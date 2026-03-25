@@ -1,4 +1,4 @@
-# 📁 Estructura de Carpetas - Backend con Express
+#  Estructura de Carpetas - Backend con Express
 
 ## 📂 `/database`
 
