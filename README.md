@@ -13,6 +13,8 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 npm install 
 npm install axios vue-router pinia
 npm install vue-router
+npm install -D tailwindcss@3.3.3 postcss autoprefixer
+npx tailwindcss init -p
 ```
 
 # BACKEND
