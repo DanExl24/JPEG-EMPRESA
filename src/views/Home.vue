@@ -1,4 +1,8 @@
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const nurseImg = '/nurse.png'
 const cardiologiaImg = '/cardiologia.png'
 const farmacologiaImg = '/farmacologia.png'
