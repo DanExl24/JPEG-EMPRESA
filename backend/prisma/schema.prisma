@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite"
+}
+
+
+model Apprentice {
+  id               Int          @id @default(autoincrement())
+  document_type    String
+  document_number  String       @unique
+  first_name       String
+  middle_name      String?
+  last_name        String
+  second_last_name String?
+  enrollments      Enrollment[]
+  evaluations      Evaluation[]
+
+  @@map("apprentices")
+}
+
+model TrainingProgram {
+  id           Int          @id @default(autoincrement())
+  name         String
+  cohorts      Cohort[]
+  competencies Competency[]
+
+  @@map("training_programs")
+}
+
+model Cohort {
+  id            Int             @id @default(autoincrement())
+  cohort_number String          @unique
+  program_id    Int
+  program       TrainingProgram @relation(fields: [program_id], references: [id])
+  enrollments   Enrollment[]
+
+  @@map("cohorts")
+}
+
+model Competency {
+  id                Int               @id @default(autoincrement())
+  code              String            @unique
+  name              String
+  program_id        Int
+  program           TrainingProgram   @relation(fields: [program_id], references: [id])
+  learning_outcomes LearningOutcome[]
+
+  @@map("competencies")
+}
+
+model Enrollment {
+  id            Int        @id @default(autoincrement())
+  apprentice_id Int
+  cohort_id     Int
+  status        String
+  apprentice    Apprentice @relation(fields: [apprentice_id], references: [id])
+  cohort        Cohort     @relation(fields: [cohort_id], references: [id])
+
+  @@map("enrollments")
+}
+
+model Instructor {
+  id               Int          @id @default(autoincrement())
+  document_type    String
+  document_number  String       @unique
+  first_name       String
+  middle_name      String?
+  last_name        String
+  second_last_name String?
+  evaluations      Evaluation[]
+
+  @@map("instructors")
+}
+
+model LearningOutcome {
+  id            Int          @id @default(autoincrement())
+  code          String
+  competency_id Int
+  name          String
+  competency    Competency   @relation(fields: [competency_id], references: [id])
+  evaluations   Evaluation[]
+
+  @@map("learning_outcomes")
+}
+
+model Evaluation {
+  id                  Int             @id @default(autoincrement())
+  assessment_judgment String          @default("pending")
+  apprentice_id       Int
+  learning_outcome_id Int
+  updated_by          Int?
+  apprentice          Apprentice      @relation(fields: [apprentice_id], references: [id])
+  learning_outcome    LearningOutcome @relation(fields: [learning_outcome_id], references: [id])
+  instructor          Instructor?     @relation(fields: [updated_by], references: [id])
+
+  @@map("evaluations")
+}
