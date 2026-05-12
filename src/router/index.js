@@ -2,8 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import LoginView from '../views/LoginView.vue'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
-import { useAuthStore } from '../stores/auth'
-
 const routes = [
   { path: '/', component: Home },
   { path: '/login', component: LoginView },
@@ -22,16 +20,8 @@ const routes = [
       { path: 'juegos', component: () => import('../views/juegos/JuegosView.vue') },
       { path: 'settings', component: () => import('../views/settings/SettingsView.vue') },
       { path: 'perfil', component: () => import('../views/perfil/PerfilView.vue') },
-      {
-        path: 'analiticas',
-        component: () => import('../views/analiticas/AnaliticasView.vue'),
-        meta: { roles: ['admin', 'instructor'] },
-      },
-      {
-        path: 'usuarios',
-        component: () => import('../views/usuarios/UsuariosView.vue'),
-        meta: { roles: ['admin'] },
-      },
+      { path: 'analiticas', component: () => import('../views/analiticas/AnaliticasView.vue') },
+      { path: 'usuarios', component: () => import('../views/usuarios/UsuariosView.vue') },
     ],
   },
 ]
@@ -41,12 +31,3 @@ export const router = createRouter({
   routes,
 })
 
-// Pinia is initialized before router.use() in main.js, so useAuthStore() is safe here
-router.beforeEach((to) => {
-  if (to.meta.roles) {
-    const auth = useAuthStore()
-    if (!to.meta.roles.includes(auth.role)) {
-      return '/dashboard/inicio'
-    }
-  }
-})

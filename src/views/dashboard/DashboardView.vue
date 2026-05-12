@@ -55,37 +55,32 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 
 const auth = useAuthStore()
 
-const allStats = [
-  { label: 'Cursos Activos', value: '12', change: '+2 esta semana', icon: 'school', bg: 'bg-blue-50', iconColor: '#3b82f6', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Usuarios', value: '1,240', change: '+18 nuevos', icon: 'group', bg: 'bg-purple-50', iconColor: '#8b5cf6', roles: ['admin'] },
-  { label: 'Mi Progreso', value: '68%', change: '+5% este mes', icon: 'trending_up', bg: 'bg-green-50', iconColor: '#10b981', roles: ['aprendiz', 'instructor'] },
-  { label: 'Logros', value: '7', change: '+1 desbloqueado', icon: 'emoji_events', bg: 'bg-yellow-50', iconColor: '#f59e0b', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Actividades', value: '34', change: '5 pendientes', icon: 'task', bg: 'bg-orange-50', iconColor: '#f97316', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Ranking', value: '#3', change: 'Subiste 2 posiciones', icon: 'leaderboard', bg: 'bg-red-50', iconColor: '#ef4444', roles: ['instructor', 'aprendiz'] },
-  { label: 'Ingresos Cursos', value: '$4,820', change: '+12% mensual', icon: 'payments', bg: 'bg-teal-50', iconColor: '#14b8a6', roles: ['admin'] },
-  { label: 'Tiempo Estudio', value: '24h', change: '+3h esta semana', icon: 'schedule', bg: 'bg-indigo-50', iconColor: '#6366f1', roles: ['aprendiz'] },
+const visibleStats = [
+  { label: 'Cursos Activos', value: '12', change: '+2 esta semana', icon: 'school', bg: 'bg-blue-50', iconColor: '#3b82f6' },
+  { label: 'Usuarios', value: '1,240', change: '+18 nuevos', icon: 'group', bg: 'bg-purple-50', iconColor: '#8b5cf6' },
+  { label: 'Mi Progreso', value: '68%', change: '+5% este mes', icon: 'trending_up', bg: 'bg-green-50', iconColor: '#10b981' },
+  { label: 'Logros', value: '7', change: '+1 desbloqueado', icon: 'emoji_events', bg: 'bg-yellow-50', iconColor: '#f59e0b' },
+  { label: 'Actividades', value: '34', change: '5 pendientes', icon: 'task', bg: 'bg-orange-50', iconColor: '#f97316' },
+  { label: 'Ranking', value: '#3', change: 'Subiste 2 posiciones', icon: 'leaderboard', bg: 'bg-red-50', iconColor: '#ef4444' },
+  { label: 'Ingresos Cursos', value: '$4,820', change: '+12% mensual', icon: 'payments', bg: 'bg-teal-50', iconColor: '#14b8a6' },
+  { label: 'Tiempo Estudio', value: '24h', change: '+3h esta semana', icon: 'schedule', bg: 'bg-indigo-50', iconColor: '#6366f1' },
 ]
 
-const visibleStats = computed(() => allStats.filter(s => s.roles.includes(auth.role)))
-
-const allQuickActions = [
-  { label: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Cursos', path: '/dashboard/cursos', icon: 'school', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Actividades', path: '/dashboard/actividades', icon: 'task', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Logros', path: '/dashboard/logros', icon: 'emoji_events', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports', roles: ['admin', 'instructor', 'aprendiz'] },
-  { label: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics', roles: ['admin', 'instructor'] },
-  { label: 'Usuarios', path: '/dashboard/usuarios', icon: 'manage_accounts', roles: ['admin'] },
+const quickActions = [
+  { label: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+  { label: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+  { label: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+  { label: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
+  { label: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
+  { label: 'Logros', path: '/dashboard/logros', icon: 'emoji_events' },
+  { label: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+  { label: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
+  { label: 'Usuarios', path: '/dashboard/usuarios', icon: 'manage_accounts' },
 ]
-
-const quickActions = computed(() => allQuickActions.filter(a => a.roles.includes(auth.role)))
 
 const recentActivity = [
   { id: 1, title: 'Completaste "Fundamentos de Enfermería"', time: 'Hace 2 horas', icon: 'school', bg: 'bg-blue-100', iconColor: '#3b82f6', badge: 'Completado', badgeBg: 'bg-green-100', badgeText: 'text-green-700' },

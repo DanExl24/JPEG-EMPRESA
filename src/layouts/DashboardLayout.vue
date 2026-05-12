@@ -23,7 +23,7 @@
         <div v-for="group in menuGroups" :key="group.label">
           <p v-if="sidebarOpen && group.label" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-1 mt-3">{{ group.label }}</p>
           <router-link
-            v-for="item in group.items.filter(i => auth.can(i.key))"
+            v-for="item in group.items"
             :key="item.path"
             :to="item.path"
             :title="!sidebarOpen ? item.name : ''"
@@ -34,26 +34,15 @@
         </div>
       </nav>
 
-      <!-- User + Role Switcher -->
+      <!-- User -->
       <div class="border-t border-gray-100 p-3">
-        <div v-if="sidebarOpen" class="flex items-center gap-3 mb-3 px-1">
+        <div v-if="sidebarOpen" class="flex items-center gap-3 px-1">
           <div class="w-9 h-9 rounded-full bg-[#006688] flex items-center justify-center text-white text-sm font-bold shrink-0">
             {{ userInitials }}
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-xs font-bold text-gray-800 truncate">{{ auth.user.name }}</p>
-            <span :class="`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${auth.roleColor}`">{{ auth.roleLabel }}</span>
-          </div>
-        </div>
-
-        <!-- Dev role switcher -->
-        <div v-if="sidebarOpen" class="bg-gray-50 rounded-xl p-2">
-          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 px-1">Cambiar Rol (Dev)</p>
-          <div class="flex gap-1">
-            <button v-for="r in roles" :key="r.value" @click="auth.setRole(r.value)"
-              :class="`flex-1 py-1 text-[10px] font-bold rounded-lg transition-colors ${auth.role === r.value ? 'bg-[#006688] text-white' : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200'}`">
-              {{ r.label }}
-            </button>
+            <p class="text-[10px] text-gray-400 truncate">{{ auth.user.email }}</p>
           </div>
         </div>
       </div>
@@ -96,47 +85,41 @@ const auth = useAuthStore()
 const route = useRoute()
 const sidebarOpen = ref(true)
 
-const roles = [
-  { label: 'Admin', value: 'admin' },
-  { label: 'Inst.', value: 'instructor' },
-  { label: 'Aprdz', value: 'aprendiz' },
-]
-
 const menuGroups = [
   {
     label: '',
     items: [
-      { key: 'dashboard', name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+      { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
     ]
   },
   {
     label: 'Aprendizaje',
     items: [
-      { key: 'cursos', name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-      { key: 'actividades', name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-      { key: 'progreso', name: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
+      { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+      { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+      { name: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
     ]
   },
   {
     label: 'Comunidad',
     items: [
-      { key: 'ranking', name: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
-      { key: 'logros', name: 'Logros', path: '/dashboard/logros', icon: 'emoji_events' },
-      { key: 'juegos', name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+      { name: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
+      { name: 'Logros', path: '/dashboard/logros', icon: 'emoji_events' },
+      { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
     ]
   },
   {
     label: 'Gestión',
     items: [
-      { key: 'analiticas', name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
-      { key: 'usuarios', name: 'Usuarios', path: '/dashboard/usuarios', icon: 'group' },
+      { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
+      { name: 'Usuarios', path: '/dashboard/usuarios', icon: 'group' },
     ]
   },
   {
     label: 'Cuenta',
     items: [
-      { key: 'perfil', name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
-      { key: 'settings', name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
+      { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
+      { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
     ]
   },
 ]
