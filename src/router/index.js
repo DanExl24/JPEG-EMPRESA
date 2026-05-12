@@ -1,30 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import LoginView from '../views/Login/LoginView.vue'
-import RecoverPassword from '../views/Login/RecoverPassword.vue'
+import Home      from '../views/Home.vue'
+import LoginView from '../views/LoginView.vue'
 
 const routes = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: LoginView
-  },
-  {
-    path: '/recover',
-    name: 'Recover',
-    component: RecoverPassword
-  }
+  { path: '/',      component: Home },
+  { path: '/login', component: LoginView },
 ]
 
-const router = createRouter({
+export const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
-
-export { router }
-export default router
