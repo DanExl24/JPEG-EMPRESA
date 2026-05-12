@@ -36,9 +36,12 @@ const comunicacionImg = '/comunicacion.png'
       </div>
 
       <!-- CTA -->
-      <RouterLink to="/login" class="border border-violet-600 text-violet-600 hover:bg-violet-600 hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
-        Iniciar sesión
-      </RouterLink>
+      <button
+        @click="router.push('/login')"
+        class="border border-violet-600 text-violet-600 hover:bg-violet-600 hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
+      >
+        Iniciar Sesión
+      </button>
     </nav>
 
     <!-- HERO -->

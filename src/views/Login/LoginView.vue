@@ -81,7 +81,7 @@
               >
                 Password
               </label>
-              <a class="text-xs font-semibold text-[#006688] hover:text-[#004e69] transition-colors" href="#">
+              <a class="text-xs font-semibold text-[#006688] hover:text-[#004e69] transition-colors" href="/recover">
                 Forgot password?
               </a>
             </div>
@@ -152,19 +152,12 @@
         </div>
 
         <!-- Footer -->
-        <footer class="mt-12 text-center">
-          <p class="text-sm text-[#3e484f]">
-            Don't have an account yet?
-            <a class="text-[#006688] font-bold hover:underline underline-offset-4 ml-1" href="#">
-              Create Account
-            </a>
-          </p>
-        </footer>
+        
       </div>
     </div>
 
     <!-- Decorative Elements -->
-    <div class="absolute bottom-10 left-10 hidden xl:block">
+    <div class="absolute bottom-10 left-10 hidden xl:bottom-0 mb-2 xl:block">
       <div class="flex items-center gap-6">
         <div class="flex -space-x-3">
           <img
@@ -183,7 +176,7 @@
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsUlarddgjGXOkUiRQeFe2Y_taIX1urbCn0uCmnyKGDmf4PLoLXAJ_DuGSOzAAwOsULvOHI3ZRhIG4YOzfc6mCF6ymUVcpqbsj5XF1Tb6gnHa1nFD2xjMKSALfE_fZkw8W00OZTccPM1yOgc61NfNCiZWHstUJYervQ1B65r351G503n0ohPOSsMrHW_7QQ_BnZh9d6If5ZeKCcS97w-2W1tSMYtKjA8tj9dlsB8II2WJk97gb1BF8W1KOTo7plrfG3fhuOg4yFKYr"
           />
         </div>
-        <div class="text-xs text-[#3e484f] font-medium">
+        <div class="text-xs text-[#3e484f] font-medium ">
           Joined by <span class="text-[#006688] font-bold">12,000+</span> healthcare professionals
         </div>
       </div>
