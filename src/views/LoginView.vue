@@ -64,7 +64,7 @@
             </label>
             <input
               id="email"
-              v-model="form.email"
+              v-model="email"
               class="w-full px-5 py-4 bg-[#e0e3e5] border-none rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none"
               name="email"
               placeholder="nurse.smith@hospital.org"
@@ -87,7 +87,7 @@
             </div>
             <input
               id="password"
-              v-model="form.password"
+              v-model="password"
               class="w-full px-5 py-4 bg-[#e0e3e5] border-none rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none"
               name="password"
               placeholder="••••••••"
@@ -191,18 +191,17 @@
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { reactive } from 'vue'
-
+import { loginSubmit } from '@/composables/formLogin'
+const { submit, email, password } = loginSubmit()
 const form = reactive({
-  email: '',
-  password: '',
   remember: false,
 })
 
-function handleSubmit() {
+async function handleSubmit() {
   console.log('Login submitted:', form)
-  // Aquí va tu lógica de autenticación
+  await submit()
 }
 
 function handleGoogleLogin() {
