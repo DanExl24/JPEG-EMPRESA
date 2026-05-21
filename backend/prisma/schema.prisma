@@ -105,3 +105,15 @@ model Evaluation {
 
   @@map("evaluations")
 }
+
+model AuthUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  role         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("auth_users")
+}

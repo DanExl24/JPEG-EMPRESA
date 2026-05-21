@@ -69,6 +69,7 @@
               name="email"
               placeholder="nurse.smith@hospital.org"
               type="email"
+              :disabled="isLoading"
             />
           </div>
 
@@ -92,6 +93,7 @@
               name="password"
               placeholder="••••••••"
               type="password"
+              :disabled="isLoading"
             />
           </div>
 
@@ -108,12 +110,17 @@
             </label>
           </div>
 
+          <p v-if="errorMessage" class="text-sm font-medium text-red-600 ml-1">
+            {{ errorMessage }}
+          </p>
+
           <!-- Submit -->
           <button
             class="w-full py-4 medical-gradient text-white font-headline font-bold rounded-full transition-transform active:scale-[0.98] editorial-shadow"
             type="submit"
+            :disabled="isLoading"
           >
-            Sign In to Academy
+            {{ isLoading ? 'Signing In...' : 'Sign In to Academy' }}
           </button>
         </form>
 
@@ -185,17 +192,37 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 
+const router = useRouter()
+const auth = useAuthStore()
 const form = reactive({
   email: '',
   password: '',
   remember: false,
 })
+const isLoading = ref(false)
+const errorMessage = ref('')
 
-function handleSubmit() {
-  console.log('Login submitted:', form)
-  // Aquí va tu lógica de autenticación
+async function handleSubmit() {
+  errorMessage.value = ''
+  isLoading.value = true
+
+  try {
+    await auth.login({
+      email: form.email,
+      password: form.password,
+      remember: form.remember,
+    })
+
+    await router.push('/dashboard/inicio')
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isLoading.value = false
+  }
 }
 
 function handleGoogleLogin() {

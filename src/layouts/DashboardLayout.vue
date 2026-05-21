@@ -45,6 +45,15 @@
             <p class="text-[10px] text-gray-400 truncate">{{ auth.user.email }}</p>
           </div>
         </div>
+        <button
+          :class="`${sidebarOpen ? 'mt-3 w-full justify-start px-3' : 'mt-3 w-10 h-10 justify-center mx-auto'} flex items-center gap-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-colors`"
+          :title="sidebarOpen ? '' : 'Cerrar sesión'"
+          type="button"
+          @click="handleLogout"
+        >
+          <span class="material-symbols-outlined text-xl shrink-0">logout</span>
+          <span v-if="sidebarOpen" class="text-sm font-medium">Cerrar sesión</span>
+        </button>
       </div>
     </aside>
 
@@ -78,11 +87,12 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 const sidebarOpen = ref(true)
 
 const menuGroups = [
@@ -141,7 +151,13 @@ const pageTitles = {
 const currentPageTitle = computed(() => pageTitles[route.path] || 'Dashboard')
 
 const userInitials = computed(() => {
-  return auth.user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  return auth.user.name
+    .split(' ')
+    .filter(Boolean)
+    .map((name) => name[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'NA'
 })
 
 const today = computed(() => {
@@ -150,5 +166,10 @@ const today = computed(() => {
 
 function isActive(path) {
   return route.path === path
+}
+
+async function handleLogout() {
+  auth.clearUser()
+  await router.push('/login')
 }
 </script>
