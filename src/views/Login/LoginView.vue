@@ -62,21 +62,21 @@
         </header>
 
         <form class="space-y-6" @submit.prevent="handleSubmit">
-          <!-- Email -->
+          <!-- Usuario -->
           <div class="space-y-2">
             <label
               class="block text-xs font-label font-bold uppercase tracking-wider text-[#3e484f] ml-1"
-              for="email"
+              for="identifier"
             >
-              Email Address
+              Correo o documento
             </label>
             <input
-              id="email"
-              v-model="form.email"
+              id="identifier"
+              v-model="form.identifier"
               class="w-full px-5 py-4 bg-[#e0e3e5] border-none rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none"
-              name="email"
-              placeholder="nurse.smith@hospital.org"
-              type="email"
+              name="identifier"
+              placeholder="admin@nursingacademy.local o 1234567890"
+              type="text"
               :disabled="isLoading"
             />
           </div>
@@ -211,7 +211,7 @@ import { useAuthStore } from '../../stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const form = reactive({
-  email: '',
+  identifier: '',
   password: '',
   remember: false,
 })
@@ -224,7 +224,7 @@ async function handleSubmit() {
 
   try {
     await auth.login({
-      email: form.email,
+      identifier: form.identifier,
       password: form.password,
       remember: form.remember,
     })

@@ -44,7 +44,10 @@ export const useAuthStore = defineStore('auth', () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({
+        identifier: credentials.identifier,
+        password: credentials.password,
+      }),
     })
 
     const payload = await response.json()
