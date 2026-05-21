@@ -8,6 +8,7 @@
         </p>
       </div>
       <button
+        @click="showRegisterModal = true"
         class="flex items-center gap-2 px-4 py-2 bg-[#006688] text-white rounded-xl text-sm font-semibold hover:bg-[#004e69] transition-colors"
       >
         <span class="material-symbols-outlined text-base">person_add</span>
@@ -20,7 +21,7 @@
       <div
         v-for="s in summary"
         :key="s.label"
-        :class="`bg-white rounded-2xl p-5 shadow-sm border border-gray-100`"
+        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
       >
         <div
           :class="`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${s.bg}`"
@@ -143,17 +144,16 @@
                 <div class="flex items-center gap-2">
                   <button
                     class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#006688] transition-colors"
+                    title="Editar usuario"
                   >
-                    <span class="material-symbols-outlined text-base"
-                      >edit</span
-                    >
+                    <span class="material-symbols-outlined text-base">edit</span>
                   </button>
                   <button
+                    @click="deleteUser(user.id)"
                     class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                    title="Eliminar usuario"
                   >
-                    <span class="material-symbols-outlined text-base"
-                      >delete</span
-                    >
+                    <span class="material-symbols-outlined text-base">delete</span>
                   </button>
                 </div>
               </td>
@@ -162,49 +162,29 @@
         </table>
       </div>
     </div>
+
+    <!-- RegistoAprendiz Modal -->
+    <RegistoAprendiz
+      :is-open="showRegisterModal"
+      @close="showRegisterModal = false"
+      @apprenticeCreated="handleApprenticeCreated"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from "vue";
 import { useAuthStore } from "../../stores/auth";
+import RegistoAprendiz from "../../components/RegistoAprendiz.vue";
 
 const auth = useAuthStore();
 const search = ref("");
 const filterRole = ref("");
+const showRegisterModal = ref(false);
 
-const summary = [
-  {
-    label: "Total Usuarios",
-    count: 1267,
-    icon: "group",
-    bg: "bg-blue-50",
-    iconColor: "#3b82f6",
-  },
-  {
-    label: "Administradores",
-    count: 3,
-    icon: "admin_panel_settings",
-    bg: "bg-red-50",
-    iconColor: "#ef4444",
-  },
-  {
-    label: "Instructores",
-    count: 24,
-    icon: "school",
-    bg: "bg-purple-50",
-    iconColor: "#8b5cf6",
-  },
-  {
-    label: "Aprendices",
-    count: 1213,
-    icon: "person",
-    bg: "bg-green-50",
-    iconColor: "#10b981",
-  },
-];
+const STORAGE_KEY = "nursed.users.list";
 
-const users = [
+const defaultUsers = [
   {
     id: 1,
     name: "Carlos Díaz",
@@ -297,8 +277,62 @@ const users = [
   },
 ];
 
+function loadUsers() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return defaultUsers;
+    }
+  }
+  return defaultUsers;
+}
+
+const users = ref(loadUsers());
+
+// Computed summary counts
+const summary = computed(() => {
+  const total = users.value.length;
+  const admins = users.value.filter((u) => u.role === "admin").length;
+  const instructors = users.value.filter((u) => u.role === "instructor").length;
+  const apprentices = users.value.filter((u) => u.role === "aprendiz").length;
+
+  return [
+    {
+      label: "Total Usuarios",
+      count: total,
+      icon: "group",
+      bg: "bg-blue-50",
+      iconColor: "#3b82f6",
+    },
+    {
+      label: "Administradores",
+      count: admins,
+      icon: "admin_panel_settings",
+      bg: "bg-red-50",
+      iconColor: "#ef4444",
+    },
+    {
+      label: "Instructores",
+      count: instructors,
+      icon: "school",
+      bg: "bg-purple-50",
+      iconColor: "#8b5cf6",
+    },
+    {
+      label: "Aprendices",
+      count: apprentices,
+      icon: "person",
+      bg: "bg-green-50",
+      iconColor: "#10b981",
+    },
+  ];
+});
+
+// Computed list filter
 const filteredUsers = computed(() => {
-  return users.filter((u) => {
+  return users.value.filter((u) => {
     const matchSearch =
       !search.value ||
       u.name.toLowerCase().includes(search.value.toLowerCase()) ||
@@ -307,4 +341,46 @@ const filteredUsers = computed(() => {
     return matchSearch && matchRole;
   });
 });
+
+// Add new apprentice
+function handleApprenticeCreated(apprentice) {
+  const initials = apprentice.name
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const colors = ["#10b981", "#ef4444", "#3b82f6", "#8b5cf6", "#f59e0b", "#ec4899", "#f97316"];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+  const newUser = {
+    id: apprentice.id,
+    name: apprentice.name,
+    email: apprentice.email,
+    initials: initials || "AP",
+    role: "aprendiz",
+    roleLabel: "Aprendiz",
+    roleBg: "bg-green-100",
+    roleText: "text-green-700",
+    courses: 0,
+    active: true,
+    lastAccess: "Nunca",
+    avatarBg: "bg-green-50",
+    avatarColor: randomColor,
+  };
+
+  users.value.unshift(newUser);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(users.value));
+}
+
+// Delete user
+function deleteUser(id) {
+  if (confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
+    users.value = users.value.filter((u) => u.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users.value));
+  }
+}
 </script>
+
