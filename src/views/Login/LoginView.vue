@@ -1,5 +1,13 @@
 <template>
   <main class="min-h-screen flex items-center justify-center p-6 md:p-12 overflow-hidden relative bg-surface">
+    <RouterLink
+      class="absolute left-6 top-6 z-10 flex items-center gap-2 text-sm font-semibold text-[#006688] transition-colors hover:text-[#004e69] md:left-10 md:top-8"
+      to="/"
+    >
+      <span class="material-symbols-outlined text-xl">arrow_back</span>
+      Volver al inicio
+    </RouterLink>
+
     <!-- Background Accent Illustration -->
     <div class="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
       <img
@@ -134,11 +142,12 @@
             type="button"
             @click="handleGoogleLogin"
           >
-            <img
-              alt="Google"
-              class="w-5 h-5"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlpZ4zOgqod6-_2NyjgF8iDP_2krppQb6xHtcZy0LOXprvIJk6ONXCUqBs02JSoUUG4BQfYI_1SX9MTcXzyF641qDynkVPo6l1MfQjEpIYoKjRZvhdJFYNAAekq2QoOsEIpMAxV8mH23ksLvWVqwoUC04eynwzn7B9u-37Mas8367v1BWYwa56SerGQiyQ-UFB5ac_cNvwcby1r986KbS6cM0ydjllxU_Glp3Hqe1YdSJWnHNTsuGvaqMap5rG6oBe8IL7adGUzXSr"
-            />
+            <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.3 9.14 5.38 12 5.38z"/>
+            </svg>
             Google
           </button>
           <button
@@ -146,7 +155,10 @@
             type="button"
             @click="handleAppleLogin"
           >
-            <span class="material-symbols-outlined text-xl">ios</span>
+            <svg aria-hidden="true" class="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16.52 12.52c-.02-2.1 1.72-3.12 1.8-3.17-1-.98-2.53-1.12-3.06-1.14-1.29-.13-2.54.77-3.19.77-.66 0-1.66-.75-2.74-.73-1.4.02-2.7.83-3.42 2.09-1.47 2.55-.37 6.3 1.03 8.36.7 1 1.52 2.12 2.6 2.08 1.05-.04 1.44-.67 2.7-.67 1.25 0 1.61.67 2.72.65 1.13-.02 1.84-1 2.51-2.01.81-1.15 1.13-2.28 1.14-2.34-.03-.01-2.07-.8-2.09-3.89z"/>
+              <path d="M14.42 6.84c.56-.7.94-1.64.84-2.59-.81.04-1.82.56-2.4 1.24-.52.6-.99 1.58-.87 2.5.91.07 1.84-.46 2.43-1.15z"/>
+            </svg>
             Apple
           </button>
         </div>

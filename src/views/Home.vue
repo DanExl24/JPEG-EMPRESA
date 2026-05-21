@@ -76,7 +76,10 @@ const comunicacionImg = '/comunicacion.png'
 
           <!-- Buttons -->
           <div class="flex items-center gap-4 mb-8">
-            <button class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2">
+            <button
+              class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2"
+              @click="router.push('/login')"
+            >
               Empezar ahora
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
