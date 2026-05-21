@@ -50,7 +50,8 @@ npm run dev
 
 ```
 cd backend
-npm install
+si hay node_modules, borrar la carpeta node_modules
+npm ci
 npx prisma generate
 npx prisma db push
 npm run dev
