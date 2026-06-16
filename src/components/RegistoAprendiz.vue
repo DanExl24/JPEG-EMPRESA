@@ -118,6 +118,8 @@
 
 <script setup>
 import { reactive } from 'vue';
+import { useAuthStore } from '../stores/auth.js';
+import { useNotificationStore } from '../stores/notification.js';
 
 const props = defineProps({
   isOpen: {
@@ -139,6 +141,9 @@ const initialForm = {
 const form = reactive({ ...initialForm });
 const errors = reactive({ ...initialForm });
 
+const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
+
 function resetForm() {
   Object.assign(form, initialForm);
   Object.assign(errors, initialForm);
@@ -150,30 +155,30 @@ function closeModal() {
 }
 
 // Generador de contraseña segura
-// function generateSecurePassword() {
-//   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-//   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-//   const numbers = '0123456789';
-//   const special = '@#$!%*?&';
+function generateSecurePassword() {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const special = '@#$!%*?&';
   
-//   let pw = '';
-//   // Garantizar al menos un carácter de cada tipo
-//   pw += uppercase[Math.floor(Math.random() * uppercase.length)];
-//   pw += lowercase[Math.floor(Math.random() * lowercase.length)];
-//   pw += numbers[Math.floor(Math.random() * numbers.length)];
-//   pw += special[Math.floor(Math.random() * special.length)];
+  let pw = '';
+  // Garantizar al menos un carácter de cada tipo
+  pw += uppercase[Math.floor(Math.random() * uppercase.length)];
+  pw += lowercase[Math.floor(Math.random() * lowercase.length)];
+  pw += numbers[Math.floor(Math.random() * numbers.length)];
+  pw += special[Math.floor(Math.random() * special.length)];
   
-//   // Agregar caracteres aleatorios hasta completar longitud 10
-//   const allChars = uppercase + lowercase + numbers + special;
-//   for (let i = 0; i < 6; i++) {
-//     pw += allChars[Math.floor(Math.random() * allChars.length)];
-//   }
+  // Agregar caracteres aleatorios hasta completar longitud 10
+  const allChars = uppercase + lowercase + numbers + special;
+  for (let i = 0; i < 6; i++) {
+    pw += allChars[Math.floor(Math.random() * allChars.length)];
+  }
   
-//   // Barajar la contraseña
-//   return pw.split('').sort(() => 0.5 - Math.random()).join('');
-// }
+  // Barajar la contraseña
+  return pw.split('').sort(() => 0.5 - Math.random()).join('');
+}
 
-function handleSubmit() {
+async function handleSubmit() {
   // Limpiar errores previos
   Object.assign(errors, initialForm);
   let hasErrors = false;
@@ -235,7 +240,40 @@ function handleSubmit() {
   // Generar contraseña interna segura
   const generatedPassword = generateSecurePassword();
 
-  // Cerrar y limpiar
-  closeModal();
+  try {
+    await authStore.register({
+      nombre: form.first_name,
+      apellido: form.last_name,
+      cedula: form.document_number,
+      correo: form.email,
+      password: generatedPassword,
+      document_type: form.document_type
+    });
+
+    notificationStore.notify({
+      type: 'success',
+      title: 'Registro exitoso',
+      message: `Contraseña generada: ${generatedPassword}\n\nPor favor, guarda esta contraseña.`,
+      duration: 3000
+    });
+
+    emit('apprenticeCreated', {
+      id: Date.now(),
+      name: `${form.first_name} ${form.last_name}`,
+      email: form.email
+    });
+
+    // Cerrar y limpiar
+    closeModal();
+  } catch (err) {
+    if (err.isConflict) {
+      if (confirm('Estas credenciales ya existen ¿Desea recuperar la cuenta?')) {
+        // Redirigir a recuperación o abrir modal
+        notificationStore.notify({ type: 'info', title: 'Recuperación', message: 'Ir a recuperación de cuenta...' });
+      }
+    } else {
+      notificationStore.notify({ type: 'error', title: 'Error en el registro', message: err.message });
+    }
+  }
 }
 </script>

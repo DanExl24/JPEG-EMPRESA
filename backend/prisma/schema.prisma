@@ -13,22 +13,24 @@ datasource db {
   provider = "sqlite"
 }
 
-
-model Apprentice {
+model User {
   id               Int          @id @default(autoincrement())
-  document_type    String
-  document_number  String       @unique
-  passwordHash     String?      @map("password_hash")
-  first_name       String
-  middle_name      String?
-  last_name        String
-  second_last_name String?
+  nombre           String
+  apellido         String
+  cedula           String       @unique
+  correo           String?      @unique
+  passwordHash     String       @map("password_hash")
+  rol              String       @default("APRENDIZ") // 'ADMIN', 'INSTRUCTOR', 'APRENDIZ'
   failedAttempts   Int          @default(0) @map("failed_attempts")
   lockedUntil      DateTime?    @map("locked_until")
-  enrollments      Enrollment[]
-  evaluations      Evaluation[]
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
 
-  @@map("apprentices")
+  enrollments      Enrollment[]
+  evaluationsAsApprentice Evaluation[] @relation("ApprenticeEvaluations")
+  evaluationsAsInstructor Evaluation[] @relation("InstructorEvaluations")
+
+  @@map("users")
 }
 
 model TrainingProgram {
@@ -66,23 +68,10 @@ model Enrollment {
   apprentice_id Int
   cohort_id     Int
   status        String
-  apprentice    Apprentice @relation(fields: [apprentice_id], references: [id])
+  apprentice    User       @relation(fields: [apprentice_id], references: [id])
   cohort        Cohort     @relation(fields: [cohort_id], references: [id])
 
   @@map("enrollments")
-}
-
-model Instructor {
-  id               Int          @id @default(autoincrement())
-  document_type    String
-  document_number  String       @unique
-  first_name       String
-  middle_name      String?
-  last_name        String
-  second_last_name String?
-  evaluations      Evaluation[]
-
-  @@map("instructors")
 }
 
 model LearningOutcome {
@@ -102,12 +91,13 @@ model Evaluation {
   apprentice_id       Int
   learning_outcome_id Int
   updated_by          Int?
-  apprentice          Apprentice      @relation(fields: [apprentice_id], references: [id])
+  apprentice          User            @relation("ApprenticeEvaluations", fields: [apprentice_id], references: [id])
   learning_outcome    LearningOutcome @relation(fields: [learning_outcome_id], references: [id])
-  instructor          Instructor?     @relation(fields: [updated_by], references: [id])
+  instructor          User?           @relation("InstructorEvaluations", fields: [updated_by], references: [id])
 
   @@map("evaluations")
 }
+<<<<<<< HEAD
 
 model AuthUser {
   id             Int      @id @default(autoincrement())
@@ -150,3 +140,5 @@ model Activity {
   @@map("activities")
 }
 
+=======
+>>>>>>> 23f0fb3dcf6b6af7484f26d3bfef0b1ff66b8694

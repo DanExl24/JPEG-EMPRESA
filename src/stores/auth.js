@@ -65,7 +65,30 @@ export const useAuthStore = defineStore('auth', () => {
     return payload.user
   }
 
+  async function register(payload) {
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
+    const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }).catch(() => {
+      throw new Error('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.')
+    })
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      const err = new Error(data.message || 'Error en el registro.')
+      err.status = response.status
+      err.isConflict = response.status === 409
+      throw err
+    }
+
+    return data
+  }
   const safeUser = computed(() => user.value || {
     id: null,
     name: '',
@@ -97,5 +120,6 @@ export const useAuthStore = defineStore('auth', () => {
     setUser,
     clearUser,
     login,
+    register,
   }
 })
