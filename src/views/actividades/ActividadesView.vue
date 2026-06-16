@@ -121,7 +121,6 @@
         <div class="bg-[#006688] text-white p-6 flex justify-between items-center shrink-0">
           <div class="space-y-1">
             <h3 class="text-lg font-black">{{ editingAct ? 'Configurar Actividad Existente' : 'Diseñar Nueva Actividad Interactiva' }}</h3>
-            <p class="text-xs text-cyan-100">HU03: Soporte de plantillas y simulación del aprendiz (Demo)</p>
           </div>
           <button @click="showModal = false" class="text-white hover:text-cyan-200 transition-colors">
             <span class="material-symbols-outlined">close</span>
@@ -173,7 +172,7 @@
                   </select>
                 </div>
                 <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Fase Pedagógica (HU02)</label>
+                  <label class="text-xs font-bold text-gray-500">Fase Pedagógica</label>
                   <select v-model="form.phase" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]">
                     <option value="Preparación">Preparación</option>
                     <option value="Absorción">Absorción</option>

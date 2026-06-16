@@ -83,7 +83,6 @@
         <div class="bg-[#006688] text-white p-6 flex justify-between items-center shrink-0">
           <div class="space-y-1">
             <h3 class="text-lg font-black">{{ editingCourse ? 'Editar Estructura del Curso' : 'Crear Nuevo Curso Técnico' }}</h3>
-            <p class="text-xs text-cyan-100">HU02: Estandarización y consistencia pedagógica de módulos de aprendizaje</p>
           </div>
           <button @click="showModal = false" class="text-white hover:text-cyan-200 transition-colors">
             <span class="material-symbols-outlined">close</span>

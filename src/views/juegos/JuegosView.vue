@@ -1,8 +1,25 @@
 <template>
   <div class="space-y-6 max-w-5xl mx-auto pb-12">
     
-    <!-- ── GRID SCREEN: GAMES HUB ── -->
-    <div v-if="!activeGame" class="space-y-6 animate-fade-in">
+    <!-- ── INSTRUCTOR PLACEHOLDER (CRUD de juegos en desarrollo) ── -->
+    <div v-if="auth.isInstructor" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center space-y-6 animate-fade-in max-w-md mx-auto my-12">
+      <div class="flex justify-center">
+        <div class="w-16 h-16 rounded-full bg-amber-50 text-[#006688] flex items-center justify-center">
+          <span class="material-symbols-outlined text-3xl animate-spin" style="animation-duration: 4s;">construction</span>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-xl font-black text-gray-800">CRUD de Juegos en Desarrollo</h3>
+        <p class="text-xs text-gray-500 leading-relaxed font-semibold">
+          El panel de administración y creación de juegos (CRUD) para el instructor se encuentra actualmente en desarrollo. Pronto podrás gestionar y asignar juegos desde aquí.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── APPRENTICE PLAYABLE VIEW ── -->
+    <template v-else>
+      <!-- ── GRID SCREEN: GAMES HUB ── -->
+      <div v-if="!activeGame" class="space-y-6 animate-fade-in">
       <div>
         <h2 class="text-2xl font-bold text-gray-800">Juegos Educativos</h2>
         <p class="text-gray-500 mt-1">Aprende jugando con dinámicas interactivas y gamificadas para calentar motores.</p>
@@ -243,6 +260,8 @@
         Ir a Calentamiento
       </button>
     </div>
+
+    </template>
 
   </div>
 </template>
