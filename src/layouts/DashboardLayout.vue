@@ -1,8 +1,8 @@
 <template>
   <div class="dashboard-layout bg-gray-50 min-h-screen flex">
 
-    <!-- Sidebar -->
-    <aside :class="`${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 flex flex-col transition-all duration-300 shrink-0 relative`">
+    <!-- Sidebar --> 
+    <aside :class="`${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 flex flex-col transition-all duration-300 h-screen shrink-0 sticky top-0 z-20`">
 
       <!-- Brand -->
       <div class="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
@@ -118,6 +118,12 @@ const menuGroups = computed(() => {
         items: [
           { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
           { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+        ]
+      },
+      {
+        label: 'Comunidad',
+        items: [
+          { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
         ]
       }
     ]
