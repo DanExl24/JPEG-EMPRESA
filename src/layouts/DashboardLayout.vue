@@ -119,6 +119,12 @@ const menuGroups = computed(() => {
           { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
           { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
         ]
+      },
+      {
+        label: 'Comunidad',
+        items: [
+          { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+        ]
       }
     ]
   }
