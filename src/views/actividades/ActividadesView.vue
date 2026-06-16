@@ -316,16 +316,63 @@
 
               <!-- Playable Word Search Demo -->
               <div v-if="form.template === 'sopa'" class="space-y-4">
-                <p class="text-xs text-gray-600 font-bold">Encuentra las siguientes palabras:</p>
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                  <p class="text-xs text-gray-600 font-bold">Encuentra las siguientes palabras arrastrando:</p>
+                  <button @click="generateSopaGrid" type="button" class="text-xs text-[#006688] hover:text-[#004e69] flex items-center gap-1 font-bold">
+                    <span class="material-symbols-outlined text-sm">refresh</span> Mezclar letras
+                  </button>
+                </div>
+                
+                <!-- Word list indicators -->
                 <div class="flex flex-wrap gap-2">
-                  <span v-for="w in (form.sopaWords || '').split(',')" :key="w" class="px-2 py-1 bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold font-mono">
-                    {{ w.trim() }}
+                  <span 
+                    v-for="w in sopaWordsList" 
+                    :key="w.text" 
+                    :class="`px-2.5 py-1 rounded-xl text-xs font-bold font-mono border flex items-center gap-1.5 transition-all ${
+                      w.found 
+                        ? 'bg-green-50 border-green-200 text-green-700 line-through decoration-2 decoration-green-400' 
+                        : 'bg-gray-50 border-gray-200 text-gray-700'
+                    }`"
+                  >
+                    <span v-if="w.found" class="material-symbols-outlined text-[10px] text-green-600">check_circle</span>
+                    {{ w.text }}
                   </span>
                 </div>
-                <div class="grid grid-cols-4 gap-2 max-w-[200px] mx-auto border border-gray-200 p-2 rounded-xl bg-gray-50">
-                  <!-- Simulated Grid -->
-                  <div v-for="lettr in 'HEARTPULSESUTUR'.split('')" :key="lettr" class="w-8 h-8 rounded bg-white flex items-center justify-center text-xs font-bold border hover:bg-gray-100 cursor-pointer">
-                    {{ lettr }}
+
+                <!-- Word search grid -->
+                <div 
+                  class="grid gap-1 p-2.5 mx-auto border border-gray-200 rounded-2xl bg-gray-50 select-none touch-none"
+                  :style="`grid-template-columns: repeat(${sopaGridSize}, minmax(0, 1fr)); max-w: ${sopaGridSize * 40 + 24}px;`"
+                  @mouseup="endDrag"
+                  @mouseleave="endDrag"
+                  @touchmove="handleTouchMove"
+                  @touchend="endDrag"
+                >
+                  <div 
+                    v-for="(row, r) in sopaGrid" 
+                    :key="r" 
+                    class="contents"
+                  >
+                    <div 
+                      v-for="(cell, c) in row" 
+                      :key="c"
+                      :data-row="r"
+                      :data-col="c"
+                      @mousedown="startDrag(r, c)"
+                      @mouseenter="handleCellMouseEnter(r, c)"
+                      @touchstart.prevent="startDrag(r, c)"
+                      :class="`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold border transition-all cursor-pointer select-none ${
+                        isCellSelected(r, c)
+                          ? 'bg-[#006688]/20 border-[#006688] text-[#006688] scale-105 shadow-sm'
+                          : isCellIncorrect(r, c)
+                            ? 'bg-red-100 border-red-400 text-red-700 animate-shake scale-105 shadow-md z-10'
+                            : cell.found
+                              ? 'bg-green-100 border-green-300 text-green-700 font-extrabold shadow-xs'
+                              : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
+                      }`"
+                    >
+                      {{ cell.letter }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -445,7 +492,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 
 const auth = useAuthStore()
@@ -515,6 +562,222 @@ const form = ref({
 const previewSelectedAnswer = ref(null)
 const previewTypedPhrase = ref('')
 const demoFeedbackSuccess = ref(null)
+
+// Sopa de letras states
+const sopaGrid = ref([])
+const sopaWordsList = ref([])
+const isDraggingSopa = ref(false)
+const sopaStartCell = ref(null)
+const sopaSelectedCells = ref([])
+const sopaFoundWords = ref([])
+
+const sopaGridSize = computed(() => {
+  const rawWords = (form.value.sopaWords || '')
+    .split(',')
+    .map(w => w.trim())
+    .filter(w => w.length > 0)
+  if (rawWords.length === 0) return 10
+  const maxLen = Math.max(...rawWords.map(w => w.length))
+  return Math.min(Math.max(maxLen + 2, 10), 12)
+})
+
+function generateSopaGrid() {
+  const size = sopaGridSize.value
+  const grid = Array(size).fill(null).map(() => Array(size).fill(''))
+  
+  const rawWords = (form.value.sopaWords || 'HEART,PULSE,SUTURE,BLOOD')
+    .split(',')
+    .map(w => w.trim().toUpperCase())
+    .filter(w => w.length > 0 && w.length <= size)
+  
+  sopaWordsList.value = rawWords.map(text => ({ text, found: false }))
+  sopaFoundWords.value = []
+  
+  const directions = [
+    [0, 1],   // horizontal right
+    [1, 0],   // vertical down
+    [1, 1],   // diagonal down-right
+    [0, -1],  // horizontal left
+    [-1, 0],  // vertical up
+    [-1, -1], // diagonal up-left
+    [1, -1],  // diagonal down-left
+    [-1, 1],  // diagonal up-right
+  ]
+  
+  for (const word of rawWords) {
+    let placed = false
+    let attempts = 0
+    while (!placed && attempts < 150) {
+      attempts++
+      const dir = directions[Math.floor(Math.random() * directions.length)]
+      const startRow = Math.floor(Math.random() * size)
+      const startCol = Math.floor(Math.random() * size)
+      
+      let canPlace = true
+      for (let i = 0; i < word.length; i++) {
+        const r = startRow + dir[0] * i
+        const c = startCol + dir[1] * i
+        if (r < 0 || r >= size || c < 0 || c >= size) {
+          canPlace = false
+          break
+        }
+        if (grid[r][c] !== '' && grid[r][c] !== word[i]) {
+          canPlace = false
+          break
+        }
+      }
+      
+      if (canPlace) {
+        for (let i = 0; i < word.length; i++) {
+          const r = startRow + dir[0] * i
+          const c = startCol + dir[1] * i
+          grid[r][c] = word[i]
+        }
+        placed = true
+      }
+    }
+  }
+  
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (grid[r][c] === '') {
+        grid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)]
+      }
+    }
+  }
+  
+  sopaGrid.value = grid.map((rowArr, r) => 
+    rowArr.map((letter, c) => ({
+      letter,
+      r,
+      c,
+      found: false
+    }))
+  )
+}
+
+const sopaIncorrectCells = ref([])
+
+function startDrag(r, c) {
+  sopaIncorrectCells.value = [] // Clear previous error highlights immediately
+  isDraggingSopa.value = true
+  sopaStartCell.value = { r, c }
+  sopaSelectedCells.value = [{ r, c }]
+}
+
+function handleCellMouseEnter(r, c) {
+  if (!isDraggingSopa.value || !sopaStartCell.value) return
+  
+  const r1 = sopaStartCell.value.r
+  const c1 = sopaStartCell.value.c
+  
+  const dr = r - r1
+  const dc = c - c1
+  
+  const isHorizontal = dr === 0
+  const isVertical = dc === 0
+  const isDiagonal = Math.abs(dr) === Math.abs(dc)
+  
+  if (isHorizontal || isVertical || isDiagonal) {
+    const steps = Math.max(Math.abs(dr), Math.abs(dc))
+    const stepR = dr === 0 ? 0 : dr / Math.abs(dr)
+    const stepC = dc === 0 ? 0 : dc / Math.abs(dc)
+    
+    const path = []
+    for (let i = 0; i <= steps; i++) {
+      path.push({ r: r1 + stepR * i, c: c1 + stepC * i })
+    }
+    sopaSelectedCells.value = path
+  }
+}
+
+function handleTouchMove(e) {
+  if (!isDraggingSopa.value) return
+  const touch = e.touches[0]
+  const el = document.elementFromPoint(touch.clientX, touch.clientY)
+  if (el) {
+    const r = parseInt(el.getAttribute('data-row'))
+    const c = parseInt(el.getAttribute('data-col'))
+    if (!isNaN(r) && !isNaN(c)) {
+      handleCellMouseEnter(r, c)
+    }
+  }
+}
+
+function endDrag() {
+  if (!isDraggingSopa.value) return
+  isDraggingSopa.value = false
+  
+  if (sopaSelectedCells.value.length > 0) {
+    const selectedWord = sopaSelectedCells.value
+      .map(cell => sopaGrid.value[cell.r]?.[cell.c]?.letter)
+      .filter(Boolean)
+      .join('')
+      
+    const reversedWord = selectedWord.split('').reverse().join('')
+    
+    const matchIndex = sopaWordsList.value.findIndex(
+      w => !w.found && (w.text === selectedWord || w.text === reversedWord)
+    )
+    
+    if (matchIndex !== -1) {
+      sopaWordsList.value[matchIndex].found = true
+      sopaFoundWords.value.push(sopaWordsList.value[matchIndex].text)
+      
+      sopaSelectedCells.value.forEach(cell => {
+        if (sopaGrid.value[cell.r]?.[cell.c]) {
+          sopaGrid.value[cell.r][cell.c].found = true
+        }
+      })
+      
+      const allFound = sopaWordsList.value.every(w => w.found)
+      if (allFound) {
+        demoFeedbackSuccess.value = true
+      }
+      sopaSelectedCells.value = []
+      sopaStartCell.value = null
+    } else {
+      // Incorrect selection: trigger red animation and clear after delay
+      sopaIncorrectCells.value = [...sopaSelectedCells.value]
+      sopaSelectedCells.value = []
+      sopaStartCell.value = null
+      
+      setTimeout(() => {
+        sopaIncorrectCells.value = []
+      }, 600)
+    }
+  } else {
+    sopaSelectedCells.value = []
+    sopaStartCell.value = null
+  }
+}
+
+function isCellSelected(r, c) {
+  return sopaSelectedCells.value.some(cell => cell.r === r && cell.c === c)
+}
+
+function isCellIncorrect(r, c) {
+  return sopaIncorrectCells.value.some(cell => cell.r === r && cell.c === c)
+}
+
+watch(previewMode, (newVal) => {
+  if (newVal && form.value.template === 'sopa') {
+    generateSopaGrid()
+  }
+})
+
+watch(() => form.value.sopaWords, () => {
+  if (previewMode.value && form.value.template === 'sopa') {
+    generateSopaGrid()
+  }
+})
+
+watch(() => form.value.template, (newVal) => {
+  if (newVal === 'sopa' && previewMode.value) {
+    generateSopaGrid()
+  }
+})
 
 // Compute lists
 const filteredActivities = computed(() => {
@@ -674,6 +937,13 @@ function validateDemoSubmission() {
     } else {
       demoFeedbackSuccess.value = false
     }
+  } else if (form.value.template === 'sopa') {
+    const allFound = sopaWordsList.value.length > 0 && sopaWordsList.value.every(w => w.found)
+    if (allFound) {
+      demoFeedbackSuccess.value = true
+    } else {
+      demoFeedbackSuccess.value = false
+    }
   } else {
     // Default success for others when validating
     demoFeedbackSuccess.value = true
@@ -684,6 +954,9 @@ function resetDemo() {
   previewSelectedAnswer.value = null
   previewTypedPhrase.value = ''
   demoFeedbackSuccess.value = null
+  if (form.value.template === 'sopa') {
+    generateSopaGrid()
+  }
 }
 </script>
 
@@ -714,5 +987,13 @@ function resetDemo() {
 }
 .backdrop-blur-xs {
   backdrop-filter: blur(2px);
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+@keyframes shake {
+  0%, 100% { transform: scale(1.05) translateX(0); }
+  20%, 60% { transform: scale(1.05) translateX(-3px); }
+  40%, 80% { transform: scale(1.05) translateX(3px); }
 }
 </style>
