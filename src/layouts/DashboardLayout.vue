@@ -117,6 +117,7 @@ const menuGroups = computed(() => {
         label: 'Aprendizaje',
         items: [
           { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+          { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
         ]
       }
     ]
