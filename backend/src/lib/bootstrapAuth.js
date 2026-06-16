@@ -4,42 +4,44 @@ import { hashPassword } from './password.js'
 const DEFAULT_ADMIN = {
   email: process.env.DEFAULT_ADMIN_EMAIL || 'admin@nursingacademy.local',
   password: process.env.DEFAULT_ADMIN_PASSWORD || 'Admin12345*',
-  fullName: process.env.DEFAULT_ADMIN_NAME || 'Administrador General',
-  role: process.env.DEFAULT_ADMIN_ROLE || 'admin',
+  nombre: 'Administrador',
+  apellido: 'General',
+  cedula: 'ADMIN001',
+  rol: 'ADMIN',
 }
 
 const DEFAULT_INSTRUCTOR = {
   email: process.env.DEFAULT_INSTRUCTOR_EMAIL || 'instructor@nursingacademy.local',
   password: process.env.DEFAULT_INSTRUCTOR_PASSWORD || 'Instructor123*',
-  fullName: process.env.DEFAULT_INSTRUCTOR_NAME || 'Instructor de Prueba',
-  role: process.env.DEFAULT_INSTRUCTOR_ROLE || 'instructor',
+  nombre: 'Instructor',
+  apellido: 'de Prueba',
+  cedula: 'INST001',
+  rol: 'INSTRUCTOR',
 }
 
 const DEFAULT_APPRENTICE = {
-  documentType: process.env.DEFAULT_APPRENTICE_DOCUMENT_TYPE || 'CC',
   documentNumber: process.env.DEFAULT_APPRENTICE_DOCUMENT || '1234567890',
   password: process.env.DEFAULT_APPRENTICE_PASSWORD || 'Aprendiz123*',
-  firstName: process.env.DEFAULT_APPRENTICE_FIRST_NAME || 'Laura',
-  middleName: process.env.DEFAULT_APPRENTICE_MIDDLE_NAME || null,
-  lastName: process.env.DEFAULT_APPRENTICE_LAST_NAME || 'Gomez',
-  secondLastName: process.env.DEFAULT_APPRENTICE_SECOND_LAST_NAME || null,
+  nombre: process.env.DEFAULT_APPRENTICE_FIRST_NAME || 'Laura',
+  apellido: process.env.DEFAULT_APPRENTICE_LAST_NAME || 'Gomez',
+  rol: 'APRENDIZ',
 }
 
 export async function ensureDefaultAuthUser() {
-  const existingUser = await prisma.authUser.findFirst({
-    where: { email: DEFAULT_ADMIN.email },
+  const existingUser = await prisma.user.findFirst({
+    where: { correo: DEFAULT_ADMIN.email },
   })
 
-  if (existingUser) {
-    return
-  }
+  if (existingUser) return
 
-  await prisma.authUser.create({
+  await prisma.user.create({
     data: {
-      email: DEFAULT_ADMIN.email,
+      correo: DEFAULT_ADMIN.email,
+      cedula: DEFAULT_ADMIN.cedula,
+      nombre: DEFAULT_ADMIN.nombre,
+      apellido: DEFAULT_ADMIN.apellido,
       passwordHash: hashPassword(DEFAULT_ADMIN.password),
-      fullName: DEFAULT_ADMIN.fullName,
-      role: DEFAULT_ADMIN.role,
+      rol: DEFAULT_ADMIN.rol,
     },
   })
 
@@ -47,20 +49,20 @@ export async function ensureDefaultAuthUser() {
 }
 
 export async function ensureDefaultInstructorUser() {
-  const existingUser = await prisma.authUser.findFirst({
-    where: { email: DEFAULT_INSTRUCTOR.email },
+  const existingUser = await prisma.user.findFirst({
+    where: { correo: DEFAULT_INSTRUCTOR.email },
   })
 
-  if (existingUser) {
-    return
-  }
+  if (existingUser) return
 
-  await prisma.authUser.create({
+  await prisma.user.create({
     data: {
-      email: DEFAULT_INSTRUCTOR.email,
+      correo: DEFAULT_INSTRUCTOR.email,
+      cedula: DEFAULT_INSTRUCTOR.cedula,
+      nombre: DEFAULT_INSTRUCTOR.nombre,
+      apellido: DEFAULT_INSTRUCTOR.apellido,
       passwordHash: hashPassword(DEFAULT_INSTRUCTOR.password),
-      fullName: DEFAULT_INSTRUCTOR.fullName,
-      role: DEFAULT_INSTRUCTOR.role,
+      rol: DEFAULT_INSTRUCTOR.rol,
     },
   })
 
@@ -68,32 +70,19 @@ export async function ensureDefaultInstructorUser() {
 }
 
 export async function ensureDefaultApprenticeUser() {
-  const existingApprentice = await prisma.apprentice.findUnique({
-    where: { document_number: DEFAULT_APPRENTICE.documentNumber },
+  const existingUser = await prisma.user.findFirst({
+    where: { cedula: DEFAULT_APPRENTICE.documentNumber },
   })
 
-  const passwordHash = hashPassword(DEFAULT_APPRENTICE.password)
+  if (existingUser) return
 
-  if (existingApprentice) {
-    if (!existingApprentice.passwordHash) {
-      await prisma.apprentice.update({
-        where: { id: existingApprentice.id },
-        data: { passwordHash },
-      })
-    }
-
-    return
-  }
-
-  await prisma.apprentice.create({
+  await prisma.user.create({
     data: {
-      document_type: DEFAULT_APPRENTICE.documentType,
-      document_number: DEFAULT_APPRENTICE.documentNumber,
-      passwordHash,
-      first_name: DEFAULT_APPRENTICE.firstName,
-      middle_name: DEFAULT_APPRENTICE.middleName,
-      last_name: DEFAULT_APPRENTICE.lastName,
-      second_last_name: DEFAULT_APPRENTICE.secondLastName,
+      cedula: DEFAULT_APPRENTICE.documentNumber,
+      nombre: DEFAULT_APPRENTICE.nombre,
+      apellido: DEFAULT_APPRENTICE.apellido,
+      passwordHash: hashPassword(DEFAULT_APPRENTICE.password),
+      rol: DEFAULT_APPRENTICE.rol,
     },
   })
 
