@@ -2,8 +2,20 @@
   <div class="space-y-6">
     <div>
       <h2 class="text-2xl font-bold text-gray-800">Bienvenido, {{ auth.user.name }}</h2>
-      <p class="text-gray-500 mt-1">Aquí tienes un resumen de tu actividad reciente.</p>
+      <p class="text-gray-500 mt-1">
+        Sesión iniciada como
+        <span class="font-semibold"
+          :class="{
+            'text-purple-600': auth.role === 'admin',
+            'text-blue-600': auth.role === 'instructor',
+            'text-teal-600': auth.role === 'aprendiz',
+          }">
+          {{ auth.roleLabel }}
+        </span>
+        · Aquí tienes un resumen de tu actividad reciente.
+      </p>
     </div>
+
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

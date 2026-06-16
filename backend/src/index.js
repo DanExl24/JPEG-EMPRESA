@@ -3,7 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import testRoutes from './routes/test.routes.js'
 import authRoutes from './routes/auth.routes.js'
-import { ensureDefaultApprenticeUser, ensureDefaultAuthUser } from './lib/bootstrapAuth.js'
+import { ensureDefaultApprenticeUser, ensureDefaultAuthUser, ensureDefaultInstructorUser } from './lib/bootstrapAuth.js'
 
 const app = express()
 
@@ -15,6 +15,7 @@ app.use('/api/auth', authRoutes)
 app.use('/', testRoutes)
 
 await ensureDefaultAuthUser()
+await ensureDefaultInstructorUser()
 await ensureDefaultApprenticeUser()
 
 app.listen(3000, () => {

@@ -62,8 +62,8 @@
         </header>
 
         <form class="space-y-6" @submit.prevent="handleSubmit">
-          <!-- Usuario -->
-          <div class="space-y-2">
+          <!-- Identifier -->
+          <div class="space-y-1.5">
             <label
               class="block text-xs font-label font-bold uppercase tracking-wider text-[#3e484f] ml-1"
               for="identifier"
@@ -73,16 +73,24 @@
             <input
               id="identifier"
               v-model="form.identifier"
-              class="w-full px-5 py-4 bg-[#e0e3e5] border-none rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none"
+              class="w-full px-5 py-4 bg-[#e0e3e5] border-2 rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none"
+              :class="identifierError && touched.identifier
+                ? 'border-red-400 bg-red-50'
+                : 'border-transparent'"
               name="identifier"
               placeholder="admin@nursingacademy.local o 1234567890"
               type="text"
               :disabled="isLoading"
+              @blur="touched.identifier = true"
             />
+            <p v-if="identifierError && touched.identifier" class="text-xs text-red-500 ml-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">error</span>
+              {{ identifierError }}
+            </p>
           </div>
 
           <!-- Password -->
-          <div class="space-y-2">
+          <div class="space-y-1.5">
             <div class="flex justify-between items-center ml-1">
               <label
                 class="block text-xs font-label font-bold uppercase tracking-wider text-[#3e484f]"
@@ -94,15 +102,46 @@
                 Forgot password?
               </a>
             </div>
-            <input
-              id="password"
-              v-model="form.password"
-              class="w-full px-5 py-4 bg-[#e0e3e5] border-none rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none"
-              name="password"
-              placeholder="••••••••"
-              type="password"
-              :disabled="isLoading"
-            />
+            <div class="relative">
+              <input
+                id="password"
+                v-model="form.password"
+                class="w-full px-5 py-4 bg-[#e0e3e5] border-2 rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none pr-12"
+                :class="passwordErrors.length && touched.password
+                  ? 'border-red-400 bg-red-50'
+                  : 'border-transparent'"
+                name="password"
+                placeholder="••••••••"
+                :type="showPassword ? 'text' : 'password'"
+                :disabled="isLoading"
+                @blur="touched.password = true"
+              />
+              <button
+                type="button"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-[#6e7980] hover:text-[#006688] transition-colors"
+                @click="showPassword = !showPassword"
+                tabindex="-1"
+              >
+                <span class="material-symbols-outlined text-xl">
+                  {{ showPassword ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Password rules checklist -->
+            <transition name="slide-down">
+              <ul v-if="touched.password || form.password" class="mt-2 space-y-1">
+                <li v-for="rule in passwordRules" :key="rule.label"
+                  class="flex items-center gap-1.5 text-xs transition-colors"
+                  :class="rule.pass ? 'text-green-600' : 'text-gray-400'"
+                >
+                  <span class="material-symbols-outlined text-sm">
+                    {{ rule.pass ? 'check_circle' : 'radio_button_unchecked' }}
+                  </span>
+                  {{ rule.label }}
+                </li>
+              </ul>
+            </transition>
           </div>
 
           <!-- Remember me -->
@@ -118,17 +157,40 @@
             </label>
           </div>
 
-          <p v-if="errorMessage" class="text-sm font-medium text-red-600 ml-1">
-            {{ errorMessage }}
-          </p>
+          <!-- Lockout banner -->
+          <div v-if="isLockedOut"
+            class="flex items-start gap-3 bg-orange-50 border border-orange-300 rounded-xl px-4 py-3"
+          >
+            <span class="material-symbols-outlined text-orange-500 text-xl shrink-0 mt-0.5">lock</span>
+            <div>
+              <p class="text-sm font-bold text-orange-700">Cuenta bloqueada temporalmente</p>
+              <p class="text-xs text-orange-600 mt-0.5">{{ errorMessage }}</p>
+            </div>
+          </div>
+
+          <!-- Generic error -->
+          <div v-else-if="errorMessage"
+            class="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3"
+          >
+            <span class="material-symbols-outlined text-red-500 text-lg shrink-0 mt-0.5">warning</span>
+            <p class="text-sm font-medium text-red-600">{{ errorMessage }}</p>
+          </div>
 
           <!-- Submit -->
           <button
-            class="w-full py-4 medical-gradient text-white font-headline font-bold rounded-full transition-transform active:scale-[0.98] editorial-shadow"
+            class="w-full py-4 font-headline font-bold rounded-full transition-all duration-200 editorial-shadow"
+            :class="(isFormValid && !isLockedOut)
+              ? 'medical-gradient text-white active:scale-[0.98]'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
             type="submit"
-            :disabled="isLoading"
+            :disabled="isLoading || !isFormValid || isLockedOut"
           >
-            {{ isLoading ? 'Signing In...' : 'Sign In to Academy' }}
+            <span v-if="isLoading" class="flex items-center justify-center gap-2">
+              <span class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+              Signing In...
+            </span>
+            <span v-else-if="isLockedOut">🔒 Cuenta bloqueada</span>
+            <span v-else>Sign In to Academy</span>
           </button>
         </form>
 
@@ -204,47 +266,100 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
+
 const form = reactive({
   identifier: '',
   password: '',
   remember: false,
 })
-const isLoading = ref(false)
-const errorMessage = ref('')
 
+// Track which fields the user has interacted with (to avoid showing errors on load)
+const touched = reactive({
+  identifier: false,
+  password: false,
+})
+
+const isLoading    = ref(false)
+const errorMessage = ref('')
+const isLockedOut  = ref(false)
+const showPassword = ref(false)
+
+// ──────────────────────────────────────────────
+// Identifier validation
+// Accepts: email (contains @) or numeric document (7–12 digits)
+// ──────────────────────────────────────────────
+const identifierError = computed(() => {
+  const val = form.identifier.trim()
+  if (!val) return 'Este campo es obligatorio.'
+  if (val.includes('@')) {
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRe.test(val)) return 'Ingresa un correo electrónico válido.'
+  } else {
+    if (!/^\d+$/.test(val)) return 'El documento debe ser numérico.'
+    if (val.length < 7 || val.length > 12) return 'El documento debe tener entre 7 y 12 dígitos.'
+  }
+  return ''
+})
+
+// ──────────────────────────────────────────────
+// Password validation rules
+// ──────────────────────────────────────────────
+const passwordRules = computed(() => [
+  { label: 'Mínimo 10 caracteres',            pass: form.password.length >= 10 },
+  { label: 'Al menos 1 mayúscula',            pass: /[A-Z]/.test(form.password) },
+  { label: 'Al menos 1 minúscula',            pass: /[a-z]/.test(form.password) },
+  { label: 'Al menos 1 número',               pass: /\d/.test(form.password) },
+  { label: 'Al menos 1 carácter especial (@#$%&*)', pass: /[@#$%&*]/.test(form.password) },
+])
+
+const passwordErrors = computed(() => passwordRules.value.filter(r => !r.pass))
+
+// Form is valid only when both fields pass validation
+const isFormValid = computed(() =>
+  !identifierError.value && passwordErrors.value.length === 0
+)
+
+// ──────────────────────────────────────────────
+// Submit handler
+// ──────────────────────────────────────────────
 async function handleSubmit() {
+  // Mark all as touched to show validation errors
+  touched.identifier = true
+  touched.password   = true
+
+  if (!isFormValid.value) return
+
   errorMessage.value = ''
-  isLoading.value = true
+  isLockedOut.value  = false
+  isLoading.value    = true
 
   try {
     await auth.login({
-      identifier: form.identifier,
-      password: form.password,
-      remember: form.remember,
+      identifier: form.identifier.trim(),
+      password:   form.password,
+      remember:   form.remember,
     })
-
     await router.push('/dashboard/inicio')
   } catch (error) {
     errorMessage.value = error.message
+    isLockedOut.value  = error.isLockout === true
   } finally {
     isLoading.value = false
   }
 }
 
 function handleGoogleLogin() {
-  console.log('Google login')
-  // Aquí va tu lógica de login con Google
+  console.log('Google login — pendiente de integración')
 }
 
 function handleAppleLogin() {
-  console.log('Apple login')
-  // Aquí va tu lógica de login con Apple
+  console.log('Apple login — pendiente de integración')
 }
 </script>
 
@@ -264,5 +379,16 @@ function handleAppleLogin() {
 .font-body,
 .font-label {
   font-family: 'Inter', sans-serif;
+}
+
+/* Smooth reveal of password checklist */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.25s ease;
+}
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 </style>

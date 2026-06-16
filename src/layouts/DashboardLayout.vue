@@ -43,8 +43,17 @@
           <div class="flex-1 min-w-0">
             <p class="text-xs font-bold text-gray-800 truncate">{{ auth.user.name }}</p>
             <p class="text-[10px] text-gray-400 truncate">{{ auth.user.email }}</p>
+            <span class="inline-block mt-0.5 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+              :class="{
+                'bg-purple-100 text-purple-700': auth.role === 'admin',
+                'bg-blue-100 text-blue-700': auth.role === 'instructor',
+                'bg-teal-100 text-teal-700': auth.role === 'aprendiz',
+              }">
+              {{ auth.roleLabel }}
+            </span>
           </div>
         </div>
+
         <button
           :class="`${sidebarOpen ? 'mt-3 w-full justify-start px-3' : 'mt-3 w-10 h-10 justify-center mx-auto'} flex items-center gap-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-colors`"
           :title="sidebarOpen ? '' : 'Cerrar sesión'"

@@ -8,6 +8,13 @@ const DEFAULT_ADMIN = {
   role: process.env.DEFAULT_ADMIN_ROLE || 'admin',
 }
 
+const DEFAULT_INSTRUCTOR = {
+  email: process.env.DEFAULT_INSTRUCTOR_EMAIL || 'instructor@nursingacademy.local',
+  password: process.env.DEFAULT_INSTRUCTOR_PASSWORD || 'Instructor123*',
+  fullName: process.env.DEFAULT_INSTRUCTOR_NAME || 'Instructor de Prueba',
+  role: process.env.DEFAULT_INSTRUCTOR_ROLE || 'instructor',
+}
+
 const DEFAULT_APPRENTICE = {
   documentType: process.env.DEFAULT_APPRENTICE_DOCUMENT_TYPE || 'CC',
   documentNumber: process.env.DEFAULT_APPRENTICE_DOCUMENT || '1234567890',
@@ -37,6 +44,27 @@ export async function ensureDefaultAuthUser() {
   })
 
   console.log(`Usuario inicial listo: ${DEFAULT_ADMIN.email}`)
+}
+
+export async function ensureDefaultInstructorUser() {
+  const existingUser = await prisma.authUser.findFirst({
+    where: { email: DEFAULT_INSTRUCTOR.email },
+  })
+
+  if (existingUser) {
+    return
+  }
+
+  await prisma.authUser.create({
+    data: {
+      email: DEFAULT_INSTRUCTOR.email,
+      passwordHash: hashPassword(DEFAULT_INSTRUCTOR.password),
+      fullName: DEFAULT_INSTRUCTOR.fullName,
+      role: DEFAULT_INSTRUCTOR.role,
+    },
+  })
+
+  console.log(`Instructor inicial listo: ${DEFAULT_INSTRUCTOR.email}`)
 }
 
 export async function ensureDefaultApprenticeUser() {

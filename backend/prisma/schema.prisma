@@ -23,6 +23,8 @@ model Apprentice {
   middle_name      String?
   last_name        String
   second_last_name String?
+  failedAttempts   Int          @default(0) @map("failed_attempts")
+  lockedUntil      DateTime?    @map("locked_until")
   enrollments      Enrollment[]
   evaluations      Evaluation[]
 
@@ -108,13 +110,15 @@ model Evaluation {
 }
 
 model AuthUser {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  fullName     String   @map("full_name")
-  role         String
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  passwordHash   String   @map("password_hash")
+  fullName       String   @map("full_name")
+  role           String
+  failedAttempts Int      @default(0) @map("failed_attempts")
+  lockedUntil    DateTime? @map("locked_until")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("auth_users")
 }

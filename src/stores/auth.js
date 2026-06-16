@@ -39,64 +39,32 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(credentials) {
     const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: credentials.identifier,
-          password: credentials.password,
-        }),
-      })
+    const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        identifier: credentials.identifier,
+        password: credentials.password,
+      }),
+    }).catch(() => {
+      throw new Error('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.')
+    })
 
-      if (response.ok) {
-        const payload = await response.json()
-        setUser(payload.user, credentials.remember ?? true)
-        return payload.user
-      } else {
-        const payload = await response.json()
-        throw new Error(payload.message || 'No fue posible iniciar sesion.')
-      }
-    } catch (err) {
-      console.warn('Servidor backend offline o no disponible. Usando autenticación sin conexión (offline).', err)
-      
-      const id = credentials.identifier ? credentials.identifier.trim().toLowerCase() : ''
-      const pw = credentials.password ?? ''
+    const payload = await response.json().catch(() => ({}))
 
-      // Administrador semilla
-      if (id === 'admin@nursingacademy.local' && pw === 'Admin12345*') {
-        const mockAdmin = {
-          id: 999,
-          name: 'Administrador General',
-          email: 'admin@nursingacademy.local',
-          role: 'admin',
-        }
-        setUser(mockAdmin, credentials.remember ?? true)
-        return mockAdmin
-      }
-      
-      // Aprendiz semilla
-      if (id === '1234567890' && pw === 'Aprendiz123*') {
-        const mockApprentice = {
-          id: 998,
-          name: 'Laura Gomez',
-          email: 'laura.gomez@nursingacademy.local',
-          role: 'aprendiz',
-        }
-        setUser(mockApprentice, credentials.remember ?? true)
-        return mockApprentice
-      }
-
-      // Si el error original venía de credenciales inválidas y no de conexión
-      if (err.message && err.message !== 'Failed to fetch') {
-        throw err
-      }
-
-      throw new Error('Credenciales inválidas o servidor sin conexión.')
+    if (!response.ok) {
+      const err = new Error(payload.message || 'Credenciales inválidas.')
+      err.status = response.status
+      err.isLockout = response.status === 423
+      throw err
     }
+
+    setUser(payload.user, credentials.remember ?? true)
+    return payload.user
   }
+
 
   const safeUser = computed(() => user.value || {
     id: null,
