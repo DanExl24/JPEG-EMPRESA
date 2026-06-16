@@ -315,36 +315,40 @@
               </div>
 
               <!-- Playable Word Search Demo -->
-              <div v-if="form.template === 'sopa'" class="space-y-4">
-                <p class="text-xs text-gray-600 font-bold">Haz clic en las palabras encontradas para tacharlas:</p>
+              <div v-if="form.template === 'sopa'" class="space-y-3">
+                <p class="text-xs text-gray-600 font-bold">Selecciona las letras en el tablero para encontrar las palabras:</p>
+                <!-- Word chips: only mark found when letters are selected -->
                 <div class="flex flex-wrap gap-2">
-                  <button 
+                  <span 
                     v-for="w in sopaWordsList" 
                     :key="w" 
-                    @click="toggleSopaWord(w)"
                     :class="`px-2.5 py-1 border rounded-lg text-xs font-bold font-mono transition-all ${
                       foundWords.includes(w) 
                         ? 'bg-green-100 text-green-700 border-green-300 line-through' 
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]'
+                        : 'bg-white text-gray-700 border-gray-300'
                     }`"
                   >
                     {{ w }}
-                  </button>
+                  </span>
                 </div>
-                <div class="grid grid-cols-6 gap-1 max-w-[240px] mx-auto border border-gray-200 p-2 rounded-xl bg-gray-50">
+                <!-- Grid: click letters to select, auto-detects word when sequence matches -->
+                <div class="grid gap-1 mx-auto border border-gray-200 p-2 rounded-xl bg-gray-50" :style="`grid-template-columns: repeat(${sopaSize}, 2rem); width: fit-content;`">
                   <button 
-                    v-for="(lettr, idx) in sopaGrid" 
+                    v-for="(cell, idx) in sopaGrid" 
                     :key="idx" 
-                    @click="toggleSopaLetter(idx)"
+                    @click="selectSopaCell(idx)"
                     :class="`w-8 h-8 rounded text-xs font-bold border transition-all ${
-                      selectedLetters.includes(idx) 
-                        ? 'bg-[#006688] text-white border-[#006688]' 
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+                      isCellFoundWord(idx)
+                        ? 'bg-green-400 text-white border-green-500'
+                        : selectedLetters.includes(idx)
+                          ? 'bg-[#006688] text-white border-[#006688] scale-105'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-[#006688]/10 cursor-pointer'
                     }`"
                   >
-                    {{ lettr }}
+                    {{ cell.letter }}
                   </button>
                 </div>
+                <p v-if="sopaSelectionHint" class="text-xs text-center font-bold" :class="sopaSelectionHint.ok ? 'text-green-600' : 'text-red-500'">{{ sopaSelectionHint.msg }}</p>
               </div>
 
               <!-- Playable Crosswords Demo -->
@@ -512,7 +516,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 
 const auth = useAuthStore()
@@ -524,14 +528,65 @@ const filters = [
   { label: 'Vencidas', value: 'overdue' },
 ]
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 // Reactively managed activities data (with submission lock details)
-const activities = ref([
-  { id: 1, title: 'Caso Clínico: Insuficiencia Cardíaca', course: 'Cuidados Críticos UCI', courseId: 3, due: '15 May 2026', status: 'Pendiente', statusBg: 'bg-orange-100', statusText: 'text-orange-700', icon: 'description', iconBg: 'bg-orange-50', iconColor: '#f97316', state: 'pending', template: 'quiz', templateLabel: 'Quiz', points: 20, phase: 'Cierre', hasStudentSubmissions: true },
-  { id: 2, title: 'Quiz: Farmacología Básica', course: 'Farmacología Clínica', courseId: 2, due: '12 May 2026', status: 'Completada', statusBg: 'bg-green-100', statusText: 'text-green-700', icon: 'quiz', iconBg: 'bg-green-50', iconColor: '#10b981', state: 'done', template: 'quiz', templateLabel: 'Quiz', points: 15, phase: 'Absorción', hasStudentSubmissions: true },
-  { id: 3, title: 'Simulación: RCP Avanzado', course: 'Urgencias y Emergencias', courseId: 6, due: '10 May 2026', status: 'Vencida', statusBg: 'bg-red-100', statusText: 'text-red-700', icon: 'favorite', iconBg: 'bg-red-50', iconColor: '#ef4444', state: 'overdue', template: 'pronunciation', templateLabel: 'Pronunciación', points: 25, phase: 'Práctica', hasStudentSubmissions: false },
-  { id: 4, title: 'Lectura: Psicología del Paciente', course: 'Salud Mental y Psiquiatría', courseId: 4, due: '20 May 2026', status: 'Pendiente', statusBg: 'bg-orange-100', statusText: 'text-orange-700', icon: 'menu_book', iconBg: 'bg-purple-50', iconColor: '#8b5cf6', state: 'pending', template: 'match', templateLabel: 'Conectar Significados', points: 10, phase: 'Preparación', hasStudentSubmissions: false },
-  { id: 5, title: 'Evaluación: Cuidados Neonatales', course: 'Atención Materno-Infantil', courseId: 5, due: '18 May 2026', status: 'Completada', statusBg: 'bg-green-100', statusText: 'text-green-700', icon: 'fact_check', iconBg: 'bg-pink-50', iconColor: '#ec4899', state: 'done', template: 'listening', templateLabel: 'Escucha', points: 30, phase: 'Cierre', hasStudentSubmissions: false },
-])
+const activities = ref([])
+
+function mapActivity(act) {
+  const tpl = templateOptions.find(t => t.id === act.template) || { label: 'Actividad', icon: 'task' }
+  const courseId = courseOptions.indexOf(act.course) + 1
+  
+  // Color mapping based on template type
+  let iconBg = 'bg-blue-50'
+  let iconColor = '#006688'
+  if (act.template === 'quiz' || act.template === 'preguntas') {
+    iconBg = 'bg-green-50'
+    iconColor = '#10b981'
+  } else if (act.template === 'pronunciation') {
+    iconBg = 'bg-red-50'
+    iconColor = '#ef4444'
+  } else if (act.template === 'listening') {
+    iconBg = 'bg-pink-50'
+    iconColor = '#ec4899'
+  } else if (act.template === 'match' || act.template === 'sopa' || act.template === 'crucigrama') {
+    iconBg = 'bg-purple-50'
+    iconColor = '#8b5cf6'
+  }
+
+  const state = act.hasStudentSubmissions ? 'done' : 'pending'
+  const status = act.hasStudentSubmissions ? 'Completada' : 'Pendiente'
+  const statusBg = act.hasStudentSubmissions ? 'bg-green-100' : 'bg-orange-100'
+  const statusText = act.hasStudentSubmissions ? 'text-green-700' : 'text-orange-700'
+
+  return {
+    ...act,
+    courseId: courseId > 0 ? courseId : 1,
+    due: 'Próxima semana',
+    status,
+    statusBg,
+    statusText,
+    icon: tpl.icon,
+    iconBg,
+    iconColor,
+    state,
+    templateLabel: tpl.label
+  }
+}
+
+async function fetchActivities() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/activities`)
+    if (!response.ok) throw new Error('Error al obtener actividades.')
+    const data = await response.json()
+    activities.value = data.map(mapActivity)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+onMounted(fetchActivities)
+
 
 const courseOptions = [
   'Fundamentos de Enfermería',
@@ -601,47 +656,178 @@ const sopaWordsList = computed(() => {
     .filter(Boolean)
 })
 
-const sopaGrid = computed(() => {
-  const words = sopaWordsList.value
-  const size = 6
-  const tempGrid = Array(size).fill(null).map(() => Array(size).fill(''))
-  
-  // Try to place some words horizontally
-  for (let r = 0; r < Math.min(words.length, size); r++) {
-    const word = words[r].slice(0, size)
-    const startCol = Math.max(0, Math.floor(Math.random() * (size - word.length + 1)))
-    for (let c = 0; c < word.length; c++) {
-      tempGrid[r][startCol + c] = word[c]
-    }
-  }
-  
-  // Fill remaining cells with random uppercase letters
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (tempGrid[r][c] === '') {
-        tempGrid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)]
-      }
-    }
-  }
-  return tempGrid.flat()
-})
-
-function toggleSopaWord(word) {
-  const idx = foundWords.value.indexOf(word)
-  if (idx >= 0) {
-    foundWords.value.splice(idx, 1)
-  } else {
-    foundWords.value.push(word)
+// Deterministic random helper (seeded by word content so grid is stable)
+function seededRand(seed) {
+  let s = seed
+  return function() {
+    s = (s * 9301 + 49297) % 233280
+    return s / 233280
   }
 }
 
-function toggleSopaLetter(idx) {
+// sopaSize: dynamic grid side based on longest word
+const sopaSize = computed(() => {
+  const words = sopaWordsList.value
+  if (!words.length) return 6
+  const longest = Math.max(...words.map(w => w.length))
+  return Math.min(Math.max(longest + 1, 6), 10)
+})
+
+// sopaGrid: array of { letter, wordIdx, posInWord } cells
+// wordIdx = index in sopaWordsList or -1 if filler
+const sopaGrid = computed(() => {
+  const words = sopaWordsList.value
+  const size = sopaSize.value
+  // Use a seed derived from word content for stability
+  const seed = words.join('').split('').reduce((acc, c) => acc + c.charCodeAt(0), 1)
+  const rand = seededRand(seed)
+
+  // grid[row][col] = { letter, wordIdx, posInWord }
+  const grid = Array.from({ length: size }, () =>
+    Array.from({ length: size }, () => ({ letter: '', wordIdx: -1, posInWord: -1 }))
+  )
+
+  // Directions: horizontal, vertical, diagonal
+  const dirs = [
+    [0, 1],   // horizontal right
+    [1, 0],   // vertical down
+    [1, 1],   // diagonal down-right
+    [1, -1],  // diagonal down-left
+  ]
+
+  for (let wi = 0; wi < words.length; wi++) {
+    const word = words[wi]
+    if (word.length > size) continue
+    let placed = false
+    let attempts = 0
+    while (!placed && attempts < 200) {
+      attempts++
+      const [dr, dc] = dirs[Math.floor(rand() * dirs.length)]
+      const maxR = dr > 0 ? size - word.length : dr < 0 ? word.length - 1 : size - 1
+      const minR = dr < 0 ? word.length - 1 : 0
+      const maxC = dc > 0 ? size - word.length : dc < 0 ? word.length - 1 : size - 1
+      const minC = dc < 0 ? word.length - 1 : 0
+      if (maxR < minR || maxC < minC) continue
+      const startR = minR + Math.floor(rand() * (maxR - minR + 1))
+      const startC = minC + Math.floor(rand() * (maxC - minC + 1))
+      // Check if all cells are empty or already have the same letter
+      let canPlace = true
+      for (let i = 0; i < word.length; i++) {
+        const r = startR + dr * i
+        const c = startC + dc * i
+        if (r < 0 || r >= size || c < 0 || c >= size) { canPlace = false; break }
+        const existing = grid[r][c].letter
+        if (existing !== '' && existing !== word[i]) { canPlace = false; break }
+      }
+      if (canPlace) {
+        for (let i = 0; i < word.length; i++) {
+          const r = startR + dr * i
+          const c = startC + dc * i
+          grid[r][c] = { letter: word[i], wordIdx: wi, posInWord: i }
+        }
+        placed = true
+      }
+    }
+  }
+
+  // Fill remaining with random letters (seeded)
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (grid[r][c].letter === '') {
+        grid[r][c] = { letter: alphabet[Math.floor(rand() * alphabet.length)], wordIdx: -1, posInWord: -1 }
+      }
+    }
+  }
+  return grid.flat()
+})
+
+// wordCellMap: for each word, the list of cell indices in sopaGrid
+const wordCellMap = computed(() => {
+  const map = {}
+  sopaWordsList.value.forEach((w, wi) => {
+    map[w] = sopaGrid.value
+      .map((cell, idx) => ({ cell, idx }))
+      .filter(({ cell }) => cell.wordIdx === wi)
+      .sort((a, b) => a.cell.posInWord - b.cell.posInWord)
+      .map(({ idx }) => idx)
+  })
+  return map
+})
+
+// foundWordCells: flat set of all grid indices belonging to found words
+const foundWordCells = computed(() => {
+  const cells = new Set()
+  foundWords.value.forEach(w => {
+    const indices = wordCellMap.value[w] || []
+    indices.forEach(i => cells.add(i))
+  })
+  return cells
+})
+
+function isCellFoundWord(idx) {
+  return foundWordCells.value.has(idx)
+}
+
+// Selection hint feedback
+const sopaSelectionHint = ref(null)
+let sopaHintTimer = null
+
+function selectSopaCell(idx) {
+  // If cell belongs to an already-found word, ignore
+  if (isCellFoundWord(idx)) return
+
   const pos = selectedLetters.value.indexOf(idx)
   if (pos >= 0) {
+    // Deselect
     selectedLetters.value.splice(pos, 1)
+    sopaSelectionHint.value = null
+    return
+  }
+
+  selectedLetters.value.push(idx)
+
+  // After each selection, check if the current selection spells any word
+  const selectedWord = selectedLetters.value
+    .map(i => sopaGrid.value[i]?.letter || '')
+    .join('')
+
+  // Check all words: does current selection exactly match word cells?
+  let matched = null
+  for (const word of sopaWordsList.value) {
+    if (foundWords.value.includes(word)) continue
+    const cells = wordCellMap.value[word] || []
+    if (cells.length !== selectedLetters.value.length) continue
+    // All selected indices must be exactly the word's cells (order-independent)
+    const sel = [...selectedLetters.value].sort((a,b) => a-b)
+    const wrd = [...cells].sort((a,b) => a-b)
+    if (sel.every((v, i) => v === wrd[i])) {
+      matched = word
+      break
+    }
+  }
+
+  if (matched) {
+    foundWords.value.push(matched)
+    selectedLetters.value = []
+    if (sopaHintTimer) clearTimeout(sopaHintTimer)
+    sopaSelectionHint.value = { ok: true, msg: `✓ "${matched}" encontrada!` }
+    sopaHintTimer = setTimeout(() => { sopaSelectionHint.value = null }, 2000)
   } else {
-    selectedLetters.value.push(idx)
+    // If selected letters cannot be part of any word anymore, clear selection
+    const canContinue = sopaWordsList.value.some(word => {
+      if (foundWords.value.includes(word)) return false
+      const cells = wordCellMap.value[word] || []
+      return selectedLetters.value.every(i => cells.includes(i))
+    })
+    if (!canContinue) {
+      if (sopaHintTimer) clearTimeout(sopaHintTimer)
+      sopaSelectionHint.value = { ok: false, msg: 'Selección inválida, intenta de nuevo.' }
+      sopaHintTimer = setTimeout(() => {
+        selectedLetters.value = []
+        sopaSelectionHint.value = null
+      }, 1200)
+    }
   }
 }
 
@@ -708,10 +894,6 @@ function checkMatch() {
 // Speech API
 function playListeningAudio() {
   if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtUtterance(form.value.listeningPhrase || 'The patient requires immediate attention')
-    // Wait, let's fix speech synthesis utterance spelling
-    // Utterance has only one "Ut": SpeechSynthesisUtterance. I made a typo: SpeechSynthesisUtUtterance
-    // Let's use SpeechSynthesisUtterance
     const utteranceObj = new SpeechSynthesisUtterance(form.value.listeningPhrase || 'The patient requires immediate attention')
     utteranceObj.lang = 'en-US'
     window.speechSynthesis.speak(utteranceObj)
@@ -820,81 +1002,76 @@ function openEditActivityModal(act) {
   showModal.value = true
 }
 
-function saveActivity() {
+async function saveActivity() {
   if (!form.value.title.trim()) return
 
-  const tplIcon = templateOptions.find(t => t.id === form.value.template)
-  const icon = tplIcon ? tplIcon.icon : 'task'
-  const templateLabel = tplIcon ? tplIcon.label : 'Actividad'
-
-  if (editingAct.value) {
-    const idx = activities.value.findIndex(a => a.id === editingAct.value.id)
-    if (idx >= 0) {
-      activities.value[idx] = {
-        ...activities.value[idx],
-        title: form.value.title,
-        course: form.value.course,
-        phase: form.value.phase,
-        template: form.value.template,
-        templateLabel,
-        points: parseInt(form.value.points) || 10,
-        attemptsLimit: form.value.attempts,
-        successMessage: form.value.successMessage,
-        hintMessage: form.value.hintMessage,
-        icon,
-        sopaWords: form.value.sopaWords,
-        crossword1Clue: form.value.crossword1Clue,
-        crossword1Word: form.value.crossword1Word,
-        quizQuestion: form.value.quizQuestion,
-        quizCorrect: form.value.quizCorrect,
-        quizIncorrect: form.value.quizIncorrect,
-        matchTerm: form.value.matchTerm,
-        matchMeaning: form.value.matchMeaning,
-        listeningPhrase: form.value.listeningPhrase,
-        pronouncePhrase: form.value.pronouncePhrase,
-      }
-    }
-  } else {
-    const newId = activities.value.length ? Math.max(...activities.value.map(a => a.id)) + 1 : 1
-    activities.value.push({
-      id: newId,
-      title: form.value.title,
-      course: form.value.course,
-      phase: form.value.phase,
-      due: 'Próxima semana',
-      status: 'Pendiente',
-      statusBg: 'bg-orange-100',
-      statusText: 'text-orange-700',
-      icon,
-      iconBg: 'bg-blue-50',
-      iconColor: '#006688',
-      state: 'pending',
-      template: form.value.template,
-      templateLabel,
-      points: parseInt(form.value.points) || 10,
-      attemptsLimit: form.value.attempts,
-      successMessage: form.value.successMessage,
-      hintMessage: form.value.hintMessage,
-      hasStudentSubmissions: false,
-      sopaWords: form.value.sopaWords,
-      crossword1Clue: form.value.crossword1Clue,
-      crossword1Word: form.value.crossword1Word,
-      quizQuestion: form.value.quizQuestion,
-      quizCorrect: form.value.quizCorrect,
-      quizIncorrect: form.value.quizIncorrect,
-      matchTerm: form.value.matchTerm,
-      matchMeaning: form.value.matchMeaning,
-      listeningPhrase: form.value.listeningPhrase,
-      pronouncePhrase: form.value.pronouncePhrase,
-    })
+  const payload = {
+    title: form.value.title,
+    course: form.value.course,
+    phase: form.value.phase,
+    template: form.value.template,
+    points: parseInt(form.value.points) || 10,
+    attemptsLimit: form.value.attempts,
+    successMessage: form.value.successMessage,
+    hintMessage: form.value.hintMessage,
+    sopaWords: form.value.sopaWords,
+    crossword1Clue: form.value.crossword1Clue,
+    crossword1Word: form.value.crossword1Word,
+    quizQuestion: form.value.quizQuestion,
+    quizCorrect: form.value.quizCorrect,
+    quizIncorrect: form.value.quizIncorrect,
+    matchTerm: form.value.matchTerm,
+    matchMeaning: form.value.matchMeaning,
+    listeningPhrase: form.value.listeningPhrase,
+    pronouncePhrase: form.value.pronouncePhrase,
   }
 
-  showModal.value = false
+  try {
+    let response
+    if (editingAct.value) {
+      response = await fetch(`${apiBaseUrl}/api/activities/${editingAct.value.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    } else {
+      response = await fetch(`${apiBaseUrl}/api/activities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    }
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}))
+      throw new Error(errData.message || 'Error al guardar la actividad.')
+    }
+
+    await fetchActivities()
+    showModal.value = false
+  } catch (err) {
+    console.error(err)
+    alert(err.message || 'No se pudo guardar la actividad. Por favor, intenta de nuevo.')
+  }
 }
 
-function deleteActivity(id) {
-  if (confirm('¿Estás seguro de que deseas eliminar esta actividad?')) {
-    activities.value = activities.value.filter(a => a.id !== id)
+async function deleteActivity(id) {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/activities/${id}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}))
+      throw new Error(errData.message || 'Error al eliminar la actividad.')
+    }
+
+    await fetchActivities()
+  } catch (err) {
+    console.error(err)
+    alert(err.message || 'No se pudo eliminar la actividad.')
   }
 }
 
@@ -955,6 +1132,8 @@ function resetDemo() {
   demoFeedbackSuccess.value = null
   foundWords.value = []
   selectedLetters.value = []
+  sopaSelectionHint.value = null
+  if (sopaHintTimer) { clearTimeout(sopaHintTimer); sopaHintTimer = null }
   crosswordInput.value = Array((form.value.crossword1Word || '').length || 10).fill('')
   selectedTerm.value = ''
   selectedMeaning.value = ''

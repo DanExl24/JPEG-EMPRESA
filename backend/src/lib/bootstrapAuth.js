@@ -99,3 +99,82 @@ export async function ensureDefaultApprenticeUser() {
 
   console.log(`Aprendiz inicial listo: ${DEFAULT_APPRENTICE.documentNumber}`)
 }
+
+const DEFAULT_ACTIVITIES = [
+  {
+    title: 'Caso Clínico: Insuficiencia Cardíaca',
+    course: 'Cuidados Críticos UCI',
+    phase: 'Cierre',
+    template: 'quiz',
+    points: 20,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente! Has respondido correctamente.',
+    quizQuestion: '¿Qué mide un esfigmomanómetro?',
+    quizCorrect: 'Presión arterial',
+    quizIncorrect: 'Ritmo cardíaco',
+    hasStudentSubmissions: true
+  },
+  {
+    title: 'Quiz: Farmacología Básica',
+    course: 'Farmacología Clínica',
+    phase: 'Absorción',
+    template: 'quiz',
+    points: 15,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente trabajo!',
+    quizQuestion: '¿Qué mide un esfigmomanómetro?',
+    quizCorrect: 'Presión arterial',
+    quizIncorrect: 'Ritmo cardíaco',
+    hasStudentSubmissions: true
+  },
+  {
+    title: 'Simulación: RCP Avanzado',
+    course: 'Urgencias y Emergencias',
+    phase: 'Práctica',
+    template: 'pronunciation',
+    points: 25,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente! Correcto.',
+    pronouncePhrase: 'Check the respiratory rate of the patient',
+    hasStudentSubmissions: false
+  },
+  {
+    title: 'Lectura: Psicología del Paciente',
+    course: 'Salud Mental y Psiquiatría',
+    phase: 'Preparación',
+    template: 'match',
+    points: 10,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente trabajo!',
+    matchTerm: 'Intravenous',
+    matchMeaning: 'Administración en vena',
+    hasStudentSubmissions: false
+  },
+  {
+    title: 'Evaluación: Cuidados Neonatales',
+    course: 'Atención Materno-Infantil',
+    phase: 'Cierre',
+    template: 'listening',
+    points: 30,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente trabajo!',
+    listeningPhrase: 'The patient requires immediate attention',
+    hasStudentSubmissions: false
+  }
+]
+
+export async function ensureDefaultActivities() {
+  const count = await prisma.activity.count()
+  if (count > 0) {
+    return
+  }
+
+  for (const act of DEFAULT_ACTIVITIES) {
+    await prisma.activity.create({
+      data: act
+    })
+  }
+
+  console.log('Actividades de prueba sembradas en la base de datos.')
+}
+

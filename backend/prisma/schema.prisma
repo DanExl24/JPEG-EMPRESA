@@ -122,3 +122,31 @@ model AuthUser {
 
   @@map("auth_users")
 }
+
+model Activity {
+  id                    Int      @id @default(autoincrement())
+  title                 String
+  course                String
+  phase                 String
+  template              String
+  points                Int      @default(10)
+  attemptsLimit         String   @default("Ilimitados") @map("attempts_limit")
+  successMessage        String   @default("¡Excelente trabajo! Has acertado.") @map("success_message")
+  hintMessage           String   @default("") @map("hint_message")
+  sopaWords             String?  @map("sopa_words")
+  crossword1Clue        String?  @map("crossword1_clue")
+  crossword1Word        String?  @map("crossword1_word")
+  quizQuestion          String?  @map("quiz_question")
+  quizCorrect           String?  @map("quiz_correct")
+  quizIncorrect         String?  @map("quiz_incorrect")
+  matchTerm             String?  @map("match_term")
+  matchMeaning          String?  @map("match_meaning")
+  listeningPhrase       String?  @map("listening_phrase")
+  pronouncePhrase       String?  @map("pronounce_phrase")
+  hasStudentSubmissions Boolean  @default(false) @map("has_student_submissions")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("activities")
+}
+
