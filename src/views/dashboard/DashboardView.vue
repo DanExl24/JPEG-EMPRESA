@@ -17,8 +17,24 @@
     </div>
 
 
+    <!-- Instructor Banner -->
+    <div v-if="auth.role === 'instructor'" class="bg-blue-50 border border-blue-100 rounded-2xl p-6 space-y-4 shadow-sm animate-fade-in">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-[#006688] flex items-center justify-center text-white shrink-0 shadow-sm">
+          <span class="material-symbols-outlined text-2xl">info</span>
+        </div>
+        <div class="space-y-1">
+          <h3 class="font-bold text-gray-800 text-lg">Panel de Control del Instructor</h3>
+          <p class="text-sm text-gray-600 leading-relaxed">
+            Actualmente, no tienes módulos de navegación asignados en la barra lateral izquierda. 
+            A medida que se desarrollen las historias de usuario de este rol, se activarán automáticamente tus opciones de gestión de cursos, evaluaciones e informes.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div v-if="auth.role !== 'instructor'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div v-for="stat in visibleStats" :key="stat.label" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
         <div class="flex items-center justify-between mb-3">
           <span class="text-sm font-medium text-gray-500">{{ stat.label }}</span>
@@ -32,7 +48,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div v-if="auth.role !== 'instructor'" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <h3 class="text-lg font-bold text-gray-800 mb-4">Accesos Rápidos</h3>
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         <router-link
@@ -48,7 +64,7 @@
     </div>
 
     <!-- Recent Activity -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div v-if="auth.role !== 'instructor'" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <h3 class="text-lg font-bold text-gray-800 mb-4">Actividad Reciente</h3>
       <div class="space-y-3">
         <div v-for="item in recentActivity" :key="item.id" class="flex items-center gap-4 p-3 rounded-xl bg-gray-50">

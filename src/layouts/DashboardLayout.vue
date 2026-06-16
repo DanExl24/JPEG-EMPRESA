@@ -104,44 +104,62 @@ const route = useRoute()
 const router = useRouter()
 const sidebarOpen = ref(true)
 
-const menuGroups = [
-  {
-    label: '',
-    items: [
-      { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+const menuGroups = computed(() => {
+  if (auth.role === 'instructor') {
+    return [
+      {
+        label: '',
+        items: [
+          { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+        ]
+      },
+      {
+        label: 'Aprendizaje',
+        items: [
+          { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+        ]
+      }
     ]
-  },
-  {
-    label: 'Aprendizaje',
-    items: [
-      { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-      { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-      { name: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
-    ]
-  },
-  {
-    label: 'Comunidad',
-    items: [
-      { name: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
-      { name: 'Logros', path: '/dashboard/logros', icon: 'emoji_events' },
-      { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
-    ]
-  },
-  {
-    label: 'Gestión',
-    items: [
-      { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
-      { name: 'Usuarios', path: '/dashboard/usuarios', icon: 'group' },
-    ]
-  },
-  {
-    label: 'Cuenta',
-    items: [
-      { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
-      { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
-    ]
-  },
-]
+  }
+  return [
+    {
+      label: '',
+      items: [
+        { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+      ]
+    },
+    {
+      label: 'Aprendizaje',
+      items: [
+        { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+        { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+        { name: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
+      ]
+    },
+    {
+      label: 'Comunidad',
+      items: [
+        { name: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
+        { name: 'Logros', path: '/dashboard/logros', icon: 'emoji_events' },
+        { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+      ]
+    },
+    {
+      label: 'Gestión',
+      items: [
+        { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
+        { name: 'Usuarios', path: '/dashboard/usuarios', icon: 'group' },
+      ]
+    },
+    {
+      label: 'Cuenta',
+      items: [
+        { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
+        { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
+      ]
+    },
+  ]
+})
 
 const pageTitles = {
   '/dashboard/inicio': 'Dashboard',

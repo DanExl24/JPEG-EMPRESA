@@ -5,6 +5,7 @@ import RecoverPassword from '../views/Login/RecoverPassword.vue'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
 import DashboardView from '../views/dashboard/DashboardView.vue'
 import CursosView from '../views/cursos/CursosView.vue'
+import EstudiarCursoView from '../views/cursos/EstudiarCursoView.vue'
 import ActividadesView from '../views/actividades/ActividadesView.vue'
 import ProgresoView from '../views/progreso/ProgresoView.vue'
 import RankingView from '../views/ranking/RankingView.vue'
@@ -28,6 +29,7 @@ const routes = [
       { path: '', redirect: '/dashboard/inicio' },
       { path: 'inicio', component: DashboardView },
       { path: 'cursos', component: CursosView },
+      { path: 'cursos/:courseId', component: EstudiarCursoView },
       { path: 'actividades', component: ActividadesView },
       { path: 'progreso', component: ProgresoView },
       { path: 'ranking', component: RankingView },
