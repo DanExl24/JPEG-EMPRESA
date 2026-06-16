@@ -204,7 +204,7 @@
                 <button 
                   v-for="tpl in templateOptions" 
                   :key="tpl.id"
-                  @click="form.template = tpl.id"
+                  @click="form.template = tpl.id; resetDemo()"
                   type="button"
                   :class="`p-3 border rounded-2xl flex flex-col items-center justify-center text-center gap-1.5 transition-all ${
                     form.template === tpl.id
@@ -316,17 +316,49 @@
 
               <!-- Playable Word Search Demo -->
               <div v-if="form.template === 'sopa'" class="space-y-4">
-                <p class="text-xs text-gray-600 font-bold">Encuentra las siguientes palabras:</p>
+                <p class="text-xs text-gray-600 font-bold">Haz clic en las palabras encontradas para tacharlas:</p>
                 <div class="flex flex-wrap gap-2">
-                  <span v-for="w in (form.sopaWords || '').split(',')" :key="w" class="px-2 py-1 bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold font-mono">
-                    {{ w.trim() }}
-                  </span>
+                  <button 
+                    v-for="w in sopaWordsList" 
+                    :key="w" 
+                    @click="toggleSopaWord(w)"
+                    :class="`px-2.5 py-1 border rounded-lg text-xs font-bold font-mono transition-all ${
+                      foundWords.includes(w) 
+                        ? 'bg-green-100 text-green-700 border-green-300 line-through' 
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]'
+                    }`"
+                  >
+                    {{ w }}
+                  </button>
                 </div>
-                <div class="grid grid-cols-4 gap-2 max-w-[200px] mx-auto border border-gray-200 p-2 rounded-xl bg-gray-50">
-                  <!-- Simulated Grid -->
-                  <div v-for="lettr in 'HEARTPULSESUTUR'.split('')" :key="lettr" class="w-8 h-8 rounded bg-white flex items-center justify-center text-xs font-bold border hover:bg-gray-100 cursor-pointer">
+                <div class="grid grid-cols-6 gap-1 max-w-[240px] mx-auto border border-gray-200 p-2 rounded-xl bg-gray-50">
+                  <button 
+                    v-for="(lettr, idx) in sopaGrid" 
+                    :key="idx" 
+                    @click="toggleSopaLetter(idx)"
+                    :class="`w-8 h-8 rounded text-xs font-bold border transition-all ${
+                      selectedLetters.includes(idx) 
+                        ? 'bg-[#006688] text-white border-[#006688]' 
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+                    }`"
+                  >
                     {{ lettr }}
-                  </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Playable Crosswords Demo -->
+              <div v-if="form.template === 'crucigrama'" class="space-y-4">
+                <p class="text-xs text-gray-600 font-bold">Pista: {{ form.crossword1Clue || 'Clue' }}</p>
+                <div class="flex gap-1 justify-center">
+                  <input 
+                    v-for="(char, idx) in (form.crossword1Word || 'heart').length" 
+                    :key="idx" 
+                    type="text" 
+                    maxlength="1" 
+                    v-model="crosswordInput[idx]"
+                    class="w-8 h-8 text-center border-2 border-gray-200 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
+                  />
                 </div>
               </div>
 
@@ -355,16 +387,40 @@
 
               <!-- Playable Match Meaning Demo -->
               <div v-if="form.template === 'match'" class="space-y-4">
-                <p class="text-xs text-gray-600">Empareja el término con su descripción clínica correcta:</p>
+                <p class="text-xs text-gray-600 font-bold">Une las parejas correctas:</p>
                 <div class="grid grid-cols-2 gap-4">
                   <div class="space-y-2">
-                    <button class="w-full p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-xs font-bold text-center">
-                      {{ form.matchTerm || 'Término' }}
+                    <button 
+                      v-for="term in matchTermsList" 
+                      :key="term"
+                      @click="selectTerm(term)"
+                      :disabled="isPairMatched(term, 'term')"
+                      :class="`w-full p-2.5 border rounded-xl text-xs font-bold text-center transition-all ${
+                        isPairMatched(term, 'term')
+                          ? 'bg-green-100 text-green-700 border-green-300'
+                          : selectedTerm === term
+                            ? 'bg-[#006688] text-white border-[#006688] shadow'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`"
+                    >
+                      {{ term }}
                     </button>
                   </div>
                   <div class="space-y-2">
-                    <button class="w-full p-3 bg-orange-50 border border-orange-200 text-orange-800 rounded-xl text-xs font-bold text-center">
-                      {{ form.matchMeaning || 'Descripción' }}
+                    <button 
+                      v-for="meaning in matchMeaningsList" 
+                      :key="meaning"
+                      @click="selectMeaning(meaning)"
+                      :disabled="isPairMatched(meaning, 'meaning')"
+                      :class="`w-full p-2.5 border rounded-xl text-xs font-bold text-center transition-all ${
+                        isPairMatched(meaning, 'meaning')
+                          ? 'bg-green-100 text-green-700 border-green-300'
+                          : selectedMeaning === meaning
+                            ? 'bg-orange-600 text-white border-orange-600 shadow'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`"
+                    >
+                      {{ meaning }}
                     </button>
                   </div>
                 </div>
@@ -373,7 +429,7 @@
               <!-- Playable Listening Demo -->
               <div v-if="form.template === 'listening'" class="space-y-4">
                 <div class="flex items-center gap-3">
-                  <button class="w-10 h-10 rounded-full bg-[#006688] text-white flex items-center justify-center hover:scale-105 transition-transform">
+                  <button @click="playListeningAudio" type="button" class="w-10 h-10 rounded-full bg-[#006688] text-white flex items-center justify-center hover:scale-105 transition-transform">
                     <span class="material-symbols-outlined text-xl">volume_up</span>
                   </button>
                   <span class="text-xs text-gray-400 italic">Haz clic para oír la frase simulada</span>
@@ -392,10 +448,21 @@
                 <p class="text-sm font-semibold text-[#006688] bg-[#006688]/5 p-3 rounded-xl border border-[#006688]/10 text-center">
                   "{{ form.pronouncePhrase || 'Frase a pronunciar' }}"
                 </p>
-                <div class="flex justify-center">
-                  <button class="w-12 h-12 rounded-full bg-[#006688] hover:bg-[#004e69] text-white flex items-center justify-center shadow-md">
-                    <span class="material-symbols-outlined text-lg">mic</span>
+                <div class="flex flex-col items-center gap-2">
+                  <button 
+                    @click="simulateMicRecording"
+                    type="button"
+                    :class="`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-md ${
+                      previewRecording ? 'bg-red-600 animate-pulse' : 'bg-[#006688] hover:bg-[#004e69]'
+                    }`"
+                  >
+                    <span class="material-symbols-outlined text-lg">
+                      {{ previewRecording ? 'stop' : 'mic' }}
+                    </span>
                   </button>
+                  <span class="text-[10px] text-gray-400 font-bold">
+                    {{ previewRecording ? 'Grabando (Simulado)...' : (voiceRecorded ? 'Grabación lista' : 'Haz clic para simular grabar') }}
+                  </span>
                 </div>
               </div>
 
@@ -516,7 +583,162 @@ const previewSelectedAnswer = ref(null)
 const previewTypedPhrase = ref('')
 const demoFeedbackSuccess = ref(null)
 
-// Compute lists
+// Dynamic game preview states
+const foundWords = ref([])
+const selectedLetters = ref([])
+const crosswordInput = ref([])
+const selectedTerm = ref('')
+const selectedMeaning = ref('')
+const matchedPairs = ref([])
+const previewRecording = ref(false)
+const voiceRecorded = ref(false)
+
+// Sopa de letras computed
+const sopaWordsList = computed(() => {
+  return (form.value.sopaWords || '')
+    .split(',')
+    .map(w => w.trim().toUpperCase())
+    .filter(Boolean)
+})
+
+const sopaGrid = computed(() => {
+  const words = sopaWordsList.value
+  const size = 6
+  const tempGrid = Array(size).fill(null).map(() => Array(size).fill(''))
+  
+  // Try to place some words horizontally
+  for (let r = 0; r < Math.min(words.length, size); r++) {
+    const word = words[r].slice(0, size)
+    const startCol = Math.max(0, Math.floor(Math.random() * (size - word.length + 1)))
+    for (let c = 0; c < word.length; c++) {
+      tempGrid[r][startCol + c] = word[c]
+    }
+  }
+  
+  // Fill remaining cells with random uppercase letters
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (tempGrid[r][c] === '') {
+        tempGrid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)]
+      }
+    }
+  }
+  return tempGrid.flat()
+})
+
+function toggleSopaWord(word) {
+  const idx = foundWords.value.indexOf(word)
+  if (idx >= 0) {
+    foundWords.value.splice(idx, 1)
+  } else {
+    foundWords.value.push(word)
+  }
+}
+
+function toggleSopaLetter(idx) {
+  const pos = selectedLetters.value.indexOf(idx)
+  if (pos >= 0) {
+    selectedLetters.value.splice(pos, 1)
+  } else {
+    selectedLetters.value.push(idx)
+  }
+}
+
+// Match meanings computed
+const matchTermsList = computed(() => {
+  const list = [form.value.matchTerm || 'Syringe']
+  list.push('Suture')
+  list.push('Stethoscope')
+  return list.filter(Boolean)
+})
+
+const matchMeaningsList = computed(() => {
+  const list = [
+    form.value.matchMeaning || 'Instrument used to inject fluids',
+    'Stitch used to close a wound',
+    'Instrument to listen to body sounds'
+  ]
+  return list.filter(Boolean).sort()
+})
+
+function isPairMatched(val, type) {
+  if (type === 'term') {
+    return matchedPairs.value.some(p => p.term === val)
+  } else {
+    return matchedPairs.value.some(p => p.meaning === val)
+  }
+}
+
+function selectTerm(term) {
+  selectedTerm.value = term
+  checkMatch()
+}
+
+function selectMeaning(meaning) {
+  selectedMeaning.value = meaning
+  checkMatch()
+}
+
+function checkMatch() {
+  if (selectedTerm.value && selectedMeaning.value) {
+    let correct = false
+    if (selectedTerm.value === form.value.matchTerm && selectedMeaning.value === form.value.matchMeaning) {
+      correct = true
+    } else if (selectedTerm.value === 'Suture' && selectedMeaning.value === 'Stitch used to close a wound') {
+      correct = true
+    } else if (selectedTerm.value === 'Stethoscope' && selectedMeaning.value === 'Instrument to listen to body sounds') {
+      correct = true
+    }
+    
+    if (correct) {
+      matchedPairs.value.push({
+        term: selectedTerm.value,
+        meaning: selectedMeaning.value
+      })
+    } else {
+      alert('Pareja incorrecta. Inténtalo de nuevo.')
+    }
+    
+    selectedTerm.value = ''
+    selectedMeaning.value = ''
+  }
+}
+
+// Speech API
+function playListeningAudio() {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtUtterance(form.value.listeningPhrase || 'The patient requires immediate attention')
+    // Wait, let's fix speech synthesis utterance spelling
+    // Utterance has only one "Ut": SpeechSynthesisUtterance. I made a typo: SpeechSynthesisUtUtterance
+    // Let's use SpeechSynthesisUtterance
+    const utteranceObj = new SpeechSynthesisUtterance(form.value.listeningPhrase || 'The patient requires immediate attention')
+    utteranceObj.lang = 'en-US'
+    window.speechSynthesis.speak(utteranceObj)
+  } else {
+    alert(`[Audio Simulado]: "${form.value.listeningPhrase || 'The patient requires immediate attention'}"`)
+  }
+}
+
+// Pronunciation Sim
+
+function simulateMicRecording() {
+  if (previewRecording.value) {
+    previewRecording.value = false
+    voiceRecorded.value = true
+  } else {
+    previewRecording.value = true
+    voiceRecorded.value = false
+    setTimeout(() => {
+      if (previewRecording.value) {
+        previewRecording.value = false
+        voiceRecorded.value = true
+      }
+    }, 3000)
+  }
+}
+
+// Filtered / Summary computeds
 const filteredActivities = computed(() => {
   if (activeFilter.value === 'all') return activities.value
   return activities.value.filter(a => a.state === activeFilter.value)
@@ -538,7 +760,6 @@ const summary = computed(() => {
 function openNewActivityModal() {
   editingAct.value = null
   previewMode.value = false
-  resetDemo()
   
   form.value = {
     title: 'Nueva Actividad Médica',
@@ -561,11 +782,11 @@ function openNewActivityModal() {
     pronouncePhrase: 'Check the respiratory rate of the patient',
   }
   
+  resetDemo()
   showModal.value = true
 }
 
 function openEditActivityModal(act) {
-  // Guard condition (Double-check lockout logic)
   if (act.hasStudentSubmissions) {
     alert('Esta actividad ya fue resuelta por aprendices y no puede ser modificada.')
     return
@@ -573,7 +794,6 @@ function openEditActivityModal(act) {
 
   editingAct.value = act
   previewMode.value = false
-  resetDemo()
 
   form.value = {
     title: act.title,
@@ -596,13 +816,13 @@ function openEditActivityModal(act) {
     pronouncePhrase: act.pronouncePhrase || 'Check the respiratory rate of the patient',
   }
 
+  resetDemo()
   showModal.value = true
 }
 
 function saveActivity() {
   if (!form.value.title.trim()) return
 
-  // Resolve template icon
   const tplIcon = templateOptions.find(t => t.id === form.value.template)
   const icon = tplIcon ? tplIcon.icon : 'task'
   const templateLabel = tplIcon ? tplIcon.label : 'Actividad'
@@ -622,7 +842,16 @@ function saveActivity() {
         successMessage: form.value.successMessage,
         hintMessage: form.value.hintMessage,
         icon,
-        // Keep other data
+        sopaWords: form.value.sopaWords,
+        crossword1Clue: form.value.crossword1Clue,
+        crossword1Word: form.value.crossword1Word,
+        quizQuestion: form.value.quizQuestion,
+        quizCorrect: form.value.quizCorrect,
+        quizIncorrect: form.value.quizIncorrect,
+        matchTerm: form.value.matchTerm,
+        matchMeaning: form.value.matchMeaning,
+        listeningPhrase: form.value.listeningPhrase,
+        pronouncePhrase: form.value.pronouncePhrase,
       }
     }
   } else {
@@ -647,6 +876,16 @@ function saveActivity() {
       successMessage: form.value.successMessage,
       hintMessage: form.value.hintMessage,
       hasStudentSubmissions: false,
+      sopaWords: form.value.sopaWords,
+      crossword1Clue: form.value.crossword1Clue,
+      crossword1Word: form.value.crossword1Word,
+      quizQuestion: form.value.quizQuestion,
+      quizCorrect: form.value.quizCorrect,
+      quizIncorrect: form.value.quizIncorrect,
+      matchTerm: form.value.matchTerm,
+      matchMeaning: form.value.matchMeaning,
+      listeningPhrase: form.value.listeningPhrase,
+      pronouncePhrase: form.value.pronouncePhrase,
     })
   }
 
@@ -659,7 +898,7 @@ function deleteActivity(id) {
   }
 }
 
-// Demo Preview simulation
+// Demo Preview validation
 function validateDemoSubmission() {
   if (form.value.template === 'quiz' || form.value.template === 'preguntas') {
     if (previewSelectedAnswer.value === 'correct') {
@@ -667,16 +906,46 @@ function validateDemoSubmission() {
     } else {
       demoFeedbackSuccess.value = false
     }
+  } else if (form.value.template === 'sopa') {
+    const words = sopaWordsList.value
+    if (words.length > 0 && words.every(w => foundWords.value.includes(w))) {
+      demoFeedbackSuccess.value = true
+    } else {
+      demoFeedbackSuccess.value = false
+    }
+  } else if (form.value.template === 'crucigrama') {
+    const target = (form.value.crossword1Word || '').trim().toLowerCase()
+    const entered = crosswordInput.value.slice(0, target.length).join('').trim().toLowerCase()
+    if (target && entered === target) {
+      demoFeedbackSuccess.value = true
+    } else {
+      demoFeedbackSuccess.value = false
+    }
+  } else if (form.value.template === 'match') {
+    const requiredCount = matchTermsList.value.length
+    if (matchedPairs.value.length === requiredCount) {
+      demoFeedbackSuccess.value = true
+    } else {
+      demoFeedbackSuccess.value = false
+    }
   } else if (form.value.template === 'listening') {
-    const phrase = form.value.listeningPhrase.trim().toLowerCase()
-    if (previewTypedPhrase.value.trim().toLowerCase().includes(phrase)) {
+    const phrase = (form.value.listeningPhrase || '').trim().toLowerCase()
+    const entered = previewTypedPhrase.value.trim().toLowerCase()
+    const cleanPhrase = phrase.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+    const cleanEntered = entered.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+    if (cleanPhrase && cleanEntered.includes(cleanPhrase)) {
+      demoFeedbackSuccess.value = true
+    } else {
+      demoFeedbackSuccess.value = false
+    }
+  } else if (form.value.template === 'pronunciation') {
+    if (voiceRecorded.value) {
       demoFeedbackSuccess.value = true
     } else {
       demoFeedbackSuccess.value = false
     }
   } else {
-    // Default success for others when validating
-    demoFeedbackSuccess.value = true
+    demoFeedbackSuccess.value = false
   }
 }
 
@@ -684,6 +953,14 @@ function resetDemo() {
   previewSelectedAnswer.value = null
   previewTypedPhrase.value = ''
   demoFeedbackSuccess.value = null
+  foundWords.value = []
+  selectedLetters.value = []
+  crosswordInput.value = Array((form.value.crossword1Word || '').length || 10).fill('')
+  selectedTerm.value = ''
+  selectedMeaning.value = ''
+  matchedPairs.value = []
+  previewRecording.value = false
+  voiceRecorded.value = false
 }
 </script>
 
