@@ -30,9 +30,9 @@ npx tailwindcss init -p
 # BACKEND
 
 ```bash
-npm init -y
-npm install express cors dotenv
-npm install -D nodemon
+    npm init -y
+    npm install express cors dotenv
+    npm install -D nodemon
 ```
 
 # Correr Frontend
