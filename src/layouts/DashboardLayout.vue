@@ -55,7 +55,7 @@
         </div>
 
         <button
-          :class="`${sidebarOpen ? 'mt-3 w-full justify-start px-3' : 'mt-3 w-10 h-10 justify-center mx-auto'} flex items-center gap-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-colors`"
+          :class="`${sidebarOpen ? 'mt-3 w-full justify-start px-3' : 'mt-3 w-10 h-10 justify-center mx-auto'} flex items-center gap-3 rounded-xl border border-gray-200 bg-red-500 text-white hover:bg-red-600 hover:border-red-200 transition-colors`"
           :title="sidebarOpen ? '' : 'Cerrar sesión'"
           type="button"
           @click="handleLogout"
