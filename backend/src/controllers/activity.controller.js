@@ -13,7 +13,83 @@ export async function getActivities(req, res) {
   }
 }
 
+// GET /api/activities/my-submissions?apprenticeId=:id
+export async function getMySubmissions(req, res) {
+  try {
+    const apprenticeId = parseInt(req.query.apprenticeId)
+    if (isNaN(apprenticeId)) {
+      return res.status(400).json({ message: 'apprenticeId es requerido.' })
+    }
+    const submissions = await prisma.activitySubmission.findMany({
+      where: { apprenticeId }
+    })
+    return res.json(submissions)
+  } catch (error) {
+    console.error('Error fetching submissions:', error)
+    return res.status(500).json({ message: 'Error interno del servidor.' })
+  }
+}
+
+// GET /api/activities/:id
+export async function getActivityById(req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido.' })
+    }
+    const activity = await prisma.activity.findUnique({ where: { id } })
+    if (!activity) {
+      return res.status(404).json({ message: 'Actividad no encontrada.' })
+    }
+    return res.json(activity)
+  } catch (error) {
+    console.error('Error fetching activity by id:', error)
+    return res.status(500).json({ message: 'Error interno del servidor al obtener la actividad.' })
+  }
+}
+
+// POST /api/activities/:id/submit
+export async function submitActivity(req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido.' })
+    }
+
+    const { apprenticeId, passed } = req.body
+    if (!apprenticeId) {
+      return res.status(400).json({ message: 'apprenticeId es requerido.' })
+    }
+
+    const activity = await prisma.activity.findUnique({ where: { id } })
+    if (!activity) {
+      return res.status(404).json({ message: 'Actividad no encontrada.' })
+    }
+
+    // Upsert: if already submitted, update; otherwise create
+    const submission = await prisma.activitySubmission.upsert({
+      where: { activityId_apprenticeId: { activityId: id, apprenticeId: parseInt(apprenticeId) } },
+      update: { passed: Boolean(passed), submittedAt: new Date() },
+      create: { activityId: id, apprenticeId: parseInt(apprenticeId), passed: Boolean(passed) }
+    })
+
+    // Mark activity as having student submissions
+    if (!activity.hasStudentSubmissions) {
+      await prisma.activity.update({
+        where: { id },
+        data: { hasStudentSubmissions: true }
+      })
+    }
+
+    return res.json(submission)
+  } catch (error) {
+    console.error('Error submitting activity:', error)
+    return res.status(500).json({ message: 'Error interno del servidor al registrar la entrega.' })
+  }
+}
+
 // POST /api/activities
+
 export async function createActivity(req, res) {
   try {
     const {

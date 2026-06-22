@@ -75,10 +75,11 @@
             <!-- Student Action -->
             <router-link
               v-if="!auth.isAdmin && !auth.isInstructor"
-              :to="`/dashboard/cursos/${act.courseId || 1}`"
-              class="text-[#006688] hover:text-[#004e69]"
+              :to="`/dashboard/actividades/${act.id}`"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white rounded-lg text-xs font-bold transition-all shadow-sm"
             >
-              <span class="material-symbols-outlined text-lg">chevron_right</span>
+              <span class="material-symbols-outlined text-sm">play_arrow</span>
+              Iniciar
             </router-link>
 
             <!-- Instructor Actions -->
@@ -681,7 +682,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onActivated, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
@@ -701,7 +702,10 @@ const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 // Reactively managed activities data (with submission lock details)
 const activities = ref([])
 
-function mapActivity(act) {
+// Per-apprentice submissions (only loaded for aprendiz role)
+const mySubmissions = ref([])
+
+function mapActivity(act, submittedIds = new Set(), isApprenticeMode = false) {
   const tpl = templateOptions.find(t => t.id === act.template) || { label: 'Actividad', icon: 'task' }
   const courseId = courseOptions.indexOf(act.course) + 1
   
@@ -722,10 +726,16 @@ function mapActivity(act) {
     iconColor = '#8b5cf6'
   }
 
-  const state = act.hasStudentSubmissions ? 'done' : 'pending'
-  const status = act.hasStudentSubmissions ? 'Completada' : 'Pendiente'
-  const statusBg = act.hasStudentSubmissions ? 'bg-green-100' : 'bg-orange-100'
-  const statusText = act.hasStudentSubmissions ? 'text-green-700' : 'text-orange-700'
+  // For apprentices: use THEIR own submission status (submittedIds from their personal records)
+  // For admins/instructors: use global hasStudentSubmissions flag
+  const isDone = isApprenticeMode
+    ? submittedIds.has(act.id)
+    : act.hasStudentSubmissions
+
+  const state = isDone ? 'done' : 'pending'
+  const status = isDone ? 'Completada' : 'Pendiente'
+  const statusBg = isDone ? 'bg-green-100' : 'bg-orange-100'
+  const statusText = isDone ? 'text-green-700' : 'text-orange-700'
 
   return {
     ...act,
@@ -747,13 +757,30 @@ async function fetchActivities() {
     const response = await fetch(`${apiBaseUrl}/api/activities`)
     if (!response.ok) throw new Error('Error al obtener actividades.')
     const data = await response.json()
-    activities.value = data.map(mapActivity)
+
+    const isApprenticeMode = !auth.isAdmin && !auth.isInstructor && Boolean(auth.user?.id)
+    let submittedIds = new Set()
+    if (isApprenticeMode) {
+      try {
+        const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${auth.user.id}`)
+        if (subRes.ok) {
+          const subs = await subRes.json()
+          mySubmissions.value = subs
+          submittedIds = new Set(subs.map(s => s.activityId))
+        }
+      } catch (e) {
+        console.error('Error fetching my submissions:', e)
+      }
+    }
+
+    activities.value = data.map(act => mapActivity(act, submittedIds, isApprenticeMode))
   } catch (err) {
     console.error(err)
   }
 }
 
 onMounted(fetchActivities)
+onActivated(fetchActivities)
 
 
 const courseOptions = [

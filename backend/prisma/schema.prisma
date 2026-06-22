@@ -121,6 +121,22 @@ model Activity {
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
+  submissions           ActivitySubmission[]
+
   @@map("activities")
 }
+
+model ActivitySubmission {
+  id           Int      @id @default(autoincrement())
+  activityId   Int      @map("activity_id")
+  apprenticeId Int      @map("apprentice_id")
+  passed       Boolean  @default(false)
+  submittedAt  DateTime @default(now()) @map("submitted_at")
+
+  activity     Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, apprenticeId])
+  @@map("activity_submissions")
+}
+
 

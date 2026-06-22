@@ -7,6 +7,7 @@ import DashboardView from '../views/dashboard/DashboardView.vue'
 import CursosView from '../views/cursos/CursosView.vue'
 import EstudiarCursoView from '../views/cursos/EstudiarCursoView.vue'
 import ActividadesView from '../views/actividades/ActividadesView.vue'
+import ActividadDetalleView from '../views/actividades/ActividadDetalleView.vue'
 import ProgresoView from '../views/progreso/ProgresoView.vue'
 import RankingView from '../views/ranking/RankingView.vue'
 import LogrosView from '../views/logros/LogrosView.vue'
@@ -31,6 +32,7 @@ const routes = [
       { path: 'cursos', component: CursosView },
       { path: 'cursos/:courseId', component: EstudiarCursoView },
       { path: 'actividades', component: ActividadesView },
+      { path: 'actividades/:activityId', component: ActividadDetalleView },
       { path: 'progreso', component: ProgresoView },
       { path: 'ranking', component: RankingView },
       { path: 'logros', component: LogrosView },

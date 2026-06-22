@@ -182,7 +182,10 @@ const pageTitles = {
   '/dashboard/settings': 'Configuración',
 }
 
-const currentPageTitle = computed(() => pageTitles[route.path] || 'Dashboard')
+const currentPageTitle = computed(() => {
+  if (route.path.startsWith('/dashboard/actividades/')) return 'Detalle de Actividad'
+  return pageTitles[route.path] || 'Dashboard'
+})
 
 const userInitials = computed(() => {
   return auth.user.name
