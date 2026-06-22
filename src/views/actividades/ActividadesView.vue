@@ -84,7 +84,17 @@
 
             <!-- Instructor Actions -->
             <div v-else class="flex gap-2">
-              <button 
+              <button
+                v-if="act.template === 'quiz' || act.template === 'preguntas'"
+                @click="openReviewModal(act)"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-amber-50 text-amber-700 border-amber-200 hover:border-amber-400 flex items-center gap-1"
+                title="Revisar entregas con preguntas abiertas"
+              >
+                <span class="material-symbols-outlined text-xs">fact_check</span>
+                Revisar Entregas
+              </button>
+
+              <button
                 @click="openEditActivityModal(act)"
                 :class="`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
                   act.hasStudentSubmissions
@@ -314,12 +324,105 @@
                 </div>
               </div>
 
-              <!-- Quizzes / Preguntas Fields -->
-              <div v-if="form.template === 'quiz' || form.template === 'preguntas'" class="space-y-3">
+              <!-- Quiz Fields: mezcla de tipos por pregunta (V/F, Selección Múltiple, Abierta) -->
+              <div v-if="form.template === 'quiz'" class="space-y-3">
                 <div class="flex justify-between items-center">
                   <label class="text-xs font-bold text-gray-500">Preguntas del Quiz</label>
                   <button
-                    @click="form.quizQuestions.unshift({ question: '', options: [{ text: '', correct: true }, { text: '', correct: false }] })"
+                    @click="form.quizQuestions.unshift({ type: 'multiple', question: '', options: [{ text: '', correct: true }, { text: '', correct: false }], correct: true })"
+                    type="button"
+                    class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-xs font-bold">add</span>
+                    Agregar Pregunta
+                  </button>
+                </div>
+
+                <div v-for="(q, idx) in form.quizQuestions" :key="idx" class="bg-white p-4 rounded-2xl border border-gray-150 space-y-3 relative">
+                  <button
+                    v-if="form.quizQuestions.length > 1"
+                    @click="form.quizQuestions.splice(idx, 1)"
+                    type="button"
+                    class="absolute top-2.5 right-2.5 text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+
+                  <div class="space-y-1">
+                    <label class="text-[9px] font-bold text-gray-400">Pregunta {{ idx + 1 }}</label>
+                    <input type="text" v-model="q.question" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none" placeholder="Ej. What is the standard adult heart rate?" />
+                  </div>
+
+                  <div class="flex gap-1.5">
+                    <button type="button" @click="setQuestionType(q, 'multiple')" :class="`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${q.type === 'multiple' ? 'bg-[#006688] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`">Selección Múltiple</button>
+                    <button type="button" @click="setQuestionType(q, 'truefalse')" :class="`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${q.type === 'truefalse' ? 'bg-[#006688] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`">Verdadero/Falso</button>
+                    <button type="button" @click="setQuestionType(q, 'open')" :class="`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${q.type === 'open' ? 'bg-[#006688] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`">Pregunta Abierta</button>
+                  </div>
+
+                  <!-- Selección Múltiple -->
+                  <div v-if="q.type === 'multiple'" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <label class="text-[9px] font-bold text-gray-400">Opciones de Respuesta (marca la correcta)</label>
+                      <button
+                        @click="q.options.push({ text: '', correct: false })"
+                        type="button"
+                        class="px-2 py-0.5 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[9px] rounded-lg transition-all flex items-center gap-0.5"
+                      >
+                        <span class="material-symbols-outlined text-[10px] font-bold">add</span>
+                        Opción
+                      </button>
+                    </div>
+
+                    <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        :name="`quiz-correct-${idx}`"
+                        :checked="opt.correct"
+                        @change="q.options.forEach((o, i) => o.correct = i === oIdx)"
+                        class="shrink-0 text-green-600 focus:ring-green-500"
+                      />
+                      <input
+                        type="text"
+                        v-model="opt.text"
+                        :class="`flex-1 px-3 py-1.5 border rounded-xl text-xs font-semibold focus:outline-none ${opt.correct ? 'border-green-300 bg-green-50/20' : 'border-gray-200'}`"
+                        :placeholder="`Opción ${oIdx + 1}`"
+                      />
+                      <button
+                        v-if="q.options.length > 2"
+                        @click="q.options.splice(oIdx, 1)"
+                        type="button"
+                        class="shrink-0 text-red-400 hover:text-red-600"
+                      >
+                        <span class="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Verdadero/Falso -->
+                  <div v-else-if="q.type === 'truefalse'" class="flex gap-4">
+                    <label class="flex items-center gap-1.5 text-xs font-bold text-gray-650 cursor-pointer">
+                      <input type="radio" :name="`tf-${idx}`" :checked="q.correct === true" @change="q.correct = true" class="text-green-600 focus:ring-green-500" />
+                      Verdadero
+                    </label>
+                    <label class="flex items-center gap-1.5 text-xs font-bold text-gray-650 cursor-pointer">
+                      <input type="radio" :name="`tf-${idx}`" :checked="q.correct === false" @change="q.correct = false" class="text-green-600 focus:ring-green-500" />
+                      Falso
+                    </label>
+                  </div>
+
+                  <!-- Pregunta Abierta -->
+                  <div v-else-if="q.type === 'open'" class="text-[10px] text-gray-400 italic p-2 bg-gray-50 rounded-xl">
+                    El aprendiz escribirá su respuesta libremente. Tú la calificarás manualmente cuando entregue (panel "Revisar Entregas").
+                  </div>
+                </div>
+              </div>
+
+              <!-- Opción Múltiple Fields: solo selección múltiple, sin mezcla de tipos -->
+              <div v-if="form.template === 'preguntas'" class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <label class="text-xs font-bold text-gray-500">Preguntas de Opción Múltiple</label>
+                  <button
+                    @click="form.quizQuestions.unshift({ type: 'multiple', question: '', options: [{ text: '', correct: true }, { text: '', correct: false }] })"
                     type="button"
                     class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
                   >
@@ -359,7 +462,7 @@
                     <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="flex items-center gap-2">
                       <input
                         type="radio"
-                        :name="`quiz-correct-${idx}`"
+                        :name="`preguntas-correct-${idx}`"
                         :checked="opt.correct"
                         @change="q.options.forEach((o, i) => o.correct = i === oIdx)"
                         class="shrink-0 text-green-600 focus:ring-green-500"
@@ -577,7 +680,28 @@
               <div v-if="form.template === 'quiz' || form.template === 'preguntas'" class="space-y-5">
                 <div v-for="(q, idx) in form.quizQuestions" :key="idx" class="space-y-2">
                   <div class="text-sm font-bold text-gray-800">{{ idx + 1 }}. {{ q.question || '¿Pregunta del Quiz?' }}</div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+                  <div v-if="q.type === 'truefalse'" class="grid grid-cols-2 gap-2">
+                    <button
+                      @click="previewSelectedAnswer[idx] = true"
+                      :class="`px-4 py-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                        previewSelectedAnswer[idx] === true ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`"
+                    >Verdadero</button>
+                    <button
+                      @click="previewSelectedAnswer[idx] = false"
+                      :class="`px-4 py-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                        previewSelectedAnswer[idx] === false ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`"
+                    >Falso</button>
+                  </div>
+
+                  <div v-else-if="q.type === 'open'" class="space-y-1">
+                    <textarea v-model="previewSelectedAnswer[idx]" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none" placeholder="Respuesta libre del aprendiz..."></textarea>
+                    <p class="text-[9px] text-gray-400 italic">Esta pregunta no se autocalifica; el instructor la revisa manualmente.</p>
+                  </div>
+
+                  <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button
                       v-for="(opt, oIdx) in q.options"
                       :key="oIdx"
@@ -725,6 +849,63 @@
       </div>
     </div>
 
+    <!-- Review Open-Question Submissions Modal -->
+    <div v-if="showReviewModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
+      <div class="bg-white rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden border border-gray-100 flex flex-col my-8 max-h-[90vh] animate-slide-up">
+        <div class="bg-amber-600 text-white p-6 flex justify-between items-center shrink-0">
+          <h3 class="text-lg font-black">Revisar Entregas: {{ reviewingActivity?.title }}</h3>
+          <button @click="showReviewModal = false" class="text-white hover:text-amber-200 transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto flex-1 space-y-5">
+          <p v-if="reviewSubmissions.length === 0" class="text-sm text-gray-400 text-center py-10">
+            Aún no hay entregas para esta actividad.
+          </p>
+
+          <div v-for="sub in reviewSubmissions" :key="sub.apprenticeId" class="border border-gray-150 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <p class="font-bold text-gray-800 text-sm">
+                {{ sub.apprentice ? `${sub.apprentice.nombre} ${sub.apprentice.apellido}` : `Aprendiz #${sub.apprenticeId}` }}
+              </p>
+              <span :class="`text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${
+                sub.reviewStatus === 'pending' ? 'bg-amber-100 text-amber-700' : sub.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`">
+                {{ sub.reviewStatus === 'pending' ? 'Pendiente' : sub.passed ? 'Aprobado' : 'Desaprobado' }}
+              </span>
+            </div>
+
+            <template v-if="sub.reviewStatus === 'pending'">
+              <div v-for="a in sub.answers.filter(x => x.type === 'open')" :key="a.qIdx" class="bg-gray-50 p-3 rounded-xl space-y-2">
+                <p class="text-xs font-bold text-gray-600">{{ getReviewQuestionText(reviewingActivity, a.qIdx) }}</p>
+                <p class="text-xs text-gray-800 bg-white p-2 rounded-lg border border-gray-200">{{ a.text || '(sin respuesta)' }}</p>
+                <div class="flex gap-3">
+                  <label class="flex items-center gap-1.5 text-xs font-bold text-green-700 cursor-pointer">
+                    <input type="radio" :name="`open-${sub.apprenticeId}-${a.qIdx}`" :checked="reviewDecisions[sub.apprenticeId]?.[a.qIdx] === true" @change="reviewDecisions[sub.apprenticeId][a.qIdx] = true" />
+                    Correcta
+                  </label>
+                  <label class="flex items-center gap-1.5 text-xs font-bold text-red-600 cursor-pointer">
+                    <input type="radio" :name="`open-${sub.apprenticeId}-${a.qIdx}`" :checked="reviewDecisions[sub.apprenticeId]?.[a.qIdx] === false" @change="reviewDecisions[sub.apprenticeId][a.qIdx] = false" />
+                    Incorrecta
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex gap-2 pt-1">
+                <button @click="submitReview(sub, true)" class="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-bold transition-all">
+                  Aprobar
+                </button>
+                <button @click="submitReview(sub, false)" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-all">
+                  Desaprobar
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -752,7 +933,7 @@ const activities = ref([])
 // Per-apprentice submissions (only loaded for aprendiz role)
 const mySubmissions = ref([])
 
-function mapActivity(act, submittedIds = new Set(), isApprenticeMode = false) {
+function mapActivity(act, submissionsMap = new Map(), isApprenticeMode = false) {
   const tpl = templateOptions.find(t => t.id === act.template) || { label: 'Actividad', icon: 'task' }
   const courseId = courseOptions.indexOf(act.course) + 1
   
@@ -773,16 +954,18 @@ function mapActivity(act, submittedIds = new Set(), isApprenticeMode = false) {
     iconColor = '#8b5cf6'
   }
 
-  // For apprentices: use THEIR own submission status (submittedIds from their personal records)
+  // For apprentices: use THEIR own submission status (submissionsMap from their personal records)
   // For admins/instructors: use global hasStudentSubmissions flag
+  const mySubmission = isApprenticeMode ? submissionsMap.get(act.id) : null
   const isDone = isApprenticeMode
-    ? submittedIds.has(act.id)
+    ? Boolean(mySubmission)
     : act.hasStudentSubmissions
+  const isGrading = isDone && mySubmission?.reviewStatus === 'pending'
 
-  const state = isDone ? 'done' : 'pending'
-  const status = isDone ? 'Completada' : 'Pendiente'
-  const statusBg = isDone ? 'bg-green-100' : 'bg-orange-100'
-  const statusText = isDone ? 'text-green-700' : 'text-orange-700'
+  const state = isGrading ? 'grading' : isDone ? 'done' : 'pending'
+  const status = isGrading ? 'Calificando' : isDone ? 'Completada' : 'Pendiente'
+  const statusBg = isGrading ? 'bg-amber-100' : isDone ? 'bg-green-100' : 'bg-orange-100'
+  const statusText = isGrading ? 'text-amber-700' : isDone ? 'text-green-700' : 'text-orange-700'
 
   return {
     ...act,
@@ -806,21 +989,21 @@ async function fetchActivities() {
     const data = await response.json()
 
     const isApprenticeMode = !auth.isAdmin && !auth.isInstructor && Boolean(auth.user?.id)
-    let submittedIds = new Set()
+    let submissionsMap = new Map()
     if (isApprenticeMode) {
       try {
         const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${auth.user.id}`)
         if (subRes.ok) {
           const subs = await subRes.json()
           mySubmissions.value = subs
-          submittedIds = new Set(subs.map(s => s.activityId))
+          submissionsMap = new Map(subs.map(s => [s.activityId, s]))
         }
       } catch (e) {
         console.error('Error fetching my submissions:', e)
       }
     }
 
-    activities.value = data.map(act => mapActivity(act, submittedIds, isApprenticeMode))
+    activities.value = data.map(act => mapActivity(act, submissionsMap, isApprenticeMode))
   } catch (err) {
     console.error(err)
   }
@@ -869,7 +1052,7 @@ const form = ref({
   quizQuestion: '',
   quizCorrect: '',
   quizIncorrect: '',
-  quizQuestions: [{ question: '', options: [{ text: '', correct: true }, { text: '', correct: false }] }],
+  quizQuestions: [{ type: 'multiple', question: '', options: [{ text: '', correct: true }, { text: '', correct: false }], correct: true }],
   matchTerm: '',
   matchMeaning: '',
   listeningPhrase: '',
@@ -877,6 +1060,74 @@ const form = ref({
   crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
   layoutMode: 'automatic'
 })
+
+function setQuestionType(q, type) {
+  q.type = type
+  if (type === 'multiple' && !q.options) q.options = [{ text: '', correct: true }, { text: '', correct: false }]
+  if (type === 'truefalse' && q.correct === undefined) q.correct = true
+}
+
+// ── Revisión de preguntas abiertas (instructor) ──
+const showReviewModal = ref(false)
+const reviewingActivity = ref(null)
+const reviewSubmissions = ref([])
+const reviewDecisions = ref({})
+
+function getReviewQuestionText(act, qIdx) {
+  try {
+    const parsed = JSON.parse(act?.quizQuestion || '{}')
+    return parsed.questions?.[qIdx]?.question || `Pregunta ${qIdx + 1}`
+  } catch {
+    return `Pregunta ${qIdx + 1}`
+  }
+}
+
+async function openReviewModal(act) {
+  reviewingActivity.value = act
+  showReviewModal.value = true
+  reviewSubmissions.value = []
+  reviewDecisions.value = {}
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/activities/${act.id}/submissions`)
+    if (!res.ok) throw new Error('Error al obtener entregas.')
+    reviewSubmissions.value = await res.json()
+    reviewSubmissions.value.forEach(sub => {
+      reviewDecisions.value[sub.apprenticeId] = {}
+      sub.answers.forEach(a => {
+        if (a.type === 'open') reviewDecisions.value[sub.apprenticeId][a.qIdx] = a.correct === true
+      })
+    })
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({ type: 'error', title: 'Error', message: 'No se pudieron cargar las entregas.' })
+  }
+}
+
+async function submitReview(sub, approved) {
+  const updatedAnswers = sub.answers.map(a => {
+    if (a.type !== 'open') return a
+    return { ...a, correct: !!reviewDecisions.value[sub.apprenticeId]?.[a.qIdx] }
+  })
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/activities/${reviewingActivity.value.id}/submissions/${sub.apprenticeId}/review`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers: updatedAnswers, approved })
+    })
+    if (!res.ok) throw new Error('Error al revisar la entrega.')
+    sub.reviewStatus = 'reviewed'
+    sub.passed = approved
+    sub.answers = updatedAnswers
+    notificationStore.notify({
+      type: approved ? 'success' : 'warning',
+      title: approved ? 'Entrega aprobada' : 'Entrega desaprobada',
+      message: `Revisión de ${sub.apprentice ? sub.apprentice.nombre : 'aprendiz'} guardada.`
+    })
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({ type: 'error', title: 'Error', message: 'No se pudo guardar la revisión.' })
+  }
+}
 
 // Playable Demo inside Modal States
 const previewSelectedAnswer = ref({})
@@ -1350,7 +1601,7 @@ function openNewActivityModal() {
     quizQuestion: '¿Qué mide un esfigmomanómetro?',
     quizCorrect: 'Presión arterial',
     quizIncorrect: 'Ritmo cardíaco',
-    quizQuestions: [{ question: '¿Qué mide un esfigmomanómetro?', options: [{ text: 'Presión arterial', correct: true }, { text: 'Ritmo cardíaco', correct: false }] }],
+    quizQuestions: [{ type: 'multiple', question: '¿Qué mide un esfigmomanómetro?', options: [{ text: 'Presión arterial', correct: true }, { text: 'Ritmo cardíaco', correct: false }], correct: true }],
     matchTerm: 'Intravenous',
     matchMeaning: 'Administración en vena',
     listeningPhrase: 'The patient requires immediate attention',
@@ -1398,24 +1649,26 @@ function openEditActivityModal(act) {
     }
   }
 
-  let quizQuestions = [{ question: '¿Qué mide un esfigmomanómetro?', options: [{ text: 'Presión arterial', correct: true }, { text: 'Ritmo cardíaco', correct: false }] }]
+  let quizQuestions = [{ type: 'multiple', question: '¿Qué mide un esfigmomanómetro?', options: [{ text: 'Presión arterial', correct: true }, { text: 'Ritmo cardíaco', correct: false }], correct: true }]
   if (act.template === 'quiz' || act.template === 'preguntas') {
     const qStr = act.quizQuestion || ''
     if (qStr.startsWith('{')) {
       try {
         const parsed = JSON.parse(qStr)
         if (parsed && Array.isArray(parsed.questions) && parsed.questions.length) {
-          // Compatibilidad con formato anterior { question, correct, incorrect } sin options[]
-          quizQuestions = parsed.questions.map(q => Array.isArray(q.options)
-            ? q
-            : { question: q.question, options: [{ text: q.correct || '', correct: true }, { text: q.incorrect || '', correct: false }] }
-          )
+          // Compatibilidad con formatos anteriores { question, correct, incorrect } sin options[]/type
+          quizQuestions = parsed.questions.map(q => {
+            if (q.type === 'truefalse' || q.type === 'open') return q
+            if (Array.isArray(q.options)) return { type: 'multiple', ...q }
+            return { type: 'multiple', question: q.question, options: [{ text: q.correct || '', correct: true }, { text: q.incorrect || '', correct: false }] }
+          })
         }
       } catch (e) {
         console.error('Error parsing quiz JSON on edit:', e)
       }
     } else {
       quizQuestions = [{
+        type: 'multiple',
         question: qStr || '¿Qué mide un esfigmomanómetro?',
         options: [{ text: act.quizCorrect || 'Presión arterial', correct: true }, { text: act.quizIncorrect || 'Ritmo cardíaco', correct: false }]
       }]
@@ -1482,13 +1735,22 @@ async function saveActivity() {
   let quizQuestion = form.value.quizQuestion
   if (form.value.template === 'quiz' || form.value.template === 'preguntas') {
     const validQuestions = form.value.quizQuestions
-      .map(q => ({ question: q.question.trim(), options: q.options.filter(o => o.text.trim()) }))
-      .filter(q => q.question && q.options.length >= 2 && q.options.some(o => o.correct))
+      .map(q => {
+        const question = q.question.trim()
+        if (q.type === 'truefalse') return { type: 'truefalse', question, correct: q.correct }
+        if (q.type === 'open') return { type: 'open', question }
+        return { type: 'multiple', question, options: (q.options || []).filter(o => o.text.trim()) }
+      })
+      .filter(q => {
+        if (!q.question) return false
+        if (q.type === 'multiple') return q.options.length >= 2 && q.options.some(o => o.correct)
+        return true
+      })
     if (validQuestions.length === 0) {
       notificationStore.notify({
         type: 'error',
         title: 'Quiz Inválido',
-        message: 'Completa al menos una pregunta con 2+ opciones y marca cuál es la correcta.'
+        message: 'Completa al menos una pregunta válida (texto, y si es Selección Múltiple, 2+ opciones con una correcta marcada).'
       })
       return
     }
@@ -1578,8 +1840,10 @@ function validateDemoSubmission() {
   if (form.value.template === 'quiz' || form.value.template === 'preguntas') {
     const total = form.value.quizQuestions.length
     const answered = form.value.quizQuestions.every((q, idx) => {
-      const selIdx = previewSelectedAnswer.value[idx]
-      return selIdx !== undefined && q.options[selIdx] && q.options[selIdx].correct
+      const sel = previewSelectedAnswer.value[idx]
+      if (q.type === 'truefalse') return sel === q.correct
+      if (q.type === 'open') return typeof sel === 'string' && sel.trim().length > 0
+      return sel !== undefined && q.options[sel] && q.options[sel].correct
     })
     demoFeedbackSuccess.value = total > 0 && answered
   } else if (form.value.template === 'sopa') {

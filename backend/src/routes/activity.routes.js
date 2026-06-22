@@ -4,6 +4,8 @@ import {
   getMySubmissions,
   getActivityById,
   submitActivity,
+  getActivitySubmissions,
+  reviewSubmission,
   createActivity,
   updateActivity,
   deleteActivity
@@ -16,6 +18,8 @@ router.get('/my-submissions', getMySubmissions)
 router.get('/:id', getActivityById)
 router.post('/', createActivity)
 router.post('/:id/submit', submitActivity)
+router.get('/:id/submissions', getActivitySubmissions)
+router.patch('/:id/submissions/:apprenticeId/review', reviewSubmission)
 router.put('/:id', updateActivity)
 router.delete('/:id', deleteActivity)
 
