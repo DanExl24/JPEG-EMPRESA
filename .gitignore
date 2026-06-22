@@ -26,3 +26,6 @@ dist-ssr
 backend/prisma/db.sqlite
 
 documentos/
+
+# Deprecated SQLite files
+backend/deprecated/

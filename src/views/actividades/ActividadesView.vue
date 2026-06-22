@@ -316,18 +316,69 @@
 
               <!-- Quizzes / Preguntas Fields -->
               <div v-if="form.template === 'quiz' || form.template === 'preguntas'" class="space-y-3">
-                <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Pregunta</label>
-                  <input type="text" v-model="form.quizQuestion" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none" placeholder="Ej. What is the standard adult heart rate?" />
+                <div class="flex justify-between items-center">
+                  <label class="text-xs font-bold text-gray-500">Preguntas del Quiz</label>
+                  <button
+                    @click="form.quizQuestions.unshift({ question: '', options: [{ text: '', correct: true }, { text: '', correct: false }] })"
+                    type="button"
+                    class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-xs font-bold">add</span>
+                    Agregar Pregunta
+                  </button>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+
+                <div v-for="(q, idx) in form.quizQuestions" :key="idx" class="bg-white p-4 rounded-2xl border border-gray-150 space-y-3 relative">
+                  <button
+                    v-if="form.quizQuestions.length > 1"
+                    @click="form.quizQuestions.splice(idx, 1)"
+                    type="button"
+                    class="absolute top-2.5 right-2.5 text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+
                   <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500">Opción Correcta</label>
-                    <input type="text" v-model="form.quizCorrect" class="w-full px-3 py-2 border border-green-200 bg-green-50/20 rounded-xl text-xs font-semibold focus:outline-none" />
+                    <label class="text-[9px] font-bold text-gray-400">Pregunta {{ idx + 1 }}</label>
+                    <input type="text" v-model="q.question" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none" placeholder="Ej. What is the standard adult heart rate?" />
                   </div>
-                  <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500">Opción Incorrecta</label>
-                    <input type="text" v-model="form.quizIncorrect" class="w-full px-3 py-2 border border-red-200 bg-red-50/20 rounded-xl text-xs font-semibold focus:outline-none" />
+
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <label class="text-[9px] font-bold text-gray-400">Opciones de Respuesta (marca la correcta)</label>
+                      <button
+                        @click="q.options.push({ text: '', correct: false })"
+                        type="button"
+                        class="px-2 py-0.5 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[9px] rounded-lg transition-all flex items-center gap-0.5"
+                      >
+                        <span class="material-symbols-outlined text-[10px] font-bold">add</span>
+                        Opción
+                      </button>
+                    </div>
+
+                    <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        :name="`quiz-correct-${idx}`"
+                        :checked="opt.correct"
+                        @change="q.options.forEach((o, i) => o.correct = i === oIdx)"
+                        class="shrink-0 text-green-600 focus:ring-green-500"
+                      />
+                      <input
+                        type="text"
+                        v-model="opt.text"
+                        :class="`flex-1 px-3 py-1.5 border rounded-xl text-xs font-semibold focus:outline-none ${opt.correct ? 'border-green-300 bg-green-50/20' : 'border-gray-200'}`"
+                        :placeholder="`Opción ${oIdx + 1}`"
+                      />
+                      <button
+                        v-if="q.options.length > 2"
+                        @click="q.options.splice(oIdx, 1)"
+                        type="button"
+                        class="shrink-0 text-red-400 hover:text-red-600"
+                      >
+                        <span class="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -523,25 +574,21 @@
               </div>
 
               <!-- Playable Quiz / Preguntas Demo -->
-              <div v-if="form.template === 'quiz' || form.template === 'preguntas'" class="space-y-4">
-                <div class="text-sm font-bold text-gray-800">{{ form.quizQuestion || '¿Pregunta del Quiz?' }}</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button 
-                    @click="previewSelectedAnswer = 'correct'"
-                    :class="`px-4 py-3 border rounded-xl text-xs font-bold text-left transition-all ${
-                      previewSelectedAnswer === 'correct' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                    }`"
-                  >
-                    {{ form.quizCorrect || 'Opción Correcta' }}
-                  </button>
-                  <button 
-                    @click="previewSelectedAnswer = 'incorrect'"
-                    :class="`px-4 py-3 border rounded-xl text-xs font-bold text-left transition-all ${
-                      previewSelectedAnswer === 'incorrect' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                    }`"
-                  >
-                    {{ form.quizIncorrect || 'Opción Incorrecta' }}
-                  </button>
+              <div v-if="form.template === 'quiz' || form.template === 'preguntas'" class="space-y-5">
+                <div v-for="(q, idx) in form.quizQuestions" :key="idx" class="space-y-2">
+                  <div class="text-sm font-bold text-gray-800">{{ idx + 1 }}. {{ q.question || '¿Pregunta del Quiz?' }}</div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      v-for="(opt, oIdx) in q.options"
+                      :key="oIdx"
+                      @click="previewSelectedAnswer[idx] = oIdx"
+                      :class="`px-4 py-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                        previewSelectedAnswer[idx] === oIdx ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`"
+                    >
+                      {{ opt.text || `Opción ${oIdx + 1}` }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -822,6 +869,7 @@ const form = ref({
   quizQuestion: '',
   quizCorrect: '',
   quizIncorrect: '',
+  quizQuestions: [{ question: '', options: [{ text: '', correct: true }, { text: '', correct: false }] }],
   matchTerm: '',
   matchMeaning: '',
   listeningPhrase: '',
@@ -831,7 +879,7 @@ const form = ref({
 })
 
 // Playable Demo inside Modal States
-const previewSelectedAnswer = ref(null)
+const previewSelectedAnswer = ref({})
 const previewTypedPhrase = ref('')
 const demoFeedbackSuccess = ref(null)
 
@@ -1302,6 +1350,7 @@ function openNewActivityModal() {
     quizQuestion: '¿Qué mide un esfigmomanómetro?',
     quizCorrect: 'Presión arterial',
     quizIncorrect: 'Ritmo cardíaco',
+    quizQuestions: [{ question: '¿Qué mide un esfigmomanómetro?', options: [{ text: 'Presión arterial', correct: true }, { text: 'Ritmo cardíaco', correct: false }] }],
     matchTerm: 'Intravenous',
     matchMeaning: 'Administración en vena',
     listeningPhrase: 'The patient requires immediate attention',
@@ -1349,6 +1398,30 @@ function openEditActivityModal(act) {
     }
   }
 
+  let quizQuestions = [{ question: '¿Qué mide un esfigmomanómetro?', options: [{ text: 'Presión arterial', correct: true }, { text: 'Ritmo cardíaco', correct: false }] }]
+  if (act.template === 'quiz' || act.template === 'preguntas') {
+    const qStr = act.quizQuestion || ''
+    if (qStr.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(qStr)
+        if (parsed && Array.isArray(parsed.questions) && parsed.questions.length) {
+          // Compatibilidad con formato anterior { question, correct, incorrect } sin options[]
+          quizQuestions = parsed.questions.map(q => Array.isArray(q.options)
+            ? q
+            : { question: q.question, options: [{ text: q.correct || '', correct: true }, { text: q.incorrect || '', correct: false }] }
+          )
+        }
+      } catch (e) {
+        console.error('Error parsing quiz JSON on edit:', e)
+      }
+    } else {
+      quizQuestions = [{
+        question: qStr || '¿Qué mide un esfigmomanómetro?',
+        options: [{ text: act.quizCorrect || 'Presión arterial', correct: true }, { text: act.quizIncorrect || 'Ritmo cardíaco', correct: false }]
+      }]
+    }
+  }
+
   form.value = {
     title: act.title,
     course: act.course,
@@ -1364,6 +1437,7 @@ function openEditActivityModal(act) {
     quizQuestion: act.quizQuestion || '¿Qué mide un esfigmomanómetro?',
     quizCorrect: act.quizCorrect || 'Presión arterial',
     quizIncorrect: act.quizIncorrect || 'Ritmo cardíaco',
+    quizQuestions,
     matchTerm: act.matchTerm || 'Intravenous',
     matchMeaning: act.matchMeaning || 'Administración en vena',
     listeningPhrase: act.listeningPhrase || 'The patient requires immediate attention',
@@ -1405,6 +1479,22 @@ async function saveActivity() {
     crossword1Word = validWords.map(w => w.word).join(',')
   }
 
+  let quizQuestion = form.value.quizQuestion
+  if (form.value.template === 'quiz' || form.value.template === 'preguntas') {
+    const validQuestions = form.value.quizQuestions
+      .map(q => ({ question: q.question.trim(), options: q.options.filter(o => o.text.trim()) }))
+      .filter(q => q.question && q.options.length >= 2 && q.options.some(o => o.correct))
+    if (validQuestions.length === 0) {
+      notificationStore.notify({
+        type: 'error',
+        title: 'Quiz Inválido',
+        message: 'Completa al menos una pregunta con 2+ opciones y marca cuál es la correcta.'
+      })
+      return
+    }
+    quizQuestion = JSON.stringify({ questions: validQuestions })
+  }
+
   const payload = {
     title: form.value.title,
     course: form.value.course,
@@ -1417,7 +1507,7 @@ async function saveActivity() {
     sopaWords: form.value.sopaWords,
     crossword1Clue,
     crossword1Word,
-    quizQuestion: form.value.quizQuestion,
+    quizQuestion,
     quizCorrect: form.value.quizCorrect,
     quizIncorrect: form.value.quizIncorrect,
     matchTerm: form.value.matchTerm,
@@ -1486,11 +1576,12 @@ async function deleteActivity(id) {
 // Demo Preview validation
 function validateDemoSubmission() {
   if (form.value.template === 'quiz' || form.value.template === 'preguntas') {
-    if (previewSelectedAnswer.value === 'correct') {
-      demoFeedbackSuccess.value = true
-    } else {
-      demoFeedbackSuccess.value = false
-    }
+    const total = form.value.quizQuestions.length
+    const answered = form.value.quizQuestions.every((q, idx) => {
+      const selIdx = previewSelectedAnswer.value[idx]
+      return selIdx !== undefined && q.options[selIdx] && q.options[selIdx].correct
+    })
+    demoFeedbackSuccess.value = total > 0 && answered
   } else if (form.value.template === 'sopa') {
     const words = sopaWordsList.value
     if (words.length > 0 && words.every(w => foundWords.value.includes(w))) {
@@ -1543,7 +1634,7 @@ function validateDemoSubmission() {
 }
 
 function resetDemo() {
-  previewSelectedAnswer.value = null
+  previewSelectedAnswer.value = {}
   previewTypedPhrase.value = ''
   demoFeedbackSuccess.value = null
   foundWords.value = []
