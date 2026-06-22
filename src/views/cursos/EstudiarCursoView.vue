@@ -795,50 +795,95 @@
 
               <!-- 2. Playable Crosswords (crucigrama) -->
               <div v-if="activeDbActivity.template === 'crucigrama'" class="space-y-6">
-                <!-- Horizontales -->
-                <div v-if="crosswordWords.some(w => w.orientation === 'horizontal')" class="space-y-4">
-                  <h5 class="text-xs font-bold text-[#006688] uppercase tracking-wider flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm font-bold">swap_horiz</span>
-                    Palabras Horizontales
-                  </h5>
-                  <div v-for="(w, wIdx) in crosswordWords" :key="'h-' + wIdx">
-                    <div v-if="w.orientation === 'horizontal'" class="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                      <p class="text-xs font-bold text-gray-700">Pista: <span class="text-gray-600 font-semibold">{{ w.clue }}</span> <span class="text-gray-400 font-medium">({{ w.word.length }} letras)</span></p>
-                      <div class="flex gap-1">
-                        <input 
-                          v-for="(char, idx) in w.word.length" 
-                          :key="idx" 
-                          type="text" 
-                          maxlength="1" 
-                          v-model="activeDbCrosswordInputs[wIdx][idx]"
-                          class="w-7 h-7 text-center border-2 border-gray-250 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
-                        />
+                <!-- If layout generated successfully -->
+                <div v-if="crosswordLayout && crosswordLayout.success" class="space-y-6">
+                  <!-- Visual Grid -->
+                  <div 
+                    class="grid gap-1 p-4 bg-gray-150 rounded-2xl border border-gray-200 overflow-auto mx-auto select-none"
+                    :style="{
+                      gridTemplateColumns: `repeat(${crosswordLayout.width}, 2.2rem)`,
+                      gridTemplateRows: `repeat(${crosswordLayout.height}, 2.2rem)`,
+                      width: 'fit-content',
+                    }"
+                  >
+                    <template v-for="y in crosswordLayout.height" :key="'row-' + y">
+                      <template v-for="x in crosswordLayout.width" :key="'cell-' + (x-1) + '-' + (y-1)">
+                        <div 
+                          v-if="crosswordLayout.grid[(x-1) + ',' + (y-1)]" 
+                          class="relative w-9 h-9 border border-gray-300 rounded-lg bg-white flex items-center justify-center shadow-xs focus-within:border-[#006688] focus-within:ring-2 focus-within:ring-[#006688]/20"
+                        >
+                          <span 
+                            v-if="getWordNumberAt(x-1, y-1)" 
+                            class="absolute top-0.5 left-1 text-[8px] font-black text-[#006688] select-none pointer-events-none"
+                          >
+                            {{ getWordNumberAt(x-1, y-1) }}
+                          </span>
+                          <input 
+                            type="text" 
+                            maxlength="1" 
+                            v-model="activeDbGridInputs[(x-1) + ',' + (y-1)]"
+                            @input="onGridInput($event, x-1, y-1)"
+                            @keydown="onGridKeyDown($event, x-1, y-1)"
+                            @focus="onCellFocus(x-1, y-1)"
+                            class="w-full h-full text-center border-none bg-transparent focus:outline-none font-black uppercase text-sm text-gray-800"
+                            :id="`active-cell-input-${x-1}-${y-1}`"
+                          />
+                        </div>
+                        <div 
+                          v-else 
+                          class="w-9 h-9 rounded-lg bg-gray-200 border border-gray-250 select-none"
+                        ></div>
+                      </template>
+                    </template>
+                  </div>
+
+                  <!-- Clues columns -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 border-t pt-4 border-gray-100">
+                    <!-- Horizontales -->
+                    <div class="space-y-2">
+                      <h5 class="text-xs font-bold text-[#006688] uppercase tracking-wider flex items-center gap-1.5 border-b pb-1.5 border-gray-100">
+                        <span class="material-symbols-outlined text-sm font-bold">swap_horiz</span>
+                        Pistas Horizontales
+                      </h5>
+                      <div class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+                        <div 
+                          v-for="w in crosswordLayout.words.filter(word => word.orientation === 'horizontal')" 
+                          :key="w.id"
+                          @click="focusWordStart(w)"
+                          class="text-xs text-gray-700 hover:text-[#006688] cursor-pointer hover:bg-[#006688]/5 p-1.5 rounded-lg transition-all flex items-center gap-1"
+                        >
+                          <span class="font-bold text-[#006688]">{{ crosswordWordNumbers[w.id] }}.</span>
+                          <span>{{ w.clue }}</span>
+                          <span class="text-gray-400 font-medium ml-auto">({{ w.word.length }} letras)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Verticales -->
+                    <div class="space-y-2">
+                      <h5 class="text-xs font-bold text-orange-650 uppercase tracking-wider flex items-center gap-1.5 border-b pb-1.5 border-gray-100">
+                        <span class="material-symbols-outlined text-sm font-bold">swap_vert</span>
+                        Pistas Verticales
+                      </h5>
+                      <div class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+                        <div 
+                          v-for="w in crosswordLayout.words.filter(word => word.orientation === 'vertical')" 
+                          :key="w.id"
+                          @click="focusWordStart(w)"
+                          class="text-xs text-gray-700 hover:text-orange-600 cursor-pointer hover:bg-orange-50 p-1.5 rounded-lg transition-all flex items-center gap-1"
+                        >
+                          <span class="font-bold text-orange-600">{{ crosswordWordNumbers[w.id] }}.</span>
+                          <span>{{ w.clue }}</span>
+                          <span class="text-gray-400 font-medium ml-auto">({{ w.word.length }} letras)</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <!-- Verticales -->
-                <div v-if="crosswordWords.some(w => w.orientation === 'vertical')" class="space-y-4">
-                  <h5 class="text-xs font-bold text-orange-650 uppercase tracking-wider flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm font-bold">swap_vert</span>
-                    Palabras Verticales
-                  </h5>
-                  <div v-for="(w, wIdx) in crosswordWords" :key="'v-' + wIdx">
-                    <div v-if="w.orientation === 'vertical'" class="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                      <p class="text-xs font-bold text-gray-700">Pista: <span class="text-gray-600 font-semibold">{{ w.clue }}</span> <span class="text-gray-400 font-medium">({{ w.word.length }} letras)</span></p>
-                      <div class="flex gap-1">
-                        <input 
-                          v-for="(char, idx) in w.word.length" 
-                          :key="idx" 
-                          type="text" 
-                          maxlength="1" 
-                          v-model="activeDbCrosswordInputs[wIdx][idx]"
-                          class="w-7 h-7 text-center border-2 border-gray-250 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <!-- If layout failed to generate -->
+                <div v-else class="text-center py-6 text-xs text-red-500 font-bold bg-red-50 rounded-2xl border border-red-200">
+                  <span class="material-symbols-outlined text-2xl block mb-1">warning</span>
+                  Error al cargar el crucigrama. Por favor contacta al instructor.
                 </div>
               </div>
 
@@ -989,6 +1034,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { generateCrossword, reconstructLayout } from '../../utils/crosswordGenerator'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -1057,7 +1103,8 @@ const activeDbActivity = ref(null)
 const activeDbSelectedAnswer = ref(null)
 const activeDbTypedPhrase = ref('')
 const activeDbFeedbackSuccess = ref(null)
-const activeDbCrosswordInputs = ref([])
+const activeDbGridInputs = ref({})
+const activeDbDirection = ref('horizontal')
 const crosswordWords = computed(() => {
   if (!activeDbActivity.value) return []
   const clueStr = activeDbActivity.value.crossword1Clue || ''
@@ -1076,6 +1123,123 @@ const crosswordWords = computed(() => {
     }
   ]
 })
+
+const crosswordLayout = computed(() => {
+  const words = crosswordWords.value
+  if (!words || words.length === 0) return null
+
+  const hasCoordinates = words.every(w => typeof w.x === 'number' && typeof w.y === 'number')
+  if (hasCoordinates) {
+    return reconstructLayout(words)
+  } else {
+    const res = generateCrossword(words)
+    return res.success ? res : null
+  }
+})
+
+watch(crosswordLayout, (newLayout) => {
+  const newInputs = {}
+  if (newLayout && newLayout.success && newLayout.grid) {
+    Object.keys(newLayout.grid).forEach(key => {
+      newInputs[key] = activeDbGridInputs.value[key] || ''
+    })
+  }
+  activeDbGridInputs.value = newInputs
+}, { deep: true, immediate: true })
+
+const crosswordWordNumbers = computed(() => {
+  const layout = crosswordLayout.value
+  if (!layout || !layout.success || !layout.words) return {}
+
+  const sorted = [...layout.words].sort((a, b) => {
+    if (a.y !== b.y) return a.y - b.y
+    return a.x - b.x
+  })
+
+  let currentNum = 1
+  const numbers = {}
+  const startCellNums = {}
+
+  sorted.forEach(w => {
+    const key = `${w.x},${w.y}`
+    if (startCellNums[key]) {
+      numbers[w.id] = startCellNums[key]
+    } else {
+      numbers[w.id] = currentNum
+      startCellNums[key] = currentNum
+      currentNum++
+    }
+  })
+
+  return numbers
+})
+
+function getWordNumberAt(x, y) {
+  if (!crosswordLayout.value || !crosswordLayout.value.words) return null
+  const w = crosswordLayout.value.words.find(word => word.x === x && word.y === y)
+  return w ? crosswordWordNumbers.value[w.id] : null
+}
+
+function onCellFocus(x, y) {
+  if (!crosswordLayout.value || !crosswordLayout.value.grid) return
+  const cell = crosswordLayout.value.grid[`${x},${y}`]
+  if (cell && cell.wordOrientations.length === 1) {
+    activeDbDirection.value = cell.wordOrientations[0]
+  }
+}
+
+function onGridInput(event, x, y) {
+  const val = event.target.value
+  if (!val) return
+
+  activeDbGridInputs.value[`${x},${y}`] = val.toUpperCase()
+
+  const nextX = x + (activeDbDirection.value === 'horizontal' ? 1 : 0)
+  const nextY = y + (activeDbDirection.value === 'vertical' ? 1 : 0)
+  
+  const nextInput = document.getElementById(`active-cell-input-${nextX}-${nextY}`)
+  if (nextInput) {
+    nextInput.focus()
+    setTimeout(() => { nextInput.select() }, 10)
+  }
+}
+
+function onGridKeyDown(event, x, y) {
+  if (event.key === 'Backspace') {
+    const val = activeDbGridInputs.value[`${x},${y}`]
+    if (!val || val === '') {
+      const prevX = x - (activeDbDirection.value === 'horizontal' ? 1 : 0)
+      const prevY = y - (activeDbDirection.value === 'vertical' ? 1 : 0)
+      const prevInput = document.getElementById(`active-cell-input-${prevX}-${prevY}`)
+      if (prevInput) {
+        prevInput.focus()
+        activeDbGridInputs.value[`${prevX},${prevY}`] = ''
+        event.preventDefault()
+      }
+    }
+  } else if (event.key === 'ArrowRight') {
+    const nextInput = document.getElementById(`active-cell-input-${x+1}-${y}`)
+    if (nextInput) { nextInput.focus(); event.preventDefault() }
+  } else if (event.key === 'ArrowLeft') {
+    const prevInput = document.getElementById(`active-cell-input-${x-1}-${y}`)
+    if (prevInput) { prevInput.focus(); event.preventDefault() }
+  } else if (event.key === 'ArrowUp') {
+    const upInput = document.getElementById(`active-cell-input-${x}-${y-1}`)
+    if (upInput) { upInput.focus(); event.preventDefault() }
+  } else if (event.key === 'ArrowDown') {
+    const downInput = document.getElementById(`active-cell-input-${x}-${y+1}`)
+    if (downInput) { downInput.focus(); event.preventDefault() }
+  }
+}
+
+function focusWordStart(word) {
+  activeDbDirection.value = word.orientation
+  const input = document.getElementById(`active-cell-input-${word.x}-${word.y}`)
+  if (input) {
+    input.focus()
+    setTimeout(() => { input.select() }, 10)
+  }
+}
 const activeDbSelectedTerm = ref('')
 const activeDbSelectedMeaning = ref('')
 const activeDbMatchedPairs = ref([])
@@ -1220,7 +1384,12 @@ function resetActiveDbDemo() {
   activeDbActivitySelectedLetters.value = []
   activeDbSopaSelectionHint.value = null
   if (activeDbSopaHintTimer) { clearTimeout(activeDbSopaHintTimer); activeDbSopaHintTimer = null }
-  activeDbCrosswordInputs.value = crosswordWords.value.map(w => Array(w.word.length).fill(''))
+  activeDbGridInputs.value = {}
+  if (crosswordLayout.value && crosswordLayout.value.success) {
+    Object.keys(crosswordLayout.value.grid).forEach(key => {
+      activeDbGridInputs.value[key] = ''
+    })
+  }
   activeDbSelectedTerm.value = ''
   activeDbSelectedMeaning.value = ''
   activeDbMatchedPairs.value = []
@@ -1292,11 +1461,21 @@ function validateActiveDbSubmission() {
       success = true
     }
   } else if (act.template === 'crucigrama') {
-    success = crosswordWords.value.every((w, wIdx) => {
-      const enteredWord = (activeDbCrosswordInputs.value[wIdx] || []).join('').trim().toLowerCase()
-      const correctWord = w.word.trim().toLowerCase()
-      return enteredWord === correctWord
-    })
+    const layout = crosswordLayout.value
+    if (!layout || !layout.success) {
+      success = false
+    } else {
+      let allCorrect = true
+      for (const [key, cell] of Object.entries(layout.grid)) {
+        const entered = (activeDbGridInputs.value[key] || '').trim().toUpperCase()
+        const correct = cell.char.toUpperCase()
+        if (entered !== correct) {
+          allCorrect = false
+          break
+        }
+      }
+      success = allCorrect
+    }
   } else if (act.template === 'match') {
     if (activeDbMatchedPairs.value.includes(act.matchTerm)) {
       success = true

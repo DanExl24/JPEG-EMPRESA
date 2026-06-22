@@ -338,6 +338,21 @@
                           Agregar Palabra
                         </button>
                       </div>
+
+                      <!-- Layout Mode Selector -->
+                      <div class="bg-white p-3 rounded-2xl border border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-gray-660">Modo de Orientación:</span>
+                        <div class="flex gap-4">
+                          <label class="flex items-center gap-1.5 text-xs font-bold text-gray-660 cursor-pointer">
+                            <input type="radio" value="automatic" v-model="newActivity.layoutMode" class="text-[#006688] focus:ring-[#006688]" />
+                            Automático (Recomendado)
+                          </label>
+                          <label class="flex items-center gap-1.5 text-xs font-bold text-gray-660 cursor-pointer">
+                            <input type="radio" value="manual" v-model="newActivity.layoutMode" class="text-[#006688] focus:ring-[#006688]" />
+                            Manual (Eliges la dirección)
+                          </label>
+                        </div>
+                      </div>
                       
                       <div v-for="(item, idx) in newActivity.crosswordWords" :key="idx" class="bg-gray-50/50 p-3.5 rounded-2xl border border-gray-150 space-y-3 relative">
                         <button 
@@ -352,7 +367,8 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div class="space-y-1">
                             <label class="text-[9px] font-bold text-gray-400">Palabra</label>
-                            <input type="text" v-model="item.word" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold uppercase focus:outline-none focus:border-[#006688]" placeholder="Ej. STETHOSCOPE" />
+                            <input type="text" v-model="item.word" @input="sanitizeWordInput(item)" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold uppercase focus:outline-none focus:border-[#006688]" placeholder="Ej. STETHOSCOPE" />
+                            <p class="text-[9px] text-gray-400 font-medium mt-0.5">Solo letras. Máx. 20 caracteres.</p>
                           </div>
                           
                           <div class="space-y-1 sm:col-span-2">
@@ -361,17 +377,37 @@
                           </div>
                         </div>
                         
-                        <div class="flex items-center gap-4 pt-1">
-                          <span class="text-[9px] font-bold text-gray-400">Dirección:</span>
-                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 cursor-pointer">
+                        <div v-if="newActivity.layoutMode === 'manual'" class="flex items-center gap-4 pt-1">
+                          <span class="text-[9px] font-bold text-gray-400">Orientación:</span>
+                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-650 cursor-pointer">
                             <input type="radio" :name="'orientation-' + idx" value="horizontal" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
                             Horizontal
                           </label>
-                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 cursor-pointer">
+                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-650 cursor-pointer">
                             <input type="radio" :name="'orientation-' + idx" value="vertical" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
                             Vertical
                           </label>
                         </div>
+                        <div v-else class="flex items-center gap-2 pt-1">
+                          <span class="text-[9px] font-bold text-gray-400">Dirección:</span>
+                          <span :class="`text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded ${getCalculatedInlineOrientationBadge(idx).bg}`">
+                            {{ getCalculatedInlineOrientationBadge(idx).label }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Warning Banner -->
+                      <div v-if="inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())" class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-xs space-y-1 mt-2">
+                        <div class="flex items-center gap-1.5 font-bold">
+                          <span class="material-symbols-outlined text-sm">warning</span>
+                          <span>El crucigrama no se puede conectar</span>
+                        </div>
+                        <p v-if="inlineCrosswordLayout.reason === 'isolated'">
+                          La palabra <strong class="uppercase">"{{ inlineCrosswordLayout.errorWord }}"</strong> no comparte ninguna vocal o consonante con las demás palabras. Modifícala o añade palabras intermedias para poder conectarlas.
+                        </p>
+                        <p v-else>
+                          Las palabras no pueden formar un crucigrama cruzado válido con las combinaciones actuales. Modifica alguna palabra o añade letras en común.
+                        </p>
                       </div>
                     </div>
 
@@ -416,7 +452,18 @@
 
                   <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
                     <button @click="resetNewActivityForm" type="button" class="px-3 py-1.5 border border-gray-200 text-gray-600 font-bold text-[10px] rounded-lg transition-all">Cancelar</button>
-                    <button @click="saveNewActivity" type="button" class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-[10px] rounded-lg shadow transition-all">Guardar Actividad</button>
+                    <button 
+                      @click="saveNewActivity" 
+                      type="button" 
+                      :disabled="newActivity.template === 'crucigrama' && inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())"
+                      :class="`px-3.5 py-1.5 text-white font-bold text-[10px] rounded-lg shadow transition-all ${
+                        newActivity.template === 'crucigrama' && inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none border-gray-300'
+                          : 'bg-[#006688] hover:bg-[#004e69]'
+                      }`"
+                    >
+                      Guardar Actividad
+                    </button>
                   </div>
                 </div>
               </div>
@@ -441,8 +488,11 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { generateCrossword } from '../../utils/crosswordGenerator'
+import { useNotificationStore } from '../../stores/notification'
 
 const auth = useAuthStore()
+const notificationStore = useNotificationStore()
 const activeFilter = ref('Todos')
 const filters = ['Todos', 'En Progreso', 'Completados', 'Nuevos']
 
@@ -463,7 +513,8 @@ const newActivity = ref({
   matchMeaning: '',
   listeningPhrase: '',
   pronouncePhrase: '',
-  crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }]
+  crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
+  layoutMode: 'automatic'
 })
 
 const allowedTemplatesForCurrentPhase = computed(() => {
@@ -500,6 +551,39 @@ watch(activeModalPhase, (newPhase) => {
     newActivity.value.template = allowed[0].value
   }
 })
+
+const inlineCrosswordLayout = computed(() => {
+  if (newActivity.value.template !== 'crucigrama') return null
+  const validWords = newActivity.value.crosswordWords.filter(w => w.word.trim() && w.clue.trim())
+  if (validWords.length === 0) return { success: true, words: [], grid: {}, width: 0, height: 0 }
+  return generateCrossword(validWords, newActivity.value.layoutMode)
+})
+
+function getCalculatedInlineOrientationBadge(idx) {
+  const layout = inlineCrosswordLayout.value
+  if (!layout) return { label: 'Incompleta', bg: 'bg-gray-100 text-gray-500' }
+  
+  const wObj = newActivity.value.crosswordWords[idx]
+  if (!wObj || !wObj.word.trim()) {
+    return { label: 'Incompleta', bg: 'bg-gray-100 text-gray-500' }
+  }
+
+  if (!layout.success) {
+    if (layout.reason === 'isolated' && layout.errorWord === wObj.word.trim().toUpperCase()) {
+      return { label: 'Sin conexión', bg: 'bg-red-100 text-red-700' }
+    }
+    return { label: 'Pendiente', bg: 'bg-amber-100 text-amber-700' }
+  }
+  
+  const w = layout.words.find(word => word.id === idx)
+  if (w && w.orientation) {
+    return {
+      label: w.orientation === 'horizontal' ? 'Horizontal' : 'Vertical',
+      bg: w.orientation === 'horizontal' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+    }
+  }
+  return { label: 'Incompleta', bg: 'bg-gray-100 text-gray-500' }
+}
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 const activities = ref([])
@@ -591,7 +675,8 @@ function resetNewActivityForm() {
     matchMeaning: '',
     listeningPhrase: '',
     pronouncePhrase: '',
-    crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }]
+    crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
+    layoutMode: 'automatic'
   }
   showAddActivityForm.value = false
 }
@@ -610,9 +695,27 @@ async function saveNewActivity() {
   let crossword1Clue = ''
   let crossword1Word = ''
   if (newActivity.value.template === 'crucigrama') {
-    const validWords = newActivity.value.crosswordWords.filter(w => w.word.trim() && w.clue.trim())
-    crossword1Clue = JSON.stringify(validWords)
-    crossword1Word = validWords.map(w => w.word.trim()).join(',')
+    const layout = inlineCrosswordLayout.value
+    if (!layout || !layout.success) {
+      notificationStore.notify({
+        type: 'error',
+        title: 'Crucigrama Inválido',
+        message: 'El crucigrama no es válido. Asegúrate de que todas las palabras se conecten entre sí.'
+      })
+      return
+    }
+    const validWords = layout.words.map(w => ({
+      word: w.word,
+      clue: w.clue,
+      orientation: w.orientation,
+      x: w.x,
+      y: w.y
+    }))
+    crossword1Clue = JSON.stringify({
+      layoutMode: newActivity.value.layoutMode,
+      words: validWords
+    })
+    crossword1Word = validWords.map(w => w.word).join(',')
   }
 
   const payload = {
@@ -650,7 +753,11 @@ async function saveNewActivity() {
     resetNewActivityForm()
   } catch (err) {
     console.error(err)
-    alert(err.message || 'No se pudo crear la actividad.')
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al Crear',
+      message: err.message || 'No se pudo crear la actividad.'
+    })
   }
 }
 
@@ -667,7 +774,11 @@ async function deleteInlineActivity(id) {
     await fetchActivities()
   } catch (err) {
     console.error(err)
-    alert(err.message || 'No se pudo eliminar la actividad.')
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al Eliminar',
+      message: err.message || 'No se pudo eliminar la actividad.'
+    })
   }
 }
 
@@ -802,6 +913,22 @@ function saveCourse() {
   }
 
   showModal.value = false
+}
+
+function sanitizeWordInput(item) {
+  if (!item.word) return
+  // Solo permitir letras (inglés/español con tildes, diéresis y Ñ/ñ)
+  const cleaned = item.word.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/g, '')
+  if (item.word.length > 20 || cleaned.length > 20) {
+    notificationStore.notify({
+      type: 'warning',
+      title: 'Límite de caracteres',
+      message: 'Una palabra no puede tener más de 20 caracteres.'
+    })
+    item.word = cleaned.slice(0, 20).toUpperCase()
+  } else {
+    item.word = cleaned.toUpperCase()
+  }
 }
 </script>
 
