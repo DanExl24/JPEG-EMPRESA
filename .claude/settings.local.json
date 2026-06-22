@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git checkout *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(npx prisma *)",
+      "Bash(node add_attempts_column.mjs)"
     ]
   }
 }

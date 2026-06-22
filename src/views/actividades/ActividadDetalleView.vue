@@ -234,40 +234,43 @@
         </div>
 
         <!-- ── QUIZ / PREGUNTAS ── -->
-        <div v-else-if="activity.template === 'quiz' || activity.template === 'preguntas'" class="space-y-4">
+        <div v-else-if="activity.template === 'quiz' || activity.template === 'preguntas'" class="space-y-6">
           <h3 class="font-black text-gray-800 text-base flex items-center gap-2">
             <span class="w-2 h-5 bg-green-500 rounded-full"></span>
             {{ activity.template === 'quiz' ? 'Quiz' : 'Opción Múltiple' }}
           </h3>
-          <p class="text-sm font-semibold text-gray-800 bg-gray-50 p-4 rounded-xl border border-gray-200">
-            {{ activity.quizQuestion || '¿Pregunta del Quiz?' }}
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              v-for="(opt, idx) in quizOptions"
-              :key="idx"
-              @click="selectedAnswer = opt.value"
-              :disabled="submitted"
-              :class="`px-5 py-4 border-2 rounded-xl text-sm font-bold text-left transition-all ${
-                submitted
-                  ? opt.value === 'correct'
-                    ? 'bg-green-50 text-green-700 border-green-400'
-                    : selectedAnswer === opt.value
-                      ? 'bg-red-50 text-red-700 border-red-400'
-                      : 'bg-gray-50 text-gray-400 border-gray-200 opacity-60'
-                  : selectedAnswer === opt.value
-                    ? 'bg-[#006688] text-white border-[#006688] shadow-md'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]/50 hover:bg-[#006688]/5 cursor-pointer'
-              }`"
-            >
-              <div class="flex items-center gap-2">
-                <span
-                  v-if="submitted"
-                  class="material-symbols-outlined text-base"
-                >{{ opt.value === 'correct' ? 'check_circle' : (selectedAnswer === opt.value ? 'cancel' : 'radio_button_unchecked') }}</span>
-                {{ opt.label }}
-              </div>
-            </button>
+
+          <div v-for="(q, qIdx) in quizQuestionsList" :key="qIdx" class="space-y-3">
+            <p class="text-sm font-semibold text-gray-800 bg-gray-50 p-4 rounded-xl border border-gray-200">
+              {{ qIdx + 1 }}. {{ q.question || '¿Pregunta del Quiz?' }}
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                v-for="(opt, idx) in quizOptionsList[qIdx]"
+                :key="idx"
+                @click="selectedAnswer[qIdx] = opt._i"
+                :disabled="submitted"
+                :class="`px-5 py-4 border-2 rounded-xl text-sm font-bold text-left transition-all ${
+                  submitted
+                    ? opt.correct
+                      ? 'bg-green-50 text-green-700 border-green-400'
+                      : selectedAnswer[qIdx] === opt._i
+                        ? 'bg-red-50 text-red-700 border-red-400'
+                        : 'bg-gray-50 text-gray-400 border-gray-200 opacity-60'
+                    : selectedAnswer[qIdx] === opt._i
+                      ? 'bg-[#006688] text-white border-[#006688] shadow-md'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]/50 hover:bg-[#006688]/5 cursor-pointer'
+                }`"
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    v-if="submitted"
+                    class="material-symbols-outlined text-base"
+                  >{{ opt.correct ? 'check_circle' : (selectedAnswer[qIdx] === opt._i ? 'cancel' : 'radio_button_unchecked') }}</span>
+                  {{ opt.text }}
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -711,24 +714,41 @@ function focusWordStart(word) {
 // ════════════════════════════════════════════════
 //  QUIZ / PREGUNTAS
 // ════════════════════════════════════════════════
-const selectedAnswer = ref(null)
+const selectedAnswer = ref({})
 
-const quizOptions = computed(() => {
+const quizQuestionsList = computed(() => {
   if (!activity.value) return []
-  const correct   = activity.value.quizCorrect   || 'Respuesta correcta'
-  const incorrect = activity.value.quizIncorrect || 'Respuesta incorrecta'
-  // Shuffle deterministically based on ID so it's stable
-  const id = activity.value.id || 0
-  if (id % 2 === 0) {
-    return [
-      { value: 'correct',   label: correct },
-      { value: 'incorrect', label: incorrect },
-    ]
+  const qStr = activity.value.quizQuestion || ''
+  if (qStr.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(qStr)
+      if (parsed && Array.isArray(parsed.questions) && parsed.questions.length) {
+        // Compatibilidad con formato anterior { question, correct, incorrect } sin options[]
+        return parsed.questions.map(q => Array.isArray(q.options)
+          ? q
+          : { question: q.question, options: [{ text: q.correct || 'Respuesta correcta', correct: true }, { text: q.incorrect || 'Respuesta incorrecta', correct: false }] }
+        )
+      }
+    } catch (e) {
+      console.error('Error parsing quiz JSON:', e)
+    }
   }
-  return [
-    { value: 'incorrect', label: incorrect },
-    { value: 'correct',   label: correct },
-  ]
+  return [{
+    question: qStr || '¿Pregunta del Quiz?',
+    options: [
+      { text: activity.value.quizCorrect || 'Respuesta correcta', correct: true },
+      { text: activity.value.quizIncorrect || 'Respuesta incorrecta', correct: false },
+    ],
+  }]
+})
+
+const quizOptionsList = computed(() => {
+  const id = activity.value?.id || 0
+  // Shuffle deterministically per question so it's stable; conserva índice original en _i
+  return quizQuestionsList.value.map((q, idx) => {
+    const tagged = q.options.map((o, i) => ({ ...o, _i: i }))
+    return (id + idx) % 2 === 0 ? tagged : [...tagged].reverse()
+  })
 })
 
 // ════════════════════════════════════════════════
@@ -827,7 +847,7 @@ const canSubmit = computed(() => {
     if (!layout || !layout.success || !layout.grid) return false
     return Object.entries(layout.grid).every(([key]) => (gridInputs.value[key] || '').trim().length > 0)
   }
-  if (tpl === 'quiz' || tpl === 'preguntas') return selectedAnswer.value !== null
+  if (tpl === 'quiz' || tpl === 'preguntas') return quizQuestionsList.value.length > 0 && quizQuestionsList.value.every((q, idx) => selectedAnswer.value[idx] !== undefined)
   if (tpl === 'match') return matchedPairs.value.length === matchTermsList.value.length
   if (tpl === 'listening') return listeningInput.value.trim().length > 0
   if (tpl === 'pronunciation') return voiceRecorded.value
@@ -847,7 +867,7 @@ async function submitActivity() {
       (gridInputs.value[key] || '').trim().toUpperCase() === cell.char.toUpperCase()
     )
   } else if (tpl === 'quiz' || tpl === 'preguntas') {
-    ok = selectedAnswer.value === 'correct'
+    ok = quizQuestionsList.value.every((q, idx) => q.options[selectedAnswer.value[idx]]?.correct)
   } else if (tpl === 'match') {
     ok = matchedPairs.value.length === matchTermsList.value.length
   } else if (tpl === 'listening') {
@@ -893,7 +913,7 @@ async function submitActivity() {
 function resetActivity() {
   submitted.value      = false
   feedbackResult.value = null
-  selectedAnswer.value = null
+  selectedAnswer.value = {}
   foundWords.value     = []
   selectedLetters.value = []
   sopaSelectionHint.value = null
