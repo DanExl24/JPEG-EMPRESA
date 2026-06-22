@@ -393,8 +393,7 @@
           </button>
           <button
             @click="resetActivity"
-            :disabled="submitted"
-            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
           >
             <span class="material-symbols-outlined text-base">restart_alt</span>
             Reiniciar
@@ -859,8 +858,22 @@ async function submitActivity() {
     ok = voiceRecorded.value
   }
 
-  submitted.value     = true
+  submitted.value     = ok
   feedbackResult.value = ok
+
+  if (ok) {
+    notificationStore.notify({
+      type: 'success',
+      title: '¡Felicidades!',
+      message: `${activity.value.successMessage || '¡Respuesta correcta!'} Ganaste ${activity.value.points} puntos, se agregaron a tu progreso.`
+    })
+  } else {
+    notificationStore.notify({
+      type: 'warning',
+      title: 'Respuesta incorrecta',
+      message: `${activity.value.hintMessage || 'Sigue intentando.'} Usa "Reiniciar" para volver a intentarlo.`
+    })
+  }
 
   // Persist to backend
   const userId = auth.user?.id
