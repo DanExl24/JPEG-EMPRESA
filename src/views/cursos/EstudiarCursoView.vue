@@ -701,6 +701,285 @@
         </div>
       </div>
 
+      <!-- Seccion de Actividades de Refuerzo / Complementarias -->
+      <div v-if="currentPhaseActivities.length > 0" class="mt-8 pt-6 border-t border-gray-205 space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
+          <h4 class="font-bold text-gray-800 text-sm">Ejercicios de Refuerzo Clínico ({{ currentPhaseActivities.length }})</h4>
+        </div>
+        <p class="text-xs text-gray-500">Debes completar todos los ejercicios adicionales de esta fase para poder continuar con el módulo.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- List of Activities -->
+          <div class="space-y-2">
+            <div 
+              v-for="act in currentPhaseActivities" 
+              :key="act.id"
+              @click="selectActiveDbActivity(act)"
+              :class="`p-4 rounded-2xl border text-left cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                activeDbActivity?.id === act.id
+                  ? 'border-[#006688] bg-[#006688]/5 shadow-sm'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
+              }`"
+            >
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold text-gray-800">{{ act.title }}</span>
+                  <span class="text-[9px] uppercase tracking-wider font-extrabold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                    {{ act.template }}
+                  </span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1">Puntos: {{ act.points }}</p>
+              </div>
+              
+              <span :class="`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                completedActivityIds.includes(act.id)
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-orange-100 text-orange-700'
+              }`">
+                {{ completedActivityIds.includes(act.id) ? 'Completada ✓' : 'Pendiente' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Playable Game Area -->
+          <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150 min-h-[220px] flex flex-col justify-between">
+            <div v-if="activeDbActivity" class="space-y-4">
+              <div class="border-b border-gray-200 pb-2 flex justify-between items-center">
+                <span class="text-xs font-black text-[#006688]">{{ activeDbActivity.title }}</span>
+                <span class="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-xs">emoji_events</span>
+                  +{{ activeDbActivity.points }} pts
+                </span>
+              </div>
+
+              <!-- 1. Playable Word Search (sopa) -->
+              <div v-if="activeDbActivity.template === 'sopa'" class="space-y-3">
+                <p class="text-[11px] text-gray-600 font-bold">Selecciona las letras en el tablero para encontrar las palabras:</p>
+                
+                <!-- Word list display -->
+                <div class="flex flex-wrap gap-1.5">
+                  <span 
+                    v-for="w in activeDbActivitySopaWords" 
+                    :key="w" 
+                    :class="`px-2 py-0.5 border rounded-lg text-[10px] font-bold font-mono transition-all ${
+                      activeDbActivityFoundWords.includes(w) 
+                        ? 'bg-green-100 text-green-700 border-green-300 line-through' 
+                        : 'bg-white text-gray-650 border-gray-300'
+                    }`"
+                  >
+                    {{ w }}
+                  </span>
+                </div>
+
+                <!-- Tablero grid -->
+                <div class="grid gap-0.5 mx-auto border border-gray-200 p-1.5 rounded-xl bg-white" :style="`grid-template-columns: repeat(${activeDbActivitySopaSize}, 1.75rem); width: fit-content;`">
+                  <button 
+                    v-for="(cell, idx) in activeDbActivitySopaGrid" 
+                    :key="idx" 
+                    @click="selectActiveDbSopaCell(idx)"
+                    type="button"
+                    :class="`w-7 h-7 rounded text-[10px] font-bold border transition-all ${
+                      isActiveDbCellFoundWord(idx)
+                        ? 'bg-green-400 text-white border-green-500'
+                        : activeDbActivitySelectedLetters.includes(idx)
+                          ? 'bg-[#006688] text-white border-[#006688] scale-105'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-[#006688]/10 cursor-pointer'
+                    }`"
+                  >
+                    {{ cell.letter }}
+                  </button>
+                </div>
+                <p v-if="activeDbSopaSelectionHint" class="text-[10px] text-center font-bold" :class="activeDbSopaSelectionHint.ok ? 'text-green-600' : 'text-red-500'">{{ activeDbSopaSelectionHint.msg }}</p>
+              </div>
+
+              <!-- 2. Playable Crosswords (crucigrama) -->
+              <div v-if="activeDbActivity.template === 'crucigrama'" class="space-y-6">
+                <!-- Horizontales -->
+                <div v-if="crosswordWords.some(w => w.orientation === 'horizontal')" class="space-y-4">
+                  <h5 class="text-xs font-bold text-[#006688] uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm font-bold">swap_horiz</span>
+                    Palabras Horizontales
+                  </h5>
+                  <div v-for="(w, wIdx) in crosswordWords" :key="'h-' + wIdx">
+                    <div v-if="w.orientation === 'horizontal'" class="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <p class="text-xs font-bold text-gray-700">Pista: <span class="text-gray-600 font-semibold">{{ w.clue }}</span> <span class="text-gray-400 font-medium">({{ w.word.length }} letras)</span></p>
+                      <div class="flex gap-1">
+                        <input 
+                          v-for="(char, idx) in w.word.length" 
+                          :key="idx" 
+                          type="text" 
+                          maxlength="1" 
+                          v-model="activeDbCrosswordInputs[wIdx][idx]"
+                          class="w-7 h-7 text-center border-2 border-gray-250 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Verticales -->
+                <div v-if="crosswordWords.some(w => w.orientation === 'vertical')" class="space-y-4">
+                  <h5 class="text-xs font-bold text-orange-650 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm font-bold">swap_vert</span>
+                    Palabras Verticales
+                  </h5>
+                  <div v-for="(w, wIdx) in crosswordWords" :key="'v-' + wIdx">
+                    <div v-if="w.orientation === 'vertical'" class="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <p class="text-xs font-bold text-gray-700">Pista: <span class="text-gray-600 font-semibold">{{ w.clue }}</span> <span class="text-gray-400 font-medium">({{ w.word.length }} letras)</span></p>
+                      <div class="flex gap-1">
+                        <input 
+                          v-for="(char, idx) in w.word.length" 
+                          :key="idx" 
+                          type="text" 
+                          maxlength="1" 
+                          v-model="activeDbCrosswordInputs[wIdx][idx]"
+                          class="w-7 h-7 text-center border-2 border-gray-250 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Playable Quiz / Preguntas (quiz / preguntas) -->
+              <div v-if="activeDbActivity.template === 'quiz' || activeDbActivity.template === 'preguntas'" class="space-y-3">
+                <div class="text-xs font-bold text-gray-800">{{ activeDbActivity.quizQuestion || '¿Pregunta del Quiz?' }}</div>
+                <div class="grid grid-cols-1 gap-2">
+                  <button 
+                    @click="activeDbSelectedAnswer = 'correct'"
+                    type="button"
+                    :class="`px-3 py-2 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activeDbSelectedAnswer === 'correct' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    }`"
+                  >
+                    {{ activeDbActivity.quizCorrect || 'Opción Correcta' }}
+                  </button>
+                  <button 
+                    @click="activeDbSelectedAnswer = 'incorrect'"
+                    type="button"
+                    :class="`px-3 py-2 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activeDbSelectedAnswer === 'incorrect' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    }`"
+                  >
+                    {{ activeDbActivity.quizIncorrect || 'Opción Incorrecta' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4. Playable Match Meaning (match) -->
+              <div v-if="activeDbActivity.template === 'match'" class="space-y-4">
+                <p class="text-[11px] text-gray-650 font-bold">Une la pareja correcta:</p>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <button 
+                      @click="selectActiveDbTerm(activeDbActivity.matchTerm)"
+                      type="button"
+                      :disabled="activeDbMatchedPairs.includes(activeDbActivity.matchTerm)"
+                      :class="`w-full p-2 border rounded-xl text-[11px] font-bold text-center transition-all ${
+                        activeDbMatchedPairs.includes(activeDbActivity.matchTerm)
+                          ? 'bg-green-100 text-green-700 border-green-300'
+                          : activeDbSelectedTerm === activeDbActivity.matchTerm
+                            ? 'bg-[#006688] text-white border-[#006688] shadow'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`"
+                    >
+                      {{ activeDbActivity.matchTerm }}
+                    </button>
+                  </div>
+                  <div class="space-y-2">
+                    <button 
+                      @click="selectActiveDbMeaning(activeDbActivity.matchMeaning)"
+                      type="button"
+                      :disabled="activeDbMatchedPairs.includes(activeDbActivity.matchMeaning)"
+                      :class="`w-full p-2 border rounded-xl text-[11px] font-bold text-center transition-all ${
+                        activeDbMatchedPairs.includes(activeDbActivity.matchMeaning)
+                          ? 'bg-green-100 text-green-700 border-green-300'
+                          : activeDbSelectedMeaning === activeDbActivity.matchMeaning
+                            ? 'bg-orange-600 text-white border-orange-600 shadow'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`"
+                    >
+                      {{ activeDbActivity.matchMeaning }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5. Playable Listening (listening) -->
+              <div v-if="activeDbActivity.template === 'listening'" class="space-y-3">
+                <div class="flex items-center gap-2">
+                  <button @click="playActiveDbListeningAudio" type="button" class="w-8 h-8 rounded-full bg-[#006688] text-white flex items-center justify-center hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-sm">volume_up</span>
+                  </button>
+                  <span class="text-[10px] text-gray-400 italic">Haz clic para oír la frase</span>
+                </div>
+                <input 
+                  type="text" 
+                  v-model="activeDbTypedPhrase"
+                  class="w-full px-2.5 py-1.5 border border-gray-200 focus:outline-none focus:border-[#006688] rounded-xl text-xs font-semibold"
+                  placeholder="Escribe la frase que escuchas..."
+                />
+              </div>
+
+              <!-- 6. Playable Pronunciation (pronunciation) -->
+              <div v-if="activeDbActivity.template === 'pronunciation'" class="space-y-3">
+                <p class="text-[11px] text-gray-600 font-bold">Lee esta oración en voz alta:</p>
+                <p class="text-xs font-semibold text-[#006688] bg-[#006688]/5 p-2.5 rounded-xl border border-[#006688]/10 text-center">
+                  "{{ activeDbActivity.pronouncePhrase || 'Frase a pronunciar' }}"
+                </p>
+                <div class="flex flex-col items-center gap-1">
+                  <button 
+                    @click="simulateActiveDbMicRecording"
+                    type="button"
+                    :class="`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
+                      activeDbRecording ? 'bg-red-600 animate-pulse' : 'bg-[#006688] hover:bg-[#004e69]'
+                    }`"
+                  >
+                    <span class="material-symbols-outlined text-sm">
+                      {{ activeDbRecording ? 'stop' : 'mic' }}
+                    </span>
+                  </button>
+                  <span class="text-[9px] text-gray-400 font-bold">
+                    {{ activeDbRecording ? 'Grabando...' : (activeDbVoiceRecorded ? 'Grabación lista' : 'Haz clic para simular grabar') }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action buttons for validation -->
+              <div class="flex items-center gap-2 pt-3 border-t border-gray-200">
+                <button 
+                  @click="validateActiveDbSubmission"
+                  type="button"
+                  class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white text-[10px] font-bold rounded-lg transition-all shadow-xs"
+                >
+                  Verificar Solución
+                </button>
+                <button 
+                  @click="resetActiveDbDemo"
+                  type="button"
+                  class="px-2.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-[10px] font-bold rounded-lg transition-all"
+                >
+                  Reiniciar
+                </button>
+
+                <span v-if="activeDbFeedbackSuccess === true" class="text-green-600 text-[10px] font-bold flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-xs">check_circle</span>
+                  ¡Correcto! +{{ activeDbActivity.points }} pts
+                </span>
+                <span v-else-if="activeDbFeedbackSuccess === false" class="text-amber-600 text-[10px] font-bold flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-xs">info</span>
+                  Intenta de nuevo.
+                </span>
+              </div>
+            </div>
+            <div v-else class="text-center py-8 text-xs text-gray-400 italic">
+              Selecciona una actividad de refuerzo para resolverla.
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -745,6 +1024,337 @@ const moduleProgress = computed(() => {
   const sum = Object.values(phaseProgress.value).reduce((a, b) => a + b, 0)
   return sum / Object.keys(phaseProgress.value).length
 })
+
+// Dynamic DB activities state
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const dbActivities = ref([])
+const completedActivityIds = ref([])
+
+async function fetchDbActivities() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/activities`)
+    if (response.ok) {
+      dbActivities.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching activities:', error)
+  }
+}
+
+const currentPhaseActivities = computed(() => {
+  const phaseMapping = {
+    inicio: 'Preparación',
+    estudio: 'Absorción',
+    practica: 'Práctica',
+    evaluacion: 'Cierre'
+  }
+  const targetPhase = phaseMapping[currentPhase.value]
+  return dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === targetPhase)
+})
+
+// Dynamic Game State variables for Active DB Activity
+const activeDbActivity = ref(null)
+const activeDbSelectedAnswer = ref(null)
+const activeDbTypedPhrase = ref('')
+const activeDbFeedbackSuccess = ref(null)
+const activeDbCrosswordInputs = ref([])
+const crosswordWords = computed(() => {
+  if (!activeDbActivity.value) return []
+  const clueStr = activeDbActivity.value.crossword1Clue || ''
+  if (clueStr.startsWith('[') || clueStr.startsWith('{')) {
+    try {
+      return JSON.parse(clueStr)
+    } catch (e) {
+      console.error('Error parsing crossword JSON:', e)
+    }
+  }
+  return [
+    {
+      word: activeDbActivity.value.crossword1Word || 'HEART',
+      clue: activeDbActivity.value.crossword1Clue || 'Organ that pumps blood',
+      orientation: 'horizontal'
+    }
+  ]
+})
+const activeDbSelectedTerm = ref('')
+const activeDbSelectedMeaning = ref('')
+const activeDbMatchedPairs = ref([])
+const activeDbRecording = ref(false)
+const activeDbVoiceRecorded = ref(false)
+
+const activeDbActivitySopaWords = computed(() => {
+  if (!activeDbActivity.value || activeDbActivity.value.template !== 'sopa') return []
+  return (activeDbActivity.value.sopaWords || '')
+    .split(',')
+    .map(w => w.trim().toUpperCase())
+    .filter(Boolean)
+})
+
+const activeDbActivitySopaSize = computed(() => {
+  const words = activeDbActivitySopaWords.value
+  if (!words.length) return 8
+  const maxLen = Math.max(...words.map(w => w.length))
+  return Math.max(maxLen + 2, 8)
+})
+
+const activeDbActivitySopaGrid = ref([])
+const activeDbActivityFoundWords = ref([])
+const activeDbActivitySelectedLetters = ref([])
+const activeDbSopaSelectionHint = ref(null)
+
+function generateActiveDbSopaGrid() {
+  const words = activeDbActivitySopaWords.value
+  const size = activeDbActivitySopaSize.value
+  const grid = Array.from({ length: size * size }, () => ({ letter: '', wordIdx: -1, posInWord: -1 }))
+
+  words.forEach((word, wIdx) => {
+    let placed = false
+    let attempts = 0
+    while (!placed && attempts < 100) {
+      attempts++
+      const dir = Math.floor(Math.random() * 3) // 0: Horiz, 1: Vert, 2: Diag
+      const startX = Math.floor(Math.random() * size)
+      const startY = Math.floor(Math.random() * size)
+
+      let fits = true
+      const cells = []
+      for (let i = 0; i < word.length; i++) {
+        let x = startX
+        let y = startY
+        if (dir === 0) x += i
+        if (dir === 1) y += i
+        if (dir === 2) { x += i; y += i }
+
+        if (x >= size || y >= size) { fits = false; break }
+        const idx = y * size + x
+        if (grid[idx].letter && grid[idx].letter !== word[i]) { fits = false; break }
+        cells.push(idx)
+      }
+
+      if (fits) {
+        cells.forEach((idx, i) => {
+          grid[idx] = { letter: word[i], wordIdx: wIdx, posInWord: i }
+        })
+        placed = true
+      }
+    }
+  })
+
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  for (let i = 0; i < grid.length; i++) {
+    if (!grid[i].letter) {
+      grid[i].letter = letters[Math.floor(Math.random() * letters.length)]
+    }
+  }
+
+  activeDbActivitySopaGrid.value = grid
+}
+
+watch(activeDbActivity, (newAct) => {
+  resetActiveDbDemo()
+  if (newAct && newAct.template === 'sopa') {
+    generateActiveDbSopaGrid()
+  }
+})
+
+let activeDbSopaHintTimer = null
+
+function selectActiveDbSopaCell(idx) {
+  if (isActiveDbCellFoundWord(idx)) return
+  const list = activeDbActivitySelectedLetters.value
+  const foundIdx = list.indexOf(idx)
+  if (foundIdx >= 0) {
+    list.splice(foundIdx, 1)
+  } else {
+    list.push(idx)
+  }
+
+  const selectedStr = list
+    .map(i => activeDbActivitySopaGrid.value[i]?.letter || '')
+    .join('')
+  const reversedStr = selectedStr.split('').reverse().join('')
+
+  let matched = ''
+  for (const word of activeDbActivitySopaWords.value) {
+    if (selectedStr === word || reversedStr === word) {
+      matched = word
+      break
+    }
+  }
+
+  if (matched && !activeDbActivityFoundWords.value.includes(matched)) {
+    activeDbActivityFoundWords.value.push(matched)
+    activeDbActivitySelectedLetters.value = []
+    if (activeDbSopaHintTimer) clearTimeout(activeDbSopaHintTimer)
+    activeDbSopaSelectionHint.value = { ok: true, msg: `✓ "${matched}" encontrada!` }
+    activeDbSopaHintTimer = setTimeout(() => { activeDbSopaSelectionHint.value = null }, 2000)
+  } else {
+    const canContinue = activeDbActivitySopaWords.value.some(word => {
+      return word.startsWith(selectedStr) || word.startsWith(reversedStr)
+    })
+    if (!canContinue && selectedStr.length > 1) {
+      activeDbActivitySelectedLetters.value = []
+      if (activeDbSopaHintTimer) clearTimeout(activeDbSopaHintTimer)
+      activeDbSopaSelectionHint.value = { ok: false, msg: 'Selección inválida, intenta de nuevo.' }
+      activeDbSopaHintTimer = setTimeout(() => { activeDbSopaSelectionHint.value = null }, 2000)
+    }
+  }
+}
+
+function isActiveDbCellFoundWord(idx) {
+  const cell = activeDbActivitySopaGrid.value[idx]
+  if (!cell || cell.wordIdx === -1) return false
+  const word = activeDbActivitySopaWords.value[cell.wordIdx]
+  return activeDbActivityFoundWords.value.includes(word)
+}
+
+function selectActiveDbActivity(act) {
+  activeDbActivity.value = act
+}
+
+function resetActiveDbDemo() {
+  activeDbSelectedAnswer.value = null
+  activeDbTypedPhrase.value = ''
+  activeDbFeedbackSuccess.value = null
+  activeDbActivityFoundWords.value = []
+  activeDbActivitySelectedLetters.value = []
+  activeDbSopaSelectionHint.value = null
+  if (activeDbSopaHintTimer) { clearTimeout(activeDbSopaHintTimer); activeDbSopaHintTimer = null }
+  activeDbCrosswordInputs.value = crosswordWords.value.map(w => Array(w.word.length).fill(''))
+  activeDbSelectedTerm.value = ''
+  activeDbSelectedMeaning.value = ''
+  activeDbMatchedPairs.value = []
+  activeDbRecording.value = false
+  activeDbVoiceRecorded.value = false
+}
+
+function selectActiveDbTerm(term) {
+  if (activeDbMatchedPairs.value.includes(term)) return
+  activeDbSelectedTerm.value = term
+  checkActiveDbMatch()
+}
+
+function selectActiveDbMeaning(meaning) {
+  if (activeDbMatchedPairs.value.includes(meaning)) return
+  activeDbSelectedMeaning.value = meaning
+  checkActiveDbMatch()
+}
+
+function checkActiveDbMatch() {
+  if (activeDbSelectedTerm.value && activeDbSelectedMeaning.value) {
+    if (activeDbSelectedTerm.value === activeDbActivity.value.matchTerm && activeDbSelectedMeaning.value === activeDbActivity.value.matchMeaning) {
+      activeDbMatchedPairs.value.push(activeDbSelectedTerm.value, activeDbSelectedMeaning.value)
+    }
+    activeDbSelectedTerm.value = ''
+    activeDbSelectedMeaning.value = ''
+  }
+}
+
+function playActiveDbListeningAudio() {
+  if ('speechSynthesis' in window && activeDbActivity.value?.listeningPhrase) {
+    const utterance = new SpeechSynthesisUtterance(activeDbActivity.value.listeningPhrase)
+    utterance.lang = 'en-US'
+    window.speechSynthesis.speak(utterance)
+  } else {
+    alert('Reproduciendo: ' + (activeDbActivity.value?.listeningPhrase || 'Audio'))
+  }
+}
+
+function simulateActiveDbMicRecording() {
+  if (activeDbRecording.value) {
+    activeDbRecording.value = false
+    activeDbVoiceRecorded.value = true
+  } else {
+    activeDbRecording.value = true
+    activeDbVoiceRecorded.value = false
+    setTimeout(() => {
+      if (activeDbRecording.value) {
+        activeDbRecording.value = false
+        activeDbVoiceRecorded.value = true
+      }
+    }, 3000)
+  }
+}
+
+function validateActiveDbSubmission() {
+  if (!activeDbActivity.value) return
+
+  const act = activeDbActivity.value
+  let success = false
+
+  if (act.template === 'quiz' || act.template === 'preguntas') {
+    if (activeDbSelectedAnswer.value === 'correct') {
+      success = true
+    }
+  } else if (act.template === 'sopa') {
+    const allWords = activeDbActivitySopaWords.value
+    if (allWords.length > 0 && allWords.every(w => activeDbActivityFoundWords.value.includes(w))) {
+      success = true
+    }
+  } else if (act.template === 'crucigrama') {
+    success = crosswordWords.value.every((w, wIdx) => {
+      const enteredWord = (activeDbCrosswordInputs.value[wIdx] || []).join('').trim().toLowerCase()
+      const correctWord = w.word.trim().toLowerCase()
+      return enteredWord === correctWord
+    })
+  } else if (act.template === 'match') {
+    if (activeDbMatchedPairs.value.includes(act.matchTerm)) {
+      success = true
+    }
+  } else if (act.template === 'listening') {
+    const phrase = (act.listeningPhrase || '').trim().toLowerCase()
+    const entered = activeDbTypedPhrase.value.trim().toLowerCase()
+    const cleanPhrase = phrase.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+    const cleanEntered = entered.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+    if (cleanPhrase && cleanEntered.includes(cleanPhrase)) {
+      success = true
+    }
+  } else if (act.template === 'pronunciation') {
+    if (activeDbVoiceRecorded.value) {
+      success = true
+    }
+  }
+
+  if (success) {
+    activeDbFeedbackSuccess.value = true
+    if (!completedActivityIds.value.includes(act.id)) {
+      completedActivityIds.value.push(act.id)
+    }
+    updatePhaseProgress()
+  } else {
+    activeDbFeedbackSuccess.value = false
+  }
+}
+
+function updatePhaseProgress() {
+  // 1. Phase 1 (Inicio)
+  const phase1DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Preparación')
+  const p1DbCompleted = phase1DbActs.every(a => completedActivityIds.value.includes(a.id))
+  const p1BaseCompleted = videoCompleted.value && gameSuccess.value === true
+  phaseProgress.value.inicio = (p1BaseCompleted && p1DbCompleted) ? 100 : 0
+
+  // 2. Phase 2 (Estudio)
+  const phase2DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Absorción')
+  const p2DbCompleted = phase2DbActs.every(a => completedActivityIds.value.includes(a.id))
+  const p2BaseCompleted = vocabList.value.every(v => v.played)
+  phaseProgress.value.estudio = (p2BaseCompleted && p2DbCompleted) ? 100 : 0
+
+  // 3. Phase 3 (Práctica)
+  const phase3DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Práctica')
+  const p3DbCompleted = phase3DbActs.every(a => completedActivityIds.value.includes(a.id))
+  const filled = fillInput.value.trim().toLowerCase() === 'prescription'
+  const dictated = dictationInput.value.trim().toLowerCase().includes('heart rate')
+  const p3BaseCompleted = filled && dictated && voiceRecorded.value
+  phaseProgress.value.practica = (p3BaseCompleted && p3DbCompleted) ? 100 : 0
+
+  // 4. Phase 4 (Evaluación)
+  const phase4DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Cierre')
+  const p4DbCompleted = phase4DbActs.every(a => completedActivityIds.value.includes(a.id))
+  const p4BaseCompleted = examPassed.value
+  phaseProgress.value.evaluacion = (p4BaseCompleted && p4DbCompleted) ? 100 : 0
+  
+  saveProgress()
+}
 
 // -----------------------------------------------------------------
 // Phase 1: Welcome Video & Warm-up Game State
@@ -1157,6 +1767,7 @@ function saveProgress() {
     examPassed: examPassed.value,
     showBadgeAward: showBadgeAward.value,
     examAnswers: examAnswers.value,
+    completedActivityIds: completedActivityIds.value,
   }
   localStorage.setItem(storageKey.value, JSON.stringify(state))
 }
@@ -1186,6 +1797,7 @@ function loadProgress() {
     if (state.examPassed) examPassed.value = state.examPassed
     if (state.showBadgeAward) showBadgeAward.value = state.showBadgeAward
     if (state.examAnswers) examAnswers.value = state.examAnswers
+    if (state.completedActivityIds) completedActivityIds.value = state.completedActivityIds
     
   } catch (err) {
     console.error('Error loading progress from localStorage:', err)
@@ -1204,14 +1816,13 @@ watch([
   voiceRecorded, 
   examPassed,
   showBadgeAward,
-  examAnswers
+  examAnswers,
+  completedActivityIds
 ], () => {
   saveProgress()
 }, { deep: true })
 
-onMounted(() => {
-  loadProgress()
-  
+onMounted(async () => {
   // Update Course title based on ID if we want
   const titles = {
     '1': 'Fundamentos de Enfermería',
@@ -1224,6 +1835,10 @@ onMounted(() => {
   if (titles[courseId]) {
     courseTitle.value = titles[courseId]
   }
+
+  await fetchDbActivities()
+  loadProgress()
+  updatePhaseProgress()
 })
 </script>
 

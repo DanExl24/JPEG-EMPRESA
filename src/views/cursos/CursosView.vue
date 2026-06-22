@@ -250,6 +250,177 @@
                 </div>
               </div>
 
+              <!-- Dynamic Activities List for the current Phase -->
+              <div class="mt-6 pt-5 border-t border-gray-200/80 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wide">
+                    <span class="material-symbols-outlined text-sm text-[#006688]">sports_esports</span>
+                    Actividades de Juego / Pruebas en esta Fase ({{ coursePhaseActivities.length }})
+                  </div>
+                  <button 
+                    v-if="!showAddActivityForm"
+                    @click="showAddActivityForm = true"
+                    type="button"
+                    class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-xs">add</span>
+                    Asignar Actividad
+                  </button>
+                </div>
+
+                <!-- Activities list -->
+                <div v-if="coursePhaseActivities.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div 
+                    v-for="act in coursePhaseActivities" 
+                    :key="act.id"
+                    class="bg-white border border-gray-100 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs hover:border-gray-200 transition-all"
+                  >
+                    <div class="min-w-0">
+                      <p class="text-xs font-bold text-gray-800 truncate">{{ act.title }}</p>
+                      <p class="text-[10px] text-gray-400 font-medium">Plantilla: <span class="capitalize">{{ act.template }}</span> · Puntos: {{ act.points }}</p>
+                    </div>
+                    <button 
+                      @click="deleteInlineActivity(act.id)"
+                      type="button"
+                      class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-all shrink-0"
+                      title="Eliminar actividad"
+                    >
+                      <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <div v-else class="text-center py-4 text-[11px] text-gray-400 italic bg-white/50 rounded-xl border border-dashed border-gray-200">
+                  No hay actividades adicionales creadas para esta fase en este curso.
+                </div>
+
+                <!-- Add Activity Inline Form -->
+                <div v-if="showAddActivityForm" class="bg-white border border-gray-200 rounded-2xl p-4 space-y-4 animate-slide-up">
+                  <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                    <span class="text-xs font-bold text-gray-700">Nueva Actividad para esta Fase</span>
+                    <button @click="resetNewActivityForm" type="button" class="text-gray-400 hover:text-gray-600">
+                      <span class="material-symbols-outlined text-xs">close</span>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Título de la Actividad</label>
+                      <input type="text" v-model="newActivity.title" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Vocabulario de Signos Vitales" />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Plantilla de Juego</label>
+                      <select v-model="newActivity.template" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]">
+                        <option v-for="opt in allowedTemplatesForCurrentPhase" :key="opt.value" :value="opt.value">
+                          {{ opt.label }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Puntos Otorgados</label>
+                      <input type="number" v-model="newActivity.points" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                    </div>
+                    
+                    <!-- Dynamic Fields in course inline creator -->
+                    <div v-if="newActivity.template === 'sopa'" class="sm:col-span-2 space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Palabras (separadas por comas)</label>
+                      <input type="text" v-model="newActivity.sopaWords" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                    </div>
+
+                    <div v-if="newActivity.template === 'crucigrama'" class="sm:col-span-2 space-y-3">
+                      <div class="flex justify-between items-center">
+                        <label class="text-[10px] font-bold text-gray-500">Palabras y Pistas del Crucigrama</label>
+                        <button 
+                          @click="newActivity.crosswordWords.push({ word: '', clue: '', orientation: 'horizontal' })"
+                          type="button"
+                          class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[9px] rounded-lg transition-all flex items-center gap-1"
+                        >
+                          <span class="material-symbols-outlined text-[10px] font-bold">add</span>
+                          Agregar Palabra
+                        </button>
+                      </div>
+                      
+                      <div v-for="(item, idx) in newActivity.crosswordWords" :key="idx" class="bg-gray-50/50 p-3.5 rounded-2xl border border-gray-150 space-y-3 relative">
+                        <button 
+                          v-if="newActivity.crosswordWords.length > 1"
+                          @click="newActivity.crosswordWords.splice(idx, 1)"
+                          type="button"
+                          class="absolute top-2.5 right-2.5 text-red-400 hover:text-red-600 transition-colors"
+                        >
+                          <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div class="space-y-1">
+                            <label class="text-[9px] font-bold text-gray-400">Palabra</label>
+                            <input type="text" v-model="item.word" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold uppercase focus:outline-none focus:border-[#006688]" placeholder="Ej. STETHOSCOPE" />
+                          </div>
+                          
+                          <div class="space-y-1 sm:col-span-2">
+                            <label class="text-[9px] font-bold text-gray-400">Pista / Descripción</label>
+                            <input type="text" v-model="item.clue" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Instrumento para escuchar los latidos" />
+                          </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 pt-1">
+                          <span class="text-[9px] font-bold text-gray-400">Dirección:</span>
+                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 cursor-pointer">
+                            <input type="radio" :name="'orientation-' + idx" value="horizontal" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
+                            Horizontal
+                          </label>
+                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 cursor-pointer">
+                            <input type="radio" :name="'orientation-' + idx" value="vertical" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
+                            Vertical
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-if="newActivity.template === 'quiz' || newActivity.template === 'preguntas'" class="sm:col-span-2 space-y-3">
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Pregunta</label>
+                        <input type="text" v-model="newActivity.quizQuestion" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="¿Cuál es la pregunta?" />
+                      </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                          <label class="text-[10px] font-bold text-gray-500">Opción Correcta</label>
+                          <input type="text" v-model="newActivity.quizCorrect" class="w-full px-2 py-1.5 border border-green-200 bg-green-50/20 rounded-lg text-xs font-semibold focus:outline-none" />
+                        </div>
+                        <div class="space-y-1">
+                          <label class="text-[10px] font-bold text-gray-500">Opción Incorrecta</label>
+                          <input type="text" v-model="newActivity.quizIncorrect" class="w-full px-2 py-1.5 border border-red-200 bg-red-50/20 rounded-lg text-xs font-semibold focus:outline-none" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-if="newActivity.template === 'match'" class="sm:col-span-2 grid grid-cols-2 gap-2">
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Término en Inglés</label>
+                        <input type="text" v-model="newActivity.matchTerm" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Significado en Español</label>
+                        <input type="text" v-model="newActivity.matchMeaning" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none" />
+                      </div>
+                    </div>
+
+                    <div v-if="newActivity.template === 'listening'" class="sm:col-span-2 space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Frase para Reproducir en Inglés</label>
+                      <input type="text" v-model="newActivity.listeningPhrase" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                    </div>
+
+                    <div v-if="newActivity.template === 'pronunciation'" class="sm:col-span-2 space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Frase para Pronunciar en Inglés</label>
+                      <input type="text" v-model="newActivity.pronouncePhrase" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                    <button @click="resetNewActivityForm" type="button" class="px-3 py-1.5 border border-gray-200 text-gray-600 font-bold text-[10px] rounded-lg transition-all">Cancelar</button>
+                    <button @click="saveNewActivity" type="button" class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-[10px] rounded-lg shadow transition-all">Guardar Actividad</button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -268,12 +439,83 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 
 const auth = useAuthStore()
 const activeFilter = ref('Todos')
 const filters = ['Todos', 'En Progreso', 'Completados', 'Nuevos']
+
+// Modal & Form States
+const showModal = ref(false)
+const editingCourse = ref(null)
+const activeModalPhase = ref('inicio')
+
+const newActivity = ref({
+  title: '',
+  template: 'quiz',
+  points: 10,
+  sopaWords: 'heart, pulse, blood',
+  quizQuestion: '',
+  quizCorrect: '',
+  quizIncorrect: '',
+  matchTerm: '',
+  matchMeaning: '',
+  listeningPhrase: '',
+  pronouncePhrase: '',
+  crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }]
+})
+
+const allowedTemplatesForCurrentPhase = computed(() => {
+  if (activeModalPhase.value === 'inicio') {
+    return [
+      { value: 'sopa', label: 'Sopa de letras' },
+      { value: 'crucigrama', label: 'Crucigramas' },
+      { value: 'match', label: 'Conectar significado' }
+    ]
+  } else if (activeModalPhase.value === 'estudio') {
+    return [
+      { value: 'listening', label: 'Escucha (Audio)' },
+      { value: 'pronunciation', label: 'Pronunciación (Voz)' }
+    ]
+  } else if (activeModalPhase.value === 'practica') {
+    return [
+      { value: 'listening', label: 'Escucha (Audio)' },
+      { value: 'pronunciation', label: 'Pronunciación (Voz)' },
+      { value: 'match', label: 'Conectar significado' },
+      { value: 'preguntas', label: 'Opción múltiple' }
+    ]
+  } else if (activeModalPhase.value === 'evaluacion') {
+    return [
+      { value: 'quiz', label: 'Quizzes' },
+      { value: 'preguntas', label: 'Opción múltiple' }
+    ]
+  }
+  return []
+})
+
+watch(activeModalPhase, (newPhase) => {
+  const allowed = allowedTemplatesForCurrentPhase.value
+  if (allowed.length > 0) {
+    newActivity.value.template = allowed[0].value
+  }
+})
+
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const activities = ref([])
+
+async function fetchActivities() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/activities`)
+    if (response.ok) {
+      activities.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching activities:', error)
+  }
+}
+
+onMounted(fetchActivities)
 
 // Initial Courses Data State
 const courses = ref([
@@ -301,11 +543,6 @@ const modalPhases = [
   { id: 'evaluacion', name: 'F4: Evaluación' },
 ]
 
-// Modal & Form States
-const showModal = ref(false)
-const editingCourse = ref(null)
-const activeModalPhase = ref('inicio')
-
 const form = ref({
   title: '',
   description: '',
@@ -326,6 +563,113 @@ const form = ref({
   f4_correct: '',
   f4_incorrect: '',
 })
+
+const coursePhaseActivities = computed(() => {
+  if (!editingCourse.value) return []
+  const phaseMapping = {
+    inicio: 'Preparación',
+    estudio: 'Absorción',
+    practica: 'Práctica',
+    evaluacion: 'Cierre'
+  }
+  const targetPhase = phaseMapping[activeModalPhase.value]
+  return activities.value.filter(a => a.course === editingCourse.value.title && a.phase === targetPhase)
+})
+
+const showAddActivityForm = ref(false)
+
+function resetNewActivityForm() {
+  newActivity.value = {
+    title: '',
+    template: 'quiz',
+    points: 10,
+    sopaWords: 'heart, pulse, blood',
+    quizQuestion: '',
+    quizCorrect: '',
+    quizIncorrect: '',
+    matchTerm: '',
+    matchMeaning: '',
+    listeningPhrase: '',
+    pronouncePhrase: '',
+    crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }]
+  }
+  showAddActivityForm.value = false
+}
+
+async function saveNewActivity() {
+  if (!newActivity.value.title.trim() || !editingCourse.value) return
+  
+  const phaseMapping = {
+    inicio: 'Preparación',
+    estudio: 'Absorción',
+    practica: 'Práctica',
+    evaluacion: 'Cierre'
+  }
+  const targetPhase = phaseMapping[activeModalPhase.value]
+
+  let crossword1Clue = ''
+  let crossword1Word = ''
+  if (newActivity.value.template === 'crucigrama') {
+    const validWords = newActivity.value.crosswordWords.filter(w => w.word.trim() && w.clue.trim())
+    crossword1Clue = JSON.stringify(validWords)
+    crossword1Word = validWords.map(w => w.word.trim()).join(',')
+  }
+
+  const payload = {
+    title: newActivity.value.title,
+    course: editingCourse.value.title,
+    phase: targetPhase,
+    template: newActivity.value.template,
+    points: parseInt(newActivity.value.points) || 10,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente trabajo! Has acertado.',
+    hintMessage: '',
+    sopaWords: newActivity.value.sopaWords,
+    crossword1Clue,
+    crossword1Word,
+    quizQuestion: newActivity.value.quizQuestion,
+    quizCorrect: newActivity.value.quizCorrect,
+    quizIncorrect: newActivity.value.quizIncorrect,
+    matchTerm: newActivity.value.matchTerm,
+    matchMeaning: newActivity.value.matchMeaning,
+    listeningPhrase: newActivity.value.listeningPhrase,
+    pronouncePhrase: newActivity.value.pronouncePhrase
+  }
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/activities`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.message || 'Error al guardar la actividad.')
+    }
+    await fetchActivities()
+    resetNewActivityForm()
+  } catch (err) {
+    console.error(err)
+    alert(err.message || 'No se pudo crear la actividad.')
+  }
+}
+
+async function deleteInlineActivity(id) {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta actividad de la fase?')) return
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/activities/${id}`, {
+      method: 'DELETE'
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.message || 'Error al eliminar la actividad.')
+    }
+    await fetchActivities()
+  } catch (err) {
+    console.error(err)
+    alert(err.message || 'No se pudo eliminar la actividad.')
+  }
+}
 
 // Filter computation
 const filteredCourses = computed(() => {

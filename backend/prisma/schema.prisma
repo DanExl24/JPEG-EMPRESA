@@ -97,22 +97,6 @@ model Evaluation {
 
   @@map("evaluations")
 }
-<<<<<<< HEAD
-
-model AuthUser {
-  id             Int      @id @default(autoincrement())
-  email          String   @unique
-  passwordHash   String   @map("password_hash")
-  fullName       String   @map("full_name")
-  role           String
-  failedAttempts Int      @default(0) @map("failed_attempts")
-  lockedUntil    DateTime? @map("locked_until")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  @@map("auth_users")
-}
-
 model Activity {
   id                    Int      @id @default(autoincrement())
   title                 String
@@ -140,5 +124,3 @@ model Activity {
   @@map("activities")
 }
 
-=======
->>>>>>> 23f0fb3dcf6b6af7484f26d3bfef0b1ff66b8694

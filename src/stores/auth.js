@@ -89,11 +89,21 @@ export const useAuthStore = defineStore('auth', () => {
 
     return data
   }
-  const safeUser = computed(() => user.value || {
-    id: null,
-    name: '',
-    email: '',
-    role: 'aprendiz',
+  const safeUser = computed(() => {
+    if (!user.value) {
+      return {
+        id: null,
+        name: '',
+        email: '',
+        role: 'aprendiz',
+      }
+    }
+    return {
+      ...user.value,
+      name: user.value.name || [user.value.nombre, user.value.apellido].filter(Boolean).join(' ') || '',
+      email: user.value.email || user.value.correo || '',
+      role: (user.value.role || user.value.rol || 'aprendiz').toLowerCase(),
+    }
   })
 
   const isAuthenticated = computed(() => Boolean(user.value))

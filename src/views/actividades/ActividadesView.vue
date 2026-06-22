@@ -229,10 +229,51 @@
 
               <!-- Crucigramas Fields -->
               <div v-if="form.template === 'crucigrama'" class="space-y-3">
-                <label class="text-xs font-bold text-gray-500">Definiciones Clave</label>
-                <div class="grid grid-cols-2 gap-2">
-                  <input type="text" v-model="form.crossword1Clue" class="px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none" placeholder="Pista 1: Instrument to hear heartbeat" />
-                  <input type="text" v-model="form.crossword1Word" class="px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none" placeholder="Palabra 1: stethoscope" />
+                <div class="flex justify-between items-center">
+                  <label class="text-xs font-bold text-gray-500">Palabras y Pistas del Crucigrama</label>
+                  <button 
+                    @click="form.crosswordWords.push({ word: '', clue: '', orientation: 'horizontal' })"
+                    type="button"
+                    class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-xs font-bold">add</span>
+                    Agregar Palabra
+                  </button>
+                </div>
+                
+                <div v-for="(item, idx) in form.crosswordWords" :key="idx" class="bg-white p-4 rounded-2xl border border-gray-150 space-y-3 relative">
+                  <button 
+                    v-if="form.crosswordWords.length > 1"
+                    @click="form.crosswordWords.splice(idx, 1)"
+                    type="button"
+                    class="absolute top-2.5 right-2.5 text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="space-y-1">
+                      <label class="text-[9px] font-bold text-gray-400">Palabra</label>
+                      <input type="text" v-model="item.word" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold uppercase focus:outline-none focus:border-[#006688]" placeholder="Ej. STETHOSCOPE" />
+                    </div>
+                    
+                    <div class="space-y-1 sm:col-span-2">
+                      <label class="text-[9px] font-bold text-gray-400">Pista / Descripción</label>
+                      <input type="text" v-model="item.clue" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Instrumento para escuchar los latidos" />
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center gap-4 pt-1">
+                    <span class="text-[9px] font-bold text-gray-400">Dirección:</span>
+                    <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 cursor-pointer">
+                      <input type="radio" :name="'orientation-' + idx" value="horizontal" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
+                      Horizontal
+                    </label>
+                    <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-600 cursor-pointer">
+                      <input type="radio" :name="'orientation-' + idx" value="vertical" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
+                      Vertical
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -351,17 +392,51 @@
               </div>
 
               <!-- Playable Crosswords Demo -->
-              <div v-if="form.template === 'crucigrama'" class="space-y-4">
-                <p class="text-xs text-gray-600 font-bold">Pista: {{ form.crossword1Clue || 'Clue' }}</p>
-                <div class="flex gap-1 justify-center">
-                  <input 
-                    v-for="(char, idx) in (form.crossword1Word || 'heart').length" 
-                    :key="idx" 
-                    type="text" 
-                    maxlength="1" 
-                    v-model="crosswordInput[idx]"
-                    class="w-8 h-8 text-center border-2 border-gray-200 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
-                  />
+              <div v-if="form.template === 'crucigrama'" class="space-y-6">
+                <!-- Horizontales -->
+                <div v-if="previewCrosswordWords.some(w => w.orientation === 'horizontal')" class="space-y-4">
+                  <h5 class="text-xs font-bold text-[#006688] uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm font-bold">swap_horiz</span>
+                    Palabras Horizontales
+                  </h5>
+                  <div v-for="(w, wIdx) in previewCrosswordWords" :key="'h-' + wIdx">
+                    <div v-if="w.orientation === 'horizontal'" class="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-150">
+                      <p class="text-xs font-bold text-gray-700">Pista: <span class="text-gray-650 font-semibold">{{ w.clue }}</span> <span class="text-gray-400 font-medium">({{ w.word.length }} letras)</span></p>
+                      <div class="flex gap-1">
+                        <input 
+                          v-for="(char, idx) in w.word.length" 
+                          :key="idx" 
+                          type="text" 
+                          maxlength="1" 
+                          v-model="crosswordInputs[wIdx][idx]"
+                          class="w-7 h-7 text-center border-2 border-gray-250 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Verticales -->
+                <div v-if="previewCrosswordWords.some(w => w.orientation === 'vertical')" class="space-y-4">
+                  <h5 class="text-xs font-bold text-orange-650 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm font-bold">swap_vert</span>
+                    Palabras Verticales
+                  </h5>
+                  <div v-for="(w, wIdx) in previewCrosswordWords" :key="'v-' + wIdx">
+                    <div v-if="w.orientation === 'vertical'" class="space-y-2 bg-gray-50 p-4 rounded-2xl border border-gray-150">
+                      <p class="text-xs font-bold text-gray-700">Pista: <span class="text-gray-650 font-semibold">{{ w.clue }}</span> <span class="text-gray-400 font-medium">({{ w.word.length }} letras)</span></p>
+                      <div class="flex gap-1">
+                        <input 
+                          v-for="(char, idx) in w.word.length" 
+                          :key="idx" 
+                          type="text" 
+                          maxlength="1" 
+                          v-model="crosswordInputs[wIdx][idx]"
+                          class="w-7 h-7 text-center border-2 border-gray-250 focus:border-[#006688] focus:outline-none rounded-lg font-black uppercase text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -630,6 +705,7 @@ const form = ref({
   matchMeaning: '',
   listeningPhrase: '',
   pronouncePhrase: '',
+  crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }]
 })
 
 // Playable Demo inside Modal States
@@ -640,7 +716,16 @@ const demoFeedbackSuccess = ref(null)
 // Dynamic game preview states
 const foundWords = ref([])
 const selectedLetters = ref([])
-const crosswordInput = ref([])
+const crosswordInputs = ref([])
+const previewCrosswordWords = computed(() => {
+  return form.value.crosswordWords || [
+    {
+      word: form.value.crossword1Word || 'heart',
+      clue: form.value.crossword1Clue || 'Clue: Main cardiovascular organ',
+      orientation: 'horizontal'
+    }
+  ]
+})
 const selectedTerm = ref('')
 const selectedMeaning = ref('')
 const matchedPairs = ref([])
@@ -961,6 +1046,7 @@ function openNewActivityModal() {
     matchMeaning: 'Administración en vena',
     listeningPhrase: 'The patient requires immediate attention',
     pronouncePhrase: 'Check the respiratory rate of the patient',
+    crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }]
   }
   
   resetDemo()
@@ -975,6 +1061,20 @@ function openEditActivityModal(act) {
 
   editingAct.value = act
   previewMode.value = false
+
+  let crosswordWords = [{ word: '', clue: '', orientation: 'horizontal' }]
+  if (act.template === 'crucigrama') {
+    const clueStr = act.crossword1Clue || ''
+    if (clueStr.startsWith('[') || clueStr.startsWith('{')) {
+      try {
+        crosswordWords = JSON.parse(clueStr)
+      } catch (e) {
+        console.error('Error parsing crossword JSON on edit:', e)
+      }
+    } else {
+      crosswordWords = [{ word: act.crossword1Word || 'heart', clue: act.crossword1Clue || 'Clue: Main cardiovascular organ', orientation: 'horizontal' }]
+    }
+  }
 
   form.value = {
     title: act.title,
@@ -995,6 +1095,7 @@ function openEditActivityModal(act) {
     matchMeaning: act.matchMeaning || 'Administración en vena',
     listeningPhrase: act.listeningPhrase || 'The patient requires immediate attention',
     pronouncePhrase: act.pronouncePhrase || 'Check the respiratory rate of the patient',
+    crosswordWords
   }
 
   resetDemo()
@@ -1003,6 +1104,14 @@ function openEditActivityModal(act) {
 
 async function saveActivity() {
   if (!form.value.title.trim()) return
+
+  let crossword1Clue = form.value.crossword1Clue
+  let crossword1Word = form.value.crossword1Word
+  if (form.value.template === 'crucigrama') {
+    const validWords = form.value.crosswordWords.filter(w => w.word.trim() && w.clue.trim())
+    crossword1Clue = JSON.stringify(validWords)
+    crossword1Word = validWords.map(w => w.word.trim()).join(',')
+  }
 
   const payload = {
     title: form.value.title,
@@ -1014,8 +1123,8 @@ async function saveActivity() {
     successMessage: form.value.successMessage,
     hintMessage: form.value.hintMessage,
     sopaWords: form.value.sopaWords,
-    crossword1Clue: form.value.crossword1Clue,
-    crossword1Word: form.value.crossword1Word,
+    crossword1Clue,
+    crossword1Word,
     quizQuestion: form.value.quizQuestion,
     quizCorrect: form.value.quizCorrect,
     quizIncorrect: form.value.quizIncorrect,
@@ -1090,13 +1199,12 @@ function validateDemoSubmission() {
       demoFeedbackSuccess.value = false
     }
   } else if (form.value.template === 'crucigrama') {
-    const target = (form.value.crossword1Word || '').trim().toLowerCase()
-    const entered = crosswordInput.value.slice(0, target.length).join('').trim().toLowerCase()
-    if (target && entered === target) {
-      demoFeedbackSuccess.value = true
-    } else {
-      demoFeedbackSuccess.value = false
-    }
+    const success = previewCrosswordWords.value.every((w, wIdx) => {
+      const enteredWord = (crosswordInputs.value[wIdx] || []).join('').trim().toLowerCase()
+      const correctWord = w.word.trim().toLowerCase()
+      return enteredWord === correctWord
+    })
+    demoFeedbackSuccess.value = success
   } else if (form.value.template === 'match') {
     const requiredCount = matchTermsList.value.length
     if (matchedPairs.value.length === requiredCount) {
@@ -1133,7 +1241,7 @@ function resetDemo() {
   selectedLetters.value = []
   sopaSelectionHint.value = null
   if (sopaHintTimer) { clearTimeout(sopaHintTimer); sopaHintTimer = null }
-  crosswordInput.value = Array((form.value.crossword1Word || '').length || 10).fill('')
+  crosswordInputs.value = previewCrosswordWords.value.map(w => Array(w.word.length).fill(''))
   selectedTerm.value = ''
   selectedMeaning.value = ''
   matchedPairs.value = []
