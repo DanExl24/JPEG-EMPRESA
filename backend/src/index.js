@@ -30,7 +30,7 @@ try {
 await ensureDefaultAuthUser()
 await ensureDefaultInstructorUser()
 await ensureDefaultApprenticeUser()
-await ensureDefaultActivities()
+// await ensureDefaultActivities() // Model 'Activity' does not exist in schema
 
 app.listen(3000, () => {
   console.log('Servidor en http://localhost:3000')
