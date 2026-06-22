@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes.js'
 import activityRoutes from './routes/activity.routes.js'
 import adminRoutes from './routes/admin.routes.js'
 import { ensureDefaultApprenticeUser, ensureDefaultAuthUser, ensureDefaultInstructorUser, ensureDefaultActivities } from './lib/bootstrapAuth.js'
+import prisma from './lib/db.js'
 
 const app = express()
 
@@ -17,6 +18,14 @@ app.use('/api/auth', authRoutes)
 app.use('/api/activities', activityRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/', testRoutes)
+
+console.log('Conectando a Neon...')
+try {
+  await prisma.$queryRaw`SELECT 1`
+  console.log('¡Conectado a NEON con éxito! 🚀')
+} catch (error) {
+  console.error('Error al conectar a Neon:', error)
+}
 
 await ensureDefaultAuthUser()
 await ensureDefaultInstructorUser()
