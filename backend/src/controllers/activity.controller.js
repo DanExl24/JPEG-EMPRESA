@@ -56,7 +56,7 @@ export async function submitActivity(req, res) {
       return res.status(400).json({ message: 'ID inválido.' })
     }
 
-    const { apprenticeId, passed } = req.body
+    const { apprenticeId, passed, answers } = req.body
     if (!apprenticeId) {
       return res.status(400).json({ message: 'apprenticeId es requerido.' })
     }
@@ -66,11 +66,17 @@ export async function submitActivity(req, res) {
       return res.status(404).json({ message: 'Actividad no encontrada.' })
     }
 
+    // Si la entrega incluye preguntas abiertas, queda pendiente de revision del instructor
+    const hasOpenQuestion = Array.isArray(answers) && answers.some(a => a.type === 'open')
+    const reviewStatus = hasOpenQuestion ? 'pending' : 'graded'
+    const finalPassed = hasOpenQuestion ? false : Boolean(passed)
+    const answersJson = Array.isArray(answers) ? JSON.stringify(answers) : '[]'
+
     // Upsert: if already submitted, update; otherwise create
     const submission = await prisma.activitySubmission.upsert({
       where: { activityId_apprenticeId: { activityId: id, apprenticeId: parseInt(apprenticeId) } },
-      update: { passed: Boolean(passed), submittedAt: new Date() },
-      create: { activityId: id, apprenticeId: parseInt(apprenticeId), passed: Boolean(passed) }
+      update: { passed: finalPassed, answers: answersJson, reviewStatus, submittedAt: new Date() },
+      create: { activityId: id, apprenticeId: parseInt(apprenticeId), passed: finalPassed, answers: answersJson, reviewStatus }
     })
 
     // Mark activity as having student submissions
@@ -85,6 +91,69 @@ export async function submitActivity(req, res) {
   } catch (error) {
     console.error('Error submitting activity:', error)
     return res.status(500).json({ message: 'Error interno del servidor al registrar la entrega.' })
+  }
+}
+
+// GET /api/activities/:id/submissions  (instructor: ver entregas, incluye pendientes de revision)
+export async function getActivitySubmissions(req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido.' })
+    }
+
+    const submissions = await prisma.activitySubmission.findMany({
+      where: { activityId: id },
+      orderBy: { submittedAt: 'desc' }
+    })
+
+    const apprenticeIds = submissions.map(s => s.apprenticeId)
+    const apprentices = await prisma.user.findMany({
+      where: { id: { in: apprenticeIds } },
+      select: { id: true, nombre: true, apellido: true }
+    })
+    const apprenticeMap = Object.fromEntries(apprentices.map(a => [a.id, a]))
+
+    const result = submissions.map(s => ({
+      ...s,
+      answers: JSON.parse(s.answers || '[]'),
+      apprentice: apprenticeMap[s.apprenticeId] || null
+    }))
+
+    return res.json(result)
+  } catch (error) {
+    console.error('Error fetching activity submissions:', error)
+    return res.status(500).json({ message: 'Error interno del servidor al obtener entregas.' })
+  }
+}
+
+// PATCH /api/activities/:id/submissions/:apprenticeId/review
+export async function reviewSubmission(req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    const apprenticeId = parseInt(req.params.apprenticeId)
+    if (isNaN(id) || isNaN(apprenticeId)) {
+      return res.status(400).json({ message: 'ID inválido.' })
+    }
+
+    const { answers, approved } = req.body
+    if (!Array.isArray(answers)) {
+      return res.status(400).json({ message: 'answers (array) es requerido.' })
+    }
+
+    const submission = await prisma.activitySubmission.update({
+      where: { activityId_apprenticeId: { activityId: id, apprenticeId } },
+      data: {
+        answers: JSON.stringify(answers),
+        reviewStatus: 'reviewed',
+        passed: Boolean(approved)
+      }
+    })
+
+    return res.json(submission)
+  } catch (error) {
+    console.error('Error reviewing submission:', error)
+    return res.status(500).json({ message: 'Error interno del servidor al revisar la entrega.' })
   }
 }
 

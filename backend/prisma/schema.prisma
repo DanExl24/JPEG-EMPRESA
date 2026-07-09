@@ -131,6 +131,8 @@ model ActivitySubmission {
   activityId   Int      @map("activity_id")
   apprenticeId Int      @map("apprentice_id")
   passed       Boolean  @default(false)
+  answers      String?  @default("[]") @map("answers")
+  reviewStatus String   @default("graded") @map("review_status")
   submittedAt  DateTime @default(now()) @map("submitted_at")
 
   activity     Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)

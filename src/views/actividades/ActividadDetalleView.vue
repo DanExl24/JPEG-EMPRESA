@@ -78,7 +78,14 @@
         <!-- Feedback Banner -->
         <transition name="fade">
           <div
-            v-if="feedbackResult !== null"
+            v-if="submitted && reviewStatus === 'pending'"
+            class="flex items-center gap-3 p-4 rounded-2xl text-sm font-bold animate-slide-up bg-amber-50 border border-amber-200 text-amber-700"
+          >
+            <span class="material-symbols-outlined text-xl">hourglass_top</span>
+            <span>Tu entrega tiene preguntas abiertas. Queda pendiente de revisión por el instructor.</span>
+          </div>
+          <div
+            v-else-if="feedbackResult !== null"
             :class="`flex items-center gap-3 p-4 rounded-2xl text-sm font-bold animate-slide-up ${
               feedbackResult ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-amber-50 border border-amber-200 text-amber-700'
             }`"
@@ -241,10 +248,53 @@
           </h3>
 
           <div v-for="(q, qIdx) in quizQuestionsList" :key="qIdx" class="space-y-3">
-            <p class="text-sm font-semibold text-gray-800 bg-gray-50 p-4 rounded-xl border border-gray-200">
-              {{ qIdx + 1 }}. {{ q.question || '¿Pregunta del Quiz?' }}
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="flex items-center gap-2">
+              <p class="flex-1 text-sm font-semibold text-gray-800 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                {{ qIdx + 1 }}. {{ q.question || '¿Pregunta del Quiz?' }}
+              </p>
+              <span v-if="submitted && reviewedAnswers[qIdx]" class="material-symbols-outlined text-2xl shrink-0" :class="
+                reviewedAnswers[qIdx].correct === true ? 'text-green-500' : reviewedAnswers[qIdx].correct === false ? 'text-red-500' : 'text-amber-500'
+              ">{{ reviewedAnswers[qIdx].correct === true ? 'check_circle' : reviewedAnswers[qIdx].correct === false ? 'cancel' : 'hourglass_top' }}</span>
+            </div>
+
+            <!-- Verdadero / Falso -->
+            <div v-if="q.type === 'truefalse'" class="grid grid-cols-2 gap-3">
+              <button
+                v-for="opt in [{ value: true, label: 'Verdadero' }, { value: false, label: 'Falso' }]"
+                :key="String(opt.value)"
+                @click="selectedAnswer[qIdx] = opt.value"
+                :disabled="submitted"
+                :class="`px-5 py-4 border-2 rounded-xl text-sm font-bold text-left transition-all ${
+                  submitted
+                    ? opt.value === q.correct
+                      ? 'bg-green-50 text-green-700 border-green-400'
+                      : selectedAnswer[qIdx] === opt.value
+                        ? 'bg-red-50 text-red-700 border-red-400'
+                        : 'bg-gray-50 text-gray-400 border-gray-200 opacity-60'
+                    : selectedAnswer[qIdx] === opt.value
+                      ? 'bg-[#006688] text-white border-[#006688] shadow-md'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]/50 hover:bg-[#006688]/5 cursor-pointer'
+                }`"
+              >{{ opt.label }}</button>
+            </div>
+
+            <!-- Pregunta Abierta -->
+            <div v-else-if="q.type === 'open'" class="space-y-1">
+              <textarea
+                v-model="selectedAnswer[qIdx]"
+                :disabled="submitted"
+                rows="3"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#006688] disabled:bg-gray-50 disabled:text-gray-500"
+                placeholder="Escribe tu respuesta..."
+              ></textarea>
+              <p v-if="submitted && reviewStatus === 'pending'" class="text-[11px] text-amber-600 font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">hourglass_top</span>
+                Pendiente de revisión del instructor.
+              </p>
+            </div>
+
+            <!-- Selección Múltiple -->
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 v-for="(opt, idx) in quizOptionsList[qIdx]"
                 :key="idx"
@@ -396,7 +446,9 @@
           </button>
           <button
             @click="resetActivity"
-            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
+            :disabled="reviewStatus === 'pending'"
+            :title="reviewStatus === 'pending' ? 'Espera a que el instructor revise tu entrega antes de reiniciar' : ''"
+            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span class="material-symbols-outlined text-base">restart_alt</span>
             Reiniciar
@@ -453,7 +505,17 @@ async function fetchActivity() {
         const existing = subs.find(s => s.activityId === data.id)
         if (existing) {
           submitted.value = true
-          feedbackResult.value = existing.passed
+          reviewStatus.value = existing.reviewStatus || 'graded'
+          feedbackResult.value = reviewStatus.value === 'pending' ? null : existing.passed
+          try {
+            const parsedAnswers = JSON.parse(existing.answers || '[]')
+            reviewedAnswers.value = parsedAnswers
+            parsedAnswers.forEach(a => {
+              selectedAnswer.value[a.qIdx] = a.type === 'open' ? a.text : a.selected
+            })
+          } catch (e) {
+            console.error('Error parsing stored answers:', e)
+          }
         }
       }
     }
@@ -715,6 +777,8 @@ function focusWordStart(word) {
 //  QUIZ / PREGUNTAS
 // ════════════════════════════════════════════════
 const selectedAnswer = ref({})
+const reviewStatus = ref('graded')
+const reviewedAnswers = ref([])
 
 const quizQuestionsList = computed(() => {
   if (!activity.value) return []
@@ -723,17 +787,19 @@ const quizQuestionsList = computed(() => {
     try {
       const parsed = JSON.parse(qStr)
       if (parsed && Array.isArray(parsed.questions) && parsed.questions.length) {
-        // Compatibilidad con formato anterior { question, correct, incorrect } sin options[]
-        return parsed.questions.map(q => Array.isArray(q.options)
-          ? q
-          : { question: q.question, options: [{ text: q.correct || 'Respuesta correcta', correct: true }, { text: q.incorrect || 'Respuesta incorrecta', correct: false }] }
-        )
+        // Compatibilidad con formatos anteriores { question, correct, incorrect } sin options[]/type
+        return parsed.questions.map(q => {
+          if (q.type === 'truefalse' || q.type === 'open') return q
+          if (Array.isArray(q.options)) return { type: 'multiple', ...q }
+          return { type: 'multiple', question: q.question, options: [{ text: q.correct || 'Respuesta correcta', correct: true }, { text: q.incorrect || 'Respuesta incorrecta', correct: false }] }
+        })
       }
     } catch (e) {
       console.error('Error parsing quiz JSON:', e)
     }
   }
   return [{
+    type: 'multiple',
     question: qStr || '¿Pregunta del Quiz?',
     options: [
       { text: activity.value.quizCorrect || 'Respuesta correcta', correct: true },
@@ -742,10 +808,17 @@ const quizQuestionsList = computed(() => {
   }]
 })
 
+function isQuizQuestionAnswered(q, idx) {
+  const v = selectedAnswer.value[idx]
+  if (q.type === 'open') return typeof v === 'string' && v.trim().length > 0
+  return v !== undefined
+}
+
 const quizOptionsList = computed(() => {
   const id = activity.value?.id || 0
   // Shuffle deterministically per question so it's stable; conserva índice original en _i
   return quizQuestionsList.value.map((q, idx) => {
+    if (!Array.isArray(q.options)) return []
     const tagged = q.options.map((o, i) => ({ ...o, _i: i }))
     return (id + idx) % 2 === 0 ? tagged : [...tagged].reverse()
   })
@@ -847,7 +920,7 @@ const canSubmit = computed(() => {
     if (!layout || !layout.success || !layout.grid) return false
     return Object.entries(layout.grid).every(([key]) => (gridInputs.value[key] || '').trim().length > 0)
   }
-  if (tpl === 'quiz' || tpl === 'preguntas') return quizQuestionsList.value.length > 0 && quizQuestionsList.value.every((q, idx) => selectedAnswer.value[idx] !== undefined)
+  if (tpl === 'quiz' || tpl === 'preguntas') return quizQuestionsList.value.length > 0 && quizQuestionsList.value.every((q, idx) => isQuizQuestionAnswered(q, idx))
   if (tpl === 'match') return matchedPairs.value.length === matchTermsList.value.length
   if (tpl === 'listening') return listeningInput.value.trim().length > 0
   if (tpl === 'pronunciation') return voiceRecorded.value
@@ -858,6 +931,7 @@ async function submitActivity() {
   if (!canSubmit.value) return
   const tpl = activity.value.template
   let ok = false
+  let quizAnswers = null
 
   if (tpl === 'sopa') {
     ok = sopaWordsList.value.every(w => foundWords.value.includes(w))
@@ -867,7 +941,17 @@ async function submitActivity() {
       (gridInputs.value[key] || '').trim().toUpperCase() === cell.char.toUpperCase()
     )
   } else if (tpl === 'quiz' || tpl === 'preguntas') {
-    ok = quizQuestionsList.value.every((q, idx) => q.options[selectedAnswer.value[idx]]?.correct)
+    quizAnswers = quizQuestionsList.value.map((q, idx) => {
+      const v = selectedAnswer.value[idx]
+      if (q.type === 'truefalse') return { qIdx: idx, type: 'truefalse', selected: v, correct: v === q.correct }
+      if (q.type === 'open') return { qIdx: idx, type: 'open', text: v, correct: null }
+      const chosen = q.options[v]
+      return { qIdx: idx, type: 'multiple', selected: v, correct: !!(chosen && chosen.correct) }
+    })
+    const hasOpen = quizAnswers.some(a => a.type === 'open')
+    reviewStatus.value = hasOpen ? 'pending' : 'graded'
+    ok = !hasOpen && quizAnswers.every(a => a.correct)
+    reviewedAnswers.value = quizAnswers
   } else if (tpl === 'match') {
     ok = matchedPairs.value.length === matchTermsList.value.length
   } else if (tpl === 'listening') {
@@ -878,10 +962,17 @@ async function submitActivity() {
     ok = voiceRecorded.value
   }
 
-  submitted.value     = ok
-  feedbackResult.value = ok
+  const pending = reviewStatus.value === 'pending'
+  submitted.value      = pending ? true : ok
+  feedbackResult.value = pending ? null : ok
 
-  if (ok) {
+  if (pending) {
+    notificationStore.notify({
+      type: 'info',
+      title: 'Entregado',
+      message: 'Tu respuesta con preguntas abiertas quedó pendiente de revisión del instructor.'
+    })
+  } else if (ok) {
     notificationStore.notify({
       type: 'success',
       title: '¡Felicidades!',
@@ -902,7 +993,7 @@ async function submitActivity() {
       await fetch(`${apiBaseUrl}/api/activities/${activity.value.id}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apprenticeId: userId, passed: ok })
+        body: JSON.stringify({ apprenticeId: userId, passed: ok, answers: quizAnswers })
       })
     } catch (err) {
       console.error('Error saving submission:', err)
@@ -913,6 +1004,8 @@ async function submitActivity() {
 function resetActivity() {
   submitted.value      = false
   feedbackResult.value = null
+  reviewStatus.value   = 'graded'
+  reviewedAnswers.value = []
   selectedAnswer.value = {}
   foundWords.value     = []
   selectedLetters.value = []
