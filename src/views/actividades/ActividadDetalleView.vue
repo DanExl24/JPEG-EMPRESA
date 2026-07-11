@@ -423,6 +423,30 @@
           </div>
         </div>
 
+        <!-- ── COMPLETAR ORACIÓN (FILL IN THE BLANK) ── -->
+        <div v-else-if="activity.template === 'fillblank'" class="space-y-4">
+          <h3 class="font-black text-gray-800 text-base flex items-center gap-2">
+            <span class="w-2 h-5 bg-[#006688] rounded-full"></span>
+            Completar Oración
+          </h3>
+          <p class="text-xs text-gray-500">Completa la palabra que falta en la oración médica:</p>
+          <div class="p-5 bg-[#006688]/5 border border-[#006688]/20 rounded-2xl flex items-center justify-center gap-2 flex-wrap text-center">
+            <span class="text-sm font-bold text-gray-700">
+              {{ activity.fillblankSentence ? activity.fillblankSentence.split('[blank]')[0] : 'The ' }}
+            </span>
+            <input 
+              type="text" 
+              v-model="fillblankInput"
+              :disabled="submitted"
+              class="px-3 py-1 border border-gray-300 focus:outline-[#006688] rounded-xl text-xs font-bold text-center w-36 uppercase text-[#006688] outline-none disabled:opacity-70 disabled:bg-gray-150"
+              placeholder="palabra..."
+            />
+            <span class="text-sm font-bold text-gray-700">
+              {{ activity.fillblankSentence && activity.fillblankSentence.includes('[blank]') ? activity.fillblankSentence.split('[blank]')[1] : ' is used to listen to heart sounds.' }}
+            </span>
+          </div>
+        </div>
+
         <!-- Unknown template fallback -->
         <div v-else class="text-center py-10 text-gray-400">
           <span class="material-symbols-outlined text-4xl block mb-2">help</span>
@@ -537,6 +561,7 @@ const TEMPLATE_META = {
   match:        { label: 'Conectar Significados',  icon: 'compare_arrows' },
   listening:    { label: 'Escucha (Audio)',         icon: 'volume_up' },
   pronunciation:{ label: 'Pronunciación',          icon: 'mic' },
+  fillblank:    { label: 'Completar Oración',      icon: 'edit_note' },
 }
 
 const templateLabel = computed(() => TEMPLATE_META[activity.value?.template]?.label ?? 'Actividad')
@@ -907,6 +932,10 @@ function simulateMicRecording() {
     }, 4000)
   }
 }
+// ════════════════════════════════════════════════
+//  FILL IN THE BLANK
+// ════════════════════════════════════════════════
+const fillblankInput = ref('')
 
 // ════════════════════════════════════════════════
 //  SUBMIT / RESET
@@ -924,6 +953,7 @@ const canSubmit = computed(() => {
   if (tpl === 'match') return matchedPairs.value.length === matchTermsList.value.length
   if (tpl === 'listening') return listeningInput.value.trim().length > 0
   if (tpl === 'pronunciation') return voiceRecorded.value
+  if (tpl === 'fillblank') return fillblankInput.value.trim().length > 0
   return false
 })
 
@@ -960,6 +990,10 @@ async function submitActivity() {
     ok = entered.includes(phrase) || phrase.includes(entered)
   } else if (tpl === 'pronunciation') {
     ok = voiceRecorded.value
+  } else if (tpl === 'fillblank') {
+    const correct = (activity.value.fillblankAnswer || '').trim().toLowerCase()
+    const entered = fillblankInput.value.trim().toLowerCase()
+    ok = correct && entered === correct
   }
 
   const pending = reviewStatus.value === 'pending'
@@ -1021,6 +1055,7 @@ function resetActivity() {
   listeningInput.value = ''
   isRecording.value    = false
   voiceRecorded.value  = false
+  fillblankInput.value = ''
 }
 </script>
 

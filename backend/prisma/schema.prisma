@@ -23,14 +23,41 @@ model User {
   rol              String       @default("APRENDIZ") // 'ADMIN', 'INSTRUCTOR', 'APRENDIZ'
   failedAttempts   Int          @default(0) @map("failed_attempts")
   lockedUntil      DateTime?    @map("locked_until")
+  xp               Int          @default(0)
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
 
   enrollments      Enrollment[]
   evaluationsAsApprentice Evaluation[] @relation("ApprenticeEvaluations")
   evaluationsAsInstructor Evaluation[] @relation("InstructorEvaluations")
+  userBadges       UserBadge[]
 
   @@map("users")
+}
+
+model Badge {
+  id          Int         @id @default(autoincrement())
+  key         String      @unique
+  name        String
+  description String
+  iconEmoji   String      @default("🏆") @map("icon_emoji")
+  xpRequired  Int         @default(0) @map("xp_required")
+  userBadges  UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  badgeKey   String   @map("badge_key")
+  awardedAt  DateTime @default(now()) @map("awarded_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge      Badge    @relation(fields: [badgeKey], references: [key], onDelete: Cascade)
+
+  @@unique([userId, badgeKey])
+  @@map("user_badges")
 }
 
 model TrainingProgram {
@@ -79,8 +106,9 @@ model LearningOutcome {
   code          String
   competency_id Int
   name          String
-  competency    Competency   @relation(fields: [competency_id], references: [id])
+  competency    Competency   @relation(fields: [competency_id], references: [id], onDelete: Cascade)
   evaluations   Evaluation[]
+  activities    Activity[]
 
   @@map("learning_outcomes")
 }
@@ -117,9 +145,14 @@ model Activity {
   matchMeaning          String?  @map("match_meaning")
   listeningPhrase       String?  @map("listening_phrase")
   pronouncePhrase       String?  @map("pronounce_phrase")
+  fillblankSentence     String?  @map("fillblank_sentence")
+  fillblankAnswer       String?  @map("fillblank_answer")
   hasStudentSubmissions Boolean  @default(false) @map("has_student_submissions")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
+
+  learningOutcomeId     Int?     @map("learning_outcome_id")
+  learningOutcome       LearningOutcome? @relation(fields: [learningOutcomeId], references: [id], onDelete: SetNull)
 
   submissions           ActivitySubmission[]
 
@@ -139,6 +172,30 @@ model ActivitySubmission {
 
   @@unique([activityId, apprenticeId])
   @@map("activity_submissions")
+}
+
+model Vocabulary {
+  id          Int      @id @default(autoincrement())
+  wordEn      String   @map("word_en")
+  wordEs      String   @map("word_es")
+  category    String
+  definition  String
+  example     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("vocabulary")
+}
+
+model Dialogue {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  content     String   // JSON string representing dialogue lines (Array of { speaker: string, textEn: string, textEs: string })
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("dialogues")
 }
 
 

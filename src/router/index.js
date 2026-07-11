@@ -16,6 +16,10 @@ import AnaliticasView from '../views/analiticas/AnaliticasView.vue'
 import UsuariosView from '../views/usuarios/UsuariosView.vue'
 import PerfilView from '../views/perfil/PerfilView.vue'
 import SettingsView from '../views/settings/SettingsView.vue'
+import VocabularioView from '../views/vocabulario/VocabularioView.vue'
+import GlosarioView from '../views/glosario/GlosarioView.vue'
+import CurriculumView from '../views/curriculum/CurriculumView.vue'
+import DialogosView from '../views/dialogos/DialogosView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -41,6 +45,10 @@ const routes = [
       { path: 'usuarios', component: UsuariosView },
       { path: 'perfil', component: PerfilView },
       { path: 'settings', component: SettingsView },
+      { path: 'vocabulario', component: VocabularioView },
+      { path: 'glosario', component: GlosarioView },
+      { path: 'curriculum', component: CurriculumView },
+      { path: 'dialogos', component: DialogosView },
     ],
   },
 ]

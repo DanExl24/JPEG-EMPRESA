@@ -94,7 +94,7 @@
         <div class="border-b border-gray-100 pb-4">
           <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
-            Fase de Inicio: Bienvenida y Calentamiento
+            Module 1: Getting to Know Other People (Fase Analysis - RAP 1)
           </h3>
           <p class="text-xs text-gray-500 mt-1">Mira el video introductorio y completa el juego de calentamiento técnico antes de ver la teoría.</p>
         </div>
@@ -137,20 +137,9 @@
 
           <div class="md:col-span-2 space-y-4 flex flex-col justify-center bg-gray-50 p-6 rounded-2xl border border-gray-100">
             <h4 class="font-black text-gray-800 text-sm">¿Qué aprenderás en este módulo?</h4>
-            <ul class="text-xs text-gray-600 space-y-2">
-              <li class="flex items-start gap-2">
-                <span class="material-symbols-outlined text-xs text-[#006688] mt-0.5">check_circle</span>
-                <span>Vocabulario clínico esencial en inglés para enfermeros.</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="material-symbols-outlined text-xs text-[#006688] mt-0.5">check_circle</span>
-                <span>Uso correcto de verbos, sustantivos y adjetivos en el ámbito de la salud.</span>
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="material-symbols-outlined text-xs text-[#006688] mt-0.5">check_circle</span>
-                <span>Conversaciones comunes de atención a pacientes angloparlantes.</span>
-              </li>
-            </ul>
+            <p class="text-xs text-gray-600 leading-relaxed font-semibold">
+              At the end of this module, you will be able to greet people, introduce yourself, exchange personal information, understand basic numbers and spell names in English when interacting with patients and healthcare staff.
+            </p>
           </div>
         </div>
 
@@ -158,69 +147,80 @@
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
-            <h4 class="font-bold text-gray-800 text-sm">Juego de Calentamiento (Warm-up)</h4>
+            <h4 class="font-bold text-gray-800 text-sm">Greetings according to the time of day</h4>
           </div>
           <p class="text-xs text-gray-600">
-            Instrucción: Ordena la siguiente frase en inglés haciendo clic sobre las palabras en orden lógico. 
-            <strong>"El enfermero registra la presión arterial del paciente."</strong>
+            Instrucción: Empareja la representación/momento del día de la columna izquierda con el saludo correspondiente a la derecha.
           </p>
 
-          <div class="space-y-4 bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
             
-            <!-- Target Slot / Selected Words -->
-            <div class="min-h-[50px] bg-white border border-gray-200 rounded-xl p-3 flex flex-wrap gap-2 items-center shadow-inner">
-              <span v-if="gameSelectedWords.length === 0" class="text-gray-400 text-xs italic">Haz clic en las palabras de abajo para formar la frase...</span>
+            <!-- Left column: Moment representing items -->
+            <div class="space-y-2">
+              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Momento del día</span>
               <button 
-                v-for="(word, index) in gameSelectedWords" 
-                :key="'sel-' + index"
-                @click="removeWordFromGame(index)"
-                class="px-3 py-1.5 bg-[#006688]/10 text-[#006688] border border-[#006688]/20 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-[#006688]/20 transition-all"
-              >
-                {{ word }}
-                <span class="material-symbols-outlined text-[10px]">close</span>
-              </button>
-            </div>
-
-            <!-- Scrambled Available Words -->
-            <div class="flex flex-wrap gap-2">
-              <button 
-                v-for="(word, index) in gameScrambledWords" 
-                :key="'scram-' + index"
-                @click="addWordToGame(word, index)"
-                :disabled="gameSelectedWords.includes(word)"
-                :class="`px-3 py-2 border rounded-xl text-xs font-semibold shadow-sm transition-all ${
-                  gameSelectedWords.includes(word)
-                    ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed shadow-none'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688] hover:text-[#006688] active:scale-95'
+                v-for="item in leftItems" 
+                :key="item"
+                @click="selectLeftItem(item)"
+                type="button"
+                :disabled="matchedPairs.includes(item)"
+                :class="`w-full p-3.5 border rounded-2xl text-xs font-bold text-left transition-all flex items-center justify-between ${
+                  matchedPairs.includes(item)
+                    ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed'
+                    : selectedLeft === item
+                      ? 'bg-[#006688] text-white border-[#006688] shadow-md scale-[1.02]'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688] hover:text-[#006688]'
                 }`"
               >
-                {{ word }}
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base">
+                    {{ item === 'Sun' ? 'light_mode' : item === 'Afternoon' ? 'wb_twilight' : 'dark_mode' }}
+                  </span>
+                  <span>{{ item === 'Sun' ? 'Sun (Mañana)' : item === 'Afternoon' ? 'Afternoon (Tarde)' : 'Moon (Noche)' }}</span>
+                </div>
+                <span v-if="matchedPairs.includes(item)" class="material-symbols-outlined text-xs bg-green-500 text-white rounded-full p-0.5">check</span>
               </button>
             </div>
 
-            <div class="flex items-center gap-3">
+            <!-- Right column: Greetings -->
+            <div class="space-y-2">
+              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Saludos en Inglés</span>
               <button 
-                @click="validateWarmupGame" 
-                :disabled="gameSelectedWords.length === 0"
-                class="px-5 py-2 bg-[#006688] hover:bg-[#004e69] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                v-for="item in rightItems" 
+                :key="item"
+                @click="selectRightItem(item)"
+                type="button"
+                :disabled="matchedPairs.includes(item)"
+                :class="`w-full p-3.5 border rounded-2xl text-xs font-bold text-left transition-all flex items-center justify-between ${
+                  matchedPairs.includes(item)
+                    ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed'
+                    : selectedRight === item
+                      ? 'bg-[#006688] text-white border-[#006688] shadow-md scale-[1.02]'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688] hover:text-[#006688]'
+                }`"
               >
-                Validar Frase
+                <span>{{ item }}</span>
+                <span v-if="matchedPairs.includes(item)" class="material-symbols-outlined text-xs bg-green-500 text-white rounded-full p-0.5">check</span>
               </button>
+            </div>
+
+            <div class="sm:col-span-2 flex items-center gap-3 pt-2 border-t border-gray-200">
               <button 
                 @click="resetWarmupGame"
-                class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-xl transition-all"
+                type="button"
+                class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-xl transition-all shadow-xs"
               >
-                Limpiar
+                Limpiar Juego
               </button>
               
               <!-- Feedback messages -->
               <span v-if="gameSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">check_circle</span>
-                ¡Excelente! Frase correcta. Fase 1 validada.
+                ¡Excelente! Has emparejado todos los saludos correctamente. Fase 1 completada.
               </span>
               <span v-if="gameSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">cancel</span>
-                Inténtalo de nuevo. Revisa el orden.
+                Emparejamiento incorrecto. Inténtalo de nuevo.
               </span>
             </div>
           </div>
@@ -424,71 +424,96 @@
         <div class="border-b border-gray-100 pb-4">
           <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
-            Fase de Práctica Activa
+            Fase de Práctica Activa (RAP 1)
           </h3>
-          <p class="text-xs text-gray-500 mt-1">Completa el formulario de gramática, escribe el dictado médico y realiza la grabación de tu voz.</p>
+          <p class="text-xs text-gray-500 mt-1">Completa el formulario de perfil personal, realiza los deletreos auditivos y graba tu presentación personal.</p>
         </div>
 
-        <!-- Fill in the blank Form -->
+        <!-- Guided Practice 1 — Complete the Profile -->
         <div class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">edit_note</span>
-            <h4 class="font-bold text-gray-800 text-sm">1. Rellenar Espacios en Blanco</h4>
+            <h4 class="font-bold text-gray-800 text-sm">1. Guided Practice 1 – Complete the Profile</h4>
           </div>
-          <p class="text-xs text-gray-600">Completa la oración seleccionando o escribiendo la opción correcta para un contexto clínico.</p>
+          <p class="text-xs text-gray-600">Completa el formulario utilizando oraciones con la estructura: <strong>Subject + Verb + Complement</strong> (por ejemplo: <i>I am Maria</i>, <i>My last name is Gómez</i>, <i>I am 25 years old</i>, <i>I am Colombian</i>).</p>
 
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
-            <div class="text-sm font-semibold text-gray-700">
-              Oración: "The doctor wrote a <span class="bg-white border-b-2 border-[#006688] px-2 py-0.5 inline-block text-[#006688] min-w-[120px] text-center font-bold">{{ fillInput || '______' }}</span> for the outpatient's medication."
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-500">First Name (e.g., I am Maria)</label>
+                <input type="text" v-model="profileForm.firstName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Type: I am [name] or My name is [name]" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-500">Last Name (e.g., My last name is Gómez)</label>
+                <input type="text" v-model="profileForm.lastName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Type: My last name is [last name]" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-500">Age (e.g., I am 25 years old)</label>
+                <input type="text" v-model="profileForm.age" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Type: I am [age] years old" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-500">Nationality (e.g., I am Colombian)</label>
+                <input type="text" v-model="profileForm.nationality" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Type: I am [nationality]" />
+              </div>
             </div>
             
-            <div class="flex gap-2">
-              <button 
-                v-for="opt in ['prescription', 'stethoscope', 'suture']" 
-                :key="opt"
-                @click="fillInput = opt"
-                :class="`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-                  fillInput === opt
-                    ? 'bg-[#006688] text-white border-[#006688]'
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`"
-              >
-                {{ opt }}
-              </button>
+            <div class="flex items-center gap-3">
+              <button @click="validateProfileForm" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">Verificar Formulario</button>
+              <span v-if="profileFormSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                Formulario correcto y estructurado.
+              </span>
+              <span v-if="profileFormSuccess === false" class="text-red-650 text-xs font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">cancel</span>
+                Revisa los ejemplos. Asegúrate de incluir el sujeto, verbo y complemento.
+              </span>
             </div>
           </div>
         </div>
 
-        <!-- Dictation Activity -->
+        <!-- Guided Practice 2 — Listening and Spelling -->
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">text_to_speech</span>
-            <h4 class="font-bold text-gray-800 text-sm">2. Dictado Clínico (Escribir lo que escuchas)</h4>
+            <h4 class="font-bold text-gray-800 text-sm">2. Guided Practice 2 – Listening and Spelling</h4>
           </div>
-          <p class="text-xs text-gray-600">Escucha la frase de instrucción clínica haciendo clic en el altavoz y escríbela exactamente en el cuadro de texto.</p>
+          <p class="text-xs text-gray-600">Escucha la información deletreada en inglés y escríbela correctamente en el cuadro correspondiente.</p>
 
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
-            <div class="flex items-center gap-3">
-              <button 
-                @click="playDictationAudio"
-                class="w-10 h-10 rounded-full bg-[#006688] text-white flex items-center justify-center hover:scale-105 transition-transform"
-                title="Reproducir frase"
-              >
-                <span class="material-symbols-outlined text-xl">
-                  {{ dictationPlaying ? 'volume_mute animate-pulse' : 'volume_up' }}
-                </span>
-              </button>
-              <span class="text-xs text-gray-500 italic font-semibold">(Pista: frase de 5 palabras sobre los signos vitales)</span>
+            <div v-for="(sp, idx) in spellingTasks" :key="idx" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 bg-white border border-gray-200 rounded-2xl shadow-xs">
+              <div class="flex items-center gap-3">
+                <button 
+                  @click="playSpellingAudio(sp.audioText)"
+                  type="button"
+                  class="w-8 h-8 rounded-full bg-[#006688] text-white flex items-center justify-center hover:scale-105 transition-transform"
+                  title="Escuchar deletreo"
+                >
+                  <span class="material-symbols-outlined text-sm">volume_up</span>
+                </button>
+                <div class="space-y-0.5">
+                  <span class="text-xs font-bold text-gray-700">Audio {{ idx + 1 }}</span>
+                  <p class="text-[9px] text-gray-400 font-semibold">{{ sp.hint }}</p>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  v-model="spellingAnswers[idx]" 
+                  placeholder="Escribe lo que escuchas..."
+                  class="px-3 py-1.5 border border-gray-200 focus:outline-none focus:border-[#006688] rounded-xl text-xs font-semibold"
+                />
+                <span v-if="spellingResults[idx] === true" class="text-green-600 material-symbols-outlined text-sm">check_circle</span>
+                <span v-else-if="spellingResults[idx] === false" class="text-red-600 material-symbols-outlined text-sm">cancel</span>
+              </div>
             </div>
 
-            <div class="space-y-1">
-              <input 
-                type="text" 
-                v-model="dictationInput" 
-                placeholder="Escribe la frase aquí..."
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#006688] text-sm font-semibold"
-              />
-              <p class="text-[10px] text-gray-400 font-medium">Ejemplo para comprobar: "Please check the heart rate"</p>
+            <div class="flex items-center gap-3 pt-2">
+              <button @click="validateSpellingTasks" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">Verificar Deletreos</button>
+              <span v-if="spellingAllCorrect === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                ¡Todos los deletreos son correctos!
+              </span>
             </div>
           </div>
         </div>
@@ -497,12 +522,14 @@
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">mic</span>
-            <h4 class="font-bold text-gray-800 text-sm">3. Grabación de Voz (Pronunciación)</h4>
+            <h4 class="font-bold text-gray-800 text-sm">3. Learning Evidence Challenge</h4>
           </div>
           <p class="text-xs text-gray-600">
-            Lee en voz alta y graba la siguiente oración: 
-            <strong class="text-[#006688]">"The patient requires urgent sutures for the laceration."</strong> 
-            (Tiempo máximo: 60 segundos).
+            Graba un audio de máximo 1 minuto presentándote a un paciente extranjero. Debes saludar, decir tu nombre, deletrear tu apellido, decir tu nacionalidad y tu número de teléfono:
+            <br />
+            <span class="block mt-2 bg-[#006688]/5 text-[#006688] p-3 rounded-xl border border-[#006688]/10 font-mono text-[11px] leading-relaxed">
+              Example: "Good morning. My name is Laura Gómez. Gómez is spelled G-O-M-E-Z. I am Colombian. My phone number is 300-123-4567. Nice to meet you."
+            </span>
           </p>
 
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
@@ -512,6 +539,7 @@
               <div class="flex items-center gap-4">
                 <button 
                   @click="toggleRecording"
+                  type="button"
                   :class="`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-md ${
                     isRecording 
                       ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
@@ -548,6 +576,7 @@
               <div v-if="voiceRecorded" class="flex items-center gap-2">
                 <button 
                   @click="playVoicePreview"
+                  type="button"
                   class="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-bold transition-all hover:bg-green-200"
                 >
                   <span class="material-symbols-outlined text-xs">
@@ -1521,9 +1550,7 @@ function updatePhaseProgress() {
   // 3. Phase 3 (Práctica)
   const phase3DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Práctica')
   const p3DbCompleted = phase3DbActs.every(a => completedActivityIds.value.includes(a.id))
-  const filled = fillInput.value.trim().toLowerCase() === 'prescription'
-  const dictated = dictationInput.value.trim().toLowerCase().includes('heart rate')
-  const p3BaseCompleted = filled && dictated && voiceRecorded.value
+  const p3BaseCompleted = profileFormSuccess.value === true && spellingAllCorrect.value === true && voiceRecorded.value
   phaseProgress.value.practica = (p3BaseCompleted && p3DbCompleted) ? 100 : 0
 
   // 4. Phase 4 (Evaluación)
@@ -1536,45 +1563,115 @@ function updatePhaseProgress() {
 }
 
 // -----------------------------------------------------------------
-// Phase 1: Welcome Video & Warm-up Game State
+// Phase 1: Welcome Video & Warm-up Game State (Greetings / Sun-Moon match)
 // -----------------------------------------------------------------
 const videoPlaying = ref(false)
 const videoCompleted = ref(false)
 const videoProgress = ref(0)
 let videoTimer = null
 
-const gameScrambledWords = ref(['checks', 'The nurse', 'blood pressure', "patient's", 'the'])
-const gameSelectedWords = ref([])
-const gameSuccess = ref(null) // null = unchecked, true = correct, false = wrong
+const leftItems = ['Sun', 'Afternoon', 'Moon']
+const rightItems = ['Good morning', 'Good afternoon', 'Good evening']
+const selectedLeft = ref(null)
+const selectedRight = ref(null)
+const matchedPairs = ref([]) // matched left & right items
+const gameSuccess = ref(null)
 const isGameCompleted = computed(() => phaseProgress.value.inicio === 100)
 
+function selectLeftItem(item) {
+  if (matchedPairs.value.includes(item)) return
+  selectedLeft.value = item
+  checkWarmupMatch()
+}
+
+function selectRightItem(item) {
+  if (matchedPairs.value.includes(item)) return
+  selectedRight.value = item
+  checkWarmupMatch()
+}
+
+function checkWarmupMatch() {
+  if (selectedLeft.value && selectedRight.value) {
+    const correctPairs = {
+      'Sun': 'Good morning',
+      'Afternoon': 'Good afternoon',
+      'Moon': 'Good evening'
+    }
+    if (correctPairs[selectedLeft.value] === selectedRight.value) {
+      matchedPairs.value.push(selectedLeft.value, selectedRight.value)
+    }
+    selectedLeft.value = null
+    selectedRight.value = null
+    
+    if (matchedPairs.value.length === 6) {
+      gameSuccess.value = true
+      phaseProgress.value.inicio = 100
+      saveProgress()
+    }
+  }
+}
+
+function resetWarmupGame() {
+  selectedLeft.value = null
+  selectedRight.value = null
+  matchedPairs.value = []
+  gameSuccess.value = null
+  phaseProgress.value.inicio = 0
+  saveProgress()
+}
+
+function validateWarmupGame() {
+  if (matchedPairs.value.length === 6) {
+    gameSuccess.value = true
+    phaseProgress.value.inicio = 100
+  } else {
+    gameSuccess.value = false
+  }
+}
+
+function checkPhase1Completion() {
+  if (videoCompleted.value && gameSuccess.value === true) {
+    phaseProgress.value.inicio = 100
+  }
+}
+
+// Watch game success & video complete
+watch([videoCompleted, gameSuccess], () => {
+  checkPhase1Completion()
+})
+
 // -----------------------------------------------------------------
-// Phase 2: Highlighted Grammar, Audio Vocabulary, Clinical Dialogue
+// Phase 2: Highlighted Grammar, Audio Vocabulary, Dialogue (Sarah & John)
 // -----------------------------------------------------------------
-const activeGrammarFilters = ref(['verb', 'noun', 'adjective', 'adverb'])
+const activeGrammarFilters = ref(['subject', 'verb', 'complement'])
 const grammarSentence = [
-  { text: 'The ', type: '' },
-  { text: 'diligent ', type: 'adjective' },
-  { text: 'nurse ', type: 'noun' },
-  { text: 'administers ', type: 'verb' },
-  { text: 'the ', type: '' },
-  { text: 'vital ', type: 'adjective' },
-  { text: 'medication ', type: 'noun' },
-  { text: 'carefully', type: 'adverb' },
-  { text: '.', type: '' },
+  { text: 'I ', type: 'subject' },
+  { text: 'am ', type: 'verb' },
+  { text: 'a nursing student. ', type: 'complement' },
+  { text: 'I ', type: 'subject' },
+  { text: 'am ', type: 'verb' },
+  { text: 'from Colombia. ', type: 'complement' },
+  { text: 'You ', type: 'subject' },
+  { text: 'are ', type: 'verb' },
+  { text: 'a patient. ', type: 'complement' },
+  { text: 'You ', type: 'subject' },
+  { text: 'are ', type: 'verb' },
+  { text: 'in the hospital.', type: 'complement' }
 ]
 
 const grammarLegend = [
-  { id: 'verb', label: 'Verbo (Verb)', bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', dotBg: 'bg-green-500' },
-  { id: 'noun', label: 'Sustantivo (Noun)', bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', dotBg: 'bg-blue-500' },
-  { id: 'adjective', label: 'Adjetivo (Adjective)', bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', dotBg: 'bg-amber-500' },
-  { id: 'adverb', label: 'Adverbio (Adverb)', bg: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-300', dotBg: 'bg-pink-500' },
+  { id: 'subject', label: 'Sujeto (Subject)', bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', dotBg: 'bg-blue-500' },
+  { id: 'verb', label: 'Verbo To Be (Verb)', bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', dotBg: 'bg-green-500' },
+  { id: 'complement', label: 'Complemento (Complement)', bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', dotBg: 'bg-amber-500' }
 ]
 
 const vocabList = ref([
-  { id: 'v1', word: 'Stethoscope', ipa: '/ˈsteθ.ə.skoʊp/', translation: 'Estetoscopio', played: false, speed: 1.0 },
-  { id: 'v2', word: 'Intravenous (IV)', ipa: '/ˌɪn.trəˈviː.nəs/', translation: 'Intravenoso', played: false, speed: 1.0 },
-  { id: 'v3', word: 'Suture', ipa: '/ˈsuː.tʃɚ/', translation: 'Sutura (puntos)', played: false, speed: 1.0 },
+  { id: 'v1', word: 'Good morning', ipa: '/ɡʊd ˈmɔːr.nɪŋ/', translation: 'Buenos días (Saludo formal)', played: false, speed: 1.0 },
+  { id: 'v2', word: 'See you later', ipa: '/siː juː ˈleɪ.t̬ɚ/', translation: 'Hasta luego (Despedida)', played: false, speed: 1.0 },
+  { id: 'v3', word: 'Last name', ipa: '/læst neɪm/', translation: 'Apellido (Información personal)', played: false, speed: 1.0 },
+  { id: 'v4', word: 'Phone number', ipa: '/foʊn ˈnʌm.bɚ/', translation: 'Número telefónico', played: false, speed: 1.0 },
+  { id: 'v5', word: 'Nationality', ipa: '/ˌnæʃ.ənˈæl.ə.t̬i/', translation: 'Nacionalidad', played: false, speed: 1.0 },
+  { id: 'v6', word: 'Spelling', ipa: '/ˈspel.ɪŋ/', translation: 'Deletreo', played: false, speed: 1.0 }
 ])
 
 const playingVocabId = ref(null)
@@ -1582,21 +1679,79 @@ const vocabAudioProgress = ref(0)
 let vocabAudioInterval = null
 
 const dialogue = [
-  { role: 'nurse', english: 'Good morning, John. I need to take your vital signs before the doctor examines you.', spanish: 'Buenos días, John. Necesito tomarle sus signos vitales antes de que el doctor lo examine.' },
-  { role: 'patient', english: 'Good morning, nurse. Sure, go ahead. My arm hurts a little bit.', spanish: 'Buenos días, enfermera. Claro, adelante. Me duele un poco el brazo.' },
-  { role: 'nurse', english: 'Please rest your left arm. I will check your blood pressure and heart rate.', spanish: 'Por favor, apoye su brazo izquierdo. Revisaré su presión arterial y frecuencia cardíaca.' },
-  { role: 'patient', english: 'Okay. Is my blood pressure high?', spanish: 'De acuerdo. ¿Está alta mi presión arterial?' },
-  { role: 'nurse', english: 'It is stable: 120 over 80. Do you require any pain relievers?', spanish: 'Está estable: 120 sobre 80. ¿Requiere algún analgésico?' },
+  { role: 'Sarah', english: 'Hello. My name is Sarah.', spanish: 'Hola. Mi nombre es Sarah.' },
+  { role: 'John', english: 'Hi Sarah. My name is John.', spanish: 'Hola Sarah. Mi nombre es John.' },
+  { role: 'Sarah', english: 'Nice to meet you.', spanish: 'Gusto en conocerte.' },
+  { role: 'John', english: 'Nice to meet you too.', spanish: 'Gusto en conocerte a ti también.' }
 ]
 
 const isStudyCompleted = computed(() => phaseProgress.value.estudio === 100)
 
 // -----------------------------------------------------------------
-// Phase 3: Fill Blanks, Dictation, Voice Recorder
+// Phase 3: Profile Form & Spelling Tasks (Guided Practice 1 & 2)
 // -----------------------------------------------------------------
-const fillInput = ref('')
-const dictationInput = ref('')
-const dictationPlaying = ref(false)
+const profileForm = ref({
+  firstName: '',
+  lastName: '',
+  age: '',
+  nationality: ''
+})
+const profileFormSuccess = ref(null)
+
+function validateProfileForm() {
+  const f = profileForm.value
+  // Basic validation that they wrote Subject + Verb To Be + Complement
+  const fnOk = f.firstName.trim().toLowerCase().startsWith('i am') || f.firstName.trim().toLowerCase().startsWith('my name is')
+  const lnOk = f.lastName.trim().toLowerCase().includes('is') || f.lastName.trim().toLowerCase().startsWith('my last name is')
+  const ageOk = f.age.trim().toLowerCase().startsWith('i am') && f.age.trim().toLowerCase().includes('old')
+  const natOk = f.nationality.trim().toLowerCase().startsWith('i am')
+  
+  if (fnOk && lnOk && ageOk && natOk) {
+    profileFormSuccess.value = true
+  } else {
+    profileFormSuccess.value = false
+  }
+  checkPhase3Completion()
+}
+
+const spellingTasks = [
+  { text: 'maria', audioText: 'M A R I A', hint: 'Deletreo de primer nombre femenino' },
+  { text: 'john', audioText: 'J O H N', hint: 'Deletreo de primer nombre masculino' },
+  { text: 'maria@gmail.com', audioText: 'M A R I A at G M A I L dot C O M', hint: 'Correo electrónico deletreado' },
+  { text: '315-456-7890', audioText: '3 1 5 4 5 6 7 8 9 0', hint: 'Número telefónico dígito a dígito' }
+]
+
+const spellingAnswers = ref(['', '', '', ''])
+const spellingResults = ref([null, null, null, null])
+const spellingAllCorrect = ref(false)
+
+function playSpellingAudio(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'en-US'
+    utterance.rate = 0.65 // slower rate for clarity
+    window.speechSynthesis.speak(utterance)
+  } else {
+    alert('Spelled audio: ' + text)
+  }
+}
+
+function validateSpellingTasks() {
+  let allOk = true
+  spellingTasks.forEach((task, idx) => {
+    const entered = spellingAnswers.value[idx].trim().toLowerCase().replace(/[-\s]/g, '')
+    const correct = task.text.toLowerCase().replace(/[-\s]/g, '')
+    if (entered === correct) {
+      spellingResults.value[idx] = true
+    } else {
+      spellingResults.value[idx] = false
+      allOk = false
+    }
+  })
+  spellingAllCorrect.value = allOk
+  checkPhase3Completion()
+}
 
 const isRecording = ref(false)
 const voiceRecorded = ref(false)
@@ -1607,7 +1762,7 @@ let recorderInterval = null
 const isPracticeCompleted = computed(() => phaseProgress.value.practica === 100)
 
 // -----------------------------------------------------------------
-// Phase 4: Exam & Badges
+// Phase 4: Exam & Badges (Knowledge Check)
 // -----------------------------------------------------------------
 const examAnswers = ref({})
 const examPassed = ref(false)
@@ -1617,21 +1772,27 @@ const examScoreMessage = ref('')
 const examQuestions = [
   {
     id: 'q1',
-    question: '¿Qué significa "respiration rate" en el contexto de la salud?',
-    options: ['Frecuencia respiratoria', 'Ritmo cardíaco', 'Presión arterial', 'Frecuencia de dosificación'],
-    correct: 'Frecuencia respiratoria',
+    question: 'What is the correct greeting at 8:00 a.m.?',
+    options: ['Good evening', 'Good afternoon', 'Good morning', 'Goodbye'],
+    correct: 'Good morning',
   },
   {
     id: 'q2',
-    question: 'Completa la frase clínica: "The nurse must check the ______ before administering medication."',
-    options: ['stethoscope', 'suture', 'patient\'s file', 'ranking'],
-    correct: 'patient\'s file',
+    question: 'Choose the correct sentence:',
+    options: ['Am I nurse.', 'I nurse am.', 'I am a nurse.', 'Nurse I am.'],
+    correct: 'I am a nurse.',
   },
   {
     id: 'q3',
-    question: '¿Cuál de las siguientes palabras resaltadas corresponde a un sustantivo (Noun)? "The diligent *nurse* administers medication."',
-    options: ['diligent', 'nurse', 'administers', 'medication'],
-    correct: 'nurse',
+    question: 'How do you write 45?',
+    options: ['Forty-five', 'Fourty-five', 'Four five', 'Forty fife'],
+    correct: 'Forty-five',
+  },
+  {
+    id: 'q4',
+    question: 'What question asks for a phone number?',
+    options: ['What is your nationality?', 'What is your phone number?', 'How old are you?', 'Where are you from?'],
+    correct: 'What is your phone number?',
   },
 ]
 
@@ -1715,56 +1876,11 @@ function resetVideo() {
   videoProgress.value = 0
 }
 
-function addWordToGame(word, index) {
-  if (!gameSelectedWords.value.includes(word)) {
-    gameSelectedWords.value.push(word)
-  }
-}
-
-function removeWordFromGame(index) {
-  gameSelectedWords.value.splice(index, 1)
-}
-
-function resetWarmupGame() {
-  gameSelectedWords.value = []
-  gameSuccess.value = null
-}
-
-function validateWarmupGame() {
-  const correctOrder = ['The nurse', 'checks', 'the', "patient's", 'blood pressure']
-  
-  const matches = gameSelectedWords.value.length === correctOrder.length &&
-                  gameSelectedWords.value.every((word, i) => word === correctOrder[i])
-
-  if (matches) {
-    gameSuccess.value = true
-    phaseProgress.value.inicio = 100
-  } else {
-    gameSuccess.value = false
-  }
-}
-
-function checkPhase1Completion() {
-  // Video completed is positive, but the Game completes Phase 1
-  if (videoCompleted.value && gameSuccess.value === true) {
-    phaseProgress.value.inicio = 100
-  }
-}
-
-// Watch game success & video complete
-watch([videoCompleted, gameSuccess], () => {
-  checkPhase1Completion()
-})
-
-// -----------------------------------------------------------------
-// Phase 2 Actions
-// -----------------------------------------------------------------
 function getGrammarHighlightClass(type) {
   if (!type || !activeGrammarFilters.value.includes(type)) return ''
+  if (type === 'subject') return 'bg-blue-100 text-blue-700 border-b border-blue-400 font-bold'
   if (type === 'verb') return 'bg-green-100 text-green-700 border-b border-green-400 font-bold'
-  if (type === 'noun') return 'bg-blue-100 text-blue-700 border-b border-blue-400 font-bold'
-  if (type === 'adjective') return 'bg-amber-100 text-amber-700 border-b border-amber-400 font-bold'
-  if (type === 'adverb') return 'bg-pink-100 text-pink-700 border-b border-pink-400 font-bold'
+  if (type === 'complement') return 'bg-amber-100 text-amber-700 border-b border-amber-400 font-bold'
   return ''
 }
 
@@ -1822,14 +1938,6 @@ function validateStudyPhase() {
 // -----------------------------------------------------------------
 // Phase 3 Actions
 // -----------------------------------------------------------------
-async function playDictationAudio() {
-  const ready = await verifyMediaResource('clinical_dictation_1.mp3')
-  dictationPlaying.value = true
-  setTimeout(() => {
-    dictationPlaying.value = false
-  }, 3000)
-}
-
 async function toggleRecording() {
   if (isRecording.value) {
     // Stop recording
@@ -1873,15 +1981,18 @@ function playVoicePreview() {
 }
 
 function checkPhase3Completion() {
-  const filled = fillInput.value.trim().toLowerCase() === 'prescription'
-  const dictated = dictationInput.value.trim().toLowerCase().includes('heart rate')
+  const f = profileFormSuccess.value === true
+  const s = spellingAllCorrect.value === true
   
-  if (filled && dictated && voiceRecorded.value) {
+  if (f && s && voiceRecorded.value) {
     phaseProgress.value.practica = 100
+  } else {
+    phaseProgress.value.practica = 0
   }
+  updatePhaseProgress()
 }
 
-watch([fillInput, dictationInput, voiceRecorded], () => {
+watch([profileFormSuccess, spellingAllCorrect, voiceRecorded], () => {
   checkPhase3Completion()
 })
 
@@ -1904,14 +2015,14 @@ function submitExam() {
   
   const pct = (correctCount / examQuestions.length) * 100
   
-  if (pct >= 80) {
+  if (pct >= 75) {
     examPassed.value = true
     showBadgeAward.value = true
     phaseProgress.value.evaluacion = 100
     examScoreMessage.value = ''
     saveProgress()
   } else {
-    examScoreMessage.value = `Calificación: ${Math.round(pct)}%. Necesitas al menos 80% (2 preguntas correctas) para aprobar. Intenta de nuevo.`
+    examScoreMessage.value = `Calificación: ${Math.round(pct)}%. Necesitas al menos 75% (3 de 4 preguntas correctas) para aprobar. Intenta de nuevo.`
   }
 }
 
@@ -1938,10 +2049,13 @@ function saveProgress() {
     phaseProgress: phaseProgress.value,
     videoCompleted: videoCompleted.value,
     gameSuccess: gameSuccess.value,
-    gameSelectedWords: gameSelectedWords.value,
+    matchedPairs: matchedPairs.value,
     vocabPlayed: vocabList.value.map(v => ({ id: v.id, played: v.played })),
-    fillInput: fillInput.value,
-    dictationInput: dictationInput.value,
+    profileForm: profileForm.value,
+    profileFormSuccess: profileFormSuccess.value,
+    spellingAnswers: spellingAnswers.value,
+    spellingResults: spellingResults.value,
+    spellingAllCorrect: spellingAllCorrect.value,
     voiceRecorded: voiceRecorded.value,
     examPassed: examPassed.value,
     showBadgeAward: showBadgeAward.value,
@@ -1961,7 +2075,7 @@ function loadProgress() {
     if (state.phaseProgress) phaseProgress.value = state.phaseProgress
     if (state.videoCompleted) videoCompleted.value = state.videoCompleted
     if (state.gameSuccess) gameSuccess.value = state.gameSuccess
-    if (state.gameSelectedWords) gameSelectedWords.value = state.gameSelectedWords
+    if (state.matchedPairs) matchedPairs.value = state.matchedPairs
     
     if (state.vocabPlayed) {
       state.vocabPlayed.forEach(sp => {
@@ -1970,8 +2084,11 @@ function loadProgress() {
       })
     }
     
-    if (state.fillInput) fillInput.value = state.fillInput
-    if (state.dictationInput) dictationInput.value = state.dictationInput
+    if (state.profileForm) profileForm.value = state.profileForm
+    if (state.profileFormSuccess !== undefined) profileFormSuccess.value = state.profileFormSuccess
+    if (state.spellingAnswers) spellingAnswers.value = state.spellingAnswers
+    if (state.spellingResults) spellingResults.value = state.spellingResults
+    if (state.spellingAllCorrect !== undefined) spellingAllCorrect.value = state.spellingAllCorrect
     if (state.voiceRecorded) voiceRecorded.value = state.voiceRecorded
     if (state.examPassed) examPassed.value = state.examPassed
     if (state.showBadgeAward) showBadgeAward.value = state.showBadgeAward
@@ -1989,9 +2106,12 @@ watch([
   phaseProgress, 
   videoCompleted, 
   gameSuccess, 
-  gameSelectedWords, 
-  fillInput, 
-  dictationInput, 
+  matchedPairs, 
+  profileForm,
+  profileFormSuccess,
+  spellingAnswers,
+  spellingResults,
+  spellingAllCorrect,
   voiceRecorded, 
   examPassed,
   showBadgeAward,

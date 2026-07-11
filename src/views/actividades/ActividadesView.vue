@@ -94,6 +94,17 @@
                 Revisar Entregas
               </button>
 
+              <!-- CSV Export Button: only shown when there are student submissions -->
+              <button
+                v-if="act.hasStudentSubmissions"
+                @click="downloadCsv(act)"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 flex items-center gap-1"
+                title="Exportar entregas como CSV"
+              >
+                <span class="material-symbols-outlined text-xs">download</span>
+                Exportar CSV
+              </button>
+
               <button
                 @click="openEditActivityModal(act)"
                 :class="`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
@@ -198,6 +209,13 @@
                     <option value="1">1 Intento</option>
                     <option value="3">3 Intentos</option>
                     <option value="5">5 Intentos</option>
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-gray-500">Resultado de Aprendizaje (RAP)</label>
+                  <select v-model="form.learningOutcomeId" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]">
+                    <option value="">Ninguno</option>
+                    <option v-for="r in rapsList" :key="r.id" :value="r.id">{{ r.code }} - {{ r.name.slice(0, 45) }}...</option>
                   </select>
                 </div>
               </div>
@@ -507,6 +525,18 @@
                 <input type="text" v-model="form.pronouncePhrase" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none" placeholder="Ej. Administer the antibiotic intravenously" />
               </div>
 
+              <!-- Completar Oración (Fill in the Blank) Fields -->
+              <div v-if="form.template === 'fillblank'" class="space-y-3">
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-gray-500">Oración con espacio en blanco (usa [blank] para indicar la posición)</label>
+                  <input type="text" v-model="form.fillblankSentence" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. The [blank] is used to listen to heart sounds." />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-gray-500">Palabra de Respuesta Correcta (sensible a mayúsculas/minúsculas o limpio)</label>
+                  <input type="text" v-model="form.fillblankAnswer" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. stethoscope" />
+                </div>
+              </div>
+
             </div>
 
             <!-- Feedback Config -->
@@ -797,6 +827,25 @@
                 </div>
               </div>
 
+              <!-- Playable Fill in the Blank Demo -->
+              <div v-if="form.template === 'fillblank'" class="space-y-4">
+                <p class="text-xs text-gray-600 font-bold">Completa la palabra faltante en la oración:</p>
+                <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-center gap-2 flex-wrap">
+                  <span class="text-sm font-semibold text-gray-700">
+                    {{ form.fillblankSentence ? form.fillblankSentence.split('[blank]')[0] : 'The ' }}
+                  </span>
+                  <input 
+                    type="text" 
+                    v-model="previewFillblankAnswer"
+                    class="px-3 py-1 border border-gray-300 focus:outline-[#006688] rounded-xl text-xs font-bold text-center w-36 uppercase text-[#006688] outline-none"
+                    placeholder="palabra..."
+                  />
+                  <span class="text-sm font-semibold text-gray-700">
+                    {{ form.fillblankSentence && form.fillblankSentence.includes('[blank]') ? form.fillblankSentence.split('[blank]')[1] : ' is used to listen to heart sounds.' }}
+                  </span>
+                </div>
+              </div>
+
               <!-- Action buttons for validation in demo -->
               <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
                 <button 
@@ -1009,8 +1058,35 @@ async function fetchActivities() {
   }
 }
 
-onMounted(fetchActivities)
-onActivated(fetchActivities)
+const rapsList = ref([])
+
+async function fetchRaps() {
+  try {
+    const token = getToken()
+    const response = await fetch(`${apiBaseUrl}/api/admin/curriculum/raps`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (response.ok) {
+      rapsList.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Error fetching RAPs:', error)
+  }
+}
+
+function getToken() {
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
+onMounted(() => {
+  fetchActivities()
+  fetchRaps()
+})
+onActivated(() => {
+  fetchActivities()
+  fetchRaps()
+})
 
 
 const courseOptions = [
@@ -1027,6 +1103,7 @@ const templateOptions = [
   { id: 'crucigrama', label: 'Crucigramas', icon: 'border_inner' },
   { id: 'quiz', label: 'Quizzes', icon: 'quiz' },
   { id: 'preguntas', label: 'Opción múltiple', icon: 'list_alt' },
+  { id: 'fillblank', label: 'Completar oración', icon: 'edit_note' },
   { id: 'match', label: 'Conectar significado', icon: 'compare_arrows' },
   { id: 'listening', label: 'Escucha (Audio)', icon: 'volume_up' },
   { id: 'pronunciation', label: 'Pronunciación (Voz)', icon: 'mic' },
@@ -1057,6 +1134,9 @@ const form = ref({
   matchMeaning: '',
   listeningPhrase: '',
   pronouncePhrase: '',
+  fillblankSentence: '',
+  fillblankAnswer: '',
+  learningOutcomeId: '',
   crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
   layoutMode: 'automatic'
 })
@@ -1126,6 +1206,33 @@ async function submitReview(sub, approved) {
   } catch (err) {
     console.error(err)
     notificationStore.notify({ type: 'error', title: 'Error', message: 'No se pudo guardar la revisión.' })
+  }
+}
+
+// ── Exportación CSV de entregas (instructor) ──
+async function downloadCsv(act) {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/activities/${act.id}/submissions/export-csv`)
+    if (!res.ok) throw new Error('Error al exportar CSV.')
+
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `actividad_${act.id}_entregas_${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    notificationStore.notify({
+      type: 'success',
+      title: 'CSV exportado',
+      message: `Las entregas de "${act.title}" se descargaron correctamente.`
+    })
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({ type: 'error', title: 'Error', message: 'No se pudo exportar el CSV.' })
   }
 }
 
@@ -1282,6 +1389,7 @@ const selectedMeaning = ref('')
 const matchedPairs = ref([])
 const previewRecording = ref(false)
 const voiceRecorded = ref(false)
+const previewFillblankAnswer = ref('')
 
 // Sopa de letras computed
 const sopaWordsList = computed(() => {
@@ -1606,6 +1714,9 @@ function openNewActivityModal() {
     matchMeaning: 'Administración en vena',
     listeningPhrase: 'The patient requires immediate attention',
     pronouncePhrase: 'Check the respiratory rate of the patient',
+    fillblankSentence: 'The [blank] is used to listen to heart sounds.',
+    fillblankAnswer: 'stethoscope',
+    learningOutcomeId: '',
     crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
     layoutMode: 'automatic'
   }
@@ -1695,6 +1806,9 @@ function openEditActivityModal(act) {
     matchMeaning: act.matchMeaning || 'Administración en vena',
     listeningPhrase: act.listeningPhrase || 'The patient requires immediate attention',
     pronouncePhrase: act.pronouncePhrase || 'Check the respiratory rate of the patient',
+    fillblankSentence: act.fillblankSentence || 'The [blank] is used to listen to heart sounds.',
+    fillblankAnswer: act.fillblankAnswer || 'stethoscope',
+    learningOutcomeId: act.learningOutcomeId || '',
     crosswordWords,
     layoutMode
   }
@@ -1776,6 +1890,9 @@ async function saveActivity() {
     matchMeaning: form.value.matchMeaning,
     listeningPhrase: form.value.listeningPhrase,
     pronouncePhrase: form.value.pronouncePhrase,
+    fillblankSentence: form.value.fillblankSentence,
+    fillblankAnswer: form.value.fillblankAnswer,
+    learningOutcomeId: form.value.learningOutcomeId ? parseInt(form.value.learningOutcomeId) : null
   }
 
   try {
@@ -1892,6 +2009,14 @@ function validateDemoSubmission() {
     } else {
       demoFeedbackSuccess.value = false
     }
+  } else if (form.value.template === 'fillblank') {
+    const correct = (form.value.fillblankAnswer || '').trim().toLowerCase()
+    const entered = (previewFillblankAnswer.value || '').trim().toLowerCase()
+    if (correct && entered === correct) {
+      demoFeedbackSuccess.value = true
+    } else {
+      demoFeedbackSuccess.value = false
+    }
   } else {
     demoFeedbackSuccess.value = false
   }
@@ -1916,6 +2041,7 @@ function resetDemo() {
   matchedPairs.value = []
   previewRecording.value = false
   voiceRecorded.value = false
+  previewFillblankAnswer.value = ''
 }
 
 function sanitizeWordInput(item) {

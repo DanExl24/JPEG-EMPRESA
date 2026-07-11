@@ -91,6 +91,53 @@ export async function ensureDefaultApprenticeUser() {
 
 const DEFAULT_ACTIVITIES = [
   {
+    title: 'Greetings and Farewells Match',
+    course: 'Fundamentos de Enfermería',
+    phase: 'Preparación',
+    template: 'match',
+    points: 10,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente trabajo! Has emparejado correctamente.',
+    matchTerm: 'Good afternoon',
+    matchMeaning: 'Buenas tardes',
+    hasStudentSubmissions: false
+  },
+  {
+    title: 'Vocabulary Quiz: Personal Info',
+    course: 'Fundamentos de Enfermería',
+    phase: 'Absorción',
+    template: 'quiz',
+    points: 10,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Correcto!',
+    quizQuestion: 'What is the correct translation of "Last name"?',
+    quizCorrect: 'Apellido',
+    quizIncorrect: 'Primer nombre',
+    hasStudentSubmissions: false
+  },
+  {
+    title: 'Spelling Practice: Medical Assistant',
+    course: 'Fundamentos de Enfermería',
+    phase: 'Práctica',
+    template: 'listening',
+    points: 15,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente deletreo!',
+    listeningPhrase: 'I am a nurse',
+    hasStudentSubmissions: false
+  },
+  {
+    title: 'RAP 1 Practice Challenge',
+    course: 'Fundamentos de Enfermería',
+    phase: 'Cierre',
+    template: 'pronunciation',
+    points: 20,
+    attemptsLimit: 'Ilimitados',
+    successMessage: 'Pronunciación correcta.',
+    pronouncePhrase: 'Nice to meet you too',
+    hasStudentSubmissions: false
+  },
+  {
     title: 'Caso Clínico: Insuficiencia Cardíaca',
     course: 'Cuidados Críticos UCI',
     phase: 'Cierre',
@@ -153,17 +200,83 @@ const DEFAULT_ACTIVITIES = [
 ]
 
 export async function ensureDefaultActivities() {
-  const count = await prisma.activity.count()
-  if (count > 0) {
-    return
-  }
-
+  // Clear and re-seed to ensure RAP 1 activities are available
+  await prisma.activity.deleteMany()
   for (const act of DEFAULT_ACTIVITIES) {
-    await prisma.activity.create({
-      data: act
-    })
+    await prisma.activity.create({ data: act })
   }
-
-  console.log('Actividades de prueba sembradas en la base de datos.')
+  console.log('Actividades de prueba sembradas.')
 }
+
+export async function ensureDefaultCurriculum() {
+  const programCount = await prisma.trainingProgram.count()
+  if (programCount > 0) return
+
+  // Create default program
+  const program = await prisma.trainingProgram.create({
+    data: { name: 'Programa de Formación en Enfermería' }
+  })
+
+  // Create competency
+  const competency = await prisma.competency.create({
+    data: {
+      code: 'COMP-230101',
+      name: 'Asistencia en Procedimientos Clínicos y Hospitalarios',
+      program_id: program.id
+    }
+  })
+
+  // Create RAPs / outcomes
+  await prisma.learningOutcome.createMany({
+    data: [
+      {
+        code: 'RAP-01',
+        name: 'Administrar medicamentos y tratamientos básicos según prescripción médica.',
+        competency_id: competency.id
+      },
+      {
+        code: 'RAP-02',
+        name: 'Monitorear y registrar signos vitales del paciente de acuerdo a protocolos clínicos.',
+        competency_id: competency.id
+      }
+    ]
+  })
+  console.log('Currículum de prueba sembrado.')
+}
+
+export async function ensureDefaultVocabulary() {
+  const count = await prisma.vocabulary.count()
+  if (count > 0) return
+
+  const DEFAULT_VOCABULARY = [
+    { wordEn: 'Blood pressure', wordEs: 'Presión arterial', category: 'Signos Vitales', definition: 'Fuerza ejercida por la sangre contra las paredes de los vasos sanguíneos.', example: 'The patient\'s blood pressure is 120/80 mmHg.' },
+    { wordEn: 'Heart rate', wordEs: 'Frecuencia cardíaca', category: 'Signos Vitales', definition: 'Número de latidos del corazón por minuto.', example: 'Normal heart rate ranges from 60 to 100 bpm.' },
+    { wordEn: 'Stethoscope', wordEs: 'Estetoscopio', category: 'Equipos', definition: 'Instrumento para auscultar sonidos del corazón y pulmones.', example: 'Use the stethoscope to listen to heart sounds.' },
+    { wordEn: 'Intravenous line', wordEs: 'Vía intravenosa', category: 'Procedimientos', definition: 'Acceso directo al torrente sanguíneo a través de una vena.', example: 'Insert an IV line before administering medication.' },
+  ]
+
+  await prisma.vocabulary.createMany({ data: DEFAULT_VOCABULARY })
+  console.log('Vocabulario de prueba sembrado.')
+}
+
+export async function ensureDefaultDialogues() {
+  const count = await prisma.dialogue.count()
+  if (count > 0) return
+
+  const dialogueLines = [
+    { speaker: 'Nurse', textEn: 'Hello, I am here to check your blood pressure and heart rate.', textEs: 'Hola, estoy aquí para revisar su presión arterial y frecuencia cardíaca.' },
+    { speaker: 'Patient', textEn: 'Okay, nurse. My arm is ready.', textEs: 'Está bien, enfermera. Mi brazo está listo.' },
+    { speaker: 'Nurse', textEn: 'Excellent. Your blood pressure is 120/80, which is perfectly normal.', textEs: 'Excelente. Su presión arterial es 120/80, lo cual es perfectamente normal.' }
+  ]
+
+  await prisma.dialogue.create({
+    data: {
+      title: 'Control de Signos Vitales',
+      description: 'Conversación estándar entre enfermera y paciente al inicio del turno de control de signos vitales.',
+      content: JSON.stringify(dialogueLines)
+    }
+  })
+  console.log('Diálogos de prueba sembrados.')
+}
+
 

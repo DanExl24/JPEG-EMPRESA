@@ -5,7 +5,18 @@ import testRoutes from './routes/test.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import activityRoutes from './routes/activity.routes.js'
 import adminRoutes from './routes/admin.routes.js'
-import { ensureDefaultApprenticeUser, ensureDefaultAuthUser, ensureDefaultInstructorUser, ensureDefaultActivities } from './lib/bootstrapAuth.js'
+import learnerRoutes from './routes/learner.routes.js'
+import curriculumRoutes from './routes/curriculum.routes.js'
+import contentRoutes from './routes/content.routes.js'
+import {
+  ensureDefaultApprenticeUser,
+  ensureDefaultAuthUser,
+  ensureDefaultInstructorUser,
+  ensureDefaultActivities,
+  ensureDefaultCurriculum,
+  ensureDefaultVocabulary,
+  ensureDefaultDialogues
+} from './lib/bootstrapAuth.js'
 import prisma from './lib/db.js'
 
 const app = express()
@@ -16,7 +27,10 @@ app.use(express.json())
 app.use('/api/test', testRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/activities', activityRoutes)
+app.use('/api/admin/curriculum', curriculumRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/learner', learnerRoutes)
+app.use('/api/content', contentRoutes)
 app.use('/', testRoutes)
 
 console.log('Conectando a Neon...')
@@ -30,7 +44,10 @@ try {
 await ensureDefaultAuthUser()
 await ensureDefaultInstructorUser()
 await ensureDefaultApprenticeUser()
-// await ensureDefaultActivities() // Model 'Activity' does not exist in schema
+await ensureDefaultActivities()
+await ensureDefaultCurriculum()
+await ensureDefaultVocabulary()
+await ensureDefaultDialogues()
 
 app.listen(3000, () => {
   console.log('Servidor en http://localhost:3000')

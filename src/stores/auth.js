@@ -61,7 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
       throw err
     }
 
-    setUser(payload.user, credentials.remember ?? true)
+    setUser({ ...payload.user, token: payload.token }, credentials.remember ?? true)
     return payload.user
   }
 

@@ -118,6 +118,10 @@ const menuGroups = computed(() => {
         items: [
           { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
           { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+          { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
+          { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
+          { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
+          { name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' },
         ]
       },
       {
@@ -128,6 +132,22 @@ const menuGroups = computed(() => {
       }
     ]
   }
+
+  const learningItems = [
+    { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+    { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+  ]
+  if (auth.role === 'aprendiz') {
+    learningItems.push({ name: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' })
+  }
+  learningItems.push({ name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' })
+  learningItems.push({ name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' })
+  learningItems.push({ name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' })
+  
+  if (auth.role === 'admin') {
+    learningItems.push({ name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' })
+  }
+
   return [
     {
       label: '',
@@ -137,11 +157,7 @@ const menuGroups = computed(() => {
     },
     {
       label: 'Aprendizaje',
-      items: [
-        { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-        { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-        { name: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
-      ]
+      items: learningItems
     },
     {
       label: 'Comunidad',
@@ -173,6 +189,10 @@ const pageTitles = {
   '/dashboard/cursos': 'Cursos',
   '/dashboard/actividades': 'Actividades',
   '/dashboard/progreso': 'Progreso',
+  '/dashboard/vocabulario': 'Vocabulario',
+  '/dashboard/glosario': 'Glosario',
+  '/dashboard/dialogos': 'Diálogos Clínicos',
+  '/dashboard/curriculum': 'Gestión Curricular',
   '/dashboard/ranking': 'Ranking',
   '/dashboard/logros': 'Logros',
   '/dashboard/juegos': 'Juegos',

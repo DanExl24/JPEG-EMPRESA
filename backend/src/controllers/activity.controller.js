@@ -1,10 +1,12 @@
 import prisma from '../lib/db.js'
+import { awardXp } from './learner.controller.js'
 
 // GET /api/activities
 export async function getActivities(req, res) {
   try {
     const activities = await prisma.activity.findMany({
-      orderBy: { id: 'asc' }
+      orderBy: { id: 'asc' },
+      include: { learningOutcome: true }
     })
     return res.json(activities)
   } catch (error) {
@@ -37,7 +39,10 @@ export async function getActivityById(req, res) {
     if (isNaN(id)) {
       return res.status(400).json({ message: 'ID inválido.' })
     }
-    const activity = await prisma.activity.findUnique({ where: { id } })
+    const activity = await prisma.activity.findUnique({
+      where: { id },
+      include: { learningOutcome: true }
+    })
     if (!activity) {
       return res.status(404).json({ message: 'Actividad no encontrada.' })
     }
@@ -85,6 +90,11 @@ export async function submitActivity(req, res) {
         where: { id },
         data: { hasStudentSubmissions: true }
       })
+    }
+
+    // Award XP if passed
+    if (finalPassed && !hasOpenQuestion) {
+      try { await awardXp(parseInt(apprenticeId), activity.points) } catch (e) { console.error('XP award error:', e) }
     }
 
     return res.json(submission)
@@ -150,6 +160,14 @@ export async function reviewSubmission(req, res) {
       }
     })
 
+    // Award XP when instructor approves open-question submission
+    if (approved) {
+      const act = await prisma.activity.findUnique({ where: { id }, select: { points: true } })
+      if (act) {
+        try { await awardXp(apprenticeId, act.points) } catch (e) { console.error('XP award error:', e) }
+      }
+    }
+
     return res.json(submission)
   } catch (error) {
     console.error('Error reviewing submission:', error)
@@ -179,7 +197,8 @@ export async function createActivity(req, res) {
       matchTerm,
       matchMeaning,
       listeningPhrase,
-      pronouncePhrase
+      pronouncePhrase,
+      learningOutcomeId
     } = req.body
 
     if (!title || !course || !phase || !template) {
@@ -206,6 +225,9 @@ export async function createActivity(req, res) {
         matchMeaning,
         listeningPhrase,
         pronouncePhrase,
+        fillblankSentence,
+        fillblankAnswer,
+        learningOutcomeId: learningOutcomeId ? parseInt(learningOutcomeId) : null,
         hasStudentSubmissions: false
       }
     })
@@ -243,7 +265,8 @@ export async function updateActivity(req, res) {
       matchTerm,
       matchMeaning,
       listeningPhrase,
-      pronouncePhrase
+      pronouncePhrase,
+      learningOutcomeId
     } = req.body
 
     const existing = await prisma.activity.findUnique({
@@ -278,7 +301,10 @@ export async function updateActivity(req, res) {
         matchTerm,
         matchMeaning,
         listeningPhrase,
-        pronouncePhrase
+        pronouncePhrase,
+        fillblankSentence,
+        fillblankAnswer,
+        learningOutcomeId: learningOutcomeId !== undefined ? (learningOutcomeId ? parseInt(learningOutcomeId) : null) : existing.learningOutcomeId
       }
     })
 
@@ -286,6 +312,95 @@ export async function updateActivity(req, res) {
   } catch (error) {
     console.error('Error updating activity:', error)
     return res.status(500).json({ message: 'Error interno del servidor al actualizar actividad.' })
+  }
+}
+
+// GET /api/activities/:id/submissions/export-csv  (instructor: descargar entregas como CSV)
+export async function exportSubmissionsCsv(req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido.' })
+    }
+
+    const activity = await prisma.activity.findUnique({ where: { id } })
+    if (!activity) {
+      return res.status(404).json({ message: 'Actividad no encontrada.' })
+    }
+
+    const submissions = await prisma.activitySubmission.findMany({
+      where: { activityId: id },
+      orderBy: { submittedAt: 'asc' }
+    })
+
+    const apprenticeIds = submissions.map(s => s.apprenticeId)
+    const apprentices = await prisma.user.findMany({
+      where: { id: { in: apprenticeIds } },
+      select: { id: true, nombre: true, apellido: true, cedula: true }
+    })
+    const apprenticeMap = Object.fromEntries(apprentices.map(a => [a.id, a]))
+
+    // Build CSV header
+    const headers = [
+      'ID Aprendiz',
+      'Cédula',
+      'Nombre',
+      'Apellido',
+      'Actividad',
+      'Plantilla',
+      'Pasó',
+      'Estado de Revisión',
+      'Puntos',
+      'Fecha de Entrega'
+    ]
+
+    const SEPARATOR = ';'
+
+    const escapeCell = (value) => {
+      const str = String(value ?? '')
+      // Wrap in quotes if contains semicolon, quote, or newline
+      if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`
+      }
+      return str
+    }
+
+    const reviewStatusLabel = (status) => {
+      if (status === 'pending') return 'Pendiente de revisión'
+      if (status === 'reviewed') return 'Revisada'
+      return 'Calificada'
+    }
+
+    const rows = submissions.map(s => {
+      const appr = apprenticeMap[s.apprenticeId] || {}
+      return [
+        escapeCell(s.apprenticeId),
+        escapeCell(appr.cedula || ''),
+        escapeCell(appr.nombre || ''),
+        escapeCell(appr.apellido || ''),
+        escapeCell(activity.title),
+        escapeCell(activity.template),
+        escapeCell(s.passed ? 'Sí' : 'No'),
+        escapeCell(reviewStatusLabel(s.reviewStatus)),
+        escapeCell(activity.points),
+        escapeCell(new Date(s.submittedAt).toLocaleString('es-CO', { timeZone: 'America/Bogota' }))
+      ].join(SEPARATOR)
+    })
+
+    // 'sep=;' hint: tells Excel which separator to use regardless of regional settings
+    const csvContent = [`sep=${SEPARATOR}`, headers.join(SEPARATOR), ...rows].join('\r\n')
+    const filename = `actividad_${id}_entregas_${new Date().toISOString().slice(0, 10)}.csv`
+
+    res.setHeader('Content-Type', 'text/csv; charset=windows-1252')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    // Encode as Windows-1252 (Latin-1) — Excel on Spanish Windows uses this encoding by default.
+    // Node.js 'latin1' maps Unicode U+0000–U+00FF directly to bytes 0x00–0xFF,
+    // so Spanish accented chars (á é í ó ú ñ) encode correctly without any extra library.
+    const contentBuffer = Buffer.from(csvContent, 'latin1')
+    return res.send(contentBuffer)
+  } catch (error) {
+    console.error('Error exporting CSV:', error)
+    return res.status(500).json({ message: 'Error interno del servidor al exportar CSV.' })
   }
 }
 

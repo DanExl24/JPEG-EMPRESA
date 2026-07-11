@@ -5,6 +5,7 @@ import {
   getActivityById,
   submitActivity,
   getActivitySubmissions,
+  exportSubmissionsCsv,
   reviewSubmission,
   createActivity,
   updateActivity,
@@ -18,6 +19,7 @@ router.get('/my-submissions', getMySubmissions)
 router.get('/:id', getActivityById)
 router.post('/', createActivity)
 router.post('/:id/submit', submitActivity)
+router.get('/:id/submissions/export-csv', exportSubmissionsCsv)
 router.get('/:id/submissions', getActivitySubmissions)
 router.patch('/:id/submissions/:apprenticeId/review', reviewSubmission)
 router.put('/:id', updateActivity)
