@@ -4,17 +4,24 @@ This template should help get you started developing with Vue 3 in Vite. The tem
 
 Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
 
-# Execute podman
+# Pods Podman
 
 ```bash
-podman-composer up --build -d
+# Construir imágenes
+podman build -t jpeg-frontend:latest -f Dockerfile.frontend .
+podman build -t jpeg-backend:latest -f Dockerfile.backend ./backend
 
-```
+# Levantar pods
+podman play kube podman-app-kube.yaml
+podman play kube podman-db-kube.yaml
 
-# Turn off podman
+# Detener pods
+podman pod stop jpeg-app
+podman pod stop jpeg-db
 
-```
-podman-composer down
+# Eliminar pods
+podman pod rm jpeg-app
+podman pod rm jpeg-db
 ```
 
 # FRONTEND
@@ -39,7 +46,7 @@ npx tailwindcss init -p
 
 Raiz - npm run dev
 
-# Correr Frontend
+# Correr Backend
 
 ```
 cd backend
