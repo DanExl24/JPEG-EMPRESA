@@ -20,34 +20,66 @@ function isValidPassword(password) {
 }
 
 export async function login(req, res) {
-  const { identifier, password } = req.body;
-  if (!identifier || !password) return res.status(400).json({ message: 'Usuario y contraseña son obligatorios.' })
+  try {
+    const { identifier, password } = req.body || {};
+    const cleanIdentifier = typeof identifier === 'string' ? identifier.trim() : '';
+    const cleanPassword = typeof password === 'string' ? password : '';
 
-  const user = await prisma.user.findFirst({
-    where: { OR: [{ correo: identifier }, { cedula: identifier }] }
-  })
+    if (!cleanIdentifier || !cleanPassword) {
+      return res.status(400).json({ message: 'Usuario y contraseña son obligatorios.' });
+    }
 
-  if (!user) return res.status(401).json({ message: 'Credenciales inválidas.' })
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { correo: { equals: cleanIdentifier, mode: 'insensitive' } },
+          { cedula: cleanIdentifier }
+        ]
+      }
+    });
 
-  if (isLocked(user.lockedUntil)) {
-    return res.status(423).json({ message: `Cuenta bloqueada. Intenta en ${lockoutTimeRemaining(user.lockedUntil)} minutos.` })
+    if (!user) {
+      return res.status(401).json({ message: 'Credenciales inválidas.' });
+    }
+
+    if (isLocked(user.lockedUntil)) {
+      return res.status(423).json({ message: `Cuenta bloqueada. Intenta en ${lockoutTimeRemaining(user.lockedUntil)} minutos.` });
+    }
+
+    if (verifyPassword(cleanPassword, user.passwordHash)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedAttempts: 0, lockedUntil: null }
+      });
+
+      const token = jwt.sign({ id: user.id, role: user.rol }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+      return res.json({
+        token,
+        user: {
+          id: user.id,
+          nombre: user.nombre,
+          apellido: user.apellido,
+          rol: user.rol,
+          correo: user.correo,
+          cedula: user.cedula
+        }
+      });
+    }
+
+    const newCount = (user.failedAttempts || 0) + 1;
+    const lockedUntil = newCount >= MAX_FAILED_ATTEMPTS ? new Date(Date.now() + LOCKOUT_DURATION_MS) : null;
+    await prisma.user.update({ where: { id: user.id }, data: { failedAttempts: newCount, lockedUntil } });
+
+    if (lockedUntil) {
+      return res.status(423).json({ message: `Cuenta bloqueada por ${MAX_FAILED_ATTEMPTS} intentos fallidos.` });
+    }
+
+    return res.status(401).json({ message: 'Credenciales inválidas.' });
+  } catch (error) {
+    console.error('Error en controller de login:', error);
+    return res.status(500).json({ message: 'Error interno del servidor al procesar el inicio de sesión.' });
   }
-
-  if (verifyPassword(password, user.passwordHash)) {
-    await prisma.user.update({ where: { id: user.id }, data: { failedAttempts: 0, lockedUntil: null } })
-    const token = jwt.sign({ id: user.id, role: user.rol }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
-    return res.json({ token, user: { id: user.id, nombre: user.nombre, apellido: user.apellido, rol: user.rol, correo: user.correo, cedula: user.cedula } })
-  }
-
-  const newCount = user.failedAttempts + 1
-  const lockedUntil = newCount >= MAX_FAILED_ATTEMPTS ? new Date(Date.now() + LOCKOUT_DURATION_MS) : null
-  await prisma.user.update({ where: { id: user.id }, data: { failedAttempts: newCount, lockedUntil } })
-
-  if (lockedUntil) {
-    return res.status(423).json({ message: `Cuenta bloqueada por ${MAX_FAILED_ATTEMPTS} intentos fallidos.` })
-  }
-
-  res.status(401).json({ message: 'Credenciales inválidas.' })
 }
 
 export async function register(req, res) {

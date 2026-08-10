@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { getApiBaseUrl } from '../lib/api'
 
 const STORAGE_KEY = 'nursed.auth.user'
 
@@ -37,7 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(credentials) {
-    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const apiBaseUrl = getApiBaseUrl()
 
     const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
       method: 'POST',
@@ -45,8 +46,8 @@ export const useAuthStore = defineStore('auth', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        identifier: credentials.identifier,
-        password: credentials.password,
+        identifier: (credentials.identifier || '').trim(),
+        password: credentials.password || '',
       }),
     }).catch(() => {
       throw new Error('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.')
@@ -66,7 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function register(payload) {
-    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const apiBaseUrl = getApiBaseUrl()
 
     const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
       method: 'POST',

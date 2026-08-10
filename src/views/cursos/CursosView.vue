@@ -490,6 +490,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
@@ -585,7 +586,7 @@ function getCalculatedInlineOrientationBadge(idx) {
   return { label: 'Incompleta', bg: 'bg-gray-100 text-gray-500' }
 }
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiBaseUrl = getApiBaseUrl()
 const activities = ref([])
 
 async function fetchActivities() {

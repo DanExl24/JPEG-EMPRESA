@@ -220,10 +220,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiBaseUrl = getApiBaseUrl()
 
 const dialogues = ref([])
 const loading = ref(true)

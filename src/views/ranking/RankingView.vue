@@ -81,9 +81,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiBaseUrl = getApiBaseUrl()
 const loading = ref(true)
 const ranking = ref([])
 

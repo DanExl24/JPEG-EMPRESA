@@ -222,9 +222,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useNotificationStore } from '../../stores/notification'
+import { getApiBaseUrl } from '../../lib/api'
 
 const notificationStore = useNotificationStore()
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiBaseUrl = getApiBaseUrl()
 
 const tabs = [
   { id: 'programs', name: '1. Programas / Niveles', icon: 'school' },

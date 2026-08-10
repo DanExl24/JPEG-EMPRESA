@@ -1063,6 +1063,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 import { generateCrossword, reconstructLayout } from '../../utils/crosswordGenerator'
 
 const route = useRoute()
@@ -1101,7 +1102,7 @@ const moduleProgress = computed(() => {
 })
 
 // Dynamic DB activities state
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiBaseUrl = getApiBaseUrl()
 const dbActivities = ref([])
 const completedActivityIds = ref([])
 

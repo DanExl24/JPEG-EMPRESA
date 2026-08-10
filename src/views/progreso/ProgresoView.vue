@@ -61,8 +61,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { getApiBaseUrl } from '../../lib/api'
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiBaseUrl = getApiBaseUrl()
 const loading = ref(true)
 const progress = ref({ overallPct: 0, totalActivities: 0, totalPassed: 0, xp: 0, courses: [] })
 

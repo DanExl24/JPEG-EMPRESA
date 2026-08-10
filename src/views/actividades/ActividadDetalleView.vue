@@ -495,12 +495,13 @@ import { useRoute } from 'vue-router'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const route = useRoute()
 const notificationStore = useNotificationStore()
 const auth = useAuthStore()
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const apiBaseUrl = getApiBaseUrl()
 
 // ── State ──────────────────────────────────────
 const loading = ref(true)
