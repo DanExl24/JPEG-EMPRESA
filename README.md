@@ -8,17 +8,23 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 
 ```bash
 # Construir imágenes
-podman build -t jpeg-frontend:latest -f Dockerfile.frontend .
-podman build -t jpeg-backend:latest -f Dockerfile.backend ./backend
+podman build -t jpeg-frontend:latest -f src/Dockerfile.frontend .
+podman build -t jpeg-backend:latest -f backend/Dockerfile.backend ./backend
+```
 
+```
 # Levantar pods
 podman play kube podman-app-kube.yaml
 podman play kube podman-db-kube.yaml
+```
 
+```
 # Detener pods
 podman pod stop jpeg-app
 podman pod stop jpeg-db
+```
 
+```
 # Eliminar pods
 podman pod rm jpeg-app
 podman pod rm jpeg-db

@@ -1,10 +1,10 @@
 FROM node:20-alpine
 
-RUN pnpm add -g pnpm
-
 RUN apk add --no-cache python3 build-base
 
 RUN npm install -g pnpm@9
+
+RUN pnpm add -g pnpm
 
 WORKDIR /app
 
