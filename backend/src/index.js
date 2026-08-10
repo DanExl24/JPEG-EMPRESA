@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import http from 'http'
 import testRoutes from './routes/test.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import activityRoutes from './routes/activity.routes.js'
@@ -20,8 +21,19 @@ import {
 import prisma from './lib/db.js'
 
 const app = express()
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 3000
 
-app.use(cors())
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ?.split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean) ?? []
+
+if (allowedOrigins.length > 0) {
+  app.use(cors({ origin: allowedOrigins }))
+} else {
+  app.use(cors())
+}
+
 app.use(express.json())
 
 app.use('/api/test', testRoutes)
@@ -33,12 +45,12 @@ app.use('/api/learner', learnerRoutes)
 app.use('/api/content', contentRoutes)
 app.use('/', testRoutes)
 
-console.log('Conectando a Neon...')
+console.log('Conectando a la base de datos...')
 try {
   await prisma.$queryRaw`SELECT 1`
-  console.log('¡Conectado a NEON con éxito! 🚀')
+  console.log('¡Conectado a la base de datos con éxito! 🚀')
 } catch (error) {
-  console.error('Error al conectar a Neon:', error)
+  console.error('Error al conectar a la base de datos:', error)
 }
 
 await ensureDefaultAuthUser()
@@ -49,6 +61,7 @@ await ensureDefaultCurriculum()
 await ensureDefaultVocabulary()
 await ensureDefaultDialogues()
 
-app.listen(3000, () => {
-  console.log('Servidor en http://localhost:3000')
+const httpServer = http.createServer(app)
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Servidor backend corriendo en puerto ${PORT} (0.0.0.0) 🚀`)
 })

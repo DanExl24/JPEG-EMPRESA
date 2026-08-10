@@ -81,7 +81,9 @@
               placeholder="Usuario"
               type="text"
               :disabled="isLoading"
-              @blur="touched.identifier = true"
+              @blur="touched.identifier = true; syncFormWithDOM()"
+              @input="syncFormWithDOM"
+              @change="syncFormWithDOM"
             />
             <p v-if="identifierError && touched.identifier" class="text-xs text-red-500 ml-1 flex items-center gap-1">
               <span class="material-symbols-outlined text-sm">error</span>
@@ -107,14 +109,16 @@
                 id="password"
                 v-model="form.password"
                 class="w-full px-5 py-4 bg-[#e0e3e5] border-2 rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none pr-12"
-                :class="passwordErrors.length && touched.password
+                :class="!form.password && touched.password
                   ? 'border-red-400 bg-red-50'
                   : 'border-transparent'"
                 name="password"
                 placeholder="••••••••"
                 :type="showPassword ? 'text' : 'password'"
                 :disabled="isLoading"
-                @blur="touched.password = true"
+                @blur="touched.password = true; syncFormWithDOM()"
+                @input="syncFormWithDOM"
+                @change="syncFormWithDOM"
               />
               <button
                 type="button"
@@ -127,21 +131,10 @@
                 </span>
               </button>
             </div>
-
-            <!-- Password rules checklist -->
-            <transition name="slide-down">
-              <ul v-if="touched.password || form.password" class="mt-2 space-y-1">
-                <li v-for="rule in passwordRules" :key="rule.label"
-                  class="flex items-center gap-1.5 text-xs transition-colors"
-                  :class="rule.pass ? 'text-green-600' : 'text-gray-400'"
-                >
-                  <span class="material-symbols-outlined text-sm">
-                    {{ rule.pass ? 'check_circle' : 'radio_button_unchecked' }}
-                  </span>
-                  {{ rule.label }}
-                </li>
-              </ul>
-            </transition>
+            <p v-if="!form.password && touched.password" class="text-xs text-red-500 ml-1 flex items-center gap-1 mt-1">
+              <span class="material-symbols-outlined text-sm">error</span>
+              La contraseña es obligatoria.
+            </p>
           </div>
 
           <!-- Remember me -->
@@ -179,11 +172,11 @@
           <!-- Submit -->
           <button
             class="w-full py-4 font-headline font-bold rounded-full transition-all duration-200 editorial-shadow"
-            :class="(isFormValid && !isLockedOut)
+            :class="(form.identifier.trim() && form.password && !isLockedOut)
               ? 'medical-gradient text-white active:scale-[0.98]'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
             type="submit"
-            :disabled="isLoading || !isFormValid || isLockedOut"
+            :disabled="isLoading || isLockedOut"
           >
             <span v-if="isLoading" class="flex items-center justify-center gap-2">
               <span class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
@@ -266,7 +259,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
@@ -290,6 +283,24 @@ const errorMessage = ref('')
 const isLockedOut  = ref(false)
 const showPassword = ref(false)
 
+function syncFormWithDOM() {
+  const identifierEl = document.getElementById('identifier')
+  const passwordEl   = document.getElementById('password')
+
+  if (identifierEl && identifierEl.value) {
+    form.identifier = identifierEl.value
+  }
+  if (passwordEl && passwordEl.value) {
+    form.password = passwordEl.value
+  }
+}
+
+onMounted(() => {
+  syncFormWithDOM()
+  setTimeout(syncFormWithDOM, 100)
+  setTimeout(syncFormWithDOM, 500)
+})
+
 // ──────────────────────────────────────────────
 // Identifier validation
 // Accepts: email (contains @) or numeric document (7–12 digits)
@@ -307,33 +318,32 @@ const identifierError = computed(() => {
   return ''
 })
 
-// ──────────────────────────────────────────────
-// Password validation rules
-// ──────────────────────────────────────────────
-const passwordRules = computed(() => [
-  { label: 'Mínimo 10 caracteres',            pass: form.password.length >= 10 },
-  { label: 'Al menos 1 mayúscula',            pass: /[A-Z]/.test(form.password) },
-  { label: 'Al menos 1 minúscula',            pass: /[a-z]/.test(form.password) },
-  { label: 'Al menos 1 número',               pass: /\d/.test(form.password) },
-  { label: 'Al menos 1 carácter especial (@#$%&*)', pass: /[@#$%&*]/.test(form.password) },
-])
-
-const passwordErrors = computed(() => passwordRules.value.filter(r => !r.pass))
-
-// Form is valid only when both fields pass validation
 const isFormValid = computed(() =>
-  !identifierError.value && passwordErrors.value.length === 0
+  Boolean(form.identifier.trim() && form.password)
 )
 
 // ──────────────────────────────────────────────
 // Submit handler
 // ──────────────────────────────────────────────
 async function handleSubmit() {
+  syncFormWithDOM()
+
   // Mark all as touched to show validation errors
   touched.identifier = true
   touched.password   = true
 
-  if (!isFormValid.value) return
+  const identifierVal = form.identifier ? form.identifier.trim() : ''
+  const passwordVal   = form.password || ''
+
+  if (!identifierVal || !passwordVal) {
+    errorMessage.value = 'Por favor ingresa tu usuario y contraseña.'
+    return
+  }
+
+  if (identifierError.value) {
+    errorMessage.value = identifierError.value
+    return
+  }
 
   errorMessage.value = ''
   isLockedOut.value  = false
@@ -341,8 +351,8 @@ async function handleSubmit() {
 
   try {
     await auth.login({
-      identifier: form.identifier.trim(),
-      password:   form.password,
+      identifier: identifierVal,
+      password:   passwordVal,
       remember:   form.remember,
     })
     await router.push('/dashboard/inicio')
