@@ -65,25 +65,23 @@ app.use('/api/learner', learnerRoutes)
 app.use('/api/content', contentRoutes)
 app.use('/', testRoutes)
 
+console.log('Conectando a la base de datos...')
+try {
+  await prisma.$queryRaw`SELECT 1`
+  console.log('¡Conectado a la base de datos con éxito! 🚀')
+} catch (error) {
+  console.error('Error al conectar a la base de datos:', error)
+}
+
+await ensureDefaultAuthUser()
+await ensureDefaultInstructorUser()
+await ensureDefaultApprenticeUser()
+await ensureDefaultActivities()
+await ensureDefaultCurriculum()
+await ensureDefaultVocabulary()
+await ensureDefaultDialogues()
+
 const httpServer = http.createServer(app)
 httpServer.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Servidor backend corriendo en puerto ${PORT} (0.0.0.0) 🚀`)
 })
-
-// Inicialización asíncrona de base de datos y datos semilla en segundo plano
-;(async () => {
-  try {
-    console.log('Conectando a la base de datos...')
-    await prisma.$queryRaw`SELECT 1`
-    console.log('¡Conectado a la base de datos con éxito! 🚀')
-    await ensureDefaultAuthUser()
-    await ensureDefaultInstructorUser()
-    await ensureDefaultApprenticeUser()
-    await ensureDefaultActivities()
-    await ensureDefaultCurriculum()
-    await ensureDefaultVocabulary()
-    await ensureDefaultDialogues()
-  } catch (error) {
-    console.error('Error al inicializar la base de datos:', error)
-  }
-})()
