@@ -35,7 +35,7 @@ services:
       - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - DB_NAME=${POSTGRES_DB:-jpeg_db}
       - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-jpeg_db}?schema=public}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:81,http://localhost:5173,http://localhost:80}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://nurse-academy.adsoproject.dev,https://api-nurse-academy.adsoproject.dev,http://localhost:3000,http://localhost:81,http://localhost:5173,http://localhost:80}
     depends_on:
       db:
         condition: service_healthy

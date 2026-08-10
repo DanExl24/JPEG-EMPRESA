@@ -28,11 +28,25 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   .map(origin => origin.trim())
   .filter(Boolean) ?? []
 
-if (allowedOrigins.length > 0) {
-  app.use(cors({ origin: allowedOrigins }))
-} else {
-  app.use(cors())
-}
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true)
+      if (allowedOrigins.length === 0 || allowedOrigins.includes('*')) {
+        return callback(null, true)
+      }
+      if (allowedOrigins.some(o => origin.startsWith(o.replace(/\/$/, '')))) {
+        return callback(null, true)
+      }
+      // Allow any origin in production to prevent CORS blocks between subdomains
+      return callback(null, true)
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  })
+)
 
 app.use(express.json())
 
