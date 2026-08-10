@@ -24,7 +24,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: backend/Dockerfile.backend
     container_name: jpeg_backend
     restart: unless-stopped
     environment:
@@ -46,7 +46,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
+      dockerfile: src/Dockerfile.frontend
       args:
         VITE_API_URL: ${VITE_API_URL:-}
     container_name: jpeg_frontend
