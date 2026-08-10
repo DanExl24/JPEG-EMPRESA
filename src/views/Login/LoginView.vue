@@ -78,10 +78,12 @@
                 ? 'border-red-400 bg-red-50'
                 : 'border-transparent'"
               name="identifier"
-              placeholder="admin@nursingacademy.local o 1234567890"
+              placeholder="usuario@nursingacademy"
               type="text"
               :disabled="isLoading"
-              @blur="touched.identifier = true"
+              @blur="touched.identifier = true; syncFormWithDOM()"
+              @input="syncFormWithDOM"
+              @change="syncFormWithDOM"
             />
             <p v-if="identifierError && touched.identifier" class="text-xs text-red-500 ml-1 flex items-center gap-1">
               <span class="material-symbols-outlined text-sm">error</span>
@@ -114,7 +116,9 @@
                 placeholder="••••••••"
                 :type="showPassword ? 'text' : 'password'"
                 :disabled="isLoading"
-                @blur="touched.password = true"
+                @blur="touched.password = true; syncFormWithDOM()"
+                @input="syncFormWithDOM"
+                @change="syncFormWithDOM"
               />
               <button
                 type="button"
@@ -255,7 +259,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
@@ -278,6 +282,24 @@ const isLoading    = ref(false)
 const errorMessage = ref('')
 const isLockedOut  = ref(false)
 const showPassword = ref(false)
+
+function syncFormWithDOM() {
+  const identifierEl = document.getElementById('identifier')
+  const passwordEl   = document.getElementById('password')
+
+  if (identifierEl && identifierEl.value) {
+    form.identifier = identifierEl.value
+  }
+  if (passwordEl && passwordEl.value) {
+    form.password = passwordEl.value
+  }
+}
+
+onMounted(() => {
+  syncFormWithDOM()
+  setTimeout(syncFormWithDOM, 100)
+  setTimeout(syncFormWithDOM, 500)
+})
 
 // ──────────────────────────────────────────────
 // Identifier validation
@@ -304,11 +326,16 @@ const isFormValid = computed(() =>
 // Submit handler
 // ──────────────────────────────────────────────
 async function handleSubmit() {
+  syncFormWithDOM()
+
   // Mark all as touched to show validation errors
   touched.identifier = true
   touched.password   = true
 
-  if (!form.identifier.trim() || !form.password) {
+  const identifierVal = form.identifier ? form.identifier.trim() : ''
+  const passwordVal   = form.password || ''
+
+  if (!identifierVal || !passwordVal) {
     errorMessage.value = 'Por favor ingresa tu usuario y contraseña.'
     return
   }
@@ -324,8 +351,8 @@ async function handleSubmit() {
 
   try {
     await auth.login({
-      identifier: form.identifier.trim(),
-      password:   form.password,
+      identifier: identifierVal,
+      password:   passwordVal,
       remember:   form.remember,
     })
     await router.push('/dashboard/inicio')
