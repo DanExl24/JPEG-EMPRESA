@@ -18,8 +18,11 @@ import {
   ensureDefaultDialogues
 } from './lib/bootstrapAuth.js'
 import prisma from './lib/db.js'
+import http from 'http'
 
 const app = express()
+
+cont PORT = process.env.BACKEND_PORT || 3000
 
 app.use(cors())
 app.use(express.json())
@@ -33,12 +36,12 @@ app.use('/api/learner', learnerRoutes)
 app.use('/api/content', contentRoutes)
 app.use('/', testRoutes)
 
-console.log('Conectando a Neon...')
+console.log('Conectando a la base de datos...')
 try {
   await prisma.$queryRaw`SELECT 1`
-  console.log('¡Conectado a NEON con éxito! 🚀')
+  console.log('¡Conectado a la base de datos con éxito! 🚀')
 } catch (error) {
-  console.error('Error al conectar a Neon:', error)
+  console.error('Error al conectar a la base de datos:', error)
 }
 
 await ensureDefaultAuthUser()
@@ -52,3 +55,40 @@ await ensureDefaultDialogues()
 app.listen(3000, () => {
   console.log('Servidor en http://localhost:3000')
 })
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ?.split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean) ?? []
+
+app.use(cors({
+  origin: allowedOrigins
+}))
+
+
+const envOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim()) 
+  : [];
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins]));
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+// Crear servidor HTTP y adjuntar Socket.io
+  const httpServer = http.createServer(app);
+ 
+
+  httpServer.listen(Number(PORT), "0.0.0.0", () => {
+    console.log(`Servidor corriendo en puerto ${PORT} (0.0.0.0)`);
+  });
+
+
+startServer();

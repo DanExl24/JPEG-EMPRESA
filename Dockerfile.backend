@@ -1,19 +1,30 @@
 FROM node:20-alpine
 
-RUN pnpm add -g pnpm
+# Instalar herramientas de compilación para dependencias nativas (como bcrypt, pg)
+RUN apk add --no-cache python3 make g++
 
-RUN apk add --no-cache python3 build-base
-
+# Instalar pnpm
 RUN npm install -g pnpm@9
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+# Copiar archivos de dependencias del backend
+COPY backend/package.json backend/pnpm-lock.yaml* ./
 
-RUN pnpm install --no-frozen-lockfile
+# Instalar dependencias del backend
+RUN pnpm install --frozen-lockfile || pnpm install
 
-COPY . .
+# Copiar el código fuente del backend
+COPY backend/ ./
 
+# Generar el cliente de Prisma
+RUN pnpm prisma generate
+
+# Exponer el puerto del servidor
 EXPOSE 3000
 
-CMD ["pnpm", "run", "dev"]
+ENV PORT=3000
+ENV NODE_ENV=production
+
+# Comando para sincronizar tablas e iniciar el backend
+CMD ["sh", "-c", "pnpm prisma db push --skip-generate && pnpm start"]
