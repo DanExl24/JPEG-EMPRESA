@@ -78,7 +78,7 @@
                 ? 'border-red-400 bg-red-50'
                 : 'border-transparent'"
               name="identifier"
-              placeholder="admin@nursingacademy.local o 1234567890"
+              placeholder="Usuario"
               type="text"
               :disabled="isLoading"
               @blur="touched.identifier = true"
