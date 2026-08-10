@@ -11,7 +11,7 @@ const dbName = process.env.DB_NAME || process.env.POSTGRES_DB || "jpeg_db";
 const connectionString =
   process.env.DATABASE_URL ||
   `postgresql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?schema=public`;
-console.log("DATABASE_URL cargado:", connectionString);
+console.log("DATABASE_URL cargado");
 
 const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
