@@ -2,7 +2,15 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-const connectionString = process.env.DATABASE_URL;
+const dbUser = process.env.DB_USER || process.env.POSTGRES_USER || "postgres";
+const dbPassword = process.env.DB_PASSWORD || process.env.POSTGRES_PASSWORD || "postgres";
+const dbHost = process.env.DB_HOST || "db";
+const dbPort = process.env.DB_PORT || "5432";
+const dbName = process.env.DB_NAME || process.env.POSTGRES_DB || "jpeg_db";
+
+const connectionString =
+  process.env.DATABASE_URL ||
+  `postgresql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?schema=public`;
 console.log("DATABASE_URL cargado:", connectionString);
 
 const pool = new pg.Pool({ connectionString });
