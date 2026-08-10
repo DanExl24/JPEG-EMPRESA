@@ -23,30 +23,19 @@ import prisma from './lib/db.js'
 const app = express()
 const PORT = process.env.PORT || process.env.BACKEND_PORT || 3000
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ?.split(',')
-  .map(origin => origin.trim())
-  .filter(Boolean) ?? []
+// Fail-safe CORS middleware for cross-origin and subdomain support
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '*'
+  res.setHeader('Access-Control-Allow-Origin', origin)
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true)
-      if (allowedOrigins.length === 0 || allowedOrigins.includes('*')) {
-        return callback(null, true)
-      }
-      if (allowedOrigins.some(o => origin.startsWith(o.replace(/\/$/, '')))) {
-        return callback(null, true)
-      }
-      // Allow any origin in production to prevent CORS blocks between subdomains
-      return callback(null, true)
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  })
-)
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end()
+  }
+  next()
+})
 
 app.use(express.json())
 
