@@ -6,6 +6,8 @@ RUN apk add --no-cache python3 make g++
 # Instalar pnpm
 RUN npm install -g pnpm@9
 
+RUN pnpm add -g pnpm
+
 WORKDIR /app
 
 # Copiar archivos de dependencias del backend

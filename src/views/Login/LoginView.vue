@@ -78,7 +78,7 @@
                 ? 'border-red-400 bg-red-50'
                 : 'border-transparent'"
               name="identifier"
-              placeholder="usuario@nursingacademy"
+              placeholder="Usuario"
               type="text"
               :disabled="isLoading"
               @blur="touched.identifier = true; syncFormWithDOM()"
