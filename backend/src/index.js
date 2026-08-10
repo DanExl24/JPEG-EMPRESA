@@ -22,7 +22,7 @@ import http from 'http'
 
 const app = express()
 
-cont PORT = process.env.BACKEND_PORT || 3000
+const PORT = process.env.BACKEND_PORT || 3000
 
 app.use(cors())
 app.use(express.json())
@@ -65,22 +65,6 @@ app.use(cors({
   origin: allowedOrigins
 }))
 
-
-const envOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim()) 
-  : [];
-const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins]));
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
 
 // Crear servidor HTTP y adjuntar Socket.io
   const httpServer = http.createServer(app);

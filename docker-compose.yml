@@ -42,8 +42,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-      args:
-        VITE_API_URL: ${VITE_API_URL:-}
     container_name: jpeg_frontend
     restart: unless-stopped
     ports:
