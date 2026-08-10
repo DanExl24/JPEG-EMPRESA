@@ -200,11 +200,10 @@ const DEFAULT_ACTIVITIES = [
 ]
 
 export async function ensureDefaultActivities() {
-  // Clear and re-seed to ensure RAP 1 activities are available
-  await prisma.activity.deleteMany()
-  for (const act of DEFAULT_ACTIVITIES) {
-    await prisma.activity.create({ data: act })
-  }
+  const count = await prisma.activity.count()
+  if (count > 0) return
+
+  await prisma.activity.createMany({ data: DEFAULT_ACTIVITIES })
   console.log('Actividades de prueba sembradas.')
 }
 
