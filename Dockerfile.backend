@@ -27,4 +27,4 @@ ENV PORT=3000
 ENV NODE_ENV=production
 
 # Comando para sincronizar tablas e iniciar el backend
-CMD ["sh", "-c", "pnpm prisma db push --skip-generate && pnpm start"]
+CMD ["sh", "-c", "pnpm prisma db push --accept-data-loss && pnpm start"]

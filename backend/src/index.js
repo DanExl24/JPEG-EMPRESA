@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import http from 'http'
 import testRoutes from './routes/test.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import activityRoutes from './routes/activity.routes.js'
@@ -18,13 +19,21 @@ import {
   ensureDefaultDialogues
 } from './lib/bootstrapAuth.js'
 import prisma from './lib/db.js'
-import http from 'http'
 
 const app = express()
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 3000
 
-const PORT = process.env.BACKEND_PORT || 3000
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ?.split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean) ?? []
 
-app.use(cors())
+if (allowedOrigins.length > 0) {
+  app.use(cors({ origin: allowedOrigins }))
+} else {
+  app.use(cors())
+}
+
 app.use(express.json())
 
 app.use('/api/test', testRoutes)
@@ -52,27 +61,7 @@ await ensureDefaultCurriculum()
 await ensureDefaultVocabulary()
 await ensureDefaultDialogues()
 
-app.listen(3000, () => {
-  console.log('Servidor en http://localhost:3000')
+const httpServer = http.createServer(app)
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Servidor backend corriendo en puerto ${PORT} (0.0.0.0) 🚀`)
 })
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ?.split(',')
-  .map(origin => origin.trim())
-  .filter(Boolean) ?? []
-
-app.use(cors({
-  origin: allowedOrigins
-}))
-
-
-// Crear servidor HTTP y adjuntar Socket.io
-  const httpServer = http.createServer(app);
- 
-
-  httpServer.listen(Number(PORT), "0.0.0.0", () => {
-    console.log(`Servidor corriendo en puerto ${PORT} (0.0.0.0)`);
-  });
-
-
-startServer();
