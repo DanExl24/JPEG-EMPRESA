@@ -1,0 +1,12 @@
+services:
+  frontend:
+    container_name: nurse-frontend
+  backend:
+    container_name: nurse-backend
+  postgres:
+
+
+networks:
+  jpeg-internal:
+    drive:
+      brigde
