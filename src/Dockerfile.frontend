@@ -1,7 +1,7 @@
 # Etapa 1: Compilación (Build)
 FROM node:20-alpine AS build-stage
 
-RUN npm install -g pnpm@9
+RUN corepack enable && corepack prepare pnpm@11 --activate
 
 WORKDIR /app
 
