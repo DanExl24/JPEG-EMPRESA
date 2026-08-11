@@ -1,9 +1,12 @@
 # Etapa 1: Compilación (Build)
-FROM node:20-alpine AS build-stage
+FROM docker.io/library/node:22-alpine AS build-stage
 
 RUN corepack enable && corepack prepare pnpm@11 --activate
 
 WORKDIR /app
+
+# Modo no interactivo para pnpm (evita ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY)
+ENV CI=true
 
 # Copiar archivos de dependencias del frontend (raíz)
 COPY package.json pnpm-lock.yaml* ./
@@ -21,7 +24,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN pnpm run build
 
 # Etapa 2: Servidor Nginx de producción
-FROM nginx:alpine AS production-stage
+FROM docker.io/library/nginx:alpine AS production-stage
 
 # Copiar artefactos compilados a Nginx
 COPY --from=build-stage /app/dist /usr/share/nginx/html
