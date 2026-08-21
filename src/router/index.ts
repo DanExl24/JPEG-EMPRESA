@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home      from '../views/Home.vue'
+import type { RouteRecordRaw } from 'vue-router'
+import Home from '../views/Home.vue'
 import LoginView from '../views/Login/LoginView.vue'
 import RecoverPassword from '../views/Login/RecoverPassword.vue'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
@@ -22,8 +23,8 @@ import CurriculumView from '../views/curriculum/CurriculumView.vue'
 import DialogosView from '../views/dialogos/DialogosView.vue'
 import { useAuthStore } from '../stores/auth'
 
-const routes = [
-  { path: '/',      component: Home },
+const routes: RouteRecordRaw[] = [
+  { path: '/', component: Home },
   { path: '/login', component: LoginView },
   { path: '/recover', component: RecoverPassword },
   {
@@ -61,7 +62,7 @@ export const router = createRouter({
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+  if (to.meta['requiresAuth'] && !auth.isAuthenticated) {
     return '/login'
   }
 

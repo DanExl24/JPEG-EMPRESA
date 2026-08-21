@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { NotificationItem, NotifyOptions } from '../types/notification.types'
 
 export const useNotificationStore = defineStore('notification', () => {
-  const notifications = ref([])
+  const notifications = ref<NotificationItem[]>([])
   let nextId = 1
 
-  const notify = ({ type = 'success', title = '', message = '', duration = 3000 }) => {
+  const notify = ({ type = 'success', title = '', message = '', duration = 3000 }: NotifyOptions): void => {
     const id = nextId++
     notifications.value.push({
       id,
@@ -21,11 +22,8 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   }
 
-  const removeNotification = (id) => {
-    const index = notifications.value.findIndex((n) => n.id === id)
-    if (index !== -1) {
-      notifications.value.splice(index, 1)
-    }
+  const removeNotification = (id: number): void => {
+    notifications.value = notifications.value.filter(n => n.id !== id)
   }
 
   return {
