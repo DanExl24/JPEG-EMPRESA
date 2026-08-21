@@ -24,10 +24,10 @@ SET row_security = off;
 -- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
 --
 
-CREATE SCHEMA public;
+CREATE SCHEMA IF NOT EXISTS public;
 
 
-ALTER SCHEMA public OWNER TO pg_database_owner;
+-- ALTER SCHEMA public OWNER TO postgres;
 
 --
 -- TOC entry 3615 (class 0 OID 0)
@@ -76,7 +76,7 @@ CREATE TABLE public.activities (
 );
 
 
-ALTER TABLE public.activities OWNER TO neondb_owner;
+-- ALTER TABLE public.activities OWNER TO neondb_owner;
 
 --
 -- TOC entry 243 (class 1259 OID 16804)
@@ -92,7 +92,7 @@ CREATE SEQUENCE public.activities_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.activities_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.activities_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3616 (class 0 OID 0)
@@ -119,7 +119,7 @@ CREATE TABLE public.activity_submissions (
 );
 
 
-ALTER TABLE public.activity_submissions OWNER TO neondb_owner;
+-- ALTER TABLE public.activity_submissions OWNER TO neondb_owner;
 
 --
 -- TOC entry 245 (class 1259 OID 16831)
@@ -135,7 +135,7 @@ CREATE SEQUENCE public.activity_submissions_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.activity_submissions_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.activity_submissions_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3617 (class 0 OID 0)
@@ -161,7 +161,7 @@ CREATE TABLE public.badges (
 );
 
 
-ALTER TABLE public.badges OWNER TO neondb_owner;
+-- ALTER TABLE public.badges OWNER TO neondb_owner;
 
 --
 -- TOC entry 247 (class 1259 OID 57354)
@@ -177,7 +177,7 @@ CREATE SEQUENCE public.badges_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.badges_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.badges_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3618 (class 0 OID 0)
@@ -200,7 +200,7 @@ CREATE TABLE public.cohorts (
 );
 
 
-ALTER TABLE public.cohorts OWNER TO neondb_owner;
+-- ALTER TABLE public.cohorts OWNER TO neondb_owner;
 
 --
 -- TOC entry 233 (class 1259 OID 16739)
@@ -216,7 +216,7 @@ CREATE SEQUENCE public.cohorts_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.cohorts_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.cohorts_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3619 (class 0 OID 0)
@@ -240,7 +240,7 @@ CREATE TABLE public.competencies (
 );
 
 
-ALTER TABLE public.competencies OWNER TO neondb_owner;
+-- ALTER TABLE public.competencies OWNER TO neondb_owner;
 
 --
 -- TOC entry 235 (class 1259 OID 16751)
@@ -256,7 +256,7 @@ CREATE SEQUENCE public.competencies_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.competencies_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.competencies_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3620 (class 0 OID 0)
@@ -282,7 +282,7 @@ CREATE TABLE public.dialogues (
 );
 
 
-ALTER TABLE public.dialogues OWNER TO neondb_owner;
+-- ALTER TABLE public.dialogues OWNER TO neondb_owner;
 
 --
 -- TOC entry 253 (class 1259 OID 57402)
@@ -298,7 +298,7 @@ CREATE SEQUENCE public.dialogues_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.dialogues_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.dialogues_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3621 (class 0 OID 0)
@@ -322,7 +322,7 @@ CREATE TABLE public.enrollments (
 );
 
 
-ALTER TABLE public.enrollments OWNER TO neondb_owner;
+-- ALTER TABLE public.enrollments OWNER TO neondb_owner;
 
 --
 -- TOC entry 237 (class 1259 OID 16764)
@@ -338,7 +338,7 @@ CREATE SEQUENCE public.enrollments_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.enrollments_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.enrollments_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3622 (class 0 OID 0)
@@ -363,7 +363,7 @@ CREATE TABLE public.evaluations (
 );
 
 
-ALTER TABLE public.evaluations OWNER TO neondb_owner;
+-- ALTER TABLE public.evaluations OWNER TO neondb_owner;
 
 --
 -- TOC entry 241 (class 1259 OID 16790)
@@ -379,7 +379,7 @@ CREATE SEQUENCE public.evaluations_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.evaluations_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.evaluations_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3623 (class 0 OID 0)
@@ -403,7 +403,7 @@ CREATE TABLE public.learning_outcomes (
 );
 
 
-ALTER TABLE public.learning_outcomes OWNER TO neondb_owner;
+-- ALTER TABLE public.learning_outcomes OWNER TO neondb_owner;
 
 --
 -- TOC entry 239 (class 1259 OID 16777)
@@ -419,7 +419,7 @@ CREATE SEQUENCE public.learning_outcomes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.learning_outcomes_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.learning_outcomes_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3624 (class 0 OID 0)
@@ -441,7 +441,7 @@ CREATE TABLE public.training_programs (
 );
 
 
-ALTER TABLE public.training_programs OWNER TO neondb_owner;
+-- ALTER TABLE public.training_programs OWNER TO neondb_owner;
 
 --
 -- TOC entry 231 (class 1259 OID 16728)
@@ -457,7 +457,7 @@ CREATE SEQUENCE public.training_programs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.training_programs_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.training_programs_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3625 (class 0 OID 0)
@@ -481,7 +481,7 @@ CREATE TABLE public.user_badges (
 );
 
 
-ALTER TABLE public.user_badges OWNER TO neondb_owner;
+-- ALTER TABLE public.user_badges OWNER TO neondb_owner;
 
 --
 -- TOC entry 249 (class 1259 OID 57371)
@@ -497,7 +497,7 @@ CREATE SEQUENCE public.user_badges_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.user_badges_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.user_badges_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3626 (class 0 OID 0)
@@ -529,7 +529,7 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO neondb_owner;
+-- ALTER TABLE public.users OWNER TO neondb_owner;
 
 --
 -- TOC entry 229 (class 1259 OID 16707)
@@ -545,7 +545,7 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.users_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3627 (class 0 OID 0)
@@ -573,7 +573,7 @@ CREATE TABLE public.vocabulary (
 );
 
 
-ALTER TABLE public.vocabulary OWNER TO neondb_owner;
+-- ALTER TABLE public.vocabulary OWNER TO neondb_owner;
 
 --
 -- TOC entry 251 (class 1259 OID 57385)
@@ -589,7 +589,7 @@ CREATE SEQUENCE public.vocabulary_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.vocabulary_id_seq OWNER TO neondb_owner;
+-- ALTER SEQUENCE public.vocabulary_id_seq OWNER TO neondb_owner;
 
 --
 -- TOC entry 3628 (class 0 OID 0)
