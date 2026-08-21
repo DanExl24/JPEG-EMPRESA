@@ -118,7 +118,7 @@
 
 <script setup>
 import { reactive } from 'vue';
-import { useAuthStore } from '../stores/auth.js';
+import { useAuthStore } from '../stores/auth';
 import { useNotificationStore } from '../stores/notification.js';
 
 const props = defineProps({
