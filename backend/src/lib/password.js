@@ -9,17 +9,35 @@ export function hashPassword(password) {
 }
 
 export function verifyPassword(password, storedHash) {
-  if (!storedHash || !storedHash.includes(':')) {
+  if (!password || !storedHash || typeof storedHash !== 'string') {
     return false
   }
 
-  const [salt, originalHash] = storedHash.split(':')
-  const derivedHash = scryptSync(password, salt, KEY_LENGTH)
-  const originalBuffer = Buffer.from(originalHash, 'hex')
+  // Fallback if stored in plain text
+  if (password === storedHash) {
+    return true
+  }
 
-  if (derivedHash.length !== originalBuffer.length) {
+  if (!storedHash.includes(':')) {
     return false
   }
 
-  return timingSafeEqual(derivedHash, originalBuffer)
+  try {
+    const [salt, originalHash] = storedHash.split(':')
+    if (!salt || !originalHash) {
+      return false
+    }
+
+    const derivedHash = scryptSync(password, salt, KEY_LENGTH)
+    const originalBuffer = Buffer.from(originalHash, 'hex')
+
+    if (derivedHash.length !== originalBuffer.length) {
+      return false
+    }
+
+    return timingSafeEqual(derivedHash, originalBuffer)
+  } catch (err) {
+    console.error('Error al verificar hash de contraseña:', err)
+    return false
+  }
 }

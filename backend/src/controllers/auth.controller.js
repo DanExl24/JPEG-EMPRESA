@@ -33,7 +33,7 @@ export async function login(req, res) {
       where: {
         OR: [
           { correo: { equals: cleanIdentifier, mode: 'insensitive' } },
-          { cedula: cleanIdentifier }
+          { cedula: { equals: cleanIdentifier, mode: 'insensitive' } }
         ]
       }
     });

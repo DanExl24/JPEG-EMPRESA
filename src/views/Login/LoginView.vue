@@ -312,8 +312,10 @@ const identifierError = computed(() => {
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRe.test(val)) return 'Ingresa un correo electrónico válido.'
   } else {
-    if (!/^\d+$/.test(val)) return 'El documento debe ser numérico.'
-    if (val.length < 7 || val.length > 12) return 'El documento debe tener entre 7 y 12 dígitos.'
+    // Acepta número de documento (7 a 12 dígitos) o identificadores de usuario alfanuméricos (ej. ADMIN001)
+    if (!/^[a-zA-Z0-9_-]{3,30}$/.test(val)) {
+      return 'El documento o identificador debe tener entre 3 y 30 caracteres.'
+    }
   }
   return ''
 })

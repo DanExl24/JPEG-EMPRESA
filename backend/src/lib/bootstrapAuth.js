@@ -29,10 +29,36 @@ const DEFAULT_APPRENTICE = {
 
 export async function ensureDefaultAuthUser() {
   const existingUser = await prisma.user.findFirst({
-    where: { correo: DEFAULT_ADMIN.email },
+    where: {
+      OR: [
+        { correo: { equals: DEFAULT_ADMIN.email, mode: 'insensitive' } },
+        { cedula: { equals: DEFAULT_ADMIN.cedula, mode: 'insensitive' } }
+      ]
+    },
   })
 
-  if (existingUser) return
+  if (existingUser) {
+    const isPasswordValid = verifyPassword(DEFAULT_ADMIN.password, existingUser.passwordHash)
+    const isLocked = Boolean(existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date())
+
+    if (!isPasswordValid || isLocked || existingUser.failedAttempts > 0 || existingUser.rol !== DEFAULT_ADMIN.rol) {
+      await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          correo: DEFAULT_ADMIN.email,
+          cedula: DEFAULT_ADMIN.cedula,
+          nombre: DEFAULT_ADMIN.nombre,
+          apellido: DEFAULT_ADMIN.apellido,
+          passwordHash: hashPassword(DEFAULT_ADMIN.password),
+          rol: DEFAULT_ADMIN.rol,
+          failedAttempts: 0,
+          lockedUntil: null,
+        },
+      })
+      console.log(`Usuario inicial actualizado y restablecido: ${DEFAULT_ADMIN.email}`)
+    }
+    return
+  }
 
   await prisma.user.create({
     data: {
@@ -50,10 +76,36 @@ export async function ensureDefaultAuthUser() {
 
 export async function ensureDefaultInstructorUser() {
   const existingUser = await prisma.user.findFirst({
-    where: { correo: DEFAULT_INSTRUCTOR.email },
+    where: {
+      OR: [
+        { correo: { equals: DEFAULT_INSTRUCTOR.email, mode: 'insensitive' } },
+        { cedula: { equals: DEFAULT_INSTRUCTOR.cedula, mode: 'insensitive' } }
+      ]
+    },
   })
 
-  if (existingUser) return
+  if (existingUser) {
+    const isPasswordValid = verifyPassword(DEFAULT_INSTRUCTOR.password, existingUser.passwordHash)
+    const isLocked = Boolean(existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date())
+
+    if (!isPasswordValid || isLocked || existingUser.failedAttempts > 0 || existingUser.rol !== DEFAULT_INSTRUCTOR.rol) {
+      await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          correo: DEFAULT_INSTRUCTOR.email,
+          cedula: DEFAULT_INSTRUCTOR.cedula,
+          nombre: DEFAULT_INSTRUCTOR.nombre,
+          apellido: DEFAULT_INSTRUCTOR.apellido,
+          passwordHash: hashPassword(DEFAULT_INSTRUCTOR.password),
+          rol: DEFAULT_INSTRUCTOR.rol,
+          failedAttempts: 0,
+          lockedUntil: null,
+        },
+      })
+      console.log(`Instructor inicial actualizado y restablecido: ${DEFAULT_INSTRUCTOR.email}`)
+    }
+    return
+  }
 
   await prisma.user.create({
     data: {
@@ -71,10 +123,30 @@ export async function ensureDefaultInstructorUser() {
 
 export async function ensureDefaultApprenticeUser() {
   const existingUser = await prisma.user.findFirst({
-    where: { cedula: DEFAULT_APPRENTICE.documentNumber },
+    where: { cedula: { equals: DEFAULT_APPRENTICE.documentNumber, mode: 'insensitive' } },
   })
 
-  if (existingUser) return
+  if (existingUser) {
+    const isPasswordValid = verifyPassword(DEFAULT_APPRENTICE.password, existingUser.passwordHash)
+    const isLocked = Boolean(existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date())
+
+    if (!isPasswordValid || isLocked || existingUser.failedAttempts > 0 || existingUser.rol !== DEFAULT_APPRENTICE.rol) {
+      await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          cedula: DEFAULT_APPRENTICE.documentNumber,
+          nombre: DEFAULT_APPRENTICE.nombre,
+          apellido: DEFAULT_APPRENTICE.apellido,
+          passwordHash: hashPassword(DEFAULT_APPRENTICE.password),
+          rol: DEFAULT_APPRENTICE.rol,
+          failedAttempts: 0,
+          lockedUntil: null,
+        },
+      })
+      console.log(`Aprendiz inicial actualizado y restablecido: ${DEFAULT_APPRENTICE.documentNumber}`)
+    }
+    return
+  }
 
   await prisma.user.create({
     data: {
