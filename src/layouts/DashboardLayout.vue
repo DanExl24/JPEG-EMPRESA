@@ -227,6 +227,6 @@ function isActive(path) {
 
 async function handleLogout() {
   auth.clearUser()
-  await router.push('/login')
+  window.location.href = '/login'
 }
 </script>
