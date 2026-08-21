@@ -287,23 +287,27 @@ function syncFormWithDOM() {
   const identifierEl = document.getElementById('identifier')
   const passwordEl   = document.getElementById('password')
 
-  if (identifierEl && identifierEl.value) {
+  if (identifierEl && identifierEl.value && identifierEl.value !== form.identifier) {
     form.identifier = identifierEl.value
   }
-  if (passwordEl && passwordEl.value) {
+  if (passwordEl && passwordEl.value && passwordEl.value !== form.password) {
     form.password = passwordEl.value
   }
 }
 
 onMounted(() => {
   syncFormWithDOM()
-  setTimeout(syncFormWithDOM, 100)
-  setTimeout(syncFormWithDOM, 500)
+  const delays = [50, 100, 250, 500, 1000, 2000]
+  delays.forEach(d => setTimeout(syncFormWithDOM, d))
+
+  window.addEventListener('focus', syncFormWithDOM)
+  document.addEventListener('click', syncFormWithDOM, { capture: true, passive: true })
+  document.addEventListener('mousemove', syncFormWithDOM, { once: true, passive: true })
 })
 
 // ──────────────────────────────────────────────
 // Identifier validation
-// Accepts: email (contains @) or numeric document (7–12 digits)
+// Accepts: email (contains @) or numeric document (7–12 digits) or username
 // ──────────────────────────────────────────────
 const identifierError = computed(() => {
   const val = form.identifier.trim()
@@ -328,14 +332,22 @@ const isFormValid = computed(() =>
 // Submit handler
 // ──────────────────────────────────────────────
 async function handleSubmit() {
-  syncFormWithDOM()
+  const identifierEl = document.getElementById('identifier')
+  const passwordEl   = document.getElementById('password')
+
+  // Obtener directamente del DOM nativo para asegurar valor de autofill al primer clic
+  const rawIdentifier = (identifierEl && identifierEl.value ? identifierEl.value : form.identifier) || ''
+  const rawPassword   = (passwordEl && passwordEl.value ? passwordEl.value : form.password) || ''
+
+  form.identifier = rawIdentifier
+  form.password   = rawPassword
 
   // Mark all as touched to show validation errors
   touched.identifier = true
   touched.password   = true
 
-  const identifierVal = form.identifier ? form.identifier.trim() : ''
-  const passwordVal   = form.password || ''
+  const identifierVal = rawIdentifier.trim()
+  const passwordVal   = rawPassword
 
   if (!identifierVal || !passwordVal) {
     errorMessage.value = 'Por favor ingresa tu usuario y contraseña.'
