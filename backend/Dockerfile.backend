@@ -13,13 +13,13 @@ WORKDIR /app
 ENV CI=true
 
 # Copiar archivos de dependencias del backend
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
+COPY backend/package.json backend/pnpm-lock.yaml* backend/pnpm-workspace.yaml ./
 
 # Instalar dependencias del backend
 RUN pnpm install --frozen-lockfile || pnpm install
 
 # Copiar el código fuente del backend
-COPY . ./
+COPY backend/ ./
 
 # Generar el cliente de Prisma
 RUN pnpm prisma generate

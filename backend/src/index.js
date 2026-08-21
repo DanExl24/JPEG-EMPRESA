@@ -21,31 +21,34 @@ import {
 import prisma from './lib/db.js'
 
 const app = express()
-const PORT = process.env.PORT || process.env.BACKEND_PORT || 3000
+const PORT = Number(process.env.BACKEND_PORT || process.env.PORT || 3000)
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ?.split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean) ?? []
 
-// Fail-safe CORS middleware for cross-origin and subdomain support + Request Logging
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      callback(null, true)
+      return
+    }
+
+    callback(new Error('Not allowed by CORS'))
+  },
+  credentials: true
+}))
+
 app.use((req, res, next) => {
-  const origin = req.headers.origin || '*'
-  res.setHeader('Access-Control-Allow-Origin', origin)
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
-
   const timestamp = new Date().toISOString()
-  console.log(`[${timestamp}] 📥 Petición: ${req.method} ${req.originalUrl || req.url} | Origin: ${origin}`)
-
-  if (req.method === 'OPTIONS') {
-    console.log(`[${timestamp}] 🟢 Respondiendo 204 OK a preflight OPTIONS para Origin: ${origin}`)
-    return res.status(204).end()
-  }
+  console.log(`[${timestamp}] Petición: ${req.method} ${req.originalUrl || req.url} | Origin: ${req.headers.origin || '*'}`)
 
   res.on('finish', () => {
-    console.log(`[${timestamp}] 📤 Respuesta enviada: ${req.method} ${req.originalUrl || req.url} -> Status ${res.statusCode}`)
+    console.log(`[${timestamp}] Respuesta enviada: ${req.method} ${req.originalUrl || req.url} -> Status ${res.statusCode}`)
   })
 
   next()
 })
-
 app.use(express.json())
 
 // Body logging middleware for debugging login payloads
@@ -54,6 +57,10 @@ app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] 📦 Payload Body (${req.url}):`, JSON.stringify(req.body || {}))
   }
   next()
+})
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ status: 'ok' })
 })
 
 app.use('/api/test', testRoutes)
@@ -83,5 +90,5 @@ await ensureDefaultDialogues()
 
 const httpServer = http.createServer(app)
 httpServer.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`Servidor backend corriendo en puerto ${PORT} (0.0.0.0) 🚀`)
+  console.log(`Servidor backend corriendo en puerto ${PORT} (0.0.0.0)`)
 })
