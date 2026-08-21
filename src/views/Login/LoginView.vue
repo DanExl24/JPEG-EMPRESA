@@ -231,33 +231,35 @@
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { reactive, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import type { ComputedRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import type { LoginFormState, FormTouchedState, AuthCustomError } from '../../types/auth.types'
 
 const router = useRouter()
 const auth = useAuthStore()
 
-const form = reactive({
+const form = reactive<LoginFormState>({
   identifier: '',
   password: '',
   remember: false,
 })
 
-const touched = reactive({
+const touched = reactive<FormTouchedState>({
   identifier: false,
   password: false,
 })
 
-const isLoading    = ref(false)
-const errorMessage = ref('')
-const isLockedOut  = ref(false)
-const showPassword = ref(false)
+const isLoading = ref<boolean>(false)
+const errorMessage = ref<string>('')
+const isLockedOut = ref<boolean>(false)
+const showPassword = ref<boolean>(false)
 
-function syncFormWithDOM() {
-  const identifierEl = document.getElementById('identifier')
-  const passwordEl   = document.getElementById('password')
+function syncFormWithDOM(): void {
+  const identifierEl = document.getElementById('identifier') as HTMLInputElement | null
+  const passwordEl   = document.getElementById('password') as HTMLInputElement | null
 
   if (identifierEl && identifierEl.value && identifierEl.value !== form.identifier) {
     form.identifier = identifierEl.value
@@ -267,11 +269,9 @@ function syncFormWithDOM() {
   }
 }
 
-let syncInterval = null
-
 onMounted(() => {
   syncFormWithDOM()
-  const delays = [50, 100, 250, 500, 1000, 2000]
+  const delays: number[] = [50, 100, 250, 500, 1000, 2000]
   delays.forEach(d => setTimeout(syncFormWithDOM, d))
 
   window.addEventListener('focus', syncFormWithDOM)
@@ -280,13 +280,12 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (syncInterval) clearInterval(syncInterval)
   window.removeEventListener('focus', syncFormWithDOM)
   document.removeEventListener('click', syncFormWithDOM)
 })
 
-const identifierError = computed(() => {
-  const val = form.identifier.trim()
+const identifierError: ComputedRef<string> = computed(() => {
+  const val: string = form.identifier.trim()
   if (!val) return 'Este campo es obligatorio.'
   if (val.includes('@')) {
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -299,13 +298,13 @@ const identifierError = computed(() => {
   return ''
 })
 
-async function handleSubmit() {
-  const identifierEl = document.getElementById('identifier')
-  const passwordEl   = document.getElementById('password')
+async function handleSubmit(): Promise<void> {
+  const identifierEl = document.getElementById('identifier') as HTMLInputElement | null
+  const passwordEl   = document.getElementById('password') as HTMLInputElement | null
 
   // Obtener directamente del DOM nativo para asegurar valor de autofill al primer clic
-  const rawIdentifier = (identifierEl && identifierEl.value ? identifierEl.value : form.identifier) || ''
-  const rawPassword   = (passwordEl && passwordEl.value ? passwordEl.value : form.password) || ''
+  const rawIdentifier: string = (identifierEl && identifierEl.value ? identifierEl.value : form.identifier) || ''
+  const rawPassword: string   = (passwordEl && passwordEl.value ? passwordEl.value : form.password) || ''
 
   form.identifier = rawIdentifier
   form.password   = rawPassword
@@ -313,8 +312,8 @@ async function handleSubmit() {
   touched.identifier = true
   touched.password   = true
 
-  const identifierVal = rawIdentifier.trim()
-  const passwordVal   = rawPassword
+  const identifierVal: string = rawIdentifier.trim()
+  const passwordVal: string   = rawPassword
 
   if (!identifierVal || !passwordVal) {
     errorMessage.value = 'Por favor ingresa tu usuario y contraseña.'
@@ -337,16 +336,17 @@ async function handleSubmit() {
       remember:   form.remember,
     })
     await router.push('/dashboard/inicio')
-  } catch (error) {
-    console.error('[Login Error View]:', error)
-    errorMessage.value = error.message || 'Error al iniciar sesión.'
-    isLockedOut.value  = error.isLockout === true
+  } catch (error: unknown) {
+    const err = error as AuthCustomError
+    console.error('[Login Error View]:', err)
+    errorMessage.value = err.message || 'Error al iniciar sesión.'
+    isLockedOut.value  = err.isLockout === true
   } finally {
     isLoading.value = false
   }
 }
 
-function handleSocialLogin(provider) {
+function handleSocialLogin(provider: string): void {
   console.log(`${provider} login — pendiente de integración`)
 }
 </script>
