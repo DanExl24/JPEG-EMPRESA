@@ -5,7 +5,6 @@ import { getApiBaseUrl } from '../lib/api'
 import type {
   AuthUser,
   LoginCredentials,
-  LoginResponse,
   RegisterPayload,
   AuthApiResponse,
   AuthCustomError,
