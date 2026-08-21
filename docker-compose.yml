@@ -27,6 +27,8 @@ services:
       dockerfile: backend/Dockerfile.backend
     container_name: jpeg_backend
     restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
     environment:
       - TZ=America/Bogota
       - DB_HOST=db
