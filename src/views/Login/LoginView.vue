@@ -78,8 +78,9 @@
                 ? 'border-red-400 bg-red-50'
                 : 'border-transparent'"
               name="identifier"
-              placeholder="Usuario"
+              placeholder="Usuario, correo o documento"
               type="text"
+              autocomplete="username"
               :disabled="isLoading"
               @blur="touched.identifier = true; syncFormWithDOM()"
               @input="syncFormWithDOM"
@@ -100,9 +101,9 @@
               >
                 Password
               </label>
-              <a class="text-xs font-semibold text-[#006688] hover:text-[#004e69] transition-colors" href="/recover">
+              <RouterLink class="text-xs font-semibold text-[#006688] hover:text-[#004e69] transition-colors" to="/recover">
                 Forgot password?
-              </a>
+              </RouterLink>
             </div>
             <div class="relative">
               <input
@@ -114,6 +115,7 @@
                   : 'border-transparent'"
                 name="password"
                 placeholder="••••••••"
+                autocomplete="current-password"
                 :type="showPassword ? 'text' : 'password'"
                 :disabled="isLoading"
                 @blur="touched.password = true; syncFormWithDOM()"
@@ -142,10 +144,10 @@
             <input
               id="remember"
               v-model="form.remember"
-              class="w-5 h-5 rounded-md border-[#bdc8d0] text-[#006688] focus:ring-[#c2e8ff] transition-all"
+              class="w-5 h-5 rounded-md border-[#bdc8d0] text-[#006688] focus:ring-[#c2e8ff] transition-all cursor-pointer"
               type="checkbox"
             />
-            <label class="text-sm text-[#3e484f] font-medium" for="remember">
+            <label class="text-sm text-[#3e484f] font-medium cursor-pointer" for="remember">
               Keep me logged in for 30 days
             </label>
           </div>
@@ -171,10 +173,10 @@
 
           <!-- Submit -->
           <button
-            class="w-full py-4 font-headline font-bold rounded-full transition-all duration-200 editorial-shadow"
+            class="w-full py-4 font-headline font-bold rounded-full transition-all duration-200 editorial-shadow cursor-pointer"
             :class="(form.identifier.trim() && form.password && !isLockedOut)
               ? 'medical-gradient text-white active:scale-[0.98]'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+              : 'bg-gray-200 text-gray-400'"
             type="submit"
             :disabled="isLoading || isLockedOut"
           >
@@ -202,7 +204,7 @@
           <button
             class="flex items-center justify-center gap-3 py-3 px-4 bg-[#f2f4f6] rounded-full hover:bg-[#e6e8ea] transition-colors font-semibold text-[#3e484f] text-sm"
             type="button"
-            @click="handleGoogleLogin"
+            @click="handleSocialLogin('Google')"
           >
             <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -215,7 +217,7 @@
           <button
             class="flex items-center justify-center gap-3 py-3 px-4 bg-[#f2f4f6] rounded-full hover:bg-[#e6e8ea] transition-colors font-semibold text-[#3e484f] text-sm"
             type="button"
-            @click="handleAppleLogin"
+            @click="handleSocialLogin('Apple')"
           >
             <svg aria-hidden="true" class="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
               <path d="M16.52 12.52c-.02-2.1 1.72-3.12 1.8-3.17-1-.98-2.53-1.12-3.06-1.14-1.29-.13-2.54.77-3.19.77-.66 0-1.66-.75-2.74-.73-1.4.02-2.7.83-3.42 2.09-1.47 2.55-.37 6.3 1.03 8.36.7 1 1.52 2.12 2.6 2.08 1.05-.04 1.44-.67 2.7-.67 1.25 0 1.61.67 2.72.65 1.13-.02 1.84-1 2.51-2.01.81-1.15 1.13-2.28 1.14-2.34-.03-.01-2.07-.8-2.09-3.89z"/>
@@ -224,42 +226,13 @@
             Apple
           </button>
         </div>
-
-        <!-- Footer -->
-        
-      </div>
-    </div>
-
-    <!-- Decorative Elements -->
-    <div class="absolute bottom-10 left-10 hidden xl:bottom-0 mb-2 xl:block">
-      <div class="flex items-center gap-6">
-        <div class="flex -space-x-3">
-          <img
-            alt="Nurse"
-            class="w-10 h-10 rounded-full border-2 border-white"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3bm-5AeIKuj6NpFPxY3SYV9X0_VzJUUEPPmYXHKrJmoE5xhpiwshKKNj1zJ4G1lok6RHBiUZS0wiCyZDJsTc0gwsDSJZcu7We3Ublssx1x9Da8LeX5gJEL7najp6cs8Jkm5o7MTgXf0BPK4fNVhvQeehyloaAMlYYA6BTserh8iHIN8VaUHWbT37iRIIj78O4iY5f3p7bvWFonr_u0WJgnJVbYci6ycNckG5LHM1f-7Ww0sbEPu16LdTOL2xMlB8tu2GavNdNHgfX"
-          />
-          <img
-            alt="Doctor"
-            class="w-10 h-10 rounded-full border-2 border-white"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDawUn_7bcuHnnCZNzbnfGhESvvrC0i28fCB-ij9KHkisa1ePM4bRNrb9I_au5aBJoaT2tOo0Svep8xstDz_YFA69mgzz3Dx5UPaqvUhgOtpObACBZSj7MpdV_5p1Wb_WBDeEEMZoHTntKvvPOVdwU31uwkC-eKf-XA5FVopp3w7SHpzHifB5wl9S_0ABWrTH26wBb7YvDu6RpaTdEuqHaiHG_oBaZJh_iUnJolGpcpnEIFhZW9FZ_G2Rzp-fXhSzyubSKE5ZdHubeT"
-          />
-          <img
-            alt="Healthcare worker"
-            class="w-10 h-10 rounded-full border-2 border-white"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsUlarddgjGXOkUiRQeFe2Y_taIX1urbCn0uCmnyKGDmf4PLoLXAJ_DuGSOzAAwOsULvOHI3ZRhIG4YOzfc6mCF6ymUVcpqbsj5XF1Tb6gnHa1nFD2xjMKSALfE_fZkw8W00OZTccPM1yOgc61NfNCiZWHstUJYervQ1B65r351G503n0ohPOSsMrHW_7QQ_BnZh9d6If5ZeKCcS97w-2W1tSMYtKjA8tj9dlsB8II2WJk97gb1BF8W1KOTo7plrfG3fhuOg4yFKYr"
-          />
-        </div>
-        <div class="text-xs text-[#3e484f] font-medium ">
-          Joined by <span class="text-[#006688] font-bold">12,000+</span> healthcare professionals
-        </div>
       </div>
     </div>
   </main>
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
@@ -272,7 +245,6 @@ const form = reactive({
   remember: false,
 })
 
-// Track which fields the user has interacted with (to avoid showing errors on load)
 const touched = reactive({
   identifier: false,
   password: false,
@@ -295,6 +267,8 @@ function syncFormWithDOM() {
   }
 }
 
+let syncInterval = null
+
 onMounted(() => {
   syncFormWithDOM()
   const delays = [50, 100, 250, 500, 1000, 2000]
@@ -305,10 +279,12 @@ onMounted(() => {
   document.addEventListener('mousemove', syncFormWithDOM, { once: true, passive: true })
 })
 
-// ──────────────────────────────────────────────
-// Identifier validation
-// Accepts: email (contains @) or numeric document (7–12 digits) or username
-// ──────────────────────────────────────────────
+onBeforeUnmount(() => {
+  if (syncInterval) clearInterval(syncInterval)
+  window.removeEventListener('focus', syncFormWithDOM)
+  document.removeEventListener('click', syncFormWithDOM)
+})
+
 const identifierError = computed(() => {
   const val = form.identifier.trim()
   if (!val) return 'Este campo es obligatorio.'
@@ -316,7 +292,6 @@ const identifierError = computed(() => {
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRe.test(val)) return 'Ingresa un correo electrónico válido.'
   } else {
-    // Acepta número de documento (7 a 12 dígitos) o identificadores de usuario alfanuméricos (ej. ADMIN001)
     if (!/^[a-zA-Z0-9_-]{3,30}$/.test(val)) {
       return 'El documento o identificador debe tener entre 3 y 30 caracteres.'
     }
@@ -324,13 +299,6 @@ const identifierError = computed(() => {
   return ''
 })
 
-const isFormValid = computed(() =>
-  Boolean(form.identifier.trim() && form.password)
-)
-
-// ──────────────────────────────────────────────
-// Submit handler
-// ──────────────────────────────────────────────
 async function handleSubmit() {
   const identifierEl = document.getElementById('identifier')
   const passwordEl   = document.getElementById('password')
@@ -342,7 +310,6 @@ async function handleSubmit() {
   form.identifier = rawIdentifier
   form.password   = rawPassword
 
-  // Mark all as touched to show validation errors
   touched.identifier = true
   touched.password   = true
 
@@ -371,19 +338,16 @@ async function handleSubmit() {
     })
     await router.push('/dashboard/inicio')
   } catch (error) {
-    errorMessage.value = error.message
+    console.error('[Login Error View]:', error)
+    errorMessage.value = error.message || 'Error al iniciar sesión.'
     isLockedOut.value  = error.isLockout === true
   } finally {
     isLoading.value = false
   }
 }
 
-function handleGoogleLogin() {
-  console.log('Google login — pendiente de integración')
-}
-
-function handleAppleLogin() {
-  console.log('Apple login — pendiente de integración')
+function handleSocialLogin(provider) {
+  console.log(`${provider} login — pendiente de integración`)
 }
 </script>
 
@@ -403,16 +367,5 @@ function handleAppleLogin() {
 .font-body,
 .font-label {
   font-family: 'Inter', sans-serif;
-}
-
-/* Smooth reveal of password checklist */
-.slide-down-enter-active,
-.slide-down-leave-active {
-  transition: all 0.25s ease;
-}
-.slide-down-enter-from,
-.slide-down-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
 }
 </style>

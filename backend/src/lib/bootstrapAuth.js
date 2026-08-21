@@ -1,5 +1,5 @@
 import prisma from './db.js'
-import { hashPassword } from './password.js'
+import { hashPassword, verifyPassword } from './password.js'
 
 const DEFAULT_ADMIN = {
   email: process.env.DEFAULT_ADMIN_EMAIL || 'admin@nursingacademy.local',

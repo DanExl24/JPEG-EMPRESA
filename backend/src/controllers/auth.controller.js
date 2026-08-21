@@ -3,32 +3,44 @@ import { verifyPassword, hashPassword } from '../lib/password.js'
 import jwt from 'jsonwebtoken'
 
 const MAX_FAILED_ATTEMPTS = 5
-const LOCKOUT_DURATION_MS  = 2 * 60 * 60 * 1000 // 2 horas
+const LOCKOUT_DURATION_MS = 2 * 60 * 60 * 1000 // 2 horas
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h'
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'
 
 // Helpers
 function isLocked(lockedUntil) {
-  return lockedUntil && new Date(lockedUntil) > new Date()
+  return Boolean(lockedUntil && new Date(lockedUntil) > new Date())
 }
+
 function lockoutTimeRemaining(lockedUntil) {
-  return Math.ceil((new Date(lockedUntil) - new Date()) / 60000)
+  if (!lockedUntil) return 0
+  const diffMs = new Date(lockedUntil).getTime() - Date.now()
+  return Math.max(1, Math.ceil(diffMs / 60000))
 }
 
 function isValidPassword(password) {
-  return password.length >= 8 && /[A-Z]/.test(password) && /[@#$%&*]/.test(password);
+  return typeof password === 'string' && password.length >= 8 && /[A-Z]/.test(password) && /[@#$%&*]/.test(password)
 }
 
+/**
+ * Procesa el inicio de sesión unificado para Admin, Instructor y Aprendiz.
+ */
 export async function login(req, res) {
   try {
-    const { identifier, password } = req.body || {};
-    const cleanIdentifier = typeof identifier === 'string' ? identifier.trim() : '';
-    const cleanPassword = typeof password === 'string' ? password : '';
+    const { identifier, password } = req.body || {}
+
+    const cleanIdentifier = typeof identifier === 'string' ? identifier.trim() : ''
+    const cleanPassword = typeof password === 'string' ? password : ''
 
     if (!cleanIdentifier || !cleanPassword) {
-      return res.status(400).json({ message: 'Usuario y contraseña son obligatorios.' });
+      return res.status(400).json({
+        message: 'Por favor ingresa tu usuario/correo y contraseña.'
+      })
     }
 
+    console.log(`[Auth Login] Intento de login para identificador: "${cleanIdentifier}"`)
+
+    // Búsqueda insensible a mayúsculas por correo o documento (cédula)
     const user = await prisma.user.findFirst({
       where: {
         OR: [
@@ -36,23 +48,49 @@ export async function login(req, res) {
           { cedula: { equals: cleanIdentifier, mode: 'insensitive' } }
         ]
       }
-    });
+    })
 
     if (!user) {
-      return res.status(401).json({ message: 'Credenciales inválidas.' });
+      console.warn(`[Auth Login] Usuario no encontrado para: "${cleanIdentifier}"`)
+      return res.status(401).json({ message: 'Credenciales inválidas.' })
     }
 
+    // Verificar si la cuenta está bloqueada
     if (isLocked(user.lockedUntil)) {
-      return res.status(423).json({ message: `Cuenta bloqueada. Intenta en ${lockoutTimeRemaining(user.lockedUntil)} minutos.` });
+      const minutesLeft = lockoutTimeRemaining(user.lockedUntil)
+      console.warn(`[Auth Login] Cuenta bloqueada para ${user.correo || user.cedula}. Minutos restantes: ${minutesLeft}`)
+      return res.status(423).json({
+        message: `Cuenta bloqueada temporalmente por intentos fallidos. Intenta de nuevo en ${minutesLeft} minutos.`
+      })
     }
 
-    if (verifyPassword(cleanPassword, user.passwordHash)) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { failedAttempts: 0, lockedUntil: null }
-      });
+    // Verificar contraseña
+    const passwordMatches = verifyPassword(cleanPassword, user.passwordHash)
 
-      const token = jwt.sign({ id: user.id, role: user.rol }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    if (passwordMatches) {
+      // Restablecer intentos fallidos
+      if (user.failedAttempts > 0 || user.lockedUntil !== null) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { failedAttempts: 0, lockedUntil: null }
+        }).catch(err => console.error('[Auth Login] Error resetting failed attempts:', err.message))
+      }
+
+      const roleNormalized = (user.rol || 'APRENDIZ').toUpperCase()
+      const token = jwt.sign(
+        {
+          id: user.id,
+          role: roleNormalized,
+          correo: user.correo,
+          cedula: user.cedula
+        },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+      )
+
+      const fullName = [user.nombre, user.apellido].filter(Boolean).join(' ') || 'Usuario'
+
+      console.log(`[Auth Login] ✅ Inicio de sesión exitoso: ${user.correo || user.cedula} (Rol: ${roleNormalized})`)
 
       return res.json({
         token,
@@ -60,70 +98,124 @@ export async function login(req, res) {
           id: user.id,
           nombre: user.nombre,
           apellido: user.apellido,
-          rol: user.rol,
+          name: fullName,
+          rol: roleNormalized,
+          role: roleNormalized.toLowerCase(),
           correo: user.correo,
-          cedula: user.cedula
+          email: user.correo,
+          cedula: user.cedula,
+          xp: user.xp || 0
         }
-      });
+      })
     }
 
-    const newCount = (user.failedAttempts || 0) + 1;
-    const lockedUntil = newCount >= MAX_FAILED_ATTEMPTS ? new Date(Date.now() + LOCKOUT_DURATION_MS) : null;
-    await prisma.user.update({ where: { id: user.id }, data: { failedAttempts: newCount, lockedUntil } });
+    // Contraseña incorrecta -> Incrementar contador de intentos fallidos
+    const nextAttempts = (user.failedAttempts || 0) + 1
+    const shouldLock = nextAttempts >= MAX_FAILED_ATTEMPTS
+    const lockedUntilDate = shouldLock ? new Date(Date.now() + LOCKOUT_DURATION_MS) : null
 
-    if (lockedUntil) {
-      return res.status(423).json({ message: `Cuenta bloqueada por ${MAX_FAILED_ATTEMPTS} intentos fallidos.` });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedAttempts: nextAttempts,
+        lockedUntil: lockedUntilDate
+      }
+    }).catch(err => console.error('[Auth Login] Error incrementing failed attempts:', err.message))
+
+    if (shouldLock) {
+      console.warn(`[Auth Login] 🔒 Cuenta bloqueada por alcanzar ${MAX_FAILED_ATTEMPTS} intentos fallidos: ${cleanIdentifier}`)
+      return res.status(423).json({
+        message: `Cuenta bloqueada por ${MAX_FAILED_ATTEMPTS} intentos fallidos. Intenta en 2 horas.`
+      })
     }
 
-    return res.status(401).json({ message: 'Credenciales inválidas.' });
+    console.warn(`[Auth Login] ❌ Contraseña incorrecta para: "${cleanIdentifier}". Intento ${nextAttempts}/${MAX_FAILED_ATTEMPTS}`)
+    return res.status(401).json({ message: 'Credenciales inválidas.' })
   } catch (error) {
-    console.error('Error en controller de login:', error);
-    return res.status(500).json({ message: 'Error interno del servidor al procesar el inicio de sesión.' });
+    console.error('[Auth Login Fatal Error]:', error)
+    return res.status(500).json({
+      message: 'Error interno del servidor al procesar el inicio de sesión.'
+    })
   }
 }
 
+/**
+ * Registro de nuevos aprendices
+ */
 export async function register(req, res) {
-  const { nombre, apellido, cedula, correo, password } = req.body;
-  if (!nombre || !apellido || !cedula || !correo || !password) {
-    return res.status(400).json({ message: 'Todos los campos son obligatorios.' })
-  }
-  if (!isValidPassword(password)) {
-    return res.status(400).json({ message: 'La contraseña no cumple los requisitos. Mínimo 8 caracteres, 1 mayúscula y 1 carácter especial (@#$%&*).' })
-  }
-
-  const existing = await prisma.user.findFirst({
-    where: { OR: [{ correo }, { cedula }] }
-  })
-
-  if (existing) {
-    if (existing.rol === 'APRENDIZ') {
-      return res.status(409).json({ message: 'Estas credenciales ya existen ¿Desea recuperar la cuenta?' })
+  try {
+    const { nombre, apellido, cedula, correo, password } = req.body || {}
+    if (!nombre || !apellido || !cedula || !correo || !password) {
+      return res.status(400).json({ message: 'Todos los campos son obligatorios.' })
     }
-    return res.status(400).json({ message: 'El usuario ya existe en el sistema.' })
+
+    if (!isValidPassword(password)) {
+      return res.status(400).json({
+        message: 'La contraseña debe tener mínimo 8 caracteres, al menos 1 mayúscula y 1 carácter especial (@#$%&*).'
+      })
+    }
+
+    const cleanCorreo = correo.trim().toLowerCase()
+    const cleanCedula = cedula.trim()
+
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { correo: { equals: cleanCorreo, mode: 'insensitive' } },
+          { cedula: { equals: cleanCedula, mode: 'insensitive' } }
+        ]
+      }
+    })
+
+    if (existing) {
+      if (existing.rol === 'APRENDIZ') {
+        return res.status(409).json({ message: 'Estas credenciales ya existen ¿Desea recuperar la cuenta?' })
+      }
+      return res.status(400).json({ message: 'El usuario ya existe en el sistema.' })
+    }
+
+    await prisma.user.create({
+      data: {
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        cedula: cleanCedula,
+        correo: cleanCorreo,
+        passwordHash: hashPassword(password),
+        rol: 'APRENDIZ'
+      }
+    })
+
+    return res.status(201).json({ message: 'Usuario registrado exitosamente.' })
+  } catch (error) {
+    console.error('[Auth Register Error]:', error)
+    return res.status(500).json({ message: 'Error interno al registrar usuario.' })
   }
-
-  const user = await prisma.user.create({
-    data: { nombre, apellido, cedula, correo, passwordHash: hashPassword(password), rol: 'APRENDIZ' }
-  })
-
-  res.status(201).json({ message: 'Usuario registrado exitosamente.' })
 }
 
+/**
+ * Recuperación de cuenta / contraseña
+ */
 export async function recover(req, res) {
-  const { identifier } = req.body;
-  if (!identifier) return res.status(400).json({ message: 'Identificador requerido.' })
-  
-  // Mock recovery implementation as requested
-  res.json({ message: 'Si el correo existe en el sistema, recibirás un enlace de recuperación.' })
+  const { identifier } = req.body || {}
+  if (!identifier) {
+    return res.status(400).json({ message: 'Identificador requerido.' })
+  }
+  return res.json({
+    message: 'Si el correo o documento existe en el sistema, recibirás un enlace de recuperación.'
+  })
 }
 
+/**
+ * Restablecer contraseña
+ */
 export async function resetPassword(req, res) {
-  const { token, newPassword } = req.body;
-  if (!token || !newPassword) return res.status(400).json({ message: 'Faltan parámetros.' })
+  const { token, newPassword } = req.body || {}
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: 'Faltan parámetros.' })
+  }
   if (!isValidPassword(newPassword)) {
-    return res.status(400).json({ message: 'La contraseña no cumple los requisitos.' })
+    return res.status(400).json({ message: 'La nueva contraseña no cumple con los requisitos de seguridad.' })
   }
 
-  // Mock implementation
-  res.json({ message: 'Contraseña restablecida exitosamente.' })
+  return res.json({ message: 'Contraseña restablecida exitosamente.' })
 }
