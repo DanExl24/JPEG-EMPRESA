@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { Request, Response, NextFunction } from 'express'
 import {
   getVocabulary, createVocabularyTerm, updateVocabularyTerm, deleteVocabularyTerm,
   getDialogues, getDialogueById, createDialogue, updateDialogue, deleteDialogue
@@ -10,11 +11,12 @@ const router = Router()
 router.use(authenticate)
 
 // Helper middleware to restrict writes to ADMIN/INSTRUCTOR
-const requireAdminOrInstructor = (req, res, next) => {
-  if (req.user.role === 'ADMIN' || req.user.role === 'INSTRUCTOR') {
-    return next()
+const requireAdminOrInstructor = (req: Request, res: Response, next: NextFunction): void => {
+  if (req.user?.role === 'ADMIN' || req.user?.role === 'INSTRUCTOR') {
+    next()
+    return
   }
-  return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de Administrador o Instructor.' })
+  res.status(403).json({ message: 'Acceso denegado. Se requiere rol de Administrador o Instructor.' })
 }
 
 // --- Vocabulary ---

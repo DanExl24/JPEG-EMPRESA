@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express'
 import prisma from '../lib/db.js'
 
 // Badges catálogo — se otorgan automáticamente al alcanzar XP o eventos
@@ -11,7 +12,7 @@ const BADGE_CATALOG = [
 ]
 
 // Seed badges table if empty
-async function ensureBadges() {
+async function ensureBadges(): Promise<void> {
   const count = await prisma.badge.count()
   if (count === 0) {
     await prisma.badge.createMany({ data: BADGE_CATALOG, skipDuplicates: true })
@@ -19,15 +20,15 @@ async function ensureBadges() {
 }
 
 // Award badges based on current XP
-async function checkAndAwardBadges(userId, currentXp) {
+async function checkAndAwardBadges(userId: number, currentXp: number): Promise<typeof BADGE_CATALOG> {
   await ensureBadges()
   const earned = await prisma.userBadge.findMany({ where: { userId }, select: { badgeKey: true } })
-  const earnedKeys = new Set(earned.map(b => b.badgeKey))
+  const earnedKeys = new Set(earned.map((b: { badgeKey: string }) => b.badgeKey))
 
-  const toAward = BADGE_CATALOG.filter(b => currentXp >= b.xpRequired && !earnedKeys.has(b.key))
+  const toAward = BADGE_CATALOG.filter((b: (typeof BADGE_CATALOG)[number]) => currentXp >= b.xpRequired && !earnedKeys.has(b.key))
   if (toAward.length > 0) {
     await prisma.userBadge.createMany({
-      data: toAward.map(b => ({ userId, badgeKey: b.key })),
+      data: toAward.map((b: (typeof BADGE_CATALOG)[number]) => ({ userId, badgeKey: b.key })),
       skipDuplicates: true
     })
   }
@@ -35,14 +36,22 @@ async function checkAndAwardBadges(userId, currentXp) {
 }
 
 // GET /api/learner/profile
-export async function getProfile(req, res) {
+export async function getProfile(req: Request, res: Response): Promise<void> {
   try {
-    const userId = req.user.id
+    const userId = Number(req.user?.id)
+    if (!userId) {
+      res.status(401).json({ message: 'No autenticado.' })
+      return
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, nombre: true, apellido: true, cedula: true, correo: true, rol: true, xp: true, createdAt: true }
     })
-    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' })
+    if (!user) {
+      res.status(404).json({ message: 'Usuario no encontrado.' })
+      return
+    }
 
     const badges = await prisma.userBadge.findMany({
       where: { userId },
@@ -53,41 +62,52 @@ export async function getProfile(req, res) {
     const submissions = await prisma.activitySubmission.count({ where: { apprenticeId: userId } })
     const passed = await prisma.activitySubmission.count({ where: { apprenticeId: userId, passed: true } })
 
-    return res.json({
+    res.json({
       ...user,
-      badges: badges.map(ub => ub.badge),
+      badges: badges.map((ub: { badge: unknown }) => ub.badge),
       stats: { totalSubmissions: submissions, passedSubmissions: passed }
     })
   } catch (err) {
     console.error('Error getProfile:', err)
-    return res.status(500).json({ message: 'Error interno del servidor.' })
+    res.status(500).json({ message: 'Error interno del servidor.' })
   }
 }
 
 // PUT /api/learner/profile
-export async function updateProfile(req, res) {
+export async function updateProfile(req: Request, res: Response): Promise<void> {
   try {
-    const userId = req.user.id
-    const { nombre, apellido } = req.body
-    if (!nombre || !apellido) {
-      return res.status(400).json({ message: 'Nombre y apellido son requeridos.' })
+    const userId = Number(req.user?.id)
+    if (!userId) {
+      res.status(401).json({ message: 'No autenticado.' })
+      return
     }
+
+    const { nombre, apellido } = req.body || {}
+    if (!nombre || !apellido) {
+      res.status(400).json({ message: 'Nombre y apellido son requeridos.' })
+      return
+    }
+
     const updated = await prisma.user.update({
       where: { id: userId },
-      data: { nombre: nombre.trim(), apellido: apellido.trim() },
+      data: { nombre: String(nombre).trim(), apellido: String(apellido).trim() },
       select: { id: true, nombre: true, apellido: true, cedula: true, correo: true, rol: true, xp: true }
     })
-    return res.json(updated)
+    res.json(updated)
   } catch (err) {
     console.error('Error updateProfile:', err)
-    return res.status(500).json({ message: 'Error interno del servidor.' })
+    res.status(500).json({ message: 'Error interno del servidor.' })
   }
 }
 
 // GET /api/learner/progress
-export async function getProgress(req, res) {
+export async function getProgress(req: Request, res: Response): Promise<void> {
   try {
-    const userId = req.user.id
+    const userId = Number(req.user?.id)
+    if (!userId) {
+      res.status(401).json({ message: 'No autenticado.' })
+      return
+    }
 
     const allActivities = await prisma.activity.findMany({
       select: { id: true, course: true, points: true }
@@ -98,10 +118,10 @@ export async function getProgress(req, res) {
       select: { activityId: true, passed: true, reviewStatus: true }
     })
 
-    const submissionMap = Object.fromEntries(mySubmissions.map(s => [s.activityId, s]))
+    const submissionMap = Object.fromEntries(mySubmissions.map((s: { activityId: number; passed: boolean; reviewStatus: string }) => [s.activityId, s]))
 
     // Group by course
-    const courseMap = {}
+    const courseMap: Record<string, { total: number; passed: number; totalPoints: number; earnedPoints: number }> = {}
     for (const act of allActivities) {
       if (!courseMap[act.course]) {
         courseMap[act.course] = { total: 0, passed: 0, totalPoints: 0, earnedPoints: 0 }
@@ -126,20 +146,20 @@ export async function getProgress(req, res) {
     }))
 
     const totalActivities = allActivities.length
-    const totalPassed = mySubmissions.filter(s => s.passed).length
+    const totalPassed = mySubmissions.filter((s: { passed: boolean }) => s.passed).length
     const overallPct = totalActivities > 0 ? Math.round((totalPassed / totalActivities) * 100) : 0
 
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { xp: true } })
 
-    return res.json({ overallPct, totalActivities, totalPassed, xp: user?.xp || 0, courses })
+    res.json({ overallPct, totalActivities, totalPassed, xp: user?.xp || 0, courses })
   } catch (err) {
     console.error('Error getProgress:', err)
-    return res.status(500).json({ message: 'Error interno del servidor.' })
+    res.status(500).json({ message: 'Error interno del servidor.' })
   }
 }
 
 // GET /api/learner/leaderboard
-export async function getLeaderboard(req, res) {
+export async function getLeaderboard(_req: Request, res: Response): Promise<void> {
   try {
     const users = await prisma.user.findMany({
       where: { rol: 'APRENDIZ' },
@@ -148,7 +168,7 @@ export async function getLeaderboard(req, res) {
       take: 10
     })
 
-    const result = await Promise.all(users.map(async (u, idx) => {
+    const result = await Promise.all(users.map(async (u: { id: number; nombre: string; apellido: string; xp: number }, idx: number) => {
       const passed = await prisma.activitySubmission.count({ where: { apprenticeId: u.id, passed: true } })
       return {
         rank: idx + 1,
@@ -160,15 +180,15 @@ export async function getLeaderboard(req, res) {
       }
     }))
 
-    return res.json(result)
+    res.json(result)
   } catch (err) {
     console.error('Error getLeaderboard:', err)
-    return res.status(500).json({ message: 'Error interno del servidor.' })
+    res.status(500).json({ message: 'Error interno del servidor.' })
   }
 }
 
-// POST /api/learner/award-xp  (interno, usado por activity controller)
-export async function awardXp(userId, xpAmount) {
+// POST /api/learner/award-xp (interno)
+export async function awardXp(userId: number, xpAmount: number): Promise<number | null> {
   if (!userId || !xpAmount || xpAmount <= 0) return null
   const updated = await prisma.user.update({
     where: { id: userId },

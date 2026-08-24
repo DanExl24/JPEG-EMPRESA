@@ -1,13 +1,14 @@
 {
-  "name": "database",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "Contiene la configuración y conexión al gestor de base de datos (en este caso, **Supabase**).",
+  "description": "API Backend para Nursing Academy con Express, Prisma ORM y PostgreSQL.",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,9 +25,16 @@
   "devDependencies": {
     "@prisma/adapter-better-sqlite3": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "@types/node": "^25.7.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.8",
+    "@types/node": "^22.13.4",
+    "@types/pg": "^8.11.11",
     "better-sqlite3": "^12.10.0",
     "nodemon": "^3.1.14",
-    "prisma": "^7.8.0"
+    "prisma": "^7.8.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
   }
 }

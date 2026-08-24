@@ -1,0 +1,172 @@
+import type { Request, Response } from 'express'
+import prisma from '../lib/db.js'
+import type { CreateVocabularyDto, CreateDialogueDto } from '../types/dtos.js'
+
+// --- VOCABULARY ---
+export async function getVocabulary(_req: Request, res: Response): Promise<void> {
+  try {
+    const list = await prisma.vocabulary.findMany()
+    res.json(list)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al listar vocabulario.', error: errorObj.message })
+  }
+}
+
+export async function createVocabularyTerm(req: Request<unknown, unknown, CreateVocabularyDto>, res: Response): Promise<void> {
+  try {
+    const { wordEn, wordEs, category, definition, example } = req.body || {}
+    if (!wordEn || !wordEs || !category || !definition) {
+      res.status(400).json({ message: 'Los campos en inglés, español, categoría y definición son obligatorios.' })
+      return
+    }
+
+    const created = await prisma.vocabulary.create({
+      data: { wordEn, wordEs, category, definition, example }
+    })
+    res.status(201).json(created)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al crear término de vocabulario.', error: errorObj.message })
+  }
+}
+
+export async function updateVocabularyTerm(req: Request<{ id: string }, unknown, Partial<CreateVocabularyDto>>, res: Response): Promise<void> {
+  try {
+    const { id } = req.params
+    const { wordEn, wordEs, category, definition, example } = req.body || {}
+    if (!wordEn || !wordEs || !category || !definition) {
+      res.status(400).json({ message: 'Los campos en inglés, español, categoría y definición son obligatorios.' })
+      return
+    }
+
+    const updated = await prisma.vocabulary.update({
+      where: { id: parseInt(id) },
+      data: { wordEn, wordEs, category, definition, example }
+    })
+    res.json(updated)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al actualizar término de vocabulario.', error: errorObj.message })
+  }
+}
+
+export async function deleteVocabularyTerm(req: Request<{ id: string }>, res: Response): Promise<void> {
+  try {
+    const { id } = req.params
+    await prisma.vocabulary.delete({
+      where: { id: parseInt(id) }
+    })
+    res.json({ message: 'Término de vocabulario eliminado correctamente.' })
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al eliminar término de vocabulario.', error: errorObj.message })
+  }
+}
+
+// --- DIALOGUES ---
+export async function getDialogues(_req: Request, res: Response): Promise<void> {
+  try {
+    const list = await prisma.dialogue.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
+    res.json(list)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al listar diálogos.', error: errorObj.message })
+  }
+}
+
+export async function getDialogueById(req: Request<{ id: string }>, res: Response): Promise<void> {
+  try {
+    const { id } = req.params
+    const item = await prisma.dialogue.findUnique({
+      where: { id: parseInt(id) }
+    })
+    if (!item) {
+      res.status(404).json({ message: 'Diálogo no encontrado.' })
+      return
+    }
+    res.json(item)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al obtener diálogo.', error: errorObj.message })
+  }
+}
+
+export async function createDialogue(req: Request<unknown, unknown, CreateDialogueDto>, res: Response): Promise<void> {
+  try {
+    const { title, description, content } = req.body || {}
+    if (!title || !content) {
+      res.status(400).json({ message: 'El título y el contenido son obligatorios.' })
+      return
+    }
+
+    try {
+      const parsed = typeof content === 'string' ? JSON.parse(content) : content
+      if (!Array.isArray(parsed)) throw new Error('El contenido del diálogo debe ser una lista de líneas.')
+    } catch (e: unknown) {
+      const errorObj = e as Error
+      res.status(400).json({ message: 'Contenido de diálogo inválido. Debe ser una lista JSON.', error: errorObj.message })
+      return
+    }
+
+    const created = await prisma.dialogue.create({
+      data: {
+        title,
+        description,
+        content: typeof content === 'string' ? content : JSON.stringify(content)
+      }
+    })
+    res.status(201).json(created)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al crear diálogo.', error: errorObj.message })
+  }
+}
+
+export async function updateDialogue(req: Request<{ id: string }, unknown, Partial<CreateDialogueDto>>, res: Response): Promise<void> {
+  try {
+    const { id } = req.params
+    const { title, description, content } = req.body || {}
+    if (!title || !content) {
+      res.status(400).json({ message: 'El título y el contenido son obligatorios.' })
+      return
+    }
+
+    try {
+      const parsed = typeof content === 'string' ? JSON.parse(content) : content
+      if (!Array.isArray(parsed)) throw new Error('El contenido debe ser una lista de líneas.')
+    } catch (e: unknown) {
+      const errorObj = e as Error
+      res.status(400).json({ message: 'Contenido de diálogo inválido.', error: errorObj.message })
+      return
+    }
+
+    const updated = await prisma.dialogue.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        description,
+        content: typeof content === 'string' ? content : JSON.stringify(content)
+      }
+    })
+    res.json(updated)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al actualizar diálogo.', error: errorObj.message })
+  }
+}
+
+export async function deleteDialogue(req: Request<{ id: string }>, res: Response): Promise<void> {
+  try {
+    const { id } = req.params
+    await prisma.dialogue.delete({
+      where: { id: parseInt(id) }
+    })
+    res.json({ message: 'Diálogo eliminado correctamente.' })
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al eliminar diálogo.', error: errorObj.message })
+  }
+}

@@ -1,21 +1,23 @@
 import { Router } from 'express'
+import type { Request, Response, NextFunction } from 'express'
 import {
   getPrograms, createProgram, updateProgram, deleteProgram,
   getCompetencies, createCompetency, updateCompetency, deleteCompetency,
   getRaps, createRap, updateRap, deleteRap
 } from '../controllers/curriculum.controller.js'
-import { authenticate, requireRole } from '../lib/middleware.js'
+import { authenticate } from '../lib/middleware.js'
 
 const router = Router()
 
 router.use(authenticate)
 
 // Middleware to allow only admins or instructors
-const requireAdminOrInstructor = (req, res, next) => {
-  if (req.user.role === 'ADMIN' || req.user.role === 'INSTRUCTOR') {
-    return next()
+const requireAdminOrInstructor = (req: Request, res: Response, next: NextFunction): void => {
+  if (req.user?.role === 'ADMIN' || req.user?.role === 'INSTRUCTOR') {
+    next()
+    return
   }
-  return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de Administrador o Instructor.' })
+  res.status(403).json({ message: 'Acceso denegado. Se requiere rol de Administrador o Instructor.' })
 }
 
 router.use(requireAdminOrInstructor)

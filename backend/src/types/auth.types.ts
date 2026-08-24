@@ -1,53 +1,37 @@
-/**
- * Tipos de roles soportados en el Backend
- */
-export type UserRoleBackend = 'ADMIN' | 'INSTRUCTOR' | 'APRENDIZ'
+import type { UserRoleUpper, UserRoleLower } from '../../../shared/types/auth.shared.js'
 
-/**
- * Payload decodificado del JWT
- */
+export type UserRoleBackend = UserRoleUpper
+
 export interface JwtPayloadAuth {
   id: number
-  role: UserRoleBackend
+  role: UserRoleUpper
   correo?: string | null
   cedula?: string
 }
 
-/**
- * Modelo de datos de usuario devuelto por la autenticación
- */
 export interface UserAuthDto {
   id: number
   nombre: string
   apellido: string
   name: string
-  rol: UserRoleBackend
-  role: string
+  rol: UserRoleUpper
+  role: UserRoleLower
   correo: string | null
   email: string | null
   cedula: string
   xp: number
 }
 
-/**
- * Cuerpo de la petición de Login
- */
 export interface LoginRequestBody {
   identifier?: string
   password?: string
 }
 
-/**
- * Respuesta JSON exitosa de Login
- */
 export interface LoginSuccessResponse {
   token: string
   user: UserAuthDto
 }
 
-/**
- * Cuerpo de la petición de Registro
- */
 export interface RegisterRequestBody {
   nombre?: string
   apellido?: string
@@ -56,9 +40,6 @@ export interface RegisterRequestBody {
   password?: string
 }
 
-/**
- * Respuesta genérica de error / mensaje
- */
 export interface MessageResponse {
   message: string
 }

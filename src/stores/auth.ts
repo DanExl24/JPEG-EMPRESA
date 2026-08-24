@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { ComputedRef } from 'vue'
-import { getApiBaseUrl } from '../lib/api'
+import { apiFetch, ApiError } from '../lib/apiClient'
 import type {
   AuthUser,
   LoginCredentials,
@@ -48,7 +48,6 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(credentials: LoginCredentials): Promise<AuthUser> {
-    const apiBaseUrl: string = getApiBaseUrl()
     const cleanIdentifier: string = (credentials.identifier || '').trim()
     const cleanPassword: string = credentials.password || ''
 
@@ -58,91 +57,91 @@ export const useAuthStore = defineStore('auth', () => {
       throw err
     }
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 12000)
-
-    let response: Response
     try {
-      response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      const data = await apiFetch<{ token: string; user: AuthUser }>('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        skipAuth: true,
         body: JSON.stringify({
           identifier: cleanIdentifier,
           password: cleanPassword,
         }),
-        signal: controller.signal,
       })
-    } catch (fetchError: unknown) {
-      clearTimeout(timeoutId)
-      const errorObj = fetchError as Error
-      if (errorObj?.name === 'AbortError') {
-        const err: AuthCustomError = new Error('El servidor tardó demasiado en responder. Por favor intenta de nuevo.')
-        err.status = 408
+
+      if (!data?.user) {
+        const err: AuthCustomError = new Error('Respuesta del servidor incompleta.')
         throw err
       }
-      const err: AuthCustomError = new Error('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.')
-      throw err
-    } finally {
-      clearTimeout(timeoutId)
-    }
 
-    let payload: AuthApiResponse & { user?: AuthUser } = {}
-    try {
-      payload = (await response.json()) as AuthApiResponse & { user?: AuthUser }
-    } catch {
-      payload = {}
-    }
+      const sessionData: AuthUser = {
+        ...data.user,
+        token: data.token || '',
+      }
 
-    if (!response.ok) {
-      const errorMsg: string = payload.message || (response.status === 401 ? 'Credenciales inválidas.' : 'Error al procesar el inicio de sesión.')
-      const err: AuthCustomError = new Error(errorMsg)
-      err.status = response.status
-      err.isLockout = response.status === 423
-      throw err
+      setUser(sessionData, credentials.remember ?? true)
+      return data.user
+    } catch (error: unknown) {
+      if (error instanceof ApiError) {
+        const customErr: AuthCustomError = new Error(error.message)
+        customErr.status = error.status
+        customErr.isLockout = error.isLockout
+        customErr.isConflict = error.isConflict
+        throw customErr
+      }
+      throw error
     }
-
-    if (!payload.user) {
-      const err: AuthCustomError = new Error('Respuesta del servidor incompleta.')
-      throw err
-    }
-
-    const sessionData: AuthUser = {
-      ...payload.user,
-      token: payload.token || '',
-    }
-
-    setUser(sessionData, credentials.remember ?? true)
-    return payload.user
   }
 
   async function register(payload: RegisterPayload): Promise<AuthApiResponse> {
-    const apiBaseUrl: string = getApiBaseUrl()
+    try {
+      const data = await apiFetch<AuthApiResponse>('/api/auth/register', {
+        method: 'POST',
+        skipAuth: true,
+        body: JSON.stringify(payload),
+      })
+      return data
+    } catch (error: unknown) {
+      if (error instanceof ApiError) {
+        const customErr: AuthCustomError = new Error(error.message)
+        customErr.status = error.status
+        customErr.isConflict = error.isConflict
+        throw customErr
+      }
+      throw error
+    }
+  }
 
-    const response: Response = await fetch(`${apiBaseUrl}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    }).catch(() => {
-      const err: AuthCustomError = new Error('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.')
-      throw err
-    })
-
-    const data = (await response.json().catch(() => ({}))) as AuthApiResponse
-
-    if (!response.ok) {
-      const err: AuthCustomError = new Error(data.message || 'Error en el registro.')
-      err.status = response.status
-      err.isConflict = response.status === 409
-      throw err
+  async function checkAuth(): Promise<AuthUser | null> {
+    const currentStored = user.value || getStoredUser()
+    if (!currentStored?.token) {
+      clearUser()
+      return null
     }
 
-    return data
+    try {
+      const data = await apiFetch<{ user: AuthUser }>('/api/auth/me', {
+        method: 'GET',
+      })
+
+      if (data?.user) {
+        const updatedData: AuthUser = {
+          ...data.user,
+          token: currentStored.token,
+        }
+        user.value = updatedData
+        // Preservar en el storage donde estuviera
+        if (localStorage.getItem(STORAGE_KEY)) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData))
+        } else if (sessionStorage.getItem(STORAGE_KEY)) {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData))
+        }
+        return updatedData
+      }
+      return null
+    } catch (error) {
+      console.warn('[Auth Store] Session validation failed:', error)
+      clearUser()
+      return null
+    }
   }
 
   const safeUser: ComputedRef<AuthUser> = computed(() => {
@@ -165,7 +164,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   })
 
-  const isAuthenticated: ComputedRef<boolean> = computed(() => Boolean(user.value && user.value.id))
+  const isAuthenticated: ComputedRef<boolean> = computed(() => Boolean(user.value && user.value.id && user.value.token))
   const role: ComputedRef<UserRole> = computed(() => safeUser.value.role)
   const isAdmin: ComputedRef<boolean> = computed(() => role.value === 'admin')
   const isInstructor: ComputedRef<boolean> = computed(() => role.value === 'instructor')
@@ -192,5 +191,6 @@ export const useAuthStore = defineStore('auth', () => {
     clearUser,
     login,
     register,
+    checkAuth,
   }
 })

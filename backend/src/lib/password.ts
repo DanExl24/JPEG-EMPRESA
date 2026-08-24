@@ -3,9 +3,9 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 const KEY_LENGTH = 64
 
 /**
- * Generates a secure salt:hash string for the given password.
+ * Genera una cadena segura salt:hash a partir de una contraseña en texto plano.
  */
-export function hashPassword(password) {
+export function hashPassword(password: string): string {
   if (!password || typeof password !== 'string') {
     throw new Error('Password must be a non-empty string')
   }
@@ -15,17 +15,16 @@ export function hashPassword(password) {
 }
 
 /**
- * Safely verifies a plaintext password against a stored hash string.
- * Supports salt:hash (scrypt) format and plaintext legacy fallback.
- * Never throws exceptions.
+ * Verifica de forma segura una contraseña en texto plano contra un hash almacenado.
+ * Soporta formato salt:hash (scrypt) y fallback en texto plano para casos de prueba.
  */
-export function verifyPassword(password, storedHash) {
+export function verifyPassword(password: string, storedHash: string): boolean {
   try {
     if (!password || !storedHash || typeof password !== 'string' || typeof storedHash !== 'string') {
       return false
     }
 
-    // Direct match fallback (for edge-case test migrations)
+    // Direct match fallback
     if (password === storedHash) {
       return true
     }
@@ -47,8 +46,9 @@ export function verifyPassword(password, storedHash) {
     }
 
     return timingSafeEqual(derivedHash, originalBuffer)
-  } catch (err) {
-    console.error('[Auth Crypto] Error verifying password:', err.message)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    console.error('[Auth Crypto] Error verifying password:', errorObj.message)
     return false
   }
 }

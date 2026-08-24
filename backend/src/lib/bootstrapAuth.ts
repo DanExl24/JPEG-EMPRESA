@@ -21,13 +21,14 @@ const DEFAULT_INSTRUCTOR = {
 
 const DEFAULT_APPRENTICE = {
   documentNumber: process.env.DEFAULT_APPRENTICE_DOCUMENT || '1234567890',
+  email: process.env.DEFAULT_APPRENTICE_EMAIL || 'aprendiz@nursingacademy.local',
   password: process.env.DEFAULT_APPRENTICE_PASSWORD || 'Aprendiz123*',
   nombre: process.env.DEFAULT_APPRENTICE_FIRST_NAME || 'Laura',
   apellido: process.env.DEFAULT_APPRENTICE_LAST_NAME || 'Gomez',
   rol: 'APRENDIZ',
 }
 
-export async function ensureDefaultAuthUser() {
+export async function ensureDefaultAuthUser(): Promise<void> {
   const existingUser = await prisma.user.findFirst({
     where: {
       OR: [
@@ -74,7 +75,7 @@ export async function ensureDefaultAuthUser() {
   console.log(`Usuario inicial listo: ${DEFAULT_ADMIN.email}`)
 }
 
-export async function ensureDefaultInstructorUser() {
+export async function ensureDefaultInstructorUser(): Promise<void> {
   const existingUser = await prisma.user.findFirst({
     where: {
       OR: [
@@ -121,20 +122,26 @@ export async function ensureDefaultInstructorUser() {
   console.log(`Instructor inicial listo: ${DEFAULT_INSTRUCTOR.email}`)
 }
 
-export async function ensureDefaultApprenticeUser() {
+export async function ensureDefaultApprenticeUser(): Promise<void> {
   const existingUser = await prisma.user.findFirst({
-    where: { cedula: { equals: DEFAULT_APPRENTICE.documentNumber, mode: 'insensitive' } },
+    where: {
+      OR: [
+        { cedula: { equals: DEFAULT_APPRENTICE.documentNumber, mode: 'insensitive' } },
+        { correo: { equals: DEFAULT_APPRENTICE.email, mode: 'insensitive' } }
+      ]
+    },
   })
 
   if (existingUser) {
     const isPasswordValid = verifyPassword(DEFAULT_APPRENTICE.password, existingUser.passwordHash)
     const isLocked = Boolean(existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date())
 
-    if (!isPasswordValid || isLocked || existingUser.failedAttempts > 0 || existingUser.rol !== DEFAULT_APPRENTICE.rol) {
+    if (!isPasswordValid || isLocked || existingUser.failedAttempts > 0 || existingUser.rol !== DEFAULT_APPRENTICE.rol || !existingUser.correo) {
       await prisma.user.update({
         where: { id: existingUser.id },
         data: {
           cedula: DEFAULT_APPRENTICE.documentNumber,
+          correo: DEFAULT_APPRENTICE.email,
           nombre: DEFAULT_APPRENTICE.nombre,
           apellido: DEFAULT_APPRENTICE.apellido,
           passwordHash: hashPassword(DEFAULT_APPRENTICE.password),
@@ -151,6 +158,7 @@ export async function ensureDefaultApprenticeUser() {
   await prisma.user.create({
     data: {
       cedula: DEFAULT_APPRENTICE.documentNumber,
+      correo: DEFAULT_APPRENTICE.email,
       nombre: DEFAULT_APPRENTICE.nombre,
       apellido: DEFAULT_APPRENTICE.apellido,
       passwordHash: hashPassword(DEFAULT_APPRENTICE.password),
@@ -271,25 +279,24 @@ const DEFAULT_ACTIVITIES = [
   }
 ]
 
-export async function ensureDefaultActivities() {
-  // Clear and re-seed to ensure RAP 1 activities are available
-  await prisma.activity.deleteMany()
+export async function ensureDefaultActivities(): Promise<void> {
+  const count = await prisma.activity.count()
+  if (count > 0) return
+
   for (const act of DEFAULT_ACTIVITIES) {
     await prisma.activity.create({ data: act })
   }
   console.log('Actividades de prueba sembradas.')
 }
 
-export async function ensureDefaultCurriculum() {
+export async function ensureDefaultCurriculum(): Promise<void> {
   const programCount = await prisma.trainingProgram.count()
   if (programCount > 0) return
 
-  // Create default program
   const program = await prisma.trainingProgram.create({
     data: { name: 'Programa de Formación en Enfermería' }
   })
 
-  // Create competency
   const competency = await prisma.competency.create({
     data: {
       code: 'COMP-230101',
@@ -298,7 +305,6 @@ export async function ensureDefaultCurriculum() {
     }
   })
 
-  // Create RAPs / outcomes
   await prisma.learningOutcome.createMany({
     data: [
       {
@@ -316,7 +322,7 @@ export async function ensureDefaultCurriculum() {
   console.log('Currículum de prueba sembrado.')
 }
 
-export async function ensureDefaultVocabulary() {
+export async function ensureDefaultVocabulary(): Promise<void> {
   const count = await prisma.vocabulary.count()
   if (count > 0) return
 
@@ -331,7 +337,7 @@ export async function ensureDefaultVocabulary() {
   console.log('Vocabulario de prueba sembrado.')
 }
 
-export async function ensureDefaultDialogues() {
+export async function ensureDefaultDialogues(): Promise<void> {
   const count = await prisma.dialogue.count()
   if (count > 0) return
 
@@ -350,5 +356,3 @@ export async function ensureDefaultDialogues() {
   })
   console.log('Diálogos de prueba sembrados.')
 }
-
-

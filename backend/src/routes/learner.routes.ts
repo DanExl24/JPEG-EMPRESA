@@ -6,9 +6,9 @@ const router = Router()
 
 router.use(authenticate)
 
-router.get('/profile',     getProfile)
-router.put('/profile',     updateProfile)
-router.get('/progress',    getProgress)
+router.get('/profile', getProfile)
+router.put('/profile', updateProfile)
+router.get('/progress', getProgress)
 router.get('/leaderboard', getLeaderboard)
 
 export default router

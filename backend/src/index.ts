@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import express from 'express'
+import type { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import http from 'http'
 import testRoutes from './routes/test.routes.js'
@@ -28,7 +29,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   .filter(Boolean) ?? []
 
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
       callback(null, true)
       return
@@ -39,7 +40,7 @@ app.use(cors({
   credentials: true
 }))
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString()
   console.log(`[${timestamp}] Petición: ${req.method} ${req.originalUrl || req.url} | Origin: ${req.headers.origin || '*'}`)
 
@@ -52,14 +53,14 @@ app.use((req, res, next) => {
 app.use(express.json())
 
 // Body logging middleware for debugging login payloads
-app.use((req, res, next) => {
+app.use((req: Request, _res: Response, next: NextFunction) => {
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     console.log(`[${new Date().toISOString()}] 📦 Payload Body (${req.url}):`, JSON.stringify(req.body || {}))
   }
   next()
 })
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' })
 })
 

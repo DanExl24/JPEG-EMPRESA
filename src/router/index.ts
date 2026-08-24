@@ -59,8 +59,20 @@ export const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+let hasCheckedAuth = false
+
+router.beforeEach(async (to) => {
   const auth = useAuthStore()
+
+  // Validar sesión con el backend en la primera carga si existe token guardado
+  if (!hasCheckedAuth && auth.isAuthenticated) {
+    hasCheckedAuth = true
+    try {
+      await auth.checkAuth()
+    } catch {
+      // Ignorar error, el store ya limpia el estado si el token es inválido
+    }
+  }
 
   if (to.meta['requiresAuth'] && !auth.isAuthenticated) {
     return '/login'
@@ -70,3 +82,4 @@ router.beforeEach((to) => {
     return '/dashboard/inicio'
   }
 })
+

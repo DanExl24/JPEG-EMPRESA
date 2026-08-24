@@ -1,31 +1,41 @@
+import type { Request, Response } from 'express'
 import prisma from '../lib/db.js'
 import { verifyPassword, hashPassword } from '../lib/password.js'
 import jwt from 'jsonwebtoken'
+import type {
+  LoginRequestBody,
+  RegisterRequestBody,
+  UserAuthDto,
+  UserRoleBackend,
+  JwtPayloadAuth
+} from '../types/auth.types.js'
+import type { UserRoleLower } from '../../../shared/types/auth.shared.js'
 
 const MAX_FAILED_ATTEMPTS = 5
-const LOCKOUT_DURATION_MS = 2 * 60 * 60 * 1000 // 2 horas
+const IS_DEV = process.env.NODE_ENV !== 'production'
+const LOCKOUT_DURATION_MS = IS_DEV ? 60 * 1000 : 2 * 60 * 60 * 1000 // 1 min en dev, 2 horas en prod
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'
 
 // Helpers
-function isLocked(lockedUntil) {
+function isLocked(lockedUntil: Date | null): boolean {
   return Boolean(lockedUntil && new Date(lockedUntil) > new Date())
 }
 
-function lockoutTimeRemaining(lockedUntil) {
+function lockoutTimeRemaining(lockedUntil: Date | null): number {
   if (!lockedUntil) return 0
   const diffMs = new Date(lockedUntil).getTime() - Date.now()
   return Math.max(1, Math.ceil(diffMs / 60000))
 }
 
-function isValidPassword(password) {
+function isValidPassword(password: string): boolean {
   return typeof password === 'string' && password.length >= 8 && /[A-Z]/.test(password) && /[@#$%&*]/.test(password)
 }
 
 /**
  * Procesa el inicio de sesión unificado para Admin, Instructor y Aprendiz.
  */
-export async function login(req, res) {
+export async function login(req: Request<unknown, unknown, LoginRequestBody>, res: Response): Promise<void> {
   try {
     const { identifier, password } = req.body || {}
 
@@ -33,9 +43,10 @@ export async function login(req, res) {
     const cleanPassword = typeof password === 'string' ? password : ''
 
     if (!cleanIdentifier || !cleanPassword) {
-      return res.status(400).json({
+      res.status(400).json({
         message: 'Por favor ingresa tu usuario/correo y contraseña.'
       })
+      return
     }
 
     console.log(`[Auth Login] Intento de login para identificador: "${cleanIdentifier}"`)
@@ -52,16 +63,18 @@ export async function login(req, res) {
 
     if (!user) {
       console.warn(`[Auth Login] Usuario no encontrado para: "${cleanIdentifier}"`)
-      return res.status(401).json({ message: 'Credenciales inválidas.' })
+      res.status(401).json({ message: 'Credenciales inválidas.' })
+      return
     }
 
     // Verificar si la cuenta está bloqueada
     if (isLocked(user.lockedUntil)) {
       const minutesLeft = lockoutTimeRemaining(user.lockedUntil)
       console.warn(`[Auth Login] Cuenta bloqueada para ${user.correo || user.cedula}. Minutos restantes: ${minutesLeft}`)
-      return res.status(423).json({
+      res.status(423).json({
         message: `Cuenta bloqueada temporalmente por intentos fallidos. Intenta de nuevo en ${minutesLeft} minutos.`
       })
+      return
     }
 
     // Verificar contraseña
@@ -73,40 +86,46 @@ export async function login(req, res) {
         await prisma.user.update({
           where: { id: user.id },
           data: { failedAttempts: 0, lockedUntil: null }
-        }).catch(err => console.error('[Auth Login] Error resetting failed attempts:', err.message))
+        }).catch((err: Error) => console.error('[Auth Login] Error resetting failed attempts:', err.message))
       }
 
-      const roleNormalized = (user.rol || 'APRENDIZ').toUpperCase()
+      const roleNormalized = (user.rol || 'APRENDIZ').toUpperCase() as UserRoleBackend
+      const roleLower = roleNormalized.toLowerCase() as UserRoleLower
+      const tokenPayload: JwtPayloadAuth = {
+        id: user.id,
+        role: roleNormalized,
+        correo: user.correo,
+        cedula: user.cedula
+      }
+
       const token = jwt.sign(
-        {
-          id: user.id,
-          role: roleNormalized,
-          correo: user.correo,
-          cedula: user.cedula
-        },
+        tokenPayload,
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
+        { expiresIn: JWT_EXPIRES_IN as any }
       )
 
       const fullName = [user.nombre, user.apellido].filter(Boolean).join(' ') || 'Usuario'
 
       console.log(`[Auth Login] ✅ Inicio de sesión exitoso: ${user.correo || user.cedula} (Rol: ${roleNormalized})`)
 
-      return res.json({
+      const userDto: UserAuthDto = {
+        id: user.id,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        name: fullName,
+        rol: roleNormalized,
+        role: roleLower,
+        correo: user.correo,
+        email: user.correo,
+        cedula: user.cedula,
+        xp: user.xp || 0
+      }
+
+      res.json({
         token,
-        user: {
-          id: user.id,
-          nombre: user.nombre,
-          apellido: user.apellido,
-          name: fullName,
-          rol: roleNormalized,
-          role: roleNormalized.toLowerCase(),
-          correo: user.correo,
-          email: user.correo,
-          cedula: user.cedula,
-          xp: user.xp || 0
-        }
+        user: userDto
       })
+      return
     }
 
     // Contraseña incorrecta -> Incrementar contador de intentos fallidos
@@ -120,20 +139,21 @@ export async function login(req, res) {
         failedAttempts: nextAttempts,
         lockedUntil: lockedUntilDate
       }
-    }).catch(err => console.error('[Auth Login] Error incrementing failed attempts:', err.message))
+    }).catch((err: Error) => console.error('[Auth Login] Error incrementing failed attempts:', err.message))
 
     if (shouldLock) {
       console.warn(`[Auth Login] 🔒 Cuenta bloqueada por alcanzar ${MAX_FAILED_ATTEMPTS} intentos fallidos: ${cleanIdentifier}`)
-      return res.status(423).json({
-        message: `Cuenta bloqueada por ${MAX_FAILED_ATTEMPTS} intentos fallidos. Intenta en 2 horas.`
+      res.status(423).json({
+        message: `Cuenta bloqueada por ${MAX_FAILED_ATTEMPTS} intentos fallidos. Intenta de nuevo más tarde.`
       })
+      return
     }
 
     console.warn(`[Auth Login] ❌ Contraseña incorrecta para: "${cleanIdentifier}". Intento ${nextAttempts}/${MAX_FAILED_ATTEMPTS}`)
-    return res.status(401).json({ message: 'Credenciales inválidas.' })
+    res.status(401).json({ message: 'Credenciales inválidas.' })
   } catch (error) {
     console.error('[Auth Login Fatal Error]:', error)
-    return res.status(500).json({
+    res.status(500).json({
       message: 'Error interno del servidor al procesar el inicio de sesión.'
     })
   }
@@ -142,17 +162,19 @@ export async function login(req, res) {
 /**
  * Registro de nuevos aprendices
  */
-export async function register(req, res) {
+export async function register(req: Request<unknown, unknown, RegisterRequestBody>, res: Response): Promise<void> {
   try {
     const { nombre, apellido, cedula, correo, password } = req.body || {}
     if (!nombre || !apellido || !cedula || !correo || !password) {
-      return res.status(400).json({ message: 'Todos los campos son obligatorios.' })
+      res.status(400).json({ message: 'Todos los campos son obligatorios.' })
+      return
     }
 
     if (!isValidPassword(password)) {
-      return res.status(400).json({
+      res.status(400).json({
         message: 'La contraseña debe tener mínimo 8 caracteres, al menos 1 mayúscula y 1 carácter especial (@#$%&*).'
       })
+      return
     }
 
     const cleanCorreo = correo.trim().toLowerCase()
@@ -169,9 +191,11 @@ export async function register(req, res) {
 
     if (existing) {
       if (existing.rol === 'APRENDIZ') {
-        return res.status(409).json({ message: 'Estas credenciales ya existen ¿Desea recuperar la cuenta?' })
+        res.status(409).json({ message: 'Estas credenciales ya existen ¿Desea recuperar la cuenta?' })
+        return
       }
-      return res.status(400).json({ message: 'El usuario ya existe en el sistema.' })
+      res.status(400).json({ message: 'El usuario ya existe en el sistema.' })
+      return
     }
 
     await prisma.user.create({
@@ -185,22 +209,23 @@ export async function register(req, res) {
       }
     })
 
-    return res.status(201).json({ message: 'Usuario registrado exitosamente.' })
+    res.status(201).json({ message: 'Usuario registrado exitosamente.' })
   } catch (error) {
     console.error('[Auth Register Error]:', error)
-    return res.status(500).json({ message: 'Error interno al registrar usuario.' })
+    res.status(500).json({ message: 'Error interno al registrar usuario.' })
   }
 }
 
 /**
  * Recuperación de cuenta / contraseña
  */
-export async function recover(req, res) {
+export async function recover(req: Request, res: Response): Promise<void> {
   const { identifier } = req.body || {}
   if (!identifier) {
-    return res.status(400).json({ message: 'Identificador requerido.' })
+    res.status(400).json({ message: 'Identificador requerido.' })
+    return
   }
-  return res.json({
+  res.json({
     message: 'Si el correo o documento existe en el sistema, recibirás un enlace de recuperación.'
   })
 }
@@ -208,14 +233,60 @@ export async function recover(req, res) {
 /**
  * Restablecer contraseña
  */
-export async function resetPassword(req, res) {
+export async function resetPassword(req: Request, res: Response): Promise<void> {
   const { token, newPassword } = req.body || {}
   if (!token || !newPassword) {
-    return res.status(400).json({ message: 'Faltan parámetros.' })
+    res.status(400).json({ message: 'Faltan parámetros.' })
+    return
   }
   if (!isValidPassword(newPassword)) {
-    return res.status(400).json({ message: 'La nueva contraseña no cumple con los requisitos de seguridad.' })
+    res.status(400).json({ message: 'La nueva contraseña no cumple con los requisitos de seguridad.' })
+    return
   }
 
-  return res.json({ message: 'Contraseña restablecida exitosamente.' })
+  res.json({ message: 'Contraseña restablecida exitosamente.' })
+}
+
+/**
+ * Obtiene los datos del usuario autenticado actual a partir del token JWT
+ */
+export async function getMe(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = Number(req.user?.id)
+    if (!userId) {
+      res.status(401).json({ message: 'No autenticado.' })
+      return
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      res.status(404).json({ message: 'Usuario no encontrado.' })
+      return
+    }
+
+    const roleNormalized = (user.rol || 'APRENDIZ').toUpperCase() as UserRoleBackend
+    const roleLower = roleNormalized.toLowerCase() as UserRoleLower
+    const fullName = [user.nombre, user.apellido].filter(Boolean).join(' ') || 'Usuario'
+
+    const userDto: UserAuthDto = {
+      id: user.id,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      name: fullName,
+      rol: roleNormalized,
+      role: roleLower,
+      correo: user.correo,
+      email: user.correo || '',
+      cedula: user.cedula,
+      xp: user.xp || 0
+    }
+
+    res.json({ user: userDto })
+  } catch (error) {
+    console.error('[Auth getMe Error]:', error)
+    res.status(500).json({ message: 'Error al obtener sesión del usuario.' })
+  }
 }

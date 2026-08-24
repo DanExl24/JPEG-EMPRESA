@@ -72,7 +72,7 @@
             </label>
             <input
               id="identifier"
-              v-model="form.identifier"
+              v-model.trim="form.identifier"
               class="w-full px-5 py-4 bg-[#e0e3e5] border-2 rounded-xl focus:ring-2 focus:ring-[#006688]/20 focus:bg-white transition-all duration-300 placeholder:text-[#6e7980] outline-none"
               :class="identifierError && touched.identifier
                 ? 'border-red-400 bg-red-50'
@@ -82,9 +82,7 @@
               type="text"
               autocomplete="username"
               :disabled="isLoading"
-              @blur="touched.identifier = true; syncFormWithDOM()"
-              @input="syncFormWithDOM"
-              @change="syncFormWithDOM"
+              @blur="touched.identifier = true"
             />
             <p v-if="identifierError && touched.identifier" class="text-xs text-red-500 ml-1 flex items-center gap-1">
               <span class="material-symbols-outlined text-sm">error</span>
@@ -118,9 +116,7 @@
                 autocomplete="current-password"
                 :type="showPassword ? 'text' : 'password'"
                 :disabled="isLoading"
-                @blur="touched.password = true; syncFormWithDOM()"
-                @input="syncFormWithDOM"
-                @change="syncFormWithDOM"
+                @blur="touched.password = true"
               />
               <button
                 type="button"
@@ -171,12 +167,12 @@
             <p class="text-sm font-medium text-red-600">{{ errorMessage }}</p>
           </div>
 
-          <!-- Submit -->
+          <!-- Submit Button -->
           <button
             class="w-full py-4 font-headline font-bold rounded-full transition-all duration-200 editorial-shadow cursor-pointer"
-            :class="(form.identifier.trim() && form.password && !isLockedOut)
+            :class="(form.identifier.trim() && form.password && !isLockedOut && !isLoading)
               ? 'medical-gradient text-white active:scale-[0.98]'
-              : 'bg-gray-200 text-gray-400'"
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
             type="submit"
             :disabled="isLoading || isLockedOut"
           >
@@ -202,7 +198,7 @@
         <!-- Social Buttons -->
         <div class="mt-8 grid grid-cols-2 gap-4">
           <button
-            class="flex items-center justify-center gap-3 py-3 px-4 bg-[#f2f4f6] rounded-full hover:bg-[#e6e8ea] transition-colors font-semibold text-[#3e484f] text-sm"
+            class="flex items-center justify-center gap-3 py-3 px-4 bg-[#f2f4f6] rounded-full hover:bg-[#e6e8ea] transition-colors font-semibold text-[#3e484f] text-sm cursor-pointer"
             type="button"
             @click="handleSocialLogin('Google')"
           >
@@ -215,7 +211,7 @@
             Google
           </button>
           <button
-            class="flex items-center justify-center gap-3 py-3 px-4 bg-[#f2f4f6] rounded-full hover:bg-[#e6e8ea] transition-colors font-semibold text-[#3e484f] text-sm"
+            class="flex items-center justify-center gap-3 py-3 px-4 bg-[#f2f4f6] rounded-full hover:bg-[#e6e8ea] transition-colors font-semibold text-[#3e484f] text-sm cursor-pointer"
             type="button"
             @click="handleSocialLogin('Apple')"
           >
@@ -232,7 +228,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import type { ComputedRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
@@ -257,33 +253,6 @@ const errorMessage = ref<string>('')
 const isLockedOut = ref<boolean>(false)
 const showPassword = ref<boolean>(false)
 
-function syncFormWithDOM(): void {
-  const identifierEl = document.getElementById('identifier') as HTMLInputElement | null
-  const passwordEl   = document.getElementById('password') as HTMLInputElement | null
-
-  if (identifierEl && identifierEl.value && identifierEl.value !== form.identifier) {
-    form.identifier = identifierEl.value
-  }
-  if (passwordEl && passwordEl.value && passwordEl.value !== form.password) {
-    form.password = passwordEl.value
-  }
-}
-
-onMounted(() => {
-  syncFormWithDOM()
-  const delays: number[] = [50, 100, 250, 500, 1000, 2000]
-  delays.forEach(d => setTimeout(syncFormWithDOM, d))
-
-  window.addEventListener('focus', syncFormWithDOM)
-  document.addEventListener('click', syncFormWithDOM, { capture: true, passive: true })
-  document.addEventListener('mousemove', syncFormWithDOM, { once: true, passive: true })
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('focus', syncFormWithDOM)
-  document.removeEventListener('click', syncFormWithDOM)
-})
-
 const identifierError: ComputedRef<string> = computed(() => {
   const val: string = form.identifier.trim()
   if (!val) return 'Este campo es obligatorio.'
@@ -291,32 +260,22 @@ const identifierError: ComputedRef<string> = computed(() => {
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRe.test(val)) return 'Ingresa un correo electrónico válido.'
   } else {
-    if (!/^[a-zA-Z0-9_-]{3,30}$/.test(val)) {
-      return 'El documento o identificador debe tener entre 3 y 30 caracteres.'
+    if (val.length < 3) {
+      return 'El documento o identificador debe tener al menos 3 caracteres.'
     }
   }
   return ''
 })
 
 async function handleSubmit(): Promise<void> {
-  const identifierEl = document.getElementById('identifier') as HTMLInputElement | null
-  const passwordEl   = document.getElementById('password') as HTMLInputElement | null
-
-  // Obtener directamente del DOM nativo para asegurar valor de autofill al primer clic
-  const rawIdentifier: string = (identifierEl && identifierEl.value ? identifierEl.value : form.identifier) || ''
-  const rawPassword: string   = (passwordEl && passwordEl.value ? passwordEl.value : form.password) || ''
-
-  form.identifier = rawIdentifier
-  form.password   = rawPassword
-
   touched.identifier = true
-  touched.password   = true
+  touched.password = true
 
-  const identifierVal: string = rawIdentifier.trim()
-  const passwordVal: string   = rawPassword
+  const identifierVal: string = form.identifier.trim()
+  const passwordVal: string = form.password
 
   if (!identifierVal || !passwordVal) {
-    errorMessage.value = 'Por favor ingresa tu usuario y contraseña.'
+    errorMessage.value = 'Por favor ingresa tu usuario/correo y contraseña.'
     return
   }
 
@@ -326,21 +285,21 @@ async function handleSubmit(): Promise<void> {
   }
 
   errorMessage.value = ''
-  isLockedOut.value  = false
-  isLoading.value    = true
+  isLockedOut.value = false
+  isLoading.value = true
 
   try {
     await auth.login({
       identifier: identifierVal,
-      password:   passwordVal,
-      remember:   form.remember,
+      password: passwordVal,
+      remember: form.remember,
     })
     await router.push('/dashboard/inicio')
   } catch (error: unknown) {
     const err = error as AuthCustomError
     console.error('[Login Error View]:', err)
     errorMessage.value = err.message || 'Error al iniciar sesión.'
-    isLockedOut.value  = err.isLockout === true
+    isLockedOut.value = err.isLockout === true
   } finally {
     isLoading.value = false
   }
