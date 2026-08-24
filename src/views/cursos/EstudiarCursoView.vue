@@ -617,7 +617,7 @@
               :key="v.id" 
               class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-[#006688] transition-all flex flex-col justify-between group"
             >
-              <div class="space-y-1.5">
+              <div class="space-y-2">
                 <div class="flex justify-between items-start">
                   <span class="text-base font-bold text-gray-800 flex items-center gap-1.5">
                     <span v-if="v.emoji" class="text-lg">{{ v.emoji }}</span>
@@ -625,8 +625,11 @@
                   </span>
                   <span v-if="v.played" class="text-green-600 material-symbols-outlined text-sm">check_circle</span>
                 </div>
-                <p class="text-xs text-[#006688] italic font-medium">{{ v.ipa }}</p>
-                <p class="text-xs text-gray-500 font-medium">{{ v.translation }}</p>
+                <div class="inline-flex items-center gap-1 text-[11px] font-bold text-[#006688] bg-[#006688]/8 px-2 py-0.5 rounded-md">
+                  <span class="text-[9px] text-gray-400 font-bold uppercase">Pron:</span>
+                  <span>{{ v.pronunciation }}</span>
+                </div>
+                <p class="text-xs text-gray-600 font-medium leading-snug">{{ v.translation }}</p>
                 <span v-if="v.category" class="inline-block text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                   {{ v.category }}
                 </span>
@@ -1624,41 +1627,65 @@ const m4ResultsExamples = [
   { subject: 'The nursing checklist', verb: 'is', complement: 'complete and signed by Dr. Miller.', spanish: 'La lista de verificación está completa y firmada.', full: 'The nursing checklist is complete and signed by Dr. Miller.' },
 ]
 
-// Vocabulary Lists
+// Vocabulary Lists (Clear Spanish-friendly pronunciation guides)
 const m1VocabList = ref([
-  { id: 'v1', word: 'Hello', ipa: '/həˈloʊ/', translation: 'Hola', category: 'Saludo', emoji: '👋', played: false },
-  { id: 'v2', word: 'Good morning', ipa: '/ɡʊd ˈmɔːr.nɪŋ/', translation: 'Buenos días', category: 'Saludo', emoji: '🌅', played: false },
-  { id: 'v3', word: 'Name', ipa: '/neɪm/', translation: 'Nombre', category: 'Personal', emoji: '🪪', played: false },
-  { id: 'v4', word: 'Age', ipa: '/eɪdʒ/', translation: 'Edad', category: 'Personal', emoji: '🎂', played: false },
+  { id: 'v1', word: 'Hello', pronunciation: '[je-lóu]', translation: 'Hola (Saludo general)', category: 'Saludo', emoji: '👋', played: false },
+  { id: 'v2', word: 'Good morning', pronunciation: '[gud mór-ning]', translation: 'Buenos días (hasta 12pm)', category: 'Saludo', emoji: '🌅', played: false },
+  { id: 'v3', word: 'Good afternoon', pronunciation: '[gud áf-ter-nun]', translation: 'Buenas tardes (12pm–6pm)', category: 'Saludo', emoji: '☀️', played: false },
+  { id: 'v4', word: 'Good evening', pronunciation: '[gud ív-ning]', translation: 'Buenas noches (al llegar)', category: 'Saludo', emoji: '🌆', played: false },
+  { id: 'v5', word: 'Goodbye', pronunciation: '[gud-bái]', translation: 'Adiós (despedida formal)', category: 'Despedida', emoji: '🚶', played: false },
+  { id: 'v6', word: 'See you later', pronunciation: '[si yu léi-ter]', translation: 'Hasta luego', category: 'Despedida', emoji: '👋', played: false },
+  { id: 'v7', word: 'Name', pronunciation: '[néim]', translation: 'Nombre personal', category: 'Personal', emoji: '🪪', played: false },
+  { id: 'v8', word: 'Last name', pronunciation: '[last néim]', translation: 'Apellido', category: 'Personal', emoji: '📋', played: false },
+  { id: 'v9', word: 'Age', pronunciation: '[éidch]', translation: 'Edad en años', category: 'Personal', emoji: '🎂', played: false },
+  { id: 'v10', word: 'Nationality', pronunciation: '[na-shon-á-li-ti]', translation: 'Nacionalidad u origen', category: 'Personal', emoji: '🌎', played: false },
+  { id: 'v11', word: 'Phone number', pronunciation: '[fóun nám-ber]', translation: 'Número de teléfono', category: 'Personal', emoji: '📞', played: false },
+  { id: 'v12', word: 'Spelling', pronunciation: '[spé-ling]', translation: 'Deletreo de letras', category: 'Habilidad', emoji: '🔤', played: false },
 ])
 
 const m2VocabList = ref([
-  { id: 'm2_v1', word: 'Head', ipa: '/hɛd/', translation: 'Cabeza', category: 'Anatomía', emoji: '🧠', played: false },
-  { id: 'm2_v2', word: 'Arm', ipa: '/ɑːrm/', translation: 'Brazo', category: 'Anatomía', emoji: '💪', played: false },
-  { id: 'm2_v3', word: 'Bandage', ipa: '/ˈbændɪdʒ/', translation: 'Vendaje', category: 'Tratamiento', emoji: '🩹', played: false },
-  { id: 'm2_v4', word: 'Fracture', ipa: '/ˈfræktʃər/', translation: 'Fractura', category: 'Diagnóstico', emoji: '🦴', played: false },
+  { id: 'm2_v1', word: 'Head', pronunciation: '[jed]', translation: 'Cabeza (Anatomía)', category: 'Anatomía', emoji: '🧠', played: false },
+  { id: 'm2_v2', word: 'Arm', pronunciation: '[arm]', translation: 'Brazo (Anatomía)', category: 'Anatomía', emoji: '💪', played: false },
+  { id: 'm2_v3', word: 'Leg', pronunciation: '[leg]', translation: 'Pierna (Anatomía)', category: 'Anatomía', emoji: '🦵', played: false },
+  { id: 'm2_v4', word: 'Chest', pronunciation: '[chest]', translation: 'Pecho / Tórax', category: 'Anatomía', emoji: '🫁', played: false },
+  { id: 'm2_v5', word: 'Waiting room', pronunciation: '[wéi-ting rum]', translation: 'Sala de espera hospitalaria', category: 'Entorno', emoji: '🪑', played: false },
+  { id: 'm2_v6', word: 'Stretcher', pronunciation: '[stré-cher]', translation: 'Camilla de traslado', category: 'Entorno', emoji: '🚑', played: false },
+  { id: 'm2_v7', word: 'Hospital room', pronunciation: '[jós-pi-tal rum]', translation: 'Habitación de hospital (Room 204)', category: 'Entorno', emoji: '🏥', played: false },
+  { id: 'm2_v8', word: 'Bandage', pronunciation: '[bán-didch]', translation: 'Vendaje elástico de protección', category: 'Tratamiento', emoji: '🩹', played: false },
+  { id: 'm2_v9', word: 'Fracture', pronunciation: '[frák-chur]', translation: 'Fractura ósea confirmada', category: 'Diagnóstico', emoji: '🦴', played: false },
+  { id: 'm2_v10', word: 'Swollen', pronunciation: '[suó-len]', translation: 'Hinchado / Inflamado', category: 'Signo clínico', emoji: '🔴', played: false },
+  { id: 'm2_v11', word: 'Pale', pronunciation: '[péil]', translation: 'Pálido (Aspecto físico)', category: 'Signo clínico', emoji: '⚪', played: false },
+  { id: 'm2_v12', word: 'Dizzy', pronunciation: '[dí-zi]', translation: 'Mareado / Inestable', category: 'Síntoma', emoji: '💫', played: false },
 ])
 
 const m3VocabList = ref([
-  { id: 'm3_v1', word: 'Thermometer', ipa: '/θərˈmɑː.mə.t̬ɚ/', translation: 'Termómetro', category: 'Herramienta', emoji: '🌡️', played: false },
-  { id: 'm3_v2', word: 'Stethoscope', ipa: '/ˈsteθ.ə.skoʊp/', translation: 'Estetoscopio', category: 'Herramienta', emoji: '🩺', played: false },
-  { id: 'm3_v3', word: 'Blood pressure monitor', ipa: '/blʌd ˈpreʃ.ɚ ˈmɑː.nə.t̬ɚ/', translation: 'Monitor de presión', category: 'Herramienta', emoji: '📟', played: false },
-  { id: 'm3_v4', word: 'Checklist', ipa: '/ˈtʃek.lɪst/', translation: 'Lista de verificación', category: 'Formato', emoji: '📋', played: false },
+  { id: 'm3_v1', word: 'Thermometer', pronunciation: '[zer-mó-me-ter]', translation: 'Termómetro clínico', category: 'Herramienta', emoji: '🌡️', played: false },
+  { id: 'm3_v2', word: 'Stethoscope', pronunciation: '[sté-zo-scoup]', translation: 'Estetoscopio de auscultación', category: 'Herramienta', emoji: '🩺', played: false },
+  { id: 'm3_v3', word: 'Blood pressure monitor', pronunciation: '[blad pré-shur mó-ni-tor]', translation: 'Monitor de presión arterial', category: 'Herramienta', emoji: '📟', played: false },
+  { id: 'm3_v4', word: 'Checklist', pronunciation: '[chék-list]', translation: 'Lista de verificación clínica', category: 'Formato', emoji: '📋', played: false },
+  { id: 'm3_v5', word: 'Syringe', pronunciation: '[se-ríndch]', translation: 'Jeringa médica descartable', category: 'Herramienta', emoji: '💉', played: false },
+  { id: 'm3_v6', word: 'Pulse oximeter', pronunciation: '[pals ok-sí-me-ter]', translation: 'Pulsioxímetro de saturación', category: 'Herramienta', emoji: '🔴', played: false },
+  { id: 'm3_v7', word: 'IV Drip', pronunciation: '[ái-vi drip]', translation: 'Suero / Bomba de infusión', category: 'Equipo', emoji: '💧', played: false },
+  { id: 'm3_v8', word: 'Administer', pronunciation: '[ad-mí-nis-ter]', translation: 'Administrar medicamentos', category: 'Acción', emoji: '💊', played: false },
+  { id: 'm3_v9', word: 'Monitor', pronunciation: '[mó-ni-tor]', translation: 'Monitorear signos vitales', category: 'Acción', emoji: '📊', played: false },
+  { id: 'm3_v10', word: 'Disinfect', pronunciation: '[dis-in-féct]', translation: 'Desinfectar instrumental', category: 'Acción', emoji: '🧼', played: false },
+  { id: 'm3_v11', word: 'Explain', pronunciation: '[ex-pléin]', translation: 'Explicar procedimientos', category: 'Acción', emoji: '🗣️', played: false },
+  { id: 'm3_v12', word: 'Gauze', pronunciation: '[goz]', translation: 'Gasa estéril de curación', category: 'Material', emoji: '🩹', played: false },
 ])
 
 const m4VocabList = ref([
-  { id: 'm4_v1', word: 'Discharge', ipa: '/ˈdɪs.tʃɑːrdʒ/', translation: 'Alta médica / Egreso hospitalario', category: 'Egreso', emoji: '📄', played: false },
-  { id: 'm4_v2', word: 'Prescription', ipa: '/prəˈskrɪp.ʃən/', translation: 'Receta médica autorizada', category: 'Tratamiento', emoji: '💊', played: false },
-  { id: 'm4_v3', word: 'Painkiller', ipa: '/ˈpeɪnˌkɪl.ɚ/', translation: 'Analgésico para el dolor', category: 'Medicamento', emoji: '🩹', played: false },
-  { id: 'm4_v4', word: 'Follow-up appointment', ipa: '/ˈfɑː.loʊ.ʌp əˈpɔɪnt.mənt/', translation: 'Cita de control y seguimiento', category: 'Atención', emoji: '📅', played: false },
-  { id: 'm4_v5', word: 'Recovery', ipa: '/rɪˈkʌv.ɚ.i/', translation: 'Recuperación clínica del paciente', category: 'Evolución', emoji: '🩺', played: false },
-  { id: 'm4_v6', word: 'Outcomes', ipa: '/ˈaʊt.kʌmz/', translation: 'Resultados y desenlaces del cuidado', category: 'Evaluación', emoji: '📈', played: false },
-  { id: 'm4_v7', word: 'Dosage', ipa: '/ˈdoʊ.sɪdʒ/', translation: 'Dosis y posología indicada', category: 'Tratamiento', emoji: '💧', played: false },
-  { id: 'm4_v8', word: 'Home care', ipa: '/hoʊm ker/', translation: 'Cuidado y reposo en el hogar', category: 'Egreso', emoji: '🏡', played: false },
-  { id: 'm4_v9', word: 'Wound care', ipa: '/wuːnd ker/', translation: 'Cuidado e higiene de la herida', category: 'Curación', emoji: '🩹', played: false },
-  { id: 'm4_v10', word: 'Precautions', ipa: '/prɪˈkɑː.ʃənz/', translation: 'Precauciones de seguridad', category: 'Recomendación', emoji: '⚠️', played: false },
-  { id: 'm4_v11', word: 'Side effects', ipa: '/saɪd ɪˈfekts/', translation: 'Efectos secundarios a vigilar', category: 'Seguridad', emoji: '🔍', played: false },
-  { id: 'm4_v12', word: 'Signed orders', ipa: '/saɪnd ˈɔːr.dɚz/', translation: 'Órdenes médicas firmadas', category: 'Documento', emoji: '✍️', played: false },
+  { id: 'm4_v1', word: 'Discharge', pronunciation: '[dis-chárdch]', translation: 'Alta médica / Egreso hospitalario', category: 'Egreso', emoji: '📄', played: false },
+  { id: 'm4_v2', word: 'Prescription', pronunciation: '[pris-críp-shon]', translation: 'Receta médica autorizada', category: 'Tratamiento', emoji: '💊', played: false },
+  { id: 'm4_v3', word: 'Painkiller', pronunciation: '[péin-ki-ler]', translation: 'Analgésico para el dolor', category: 'Medicamento', emoji: '🩹', played: false },
+  { id: 'm4_v4', word: 'Follow-up appointment', pronunciation: '[fó-lou-ap a-póint-ment]', translation: 'Cita de control y seguimiento', category: 'Atención', emoji: '📅', played: false },
+  { id: 'm4_v5', word: 'Recovery', pronunciation: '[ri-kó-ve-ri]', translation: 'Recuperación clínica del paciente', category: 'Evolución', emoji: '🩺', played: false },
+  { id: 'm4_v6', word: 'Outcomes', pronunciation: '[áut-cams]', translation: 'Resultados y desenlaces del cuidado', category: 'Evaluación', emoji: '📈', played: false },
+  { id: 'm4_v7', word: 'Dosage', pronunciation: '[dóu-sidch]', translation: 'Dosis y posología indicada', category: 'Tratamiento', emoji: '💧', played: false },
+  { id: 'm4_v8', word: 'Home care', pronunciation: '[jóum quer]', translation: 'Cuidado y reposo en el hogar', category: 'Egreso', emoji: '🏡', played: false },
+  { id: 'm4_v9', word: 'Wound care', pronunciation: '[wund quer]', translation: 'Cuidado e higiene de la herida', category: 'Curación', emoji: '🩹', played: false },
+  { id: 'm4_v10', word: 'Precautions', pronunciation: '[pri-có-shons]', translation: 'Precauciones de seguridad', category: 'Recomendación', emoji: '⚠️', played: false },
+  { id: 'm4_v11', word: 'Side effects', pronunciation: '[sáid i-fécts]', translation: 'Efectos secundarios a vigilar', category: 'Seguridad', emoji: '🔍', played: false },
+  { id: 'm4_v12', word: 'Signed orders', pronunciation: '[sáind ór-ders]', translation: 'Órdenes médicas firmadas', category: 'Documento', emoji: '✍️', played: false },
 ])
 
 const activeVocabList = computed(() => {
