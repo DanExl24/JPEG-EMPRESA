@@ -602,14 +602,22 @@ async function fetchActivities() {
 
 onMounted(fetchActivities)
 
-// Initial Courses Data State
+// Initial Courses Data State — Módulo 1 RAP 1
 const courses = ref([
-  { id: 1, title: 'Fundamentos de Enfermería', description: 'Bases esenciales para el ejercicio profesional de la enfermería clínica.', category: 'Básico', categoryBg: 'bg-blue-100', categoryText: 'text-blue-700', duration: '12h', students: 340, progress: 75, icon: 'medical_services', bg: 'bg-blue-50', iconColor: '#3b82f6' },
-  { id: 2, title: 'Farmacología Clínica', description: 'Principios de medicamentos, dosificación y administración segura.', category: 'Intermedio', categoryBg: 'bg-orange-100', categoryText: 'text-orange-700', duration: '18h', students: 215, progress: 30, icon: 'medication', bg: 'bg-orange-50', iconColor: '#f97316' },
-  { id: 3, title: 'Cuidados Críticos UCI', description: 'Atención intensiva a pacientes en estado crítico y monitoreo.', category: 'Avanzado', categoryBg: 'bg-red-100', categoryText: 'text-red-700', duration: '24h', students: 98, progress: 10, icon: 'monitor_heart', bg: 'bg-red-50', iconColor: '#ef4444' },
-  { id: 4, title: 'Salud Mental y Psiquiatría', description: 'Abordaje integral del paciente con trastornos mentales.', category: 'Intermedio', categoryBg: 'bg-purple-100', categoryText: 'text-purple-700', duration: '15h', students: 178, progress: 0, icon: 'psychology', bg: 'bg-purple-50', iconColor: '#8b5cf6' },
-  { id: 5, title: 'Atención Materno-Infantil', description: 'Cuidados durante el embarazo, parto y el recién nacido.', category: 'Especialidad', categoryBg: 'bg-pink-100', categoryText: 'text-pink-700', duration: '20h', students: 262, progress: 100, icon: 'child_care', bg: 'bg-pink-50', iconColor: '#ec4899' },
-  { id: 6, title: 'Urgencias y Emergencias', description: 'Protocolos de actuación ante situaciones de emergencia médica.', category: 'Avanzado', categoryBg: 'bg-red-100', categoryText: 'text-red-700', duration: '16h', students: 143, progress: 55, icon: 'emergency', bg: 'bg-yellow-50', iconColor: '#f59e0b' },
+  {
+    id: 1,
+    title: 'Getting to Know Other People',
+    description: 'Módulo 1 — Fase Análisis · RAP 1. Aprende a saludar, presentarte, dar información personal y comunicarte con pacientes extranjeros en inglés.',
+    category: 'Básico',
+    categoryBg: 'bg-teal-100',
+    categoryText: 'text-teal-700',
+    duration: '8h',
+    students: 340,
+    progress: 0,
+    icon: 'medical_services',
+    bg: 'bg-teal-50',
+    iconColor: '#006688'
+  },
 ])
 
 const iconOptions = [

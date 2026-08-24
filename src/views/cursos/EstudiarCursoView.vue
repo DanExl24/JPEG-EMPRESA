@@ -1158,7 +1158,7 @@ const auth = useAuthStore()
 
 // State
 const courseId = route.params.courseId || '1'
-const courseTitle = ref('Fundamentos de Enfermería')
+const courseTitle = ref('Getting to Know Other People')
 
 // Tab Navigation Definition
 const phases = [
