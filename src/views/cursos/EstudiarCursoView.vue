@@ -10,8 +10,15 @@
             Volver a Cursos
           </router-link>
         </div>
-        <h2 class="text-2xl font-black text-gray-800">{{ courseTitle }}</h2>
-        <p class="text-xs text-gray-500">Módulo de Inglés Técnico Aplicado a la Enfermería</p>
+        <div class="flex items-center gap-2">
+          <h2 class="text-2xl font-black text-gray-800">{{ currentCourseTitle }}</h2>
+          <span :class="`text-xs font-bold px-2.5 py-0.5 rounded-full ${isModule2 ? 'bg-indigo-100 text-indigo-700' : 'bg-teal-100 text-teal-700'}`">
+            {{ isModule2 ? 'Fase Planeación · RAP 2 y 3' : 'Fase Análisis · RAP 1' }}
+          </span>
+        </div>
+        <p class="text-xs text-gray-500">
+          {{ isModule2 ? 'Caso Clínico: Hospitalización y Entrega de Turno de Mr. Thomas' : 'Módulo de Inglés Técnico Aplicado a la Enfermería' }}
+        </p>
       </div>
 
       <!-- Main Progress Tracking -->
@@ -61,7 +68,7 @@
     <!-- Phase Tabs Navigation (Strict Sequential Lock) -->
     <div class="bg-white rounded-2xl p-2 border border-gray-100 shadow-sm flex flex-wrap gap-1">
       <button 
-        v-for="(phase, index) in phases" 
+        v-for="phase in phases" 
         :key="phase.id"
         @click="goToPhase(phase.id)"
         :disabled="isPhaseLocked(phase.id)"
@@ -73,15 +80,11 @@
               : 'text-gray-600 hover:bg-gray-50'
         }`"
       >
-        <!-- Background indicator for completion -->
         <div v-if="phaseProgress[phase.id] === 100" class="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-bl-lg"></div>
-        
         <span class="material-symbols-outlined text-lg">
           {{ isPhaseLocked(phase.id) ? 'lock' : phase.icon }}
         </span>
         <span class="truncate">{{ phase.name }}</span>
-        
-        <!-- Check icon for finished phases -->
         <span v-if="phaseProgress[phase.id] === 100" class="material-symbols-outlined text-xs bg-white text-green-500 rounded-full p-0.5 shrink-0">check</span>
       </button>
     </div>
@@ -89,15 +92,23 @@
     <!-- Active Phase Panels -->
     <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 min-h-[400px]">
 
+      <!-- ========================================== -->
       <!-- FASE 1: INICIO (PREPARACIÓN) -->
+      <!-- ========================================== -->
       <div v-if="currentPhase === 'inicio'" class="space-y-8 animate-fade-in">
         <div class="border-b border-gray-100 pb-4">
           <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
-            Módulo 1 — Getting to Know Other People
-            <span class="text-xs font-bold bg-[#006688]/10 text-[#006688] px-2 py-0.5 rounded-full ml-2">Fase Análisis · RAP 1</span>
+            {{ isModule2 ? 'Módulo 2 — Work Life Interaction' : 'Módulo 1 — Getting to Know Other People' }}
+            <span :class="`text-xs font-bold px-2 py-0.5 rounded-full ml-2 ${isModule2 ? 'bg-indigo-100 text-indigo-700' : 'bg-[#006688]/10 text-[#006688]'}`">
+              {{ isModule2 ? 'Fase Planeación · RAP 2 y 3' : 'Fase Análisis · RAP 1' }}
+            </span>
           </h3>
-          <p class="text-xs text-gray-500 mt-1">Completa el video introductorio y el juego de calentamiento antes de avanzar a la absorción de conocimiento.</p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ isModule2 
+              ? 'Momento 1: Acompaña a Mr. Thomas en su hospitalización. Completa el video introductorio y el juego de calentamiento de turnos hospitalarios.' 
+              : 'Momento 1: Completa el video introductorio y el juego de calentamiento antes de avanzar a la absorción de conocimiento.' }}
+          </p>
         </div>
 
         <!-- Welcome Video Section -->
@@ -108,7 +119,9 @@
               <!-- Video Placeholder Overlay -->
               <div v-if="!videoPlaying && !videoCompleted" class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white p-6 text-center space-y-3 z-10">
                 <span class="material-symbols-outlined text-5xl text-[#006688] bg-white rounded-full p-3 shadow-lg group-hover:scale-105 transition-transform cursor-pointer" @click="playVideo">play_arrow</span>
-                <p class="font-bold text-sm">Video de Bienvenida: Nursing Basics Introduction</p>
+                <p class="font-bold text-sm">
+                  {{ isModule2 ? 'Caso Clínico: Hospitalización de Mr. Thomas (Habitación 204)' : 'Video de Bienvenida: Nursing Basics Introduction' }}
+                </p>
                 <p class="text-[10px] text-gray-300">Duración estimada: 25s (Simulado)</p>
               </div>
 
@@ -131,14 +144,29 @@
 
               <!-- Static BG representation -->
               <div class="absolute inset-0 bg-gradient-to-tr from-cyan-900 to-indigo-950 flex items-center justify-center">
-                <span class="material-symbols-outlined text-8xl text-white/5">clinical_notes</span>
+                <span class="material-symbols-outlined text-8xl text-white/5">{{ isModule2 ? 'hotel' : 'clinical_notes' }}</span>
               </div>
             </div>
           </div>
 
+          <!-- Objectives Panel -->
           <div class="md:col-span-2 space-y-4 flex flex-col justify-center bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            <h4 class="font-black text-gray-800 text-sm">¿Qué aprenderás? — Objetivos del RAP 1</h4>
-            <ul class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
+            <h4 class="font-black text-gray-800 text-sm">
+              {{ isModule2 ? '¿Qué aprenderás? — Objetivos del RAP 2 y 3' : '¿Qué aprenderás? — Objetivos del RAP 1' }}
+            </h4>
+            
+            <!-- Module 2 Objectives -->
+            <ul v-if="isModule2" class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
+              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Describir el estado físico de los pacientes y lesiones comunes</li>
+              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Detallar el entorno hospitalario (habitaciones, camillas, sala de espera)</li>
+              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Identificar partes del cuerpo humano y anatomía básica</li>
+              <li class="flex items-start gap-1.5"><span class="text-indigo-600 font-bold mt-0.5">⏱️</span> Usar el <strong>Pasado Simple</strong> para relatar antecedentes clínicos (*He fell, He had*)</li>
+              <li class="flex items-start gap-1.5"><span class="text-teal-600 font-bold mt-0.5">📋</span> Usar <strong>Adjetivos Descriptivos</strong> para el estado actual (*He is pale, The room is cold*)</li>
+              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">🏥</span> Realizar una <strong>Entrega de Turno (Shift Handover)</strong> en inglés</li>
+            </ul>
+
+            <!-- Module 1 Objectives -->
+            <ul v-else class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
               <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Saludar y despedirte correctamente en inglés</li>
               <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Presentarte e introducir a otras personas</li>
               <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Dar información personal básica (nombre, edad, nacionalidad)</li>
@@ -148,8 +176,11 @@
               <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Construir oraciones básicas (Subject + Verb + Complement)</li>
               <li class="flex items-start gap-1.5"><span class="text-teal-600 font-bold mt-0.5">🏥</span> Aplicar estas expresiones con pacientes extranjeros</li>
             </ul>
+
             <p class="text-[10px] text-[#006688] italic mt-3 border-t border-[#006688]/10 pt-2">
-              "At the end of this module, you will be able to introduce yourself, greet other people and ask for basic personal information in English."
+              {{ isModule2 
+                ? '"En este módulo acompañarás a Mr. Thomas en su hospitalización. Al final, serás capaz de describir el estado físico de tus pacientes, detallar su entorno hospitalario y relatar antecedentes clínicos."' 
+                : '"At the end of this module, you will be able to introduce yourself, greet other people and ask for basic personal information in English."' }}
             </p>
           </div>
         </div>
@@ -158,19 +189,27 @@
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
-            <h4 class="font-bold text-gray-800 text-sm">Warm-Up: Greetings — Empareja el momento del día con su saludo</h4>
+            <h4 class="font-bold text-gray-800 text-sm">
+              {{ isModule2 
+                ? 'Warm-Up: Hospital Shifts & Handover — Empareja los turnos con el saludo de relevo' 
+                : 'Warm-Up: Greetings — Empareja el momento del día con su saludo' }}
+            </h4>
           </div>
           <p class="text-xs text-gray-600">
-            Instrucción: Empareja el momento del día de la columna izquierda con el saludo correspondiente en inglés.
+            {{ isModule2 
+              ? 'Instrucción: Empareja el horario y turno hospitalario de la izquierda con la expresión y saludo de relevo correspondiente en inglés.' 
+              : 'Instrucción: Empareja el momento del día de la columna izquierda con el saludo correspondiente en inglés.' }}
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
             
-            <!-- Left column: Moment representing items -->
+            <!-- Left column -->
             <div class="space-y-2">
-              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Momento del día</span>
+              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                {{ isModule2 ? 'Turno Hospitalario / Momento' : 'Momento del día' }}
+              </span>
               <button 
-                v-for="item in leftItems" 
+                v-for="item in activeLeftItems" 
                 :key="item"
                 @click="selectLeftItem(item)"
                 type="button"
@@ -185,19 +224,21 @@
               >
                 <div class="flex items-center gap-2">
                   <span class="material-symbols-outlined text-base">
-                    {{ item === 'Sun' ? 'light_mode' : item === 'Afternoon' ? 'wb_twilight' : 'dark_mode' }}
+                    {{ item.includes('Morning') || item === 'Sun' ? 'light_mode' : (item.includes('Afternoon') || item === 'Afternoon' ? 'wb_twilight' : 'dark_mode') }}
                   </span>
-                  <span>{{ item === 'Sun' ? 'Sun (Mañana)' : item === 'Afternoon' ? 'Afternoon (Tarde)' : 'Moon (Noche)' }}</span>
+                  <span>{{ item }}</span>
                 </div>
                 <span v-if="matchedPairs.includes(item)" class="material-symbols-outlined text-xs bg-green-500 text-white rounded-full p-0.5">check</span>
               </button>
             </div>
 
-            <!-- Right column: Greetings -->
+            <!-- Right column -->
             <div class="space-y-2">
-              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Saludos en Inglés</span>
+              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                {{ isModule2 ? 'Expresiones de Entrega de Turno' : 'Saludos en Inglés' }}
+              </span>
               <button 
-                v-for="item in rightItems" 
+                v-for="item in activeRightItems" 
                 :key="item"
                 @click="selectRightItem(item)"
                 type="button"
@@ -224,10 +265,9 @@
                 Limpiar Juego
               </button>
               
-              <!-- Feedback messages -->
               <span v-if="gameSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">check_circle</span>
-                ¡Excelente! Has emparejado todos los saludos correctamente. Fase 1 completada.
+                ¡Excelente! Has emparejado todos los elementos correctamente. Momento 1 completado.
               </span>
               <span v-if="gameSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">cancel</span>
@@ -255,18 +295,95 @@
       </div>
 
 
+      <!-- ========================================== -->
       <!-- FASE 2: ESTUDIO (ABSORCIÓN) -->
+      <!-- ========================================== -->
       <div v-if="currentPhase === 'estudio'" class="space-y-8 animate-fade-in">
         <div class="border-b border-gray-100 pb-4">
           <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
             Momento 2 — Absorción de Conocimiento
           </h3>
-          <p class="text-xs text-gray-500 mt-1">Momento 2: Explora la gramática básica, practica el vocabulario de saludos e información personal, y revisa el Storybook y el contexto de enfermería.</p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ isModule2 
+              ? 'Momento 2: Explora el Pasado Simple vs. Adjetivos Descriptivos, interactúa con las flashcards de anatomía/hospital y analiza el Storybook de entrega de turno.' 
+              : 'Momento 2: Explora la gramática básica, practica el vocabulario de saludos e información personal, y revisa el Storybook y el contexto de enfermería.' }}
+          </p>
         </div>
 
-        <!-- Color Highlighted Grammar -->
-        <div class="space-y-4">
+        <!-- MODULE 2 GRAMMAR PILL: Two-column clinical comparison -->
+        <div v-if="isModule2" class="space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">table_chart</span>
+            <h4 class="font-bold text-gray-800 text-sm">1. Grammar Pill — Pasado Simple vs. Adjetivos Descriptivos (Caso Mr. Thomas)</h4>
+          </div>
+          <p class="text-xs text-gray-600">
+            Aprende a diferenciar qué le ocurrió al paciente en el pasado (<strong>Past Simple</strong>) de cómo se encuentra en el momento actual (<strong>Descriptive Adjectives & Present</strong>).
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+            
+            <!-- Column 1: Patient's History -->
+            <div class="bg-purple-50/70 border border-purple-200 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center justify-between border-b border-purple-200 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-purple-700 text-lg">history</span>
+                  <span class="text-xs font-black text-purple-900 uppercase tracking-wide">Patient's History (Past Simple)</span>
+                </div>
+                <span class="text-[10px] font-bold bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">Qué le ocurrió</span>
+              </div>
+              <p class="text-[11px] text-purple-700 font-medium">Usa verbos en pasado para relatar los hechos y antecedentes ocurridos:</p>
+              
+              <div class="space-y-2">
+                <div v-for="(item, idx) in m2PastExamples" :key="idx" class="bg-white p-3 rounded-xl border border-purple-100 shadow-xs flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-xs font-bold text-gray-800">
+                      <span class="text-purple-600 font-black">{{ item.subject }}</span>
+                      <span class="bg-purple-100 text-purple-800 px-1 py-0.5 rounded font-black mx-1 underline">{{ item.verb }}</span>
+                      <span>{{ item.complement }}</span>
+                    </p>
+                    <p class="text-[10px] text-gray-500 italic mt-0.5">{{ item.spanish }}</p>
+                  </div>
+                  <button @click="speakEnglish(item.full)" class="text-purple-600 hover:bg-purple-50 p-1.5 rounded-lg shrink-0" title="Escuchar">
+                    <span class="material-symbols-outlined text-base">volume_up</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 2: Current Status -->
+            <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center justify-between border-b border-emerald-200 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-emerald-700 text-lg">vital_signs</span>
+                  <span class="text-xs font-black text-emerald-900 uppercase tracking-wide">Current Status (Adjectives)</span>
+                </div>
+                <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">Cómo está hoy</span>
+              </div>
+              <p class="text-[11px] text-emerald-700 font-medium">Usa adjetivos descriptivos y el presente para detallar el estado del paciente y su entorno:</p>
+              
+              <div class="space-y-2">
+                <div v-for="(item, idx) in m2PresentExamples" :key="idx" class="bg-white p-3 rounded-xl border border-emerald-100 shadow-xs flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-xs font-bold text-gray-800">
+                      <span class="text-emerald-700 font-black">{{ item.subject }}</span>
+                      <span class="text-gray-700 mx-1">{{ item.verb }}</span>
+                      <span class="bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded font-black">{{ item.adjective }}</span>
+                    </p>
+                    <p class="text-[10px] text-gray-500 italic mt-0.5">{{ item.spanish }}</p>
+                  </div>
+                  <button @click="speakEnglish(item.full)" class="text-emerald-600 hover:bg-emerald-50 p-1.5 rounded-lg shrink-0" title="Escuchar">
+                    <span class="material-symbols-outlined text-base">volume_up</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- MODULE 1 GRAMMAR PILL -->
+        <div v-else class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">palette</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Grammar Pill — Basic Sentence Structure (Subject + Verb + Complement)</h4>
@@ -276,7 +393,6 @@
           </p>
 
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-6">
-            <!-- Sentence Render -->
             <div class="text-base sm:text-lg font-semibold text-gray-800 leading-relaxed text-center px-4">
               <span 
                 v-for="(part, idx) in grammarSentence" 
@@ -287,7 +403,6 @@
               </span>
             </div>
 
-            <!-- Legend Toggle Controls -->
             <div class="flex flex-wrap justify-center gap-2 pt-2 border-t border-gray-200">
               <button 
                 v-for="leg in grammarLegend" 
@@ -306,169 +421,101 @@
           </div>
         </div>
 
-        <!-- Listening Technical Vocabulary Zone -->
+        <!-- Vocabulary Laboratory Flashcards Zone -->
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-xl text-[#006688]">volume_up</span>
-              <h4 class="font-bold text-gray-800 text-sm">2. Vocabulary Laboratory — Greetings, Farewells & Personal Information</h4>
+              <span class="material-symbols-outlined text-xl text-[#006688]">style</span>
+              <h4 class="font-bold text-gray-800 text-sm">
+                {{ isModule2 
+                  ? '2. Laboratorio de Vocabulario — Flashcards (Partes del Cuerpo y Entorno Hospitalario)' 
+                  : '2. Vocabulary Laboratory — Greetings, Farewells & Personal Information' }}
+              </h4>
             </div>
             <span class="text-xs bg-[#006688]/5 text-[#006688] font-bold px-3 py-1 rounded-full">
-              Escuchados: {{ vocabList.filter(v => v.played).length }} / {{ vocabList.length }}
+              Escuchados: {{ activeVocabList.filter(v => v.played).length }} / {{ activeVocabList.length }}
             </span>
           </div>
           <p class="text-xs text-gray-600">
-            Reproduce el audio de cada expresión del módulo. Escucha todos los ítems para habilitar la siguiente fase.
+            {{ isModule2 
+              ? 'Interactúa con las tarjetas interactivas (Flashcards). Escucha la pronunciación correcta de cada término anatómico y hospitalario.' 
+              : 'Reproduce el audio de cada expresión del módulo. Escucha todos los ítems para habilitar la siguiente fase.' }}
           </p>
 
-          <!-- Vocabulary Player Card -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Vocabulary Flashcard Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div 
-              v-for="v in vocabList" 
+              v-for="v in activeVocabList" 
               :key="v.id" 
-              class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-[#006688] transition-all flex flex-col justify-between"
+              class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-[#006688] transition-all flex flex-col justify-between group"
             >
-              <div class="space-y-1">
+              <div class="space-y-1.5">
                 <div class="flex justify-between items-start">
-                  <span class="text-base font-bold text-gray-800">{{ v.word }}</span>
+                  <span class="text-base font-bold text-gray-800 flex items-center gap-1.5">
+                    <span v-if="v.emoji" class="text-lg">{{ v.emoji }}</span>
+                    {{ v.word }}
+                  </span>
                   <span v-if="v.played" class="text-green-600 material-symbols-outlined text-sm">check_circle</span>
                 </div>
                 <p class="text-xs text-[#006688] italic font-medium">{{ v.ipa }}</p>
                 <p class="text-xs text-gray-500 font-medium">{{ v.translation }}</p>
+                <span v-if="v.category" class="inline-block text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                  {{ v.category }}
+                </span>
               </div>
 
-              <!-- Term Audio Player Simulator -->
-              <div class="mt-4 pt-4 border-t border-gray-100 space-y-3">
-                <div class="flex items-center gap-3">
-                  <!-- Play/Pause Button -->
-                  <button 
-                    @click="playVocabAudio(v)"
-                    class="w-8 h-8 rounded-full bg-[#006688]/10 hover:bg-[#006688]/20 flex items-center justify-center text-[#006688] transition-all"
-                  >
-                    <span class="material-symbols-outlined text-base">
-                      {{ playingVocabId === v.id ? 'pause' : 'play_arrow' }}
-                    </span>
-                  </button>
-
-                  <!-- Simulated Audio Wave Progress -->
-                  <div class="flex-1 bg-gray-100 h-1 rounded-full overflow-hidden relative">
-                    <div 
-                      class="bg-[#006688] h-1 absolute left-0 top-0 transition-all" 
-                      :style="`width: ${playingVocabId === v.id ? vocabAudioProgress : (v.played ? 100 : 0)}%`"
-                    ></div>
-                  </div>
-                </div>
-
-                <!-- Speed Control -->
-                <div class="flex items-center justify-between text-[10px] text-gray-400 font-bold">
-                  <span>Velocidad:</span>
-                  <div class="flex gap-2">
-                    <button 
-                      v-for="speed in [0.8, 1.0, 1.2]" 
-                      :key="speed"
-                      @click="v.speed = speed"
-                      :class="`px-1.5 py-0.5 rounded transition-all ${v.speed === speed ? 'bg-[#006688] text-white' : 'hover:bg-gray-100'}`"
-                    >
-                      {{ speed }}x
-                    </button>
-                  </div>
-                </div>
+              <!-- Audio Player Button -->
+              <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                <button 
+                  @click="playVocabAudio(v)"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] text-xs font-bold transition-all w-full justify-center"
+                >
+                  <span class="material-symbols-outlined text-base">
+                    {{ playingVocabId === v.id ? 'graphic_eq' : 'volume_up' }}
+                  </span>
+                  <span>{{ playingVocabId === v.id ? 'Reproduciendo...' : 'Pronunciación' }}</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Real Conversation Dialogue -->
+        <!-- Storybook Dialogue -->
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">forum</span>
-            <h4 class="font-bold text-gray-800 text-sm">3. Storybook — Greetings and Presentations: Nurse & Nurse</h4>
+            <h4 class="font-bold text-gray-800 text-sm">
+              {{ isModule2 ? '3. Storybook — Recibo de Turno: Nurse Andrea & Nurse Carlos' : '3. Storybook — Greetings and Presentations: Nurse & Nurse' }}
+            </h4>
           </div>
-          <p class="text-xs text-gray-600">Revisa la conversación de presentación entre dos enfermeras — un escenario real de inicio de turno.</p>
+          <p class="text-xs text-gray-600">
+            {{ isModule2 
+              ? 'Observa la conversación dinámica de entrega de turno sobre el caso clínico de Mr. Thomas en la habitación 204. Haz clic en el audio para escuchar cada intervención.' 
+              : 'Revisa la conversación de presentación entre dos enfermeras — un escenario real de inicio de turno.' }}
+          </p>
 
-          <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-4 max-h-[300px] overflow-y-auto">
+          <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-4 max-h-[350px] overflow-y-auto">
             <div 
-              v-for="(bubble, bIdx) in dialogue" 
+              v-for="(bubble, bIdx) in activeDialogue" 
               :key="bIdx" 
-              :class="`flex gap-3 max-w-[80%] ${bubble.role === 'nurse' ? 'mr-auto' : 'ml-auto flex-row-reverse'}`"
+              :class="`flex gap-3 max-w-[85%] ${bubble.role === 'nurse' || bubble.role === 'nurseA' ? 'mr-auto' : 'ml-auto flex-row-reverse'}`"
             >
-              <div :class="`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm ${bubble.role === 'nurse' ? 'bg-[#006688]' : 'bg-orange-500'}`">
-                {{ bubble.role === 'nurse' ? '👩‍⚕️' : '🧑' }}
+              <div :class="`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm ${bubble.role === 'nurse' || bubble.role === 'nurseA' ? 'bg-[#006688]' : 'bg-indigo-600'}`">
+                {{ bubble.role === 'nurse' || bubble.role === 'nurseA' ? '👩‍⚕️' : '👨‍⚕️' }}
               </div>
-              <div :class="`p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed ${bubble.role === 'nurse' ? 'bg-white text-gray-800 rounded-tl-none border-gray-100' : 'bg-orange-50/50 text-gray-800 rounded-tr-none border-orange-100'}`">
-                <div class="font-bold text-[10px] text-gray-400 uppercase tracking-widest mb-1">{{ bubble.role === 'nurse' ? 'Nurse Sarah' : 'Nurse David' }}</div>
-                <p class="font-semibold">{{ bubble.english }}</p>
+              <div :class="`p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed ${bubble.role === 'nurse' || bubble.role === 'nurseA' ? 'bg-white text-gray-800 rounded-tl-none border-gray-100' : 'bg-indigo-50/60 text-gray-800 rounded-tr-none border-indigo-100'}`">
+                <div class="flex items-center justify-between gap-4 mb-1">
+                  <span class="font-bold text-[10px] uppercase tracking-widest text-gray-400">
+                    {{ bubble.speaker || (bubble.role === 'nurse' ? 'Nurse Sarah' : 'Nurse David') }}
+                  </span>
+                  <button @click="speakEnglish(bubble.english)" class="text-[#006688] hover:text-[#004e69] text-xs" title="Escuchar frase">
+                    <span class="material-symbols-outlined text-sm">volume_up</span>
+                  </button>
+                </div>
+                <p class="font-semibold text-gray-900">{{ bubble.english }}</p>
                 <p class="text-gray-500 mt-1 italic text-[11px]">{{ bubble.spanish }}</p>
               </div>
             </div>
-          </div>
-        </div>
-
-
-        <!-- English for Nursing — Clinical Context Section -->
-        <div class="space-y-4 pt-4 border-t border-gray-100">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-teal-600">local_hospital</span>
-            <h4 class="font-bold text-gray-800 text-sm">4. English for Nursing — Situación Clínica Real</h4>
-          </div>
-          <p class="text-xs text-gray-600">Observa cómo se aplica el vocabulario del módulo cuando un paciente extranjero llega a una institución de salud.</p>
-
-          <div class="bg-teal-50/50 p-6 rounded-2xl border border-teal-100 space-y-4 max-h-[320px] overflow-y-auto">
-            <!-- Clinical scenario badge -->
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-[10px] font-black uppercase tracking-widest text-teal-700 bg-teal-100 px-3 py-1 rounded-full">🏥 Caso Clínico — Admisión de Paciente Extranjero</span>
-            </div>
-            <!-- Nurse Laura -->
-            <div class="flex gap-3 max-w-[80%] mr-auto">
-              <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm bg-[#006688]">👩‍⚕️</div>
-              <div class="p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed bg-white text-gray-800 rounded-tl-none border-gray-100">
-                <div class="font-bold text-[10px] text-[#006688] uppercase tracking-widest mb-1">Nurse Laura</div>
-                <p class="font-semibold">Good morning. My name is Laura. I'm a nurse.</p>
-                <p class="text-gray-500 mt-1 italic text-[11px]">Buenos días. Me llamo Laura. Soy enfermera.</p>
-                <p class="font-semibold mt-2">What is your name?</p>
-                <p class="text-gray-500 mt-0.5 italic text-[11px]">¿Cuál es su nombre?</p>
-              </div>
-            </div>
-            <!-- Patient Michael -->
-            <div class="flex gap-3 max-w-[80%] ml-auto flex-row-reverse">
-              <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm bg-orange-500">🧑</div>
-              <div class="p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed bg-orange-50/50 text-gray-800 rounded-tr-none border-orange-100">
-                <div class="font-bold text-[10px] text-orange-600 uppercase tracking-widest mb-1">Patient Michael</div>
-                <p class="font-semibold">My name is Michael Brown.</p>
-                <p class="text-gray-500 mt-1 italic text-[11px]">Mi nombre es Michael Brown.</p>
-              </div>
-            </div>
-            <!-- Nurse Laura -->
-            <div class="flex gap-3 max-w-[80%] mr-auto">
-              <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm bg-[#006688]">👩‍⚕️</div>
-              <div class="p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed bg-white text-gray-800 rounded-tl-none border-gray-100">
-                <div class="font-bold text-[10px] text-[#006688] uppercase tracking-widest mb-1">Nurse Laura</div>
-                <p class="font-semibold">How do you spell your last name?</p>
-                <p class="text-gray-500 mt-1 italic text-[11px]">¿Cómo se deletrea su apellido?</p>
-              </div>
-            </div>
-            <!-- Patient Michael -->
-            <div class="flex gap-3 max-w-[80%] ml-auto flex-row-reverse">
-              <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm bg-orange-500">🧑</div>
-              <div class="p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed bg-orange-50/50 text-gray-800 rounded-tr-none border-orange-100">
-                <div class="font-bold text-[10px] text-orange-600 uppercase tracking-widest mb-1">Patient Michael</div>
-                <p class="font-semibold">B-R-O-W-N.</p>
-                <p class="text-gray-500 mt-1 italic text-[11px]">B-R-O-W-N.</p>
-              </div>
-            </div>
-            <!-- Nurse Laura -->
-            <div class="flex gap-3 max-w-[80%] mr-auto">
-              <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm bg-[#006688]">👩‍⚕️</div>
-              <div class="p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed bg-white text-gray-800 rounded-tl-none border-gray-100">
-                <div class="font-bold text-[10px] text-[#006688] uppercase tracking-widest mb-1">Nurse Laura</div>
-                <p class="font-semibold">What is your phone number?</p>
-                <p class="text-gray-500 mt-1 italic text-[11px]">¿Cuál es su número de teléfono?</p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-xs text-teal-700 font-medium flex items-start gap-2">
-            <span class="material-symbols-outlined text-sm text-teal-500 mt-0.5">info</span>
-            <span>Este es el tipo de comunicación que podrás tener con pacientes extranjeros al finalizar este módulo.</span>
           </div>
         </div>
 
@@ -498,18 +545,144 @@
       </div>
 
 
+      <!-- ========================================== -->
       <!-- FASE 3: PRÁCTICA -->
+      <!-- ========================================== -->
       <div v-if="currentPhase === 'practica'" class="space-y-8 animate-fade-in">
         <div class="border-b border-gray-100 pb-4">
           <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
-            Momento 3 — Práctica y Aplicación (RAP 1)
+            Momento 3 — Práctica y Aplicación {{ isModule2 ? '(RAP 2 y 3)' : '(RAP 1)' }}
           </h3>
-          <p class="text-xs text-gray-500 mt-1">Completa el perfil personal, realiza los deletreos y graba tu presentación personal como evidencia de aprendizaje.</p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ isModule2 
+              ? 'Completa las notas de enfermería escuchando el reporte médico, describe la habitación de Mr. Thomas y graba tu entrega de turno (Handover Report).' 
+              : 'Completa el perfil personal, realiza los deletreos y graba tu presentación personal como evidencia de aprendizaje.' }}
+          </p>
         </div>
 
-        <!-- Guided Practice 1 — Complete the Profile -->
-        <div class="space-y-4">
+        <!-- MODULE 2 PRACTICE 1: Listening & Nursing Notes -->
+        <div v-if="isModule2" class="space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">clinical_notes</span>
+            <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Completar Notas de Enfermería</h4>
+          </div>
+          <p class="text-xs text-gray-600">
+            Escucha el audio del médico describiendo el ingreso y antecedentes de Mr. Thomas. Llena los 5 espacios en blanco con las palabras clave en inglés.
+          </p>
+
+          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+            
+            <!-- Dr. Miller Audio Player Card -->
+            <div class="bg-white p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+              <div class="flex items-center gap-3">
+                <button 
+                  @click="playDrMillerReport" 
+                  class="w-10 h-10 rounded-full bg-[#006688] text-white flex items-center justify-center shadow hover:scale-105 transition-transform"
+                >
+                  <span class="material-symbols-outlined text-xl">
+                    {{ drMillerPlaying ? 'pause' : 'play_arrow' }}
+                  </span>
+                </button>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-gray-800">Audio Clínico: Dr. Miller's Admission Report</span>
+                    <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">Audio Médico</span>
+                  </div>
+                  <p class="text-[11px] text-gray-500">Escucha con atención las palabras clave para completar el cuadro clínico.</p>
+                </div>
+              </div>
+              <button 
+                @click="playDrMillerReport"
+                type="button" 
+                class="px-3 py-1.5 text-xs font-bold text-[#006688] bg-[#006688]/10 rounded-lg hover:bg-[#006688]/20 transition-all"
+              >
+                {{ drMillerPlaying ? 'Detener Audio' : 'Reproducir Audio Completo' }}
+              </button>
+            </div>
+
+            <!-- Nursing Notes Form with Blanks -->
+            <div class="bg-amber-50/50 border border-amber-200 rounded-2xl p-5 space-y-4">
+              <div class="flex items-center justify-between border-b border-amber-200 pb-2">
+                <span class="text-xs font-black text-amber-900 uppercase tracking-widest flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm">edit_note</span>
+                  Nursing Notes — Patient Chart (Room 204)
+                </span>
+                <span class="text-[10px] font-bold text-amber-800">Mr. Thomas, 68 y/o</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[11px] font-bold text-gray-700">1. Diagnóstico de la lesión (X-ray confirmed a...):</label>
+                    <button @click="speakEnglish('fracture')" class="text-[#006688] text-xs" title="Pista de audio">
+                      <span class="material-symbols-outlined text-sm">volume_up</span>
+                    </button>
+                  </div>
+                  <input type="text" v-model="m2Notes.fracture" placeholder="Palabra clave en inglés..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[11px] font-bold text-gray-700">2. Cuándo ocurrió la caída (The accident happened...):</label>
+                    <button @click="speakEnglish('yesterday')" class="text-[#006688] text-xs" title="Pista de audio">
+                      <span class="material-symbols-outlined text-sm">volume_up</span>
+                    </button>
+                  </div>
+                  <input type="text" v-model="m2Notes.yesterday" placeholder="Palabra clave en inglés..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[11px] font-bold text-gray-700">3. Lugar inicial de espera (Patient waited in the...):</label>
+                    <button @click="speakEnglish('waiting room')" class="text-[#006688] text-xs" title="Pista de audio">
+                      <span class="material-symbols-outlined text-sm">volume_up</span>
+                    </button>
+                  </div>
+                  <input type="text" v-model="m2Notes.waitingRoom" placeholder="Palabra clave en inglés..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[11px] font-bold text-gray-700">4. Tratamiento aplicado (The nurse applied a clean...):</label>
+                    <button @click="speakEnglish('bandage')" class="text-[#006688] text-xs" title="Pista de audio">
+                      <span class="material-symbols-outlined text-sm">volume_up</span>
+                    </button>
+                  </div>
+                  <input type="text" v-model="m2Notes.bandage" placeholder="Palabra clave en inglés..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                </div>
+
+                <div class="sm:col-span-2 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[11px] font-bold text-gray-700">5. Signo físico observado (His right arm is...):</label>
+                    <button @click="speakEnglish('swollen')" class="text-[#006688] text-xs" title="Pista de audio">
+                      <span class="material-symbols-outlined text-sm">volume_up</span>
+                    </button>
+                  </div>
+                  <input type="text" v-model="m2Notes.swollen" placeholder="Palabra clave en inglés..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 pt-2">
+                <button @click="validateM2Notes" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
+                  Verificar Notas de Enfermería
+                </button>
+                <span v-if="m2NotesSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">check_circle</span>
+                  ¡Notas clínicas completadas y verificadas correctamente!
+                </span>
+                <span v-if="m2NotesSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">cancel</span>
+                  Revisa las palabras tecleadas. Escucha los audios de pista si necesitas ayuda.
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- MODULE 1 PRACTICE 1: Complete the Profile -->
+        <div v-else class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">edit_note</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Guided Practice 1 — Complete the Profile</h4>
@@ -558,8 +731,150 @@
           </div>
         </div>
 
-        <!-- Guided Practice 2 — Listening and Spelling -->
-        <div class="space-y-4 pt-4 border-t border-gray-100">
+        <!-- MODULE 2 PRACTICE 2: Room 204 Clinical Scene with Dropdowns -->
+        <div v-if="isModule2" class="space-y-4 pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">dashboard_customize</span>
+            <h4 class="font-bold text-gray-800 text-sm">2. Práctica Guiada 2 — Descripción Clínica (Habitación de Mr. Thomas)</h4>
+          </div>
+          <p class="text-xs text-gray-600">
+            Observa la escena panorámica de la habitación 204 y selecciona en cada menú desplegable la opción correcta para describir la escena usando la estructura gramatical clínica.
+          </p>
+
+          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-5">
+            
+            <!-- Illustrated Visual Scenario Card -->
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-950 p-6 rounded-2xl text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-2xl text-teal-400">hotel</span>
+                  <span class="text-xs font-bold uppercase tracking-widest text-teal-300">Habitación 204 — Escena Clínica</span>
+                </div>
+                <p class="text-sm font-semibold text-gray-200">
+                  Mr. Thomas está en la cama de hospital. Tiene un vendaje en el brazo derecho por una fractura. La habitación está limpia y tranquila.
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">🛏️ En cama</span>
+                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">🩹 Vendaje</span>
+                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">🏥 Hab. 204</span>
+              </div>
+            </div>
+
+            <!-- 4 Dropdown Sentence Selectors -->
+            <div class="space-y-3">
+              <!-- Sentence 1 -->
+              <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span class="text-gray-400 font-mono">1.</span>
+                <select v-model="m2RoomScene.s1_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Sujeto --</option>
+                  <option value="The patient">The patient</option>
+                  <option value="The doctor">The doctor</option>
+                  <option value="A nurse">A nurse</option>
+                </select>
+                <select v-model="m2RoomScene.s1_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Verbo --</option>
+                  <option value="is">is</option>
+                  <option value="was">was</option>
+                  <option value="are">are</option>
+                </select>
+                <select v-model="m2RoomScene.s1_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Complemento --</option>
+                  <option value="in the bed">in the bed</option>
+                  <option value="at the hotel">at the hotel</option>
+                  <option value="in the street">in the street</option>
+                </select>
+              </div>
+
+              <!-- Sentence 2 -->
+              <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span class="text-gray-400 font-mono">2.</span>
+                <select v-model="m2RoomScene.s2_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Sujeto --</option>
+                  <option value="He">He</option>
+                  <option value="She">She</option>
+                  <option value="They">They</option>
+                </select>
+                <select v-model="m2RoomScene.s2_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Verbo --</option>
+                  <option value="has">has</option>
+                  <option value="had">had</option>
+                  <option value="having">having</option>
+                </select>
+                <select v-model="m2RoomScene.s2_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Complemento --</option>
+                  <option value="a bandage on his arm">a bandage on his arm</option>
+                  <option value="a cast on his leg">a cast on his leg</option>
+                  <option value="an oxygen mask">an oxygen mask</option>
+                </select>
+              </div>
+
+              <!-- Sentence 3 -->
+              <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span class="text-gray-400 font-mono">3.</span>
+                <select v-model="m2RoomScene.s3_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Sujeto --</option>
+                  <option value="The room">The room</option>
+                  <option value="The hotel">The hotel</option>
+                  <option value="The pharmacy">The pharmacy</option>
+                </select>
+                <select v-model="m2RoomScene.s3_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Verbo --</option>
+                  <option value="is">is</option>
+                  <option value="were">were</option>
+                  <option value="are">are</option>
+                </select>
+                <select v-model="m2RoomScene.s3_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Complemento --</option>
+                  <option value="quiet and clean">quiet and clean</option>
+                  <option value="noisy and dark">noisy and dark</option>
+                  <option value="crowded and loud">crowded and loud</option>
+                </select>
+              </div>
+
+              <!-- Sentence 4 -->
+              <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span class="text-gray-400 font-mono">4.</span>
+                <select v-model="m2RoomScene.s4_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Sujeto --</option>
+                  <option value="His right arm">His right arm</option>
+                  <option value="His left foot">His left foot</option>
+                  <option value="His head">His head</option>
+                </select>
+                <select v-model="m2RoomScene.s4_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Verbo --</option>
+                  <option value="is">is</option>
+                  <option value="was">was</option>
+                  <option value="are">are</option>
+                </select>
+                <select v-model="m2RoomScene.s4_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Complemento --</option>
+                  <option value="swollen and painful">swollen and painful</option>
+                  <option value="healthy and fine">healthy and fine</option>
+                  <option value="strong and fast">strong and fast</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+              <button @click="validateM2RoomScene" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
+                Verificar Descripción Clínica
+              </button>
+              <span v-if="m2RoomSceneSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                ¡Todas las oraciones descriptivas son correctas!
+              </span>
+              <span v-if="m2RoomSceneSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">cancel</span>
+                Algunas opciones no coinciden con la escena de Mr. Thomas. Revisa y prueba de nuevo.
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- MODULE 1 PRACTICE 2: Spelling -->
+        <div v-else class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">text_to_speech</span>
             <h4 class="font-bold text-gray-800 text-sm">2. Guided Practice 2 – Listening and Spelling</h4>
@@ -605,17 +920,23 @@
           </div>
         </div>
 
-        <!-- Voice Recorder Component -->
+        <!-- Voice Recorder Challenge Component (Common to both with tailored prompts) -->
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">mic</span>
-            <h4 class="font-bold text-gray-800 text-sm">3. Learning Evidence Challenge</h4>
+            <h4 class="font-bold text-gray-800 text-sm">
+              {{ isModule2 ? '3. El Desafío — Shift Handover Report (Nota de Voz de Entrega de Turno)' : '3. Learning Evidence Challenge' }}
+            </h4>
           </div>
           <p class="text-xs text-gray-600">
-            Graba un audio de máximo 1 minuto presentándote a un paciente extranjero. Incluye:
+            {{ isModule2 
+              ? 'Graba un audio de máximo 1 minuto simulando que le entregas el turno a tu supervisor: describe físicamente a Mr. Thomas, indica en qué lugar se encuentra (Habitación 204) y relata qué le ocurrió ayer usando verbos en pasado.' 
+              : 'Graba un audio de máximo 1 minuto presentándote a un paciente extranjero. Incluye tu nombre, deletreo de apellido y teléfono:' }}
             <br />
             <span class="block mt-2 bg-[#006688]/5 text-[#006688] p-3 rounded-xl border border-[#006688]/10 font-mono text-[11px] leading-relaxed">
-              🎤 Ejemplo: "Good morning. My name is John. My last name is Smith. S-M-I-T-H. My phone number is 312 456 7890. Nice to meet you."
+              {{ isModule2 
+                ? '🎤 Ejemplo: "Good morning supervisor. Mr. Thomas is in room 204. He is an older man. Yesterday, he fell at the hotel and suffered an arm fracture. Today, he has a bandage on his arm and is resting in bed. His vitals are stable."' 
+                : '🎤 Ejemplo: "Good morning. My name is John. My last name is Smith. S-M-I-T-H. My phone number is 312 456 7890. Nice to meet you."' }}
             </span>
           </p>
 
@@ -703,14 +1024,20 @@
       </div>
 
 
+      <!-- ========================================== -->
       <!-- FASE 4: EVALUACIÓN (CIERRE) -->
+      <!-- ========================================== -->
       <div v-if="currentPhase === 'evaluacion'" class="space-y-8 animate-fade-in">
         <div class="border-b border-gray-100 pb-4">
           <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
             Momento 4 — Cierre: Test Your Knowledge
           </h3>
-          <p class="text-xs text-gray-500 mt-1">Completa la evaluación del RAP 1 para aprobar y recibir tu insignia digital de Getting to Know Other People.</p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ isModule2 
+              ? 'Completa la evaluación del RAP 2 y 3 sobre el caso de Mr. Thomas para aprobar y recibir tu insignia digital Handover Specialist Badge.' 
+              : 'Completa la evaluación del RAP 1 para aprobar y recibir tu insignia digital de Getting to Know Other People.' }}
+          </p>
         </div>
 
         <!-- Badge Success Notification -->
@@ -726,10 +1053,13 @@
           </div>
           <div class="space-y-1">
             <h4 class="text-lg font-black text-yellow-800">🎉 ¡Felicidades! Módulo Completado</h4>
-            <p class="text-sm font-bold text-yellow-700">🏆 RAP 1 — Getting to Know Other People</p>
+            <p class="text-sm font-bold text-yellow-700">
+              {{ isModule2 ? '🏆 Handover Specialist Badge — RAP 2 y 3' : '🏆 RAP 1 — Getting to Know Other People' }}
+            </p>
             <p class="text-xs text-yellow-600 max-w-md mx-auto leading-relaxed">
-              Has demostrado que puedes saludar, presentarte, dar información personal y aplicar la estructura Subject + Verb + Complement en inglés.
-              Esta insignia aparecerá con orgullo en tu perfil.
+              {{ isModule2 
+                ? 'Has demostrado dominio en la descripción de pacientes hospitalizados, notas de enfermería, pasado simple clínico y entrega de turno en inglés. ¡Esta insignia aparecerá con orgullo en tu perfil!' 
+                : 'Has demostrado que puedes saludar, presentarte, dar información personal y aplicar la estructura Subject + Verb + Complement en inglés.' }}
             </p>
           </div>
           <button @click="showBadgeAward = false" class="text-xs font-bold text-yellow-800 hover:underline">Entendido, cerrar</button>
@@ -738,10 +1068,10 @@
         <!-- Exam Questions Form -->
         <div v-if="!examPassed" class="space-y-6">
           <p class="text-xs text-gray-600">
-            Deberás responder correctamente al menos <strong>5 de las 6 preguntas</strong> (75%) para aprobar el RAP 1.
+            Deberás responder correctamente al menos <strong>5 de las 6 preguntas</strong> (75%) para aprobar el {{ isModule2 ? 'RAP 2 y 3' : 'RAP 1' }}.
           </p>
 
-          <div v-for="(q, qIndex) in examQuestions" :key="q.id" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+          <div v-for="(q, qIndex) in activeExamQuestions" :key="q.id" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
             <div class="text-sm font-bold text-gray-800">Pregunta {{ qIndex + 1 }}: {{ q.question }}</div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -786,8 +1116,14 @@
             </div>
           </div>
           <div class="space-y-1">
-            <h4 class="text-xl font-black text-green-800">🎉 ¡Has completado el Módulo 1!</h4>
-            <p class="text-xs text-green-700">RAP 1 — Getting to Know Other People completado con éxito. Ahora puedes saludar, presentarte y comunicarte con pacientes extranjeros en inglés.</p>
+            <h4 class="text-xl font-black text-green-800">
+              {{ isModule2 ? '🎉 ¡Has completado el Módulo 2!' : '🎉 ¡Has completado el Módulo 1!' }}
+            </h4>
+            <p class="text-xs text-green-700">
+              {{ isModule2 
+                ? 'RAP 2 y 3 — Work Life Interaction completado con éxito. Ahora dominas el pasado simple clínico, notas de enfermería y entrega de turno en inglés.' 
+                : 'RAP 1 — Getting to Know Other People completado con éxito. Ahora puedes saludar, presentarte y comunicarte con pacientes extranjeros en inglés.' }}
+            </p>
           </div>
           <div class="inline-flex gap-2">
             <button 
@@ -817,7 +1153,7 @@
         </div>
       </div>
 
-      <!-- Seccion de Actividades de Refuerzo / Complementarias -->
+      <!-- Complementary DB Activities Section -->
       <div v-if="currentPhaseActivities.length > 0" class="mt-8 pt-6 border-t border-gray-205 space-y-4">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
@@ -848,279 +1184,111 @@
                 <p class="text-[10px] text-gray-400 mt-1">Puntos: {{ act.points }}</p>
               </div>
               
-              <span :class="`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                completedActivityIds.includes(act.id)
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-orange-100 text-orange-700'
-              }`">
-                {{ completedActivityIds.includes(act.id) ? 'Completada ✓' : 'Pendiente' }}
-              </span>
+              <span v-if="completedActivityIds.includes(act.id)" class="text-green-600 material-symbols-outlined text-lg">check_circle</span>
             </div>
           </div>
 
-          <!-- Playable Game Area -->
-          <div class="bg-gray-50 rounded-3xl p-5 border border-gray-150 min-h-[220px] flex flex-col justify-between">
+          <!-- Active Activity Player -->
+          <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5">
             <div v-if="activeDbActivity" class="space-y-4">
-              <div class="border-b border-gray-200 pb-2 flex justify-between items-center">
-                <span class="text-xs font-black text-[#006688]">{{ activeDbActivity.title }}</span>
-                <span class="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
-                  <span class="material-symbols-outlined text-xs">emoji_events</span>
-                  +{{ activeDbActivity.points }} pts
-                </span>
+              <div class="flex justify-between items-start border-b border-gray-200 pb-2">
+                <div>
+                  <h4 class="text-xs font-bold text-gray-800">{{ activeDbActivity.title }}</h4>
+                  <span class="text-[9px] text-[#006688] font-bold uppercase">Plantilla: {{ activeDbActivity.template }}</span>
+                </div>
+                <span class="text-xs font-bold text-amber-600">+{{ activeDbActivity.points }} pts</span>
               </div>
 
-              <!-- 1. Playable Word Search (sopa) -->
-              <div v-if="activeDbActivity.template === 'sopa'" class="space-y-3">
-                <p class="text-[11px] text-gray-600 font-bold">Selecciona las letras en el tablero para encontrar las palabras:</p>
-                
-                <!-- Word list display -->
-                <div class="flex flex-wrap gap-1.5">
-                  <span 
-                    v-for="w in activeDbActivitySopaWords" 
-                    :key="w" 
-                    :class="`px-2 py-0.5 border rounded-lg text-[10px] font-bold font-mono transition-all ${
-                      activeDbActivityFoundWords.includes(w) 
-                        ? 'bg-green-100 text-green-700 border-green-300 line-through' 
-                        : 'bg-white text-gray-650 border-gray-300'
-                    }`"
-                  >
-                    {{ w }}
-                  </span>
-                </div>
-
-                <!-- Tablero grid -->
-                <div class="grid gap-0.5 mx-auto border border-gray-200 p-1.5 rounded-xl bg-white" :style="`grid-template-columns: repeat(${activeDbActivitySopaSize}, 1.75rem); width: fit-content;`">
-                  <button 
-                    v-for="(cell, idx) in activeDbActivitySopaGrid" 
-                    :key="idx" 
-                    @click="selectActiveDbSopaCell(idx)"
-                    type="button"
-                    :class="`w-7 h-7 rounded text-[10px] font-bold border transition-all ${
-                      isActiveDbCellFoundWord(idx)
-                        ? 'bg-green-400 text-white border-green-500'
-                        : activeDbActivitySelectedLetters.includes(idx)
-                          ? 'bg-[#006688] text-white border-[#006688] scale-105'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-[#006688]/10 cursor-pointer'
-                    }`"
-                  >
-                    {{ cell.letter }}
-                  </button>
-                </div>
-                <p v-if="activeDbSopaSelectionHint" class="text-[10px] text-center font-bold" :class="activeDbSopaSelectionHint.ok ? 'text-green-600' : 'text-red-500'">{{ activeDbSopaSelectionHint.msg }}</p>
-              </div>
-
-              <!-- 2. Playable Crosswords (crucigrama) -->
-              <div v-if="activeDbActivity.template === 'crucigrama'" class="space-y-6">
-                <!-- If layout generated successfully -->
-                <div v-if="crosswordLayout && crosswordLayout.success" class="space-y-6">
-                  <!-- Visual Grid -->
-                  <div 
-                    class="grid gap-1 p-4 bg-gray-150 rounded-2xl border border-gray-200 overflow-auto mx-auto select-none"
-                    :style="{
-                      gridTemplateColumns: `repeat(${crosswordLayout.width}, 2.2rem)`,
-                      gridTemplateRows: `repeat(${crosswordLayout.height}, 2.2rem)`,
-                      width: 'fit-content',
-                    }"
-                  >
-                    <template v-for="y in crosswordLayout.height" :key="'row-' + y">
-                      <template v-for="x in crosswordLayout.width" :key="'cell-' + (x-1) + '-' + (y-1)">
-                        <div 
-                          v-if="crosswordLayout.grid[(x-1) + ',' + (y-1)]" 
-                          class="relative w-9 h-9 border border-gray-300 rounded-lg bg-white flex items-center justify-center shadow-xs focus-within:border-[#006688] focus-within:ring-2 focus-within:ring-[#006688]/20"
-                        >
-                          <span 
-                            v-if="getWordNumberAt(x-1, y-1)" 
-                            class="absolute top-0.5 left-1 text-[8px] font-black text-[#006688] select-none pointer-events-none"
-                          >
-                            {{ getWordNumberAt(x-1, y-1) }}
-                          </span>
-                          <input 
-                            type="text" 
-                            maxlength="1" 
-                            v-model="activeDbGridInputs[(x-1) + ',' + (y-1)]"
-                            @input="onGridInput($event, x-1, y-1)"
-                            @keydown="onGridKeyDown($event, x-1, y-1)"
-                            @focus="onCellFocus(x-1, y-1)"
-                            class="w-full h-full text-center border-none bg-transparent focus:outline-none font-black uppercase text-sm text-gray-800"
-                            :id="`active-cell-input-${x-1}-${y-1}`"
-                          />
-                        </div>
-                        <div 
-                          v-else 
-                          class="w-9 h-9 rounded-lg bg-gray-200 border border-gray-250 select-none"
-                        ></div>
-                      </template>
-                    </template>
-                  </div>
-
-                  <!-- Clues columns -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 border-t pt-4 border-gray-100">
-                    <!-- Horizontales -->
-                    <div class="space-y-2">
-                      <h5 class="text-xs font-bold text-[#006688] uppercase tracking-wider flex items-center gap-1.5 border-b pb-1.5 border-gray-100">
-                        <span class="material-symbols-outlined text-sm font-bold">swap_horiz</span>
-                        Pistas Horizontales
-                      </h5>
-                      <div class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
-                        <div 
-                          v-for="w in crosswordLayout.words.filter(word => word.orientation === 'horizontal')" 
-                          :key="w.id"
-                          @click="focusWordStart(w)"
-                          class="text-xs text-gray-700 hover:text-[#006688] cursor-pointer hover:bg-[#006688]/5 p-1.5 rounded-lg transition-all flex items-center gap-1"
-                        >
-                          <span class="font-bold text-[#006688]">{{ crosswordWordNumbers[w.id] }}.</span>
-                          <span>{{ w.clue }}</span>
-                          <span class="text-gray-400 font-medium ml-auto">({{ w.word.length }} letras)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Verticales -->
-                    <div class="space-y-2">
-                      <h5 class="text-xs font-bold text-orange-650 uppercase tracking-wider flex items-center gap-1.5 border-b pb-1.5 border-gray-100">
-                        <span class="material-symbols-outlined text-sm font-bold">swap_vert</span>
-                        Pistas Verticales
-                      </h5>
-                      <div class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
-                        <div 
-                          v-for="w in crosswordLayout.words.filter(word => word.orientation === 'vertical')" 
-                          :key="w.id"
-                          @click="focusWordStart(w)"
-                          class="text-xs text-gray-700 hover:text-orange-600 cursor-pointer hover:bg-orange-50 p-1.5 rounded-lg transition-all flex items-center gap-1"
-                        >
-                          <span class="font-bold text-orange-600">{{ crosswordWordNumbers[w.id] }}.</span>
-                          <span>{{ w.clue }}</span>
-                          <span class="text-gray-400 font-medium ml-auto">({{ w.word.length }} letras)</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- If layout failed to generate -->
-                <div v-else class="text-center py-6 text-xs text-red-500 font-bold bg-red-50 rounded-2xl border border-red-200">
-                  <span class="material-symbols-outlined text-2xl block mb-1">warning</span>
-                  Error al cargar el crucigrama. Por favor contacta al instructor.
-                </div>
-              </div>
-
-              <!-- 3. Playable Quiz / Preguntas (quiz / preguntas) -->
+              <!-- Quiz/Preguntas Interactive Player -->
               <div v-if="activeDbActivity.template === 'quiz' || activeDbActivity.template === 'preguntas'" class="space-y-3">
-                <div class="text-xs font-bold text-gray-800">{{ activeDbActivity.quizQuestion || '¿Pregunta del Quiz?' }}</div>
+                <p class="text-xs font-semibold text-gray-700">{{ activeDbActivity.quizQuestion }}</p>
                 <div class="grid grid-cols-1 gap-2">
                   <button 
                     @click="activeDbSelectedAnswer = 'correct'"
-                    type="button"
-                    :class="`px-3 py-2 border rounded-xl text-xs font-bold text-left transition-all ${
-                      activeDbSelectedAnswer === 'correct' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    :class="`p-2.5 rounded-xl border text-xs font-bold text-left transition-all ${
+                      activeDbSelectedAnswer === 'correct' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200'
                     }`"
                   >
-                    {{ activeDbActivity.quizCorrect || 'Opción Correcta' }}
+                    {{ activeDbActivity.quizCorrect }}
                   </button>
                   <button 
                     @click="activeDbSelectedAnswer = 'incorrect'"
-                    type="button"
-                    :class="`px-3 py-2 border rounded-xl text-xs font-bold text-left transition-all ${
-                      activeDbSelectedAnswer === 'incorrect' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    :class="`p-2.5 rounded-xl border text-xs font-bold text-left transition-all ${
+                      activeDbSelectedAnswer === 'incorrect' ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200'
                     }`"
                   >
-                    {{ activeDbActivity.quizIncorrect || 'Opción Incorrecta' }}
+                    {{ activeDbActivity.quizIncorrect }}
                   </button>
                 </div>
               </div>
 
-              <!-- 4. Playable Match Meaning (match) -->
-              <div v-if="activeDbActivity.template === 'match'" class="space-y-4">
-                <p class="text-[11px] text-gray-650 font-bold">Une la pareja correcta:</p>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="space-y-2">
-                    <button 
-                      @click="selectActiveDbTerm(activeDbActivity.matchTerm)"
-                      type="button"
-                      :disabled="activeDbMatchedPairs.includes(activeDbActivity.matchTerm)"
-                      :class="`w-full p-2 border rounded-xl text-[11px] font-bold text-center transition-all ${
-                        activeDbMatchedPairs.includes(activeDbActivity.matchTerm)
-                          ? 'bg-green-100 text-green-700 border-green-300'
-                          : activeDbSelectedTerm === activeDbActivity.matchTerm
-                            ? 'bg-[#006688] text-white border-[#006688] shadow'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`"
-                    >
-                      {{ activeDbActivity.matchTerm }}
-                    </button>
-                  </div>
-                  <div class="space-y-2">
-                    <button 
-                      @click="selectActiveDbMeaning(activeDbActivity.matchMeaning)"
-                      type="button"
-                      :disabled="activeDbMatchedPairs.includes(activeDbActivity.matchMeaning)"
-                      :class="`w-full p-2 border rounded-xl text-[11px] font-bold text-center transition-all ${
-                        activeDbMatchedPairs.includes(activeDbActivity.matchMeaning)
-                          ? 'bg-green-100 text-green-700 border-green-300'
-                          : activeDbSelectedMeaning === activeDbActivity.matchMeaning
-                            ? 'bg-orange-600 text-white border-orange-600 shadow'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`"
-                    >
-                      {{ activeDbActivity.matchMeaning }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 5. Playable Listening (listening) -->
-              <div v-if="activeDbActivity.template === 'listening'" class="space-y-3">
-                <div class="flex items-center gap-2">
-                  <button @click="playActiveDbListeningAudio" type="button" class="w-8 h-8 rounded-full bg-[#006688] text-white flex items-center justify-center hover:scale-105 transition-transform">
-                    <span class="material-symbols-outlined text-sm">volume_up</span>
-                  </button>
-                  <span class="text-[10px] text-gray-400 italic">Haz clic para oír la frase</span>
-                </div>
-                <input 
-                  type="text" 
-                  v-model="activeDbTypedPhrase"
-                  class="w-full px-2.5 py-1.5 border border-gray-200 focus:outline-none focus:border-[#006688] rounded-xl text-xs font-semibold"
-                  placeholder="Escribe la frase que escuchas..."
-                />
-              </div>
-
-              <!-- 6. Playable Pronunciation (pronunciation) -->
-              <div v-if="activeDbActivity.template === 'pronunciation'" class="space-y-3">
-                <p class="text-[11px] text-gray-600 font-bold">Lee esta oración en voz alta:</p>
-                <p class="text-xs font-semibold text-[#006688] bg-[#006688]/5 p-2.5 rounded-xl border border-[#006688]/10 text-center">
-                  "{{ activeDbActivity.pronouncePhrase || 'Frase a pronunciar' }}"
-                </p>
-                <div class="flex flex-col items-center gap-1">
+              <!-- Match/Conectar Meaning Player -->
+              <div v-if="activeDbActivity.template === 'match'" class="space-y-3">
+                <p class="text-[10px] text-gray-500 font-semibold">Empareja el término en inglés con su traducción al español:</p>
+                <div class="grid grid-cols-2 gap-2">
                   <button 
-                    @click="simulateActiveDbMicRecording"
-                    type="button"
-                    :class="`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm ${
-                      activeDbRecording ? 'bg-red-600 animate-pulse' : 'bg-[#006688] hover:bg-[#004e69]'
+                    @click="selectActiveDbTerm(activeDbActivity.matchTerm)"
+                    :disabled="activeDbMatchedPairs.includes(activeDbActivity.matchTerm)"
+                    :class="`p-2.5 border rounded-xl text-xs font-bold text-left ${
+                      activeDbMatchedPairs.includes(activeDbActivity.matchTerm)
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : activeDbSelectedTerm === activeDbActivity.matchTerm
+                          ? 'bg-[#006688] text-white border-[#006688]'
+                          : 'bg-white text-gray-700 border-gray-200'
                     }`"
                   >
-                    <span class="material-symbols-outlined text-sm">
-                      {{ activeDbRecording ? 'stop' : 'mic' }}
-                    </span>
+                    {{ activeDbActivity.matchTerm }}
                   </button>
-                  <span class="text-[9px] text-gray-400 font-bold">
-                    {{ activeDbRecording ? 'Grabando...' : (activeDbVoiceRecorded ? 'Grabación lista' : 'Haz clic para simular grabar') }}
+                  <button 
+                    @click="selectActiveDbMeaning(activeDbActivity.matchMeaning)"
+                    :disabled="activeDbMatchedPairs.includes(activeDbActivity.matchMeaning)"
+                    :class="`p-2.5 border rounded-xl text-xs font-bold text-left ${
+                      activeDbMatchedPairs.includes(activeDbActivity.matchMeaning)
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : activeDbSelectedMeaning === activeDbActivity.matchMeaning
+                          ? 'bg-[#006688] text-white border-[#006688]'
+                          : 'bg-white text-gray-700 border-gray-200'
+                    }`"
+                  >
+                    {{ activeDbActivity.matchMeaning }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Listening Player -->
+              <div v-if="activeDbActivity.template === 'listening'" class="space-y-3">
+                <p class="text-[10px] text-gray-500 font-semibold">Escucha el audio y escribe la frase en inglés:</p>
+                <div class="flex items-center gap-2">
+                  <button @click="playActiveDbListeningAudio" class="p-2 bg-[#006688] text-white rounded-lg hover:bg-[#004e69] flex items-center gap-1 text-xs font-bold">
+                    <span class="material-symbols-outlined text-sm">volume_up</span>
+                    Escuchar Frase
+                  </button>
+                </div>
+                <input type="text" v-model="activeDbTypedPhrase" placeholder="Escribe lo que escuchas..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+              </div>
+
+              <!-- Pronunciation Player -->
+              <div v-if="activeDbActivity.template === 'pronunciation'" class="space-y-3">
+                <p class="text-[10px] text-gray-500 font-semibold">Pronuncia la siguiente frase en inglés:</p>
+                <div class="p-3 bg-white border border-gray-200 rounded-xl font-bold text-xs text-[#006688] text-center">
+                  "{{ activeDbActivity.pronouncePhrase }}"
+                </div>
+                <div class="flex items-center justify-center gap-2">
+                  <button @click="simulateActiveDbMicRecording" :class="`p-2.5 rounded-full text-white flex items-center justify-center ${activeDbRecording ? 'bg-red-600 animate-pulse' : 'bg-[#006688]'}`">
+                    <span class="material-symbols-outlined text-base">mic</span>
+                  </button>
+                  <span class="text-[10px] font-bold text-gray-500">
+                    {{ activeDbRecording ? 'Grabando...' : (activeDbVoiceRecorded ? 'Pronunciación grabada' : 'Haz clic para grabar') }}
                   </span>
                 </div>
               </div>
 
-              <!-- Action buttons for validation -->
-              <div class="flex items-center gap-2 pt-3 border-t border-gray-200">
-                <button 
-                  @click="validateActiveDbSubmission"
-                  type="button"
-                  class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white text-[10px] font-bold rounded-lg transition-all shadow-xs"
-                >
+              <!-- Action Validation for Activity -->
+              <div class="flex items-center gap-2 pt-2 border-t border-gray-200">
+                <button @click="validateActiveDbSubmission" class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white text-[10px] font-bold rounded-lg transition-all shadow-xs">
                   Verificar Solución
                 </button>
-                <button 
-                  @click="resetActiveDbDemo"
-                  type="button"
-                  class="px-2.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-[10px] font-bold rounded-lg transition-all"
-                >
+                <button @click="resetActiveDbDemo" class="px-2.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-[10px] font-bold rounded-lg transition-all">
                   Reiniciar
                 </button>
 
@@ -1151,14 +1319,17 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { getApiBaseUrl } from '../../lib/api'
-import { generateCrossword, reconstructLayout } from '../../utils/crosswordGenerator'
 
 const route = useRoute()
 const auth = useAuthStore()
 
 // State
-const courseId = route.params.courseId || '1'
-const courseTitle = ref('Getting to Know Other People')
+const courseId = computed(() => route.params.courseId || '1')
+const isModule2 = computed(() => courseId.value === '2' || courseId.value === '3')
+
+const currentCourseTitle = computed(() => {
+  return isModule2.value ? 'Work Life Interaction' : 'Getting to Know Other People'
+})
 
 // Tab Navigation Definition
 const phases = [
@@ -1182,7 +1353,7 @@ const phaseProgress = ref({
   evaluacion: 0,
 })
 
-// Calculate overall modules progress (average of phases progress)
+// Calculate overall modules progress
 const moduleProgress = computed(() => {
   const sum = Object.values(phaseProgress.value).reduce((a, b) => a + b, 0)
   return sum / Object.keys(phaseProgress.value).length
@@ -1212,457 +1383,42 @@ const currentPhaseActivities = computed(() => {
     evaluacion: 'Cierre'
   }
   const targetPhase = phaseMapping[currentPhase.value]
-  return dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === targetPhase)
+  return dbActivities.value.filter(a => a.course === currentCourseTitle.value && a.phase === targetPhase)
 })
 
-// Dynamic Game State variables for Active DB Activity
-const activeDbActivity = ref(null)
-const activeDbSelectedAnswer = ref(null)
-const activeDbTypedPhrase = ref('')
-const activeDbFeedbackSuccess = ref(null)
-const activeDbGridInputs = ref({})
-const activeDbDirection = ref('horizontal')
-const crosswordWords = computed(() => {
-  if (!activeDbActivity.value) return []
-  const clueStr = activeDbActivity.value.crossword1Clue || ''
-  if (clueStr.startsWith('[') || clueStr.startsWith('{')) {
-    try {
-      return JSON.parse(clueStr)
-    } catch (e) {
-      console.error('Error parsing crossword JSON:', e)
-    }
-  }
-  return [
-    {
-      word: activeDbActivity.value.crossword1Word || 'HEART',
-      clue: activeDbActivity.value.crossword1Clue || 'Organ that pumps blood',
-      orientation: 'horizontal'
-    }
-  ]
-})
-
-const crosswordLayout = computed(() => {
-  const words = crosswordWords.value
-  if (!words || words.length === 0) return null
-
-  const hasCoordinates = words.every(w => typeof w.x === 'number' && typeof w.y === 'number')
-  if (hasCoordinates) {
-    return reconstructLayout(words)
-  } else {
-    const res = generateCrossword(words)
-    return res.success ? res : null
-  }
-})
-
-watch(crosswordLayout, (newLayout) => {
-  const newInputs = {}
-  if (newLayout && newLayout.success && newLayout.grid) {
-    Object.keys(newLayout.grid).forEach(key => {
-      newInputs[key] = activeDbGridInputs.value[key] || ''
-    })
-  }
-  activeDbGridInputs.value = newInputs
-}, { deep: true, immediate: true })
-
-const crosswordWordNumbers = computed(() => {
-  const layout = crosswordLayout.value
-  if (!layout || !layout.success || !layout.words) return {}
-
-  const sorted = [...layout.words].sort((a, b) => {
-    if (a.y !== b.y) return a.y - b.y
-    return a.x - b.x
-  })
-
-  let currentNum = 1
-  const numbers = {}
-  const startCellNums = {}
-
-  sorted.forEach(w => {
-    const key = `${w.x},${w.y}`
-    if (startCellNums[key]) {
-      numbers[w.id] = startCellNums[key]
-    } else {
-      numbers[w.id] = currentNum
-      startCellNums[key] = currentNum
-      currentNum++
-    }
-  })
-
-  return numbers
-})
-
-function getWordNumberAt(x, y) {
-  if (!crosswordLayout.value || !crosswordLayout.value.words) return null
-  const w = crosswordLayout.value.words.find(word => word.x === x && word.y === y)
-  return w ? crosswordWordNumbers.value[w.id] : null
-}
-
-function onCellFocus(x, y) {
-  if (!crosswordLayout.value || !crosswordLayout.value.grid) return
-  const cell = crosswordLayout.value.grid[`${x},${y}`]
-  if (cell && cell.wordOrientations.length === 1) {
-    activeDbDirection.value = cell.wordOrientations[0]
-  }
-}
-
-function onGridInput(event, x, y) {
-  const val = event.target.value
-  if (!val) return
-
-  activeDbGridInputs.value[`${x},${y}`] = val.toUpperCase()
-
-  const nextX = x + (activeDbDirection.value === 'horizontal' ? 1 : 0)
-  const nextY = y + (activeDbDirection.value === 'vertical' ? 1 : 0)
-  
-  const nextInput = document.getElementById(`active-cell-input-${nextX}-${nextY}`)
-  if (nextInput) {
-    nextInput.focus()
-    setTimeout(() => { nextInput.select() }, 10)
-  }
-}
-
-function onGridKeyDown(event, x, y) {
-  if (event.key === 'Backspace') {
-    const val = activeDbGridInputs.value[`${x},${y}`]
-    if (!val || val === '') {
-      const prevX = x - (activeDbDirection.value === 'horizontal' ? 1 : 0)
-      const prevY = y - (activeDbDirection.value === 'vertical' ? 1 : 0)
-      const prevInput = document.getElementById(`active-cell-input-${prevX}-${prevY}`)
-      if (prevInput) {
-        prevInput.focus()
-        activeDbGridInputs.value[`${prevX},${prevY}`] = ''
-        event.preventDefault()
-      }
-    }
-  } else if (event.key === 'ArrowRight') {
-    const nextInput = document.getElementById(`active-cell-input-${x+1}-${y}`)
-    if (nextInput) { nextInput.focus(); event.preventDefault() }
-  } else if (event.key === 'ArrowLeft') {
-    const prevInput = document.getElementById(`active-cell-input-${x-1}-${y}`)
-    if (prevInput) { prevInput.focus(); event.preventDefault() }
-  } else if (event.key === 'ArrowUp') {
-    const upInput = document.getElementById(`active-cell-input-${x}-${y-1}`)
-    if (upInput) { upInput.focus(); event.preventDefault() }
-  } else if (event.key === 'ArrowDown') {
-    const downInput = document.getElementById(`active-cell-input-${x}-${y+1}`)
-    if (downInput) { downInput.focus(); event.preventDefault() }
-  }
-}
-
-function focusWordStart(word) {
-  activeDbDirection.value = word.orientation
-  const input = document.getElementById(`active-cell-input-${word.x}-${word.y}`)
-  if (input) {
-    input.focus()
-    setTimeout(() => { input.select() }, 10)
-  }
-}
-const activeDbSelectedTerm = ref('')
-const activeDbSelectedMeaning = ref('')
-const activeDbMatchedPairs = ref([])
-const activeDbRecording = ref(false)
-const activeDbVoiceRecorded = ref(false)
-
-const activeDbActivitySopaWords = computed(() => {
-  if (!activeDbActivity.value || activeDbActivity.value.template !== 'sopa') return []
-  return (activeDbActivity.value.sopaWords || '')
-    .split(',')
-    .map(w => w.trim().toUpperCase())
-    .filter(Boolean)
-})
-
-const activeDbActivitySopaSize = computed(() => {
-  const words = activeDbActivitySopaWords.value
-  if (!words.length) return 8
-  const maxLen = Math.max(...words.map(w => w.length))
-  return Math.max(maxLen + 2, 8)
-})
-
-const activeDbActivitySopaGrid = ref([])
-const activeDbActivityFoundWords = ref([])
-const activeDbActivitySelectedLetters = ref([])
-const activeDbSopaSelectionHint = ref(null)
-
-function generateActiveDbSopaGrid() {
-  const words = activeDbActivitySopaWords.value
-  const size = activeDbActivitySopaSize.value
-  const grid = Array.from({ length: size * size }, () => ({ letter: '', wordIdx: -1, posInWord: -1 }))
-
-  words.forEach((word, wIdx) => {
-    let placed = false
-    let attempts = 0
-    while (!placed && attempts < 100) {
-      attempts++
-      const dir = Math.floor(Math.random() * 3) // 0: Horiz, 1: Vert, 2: Diag
-      const startX = Math.floor(Math.random() * size)
-      const startY = Math.floor(Math.random() * size)
-
-      let fits = true
-      const cells = []
-      for (let i = 0; i < word.length; i++) {
-        let x = startX
-        let y = startY
-        if (dir === 0) x += i
-        if (dir === 1) y += i
-        if (dir === 2) { x += i; y += i }
-
-        if (x >= size || y >= size) { fits = false; break }
-        const idx = y * size + x
-        if (grid[idx].letter && grid[idx].letter !== word[i]) { fits = false; break }
-        cells.push(idx)
-      }
-
-      if (fits) {
-        cells.forEach((idx, i) => {
-          grid[idx] = { letter: word[i], wordIdx: wIdx, posInWord: i }
-        })
-        placed = true
-      }
-    }
-  })
-
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  for (let i = 0; i < grid.length; i++) {
-    if (!grid[i].letter) {
-      grid[i].letter = letters[Math.floor(Math.random() * letters.length)]
-    }
-  }
-
-  activeDbActivitySopaGrid.value = grid
-}
-
-watch(activeDbActivity, (newAct) => {
-  resetActiveDbDemo()
-  if (newAct && newAct.template === 'sopa') {
-    generateActiveDbSopaGrid()
-  }
-})
-
-let activeDbSopaHintTimer = null
-
-function selectActiveDbSopaCell(idx) {
-  if (isActiveDbCellFoundWord(idx)) return
-  const list = activeDbActivitySelectedLetters.value
-  const foundIdx = list.indexOf(idx)
-  if (foundIdx >= 0) {
-    list.splice(foundIdx, 1)
-  } else {
-    list.push(idx)
-  }
-
-  const selectedStr = list
-    .map(i => activeDbActivitySopaGrid.value[i]?.letter || '')
-    .join('')
-  const reversedStr = selectedStr.split('').reverse().join('')
-
-  let matched = ''
-  for (const word of activeDbActivitySopaWords.value) {
-    if (selectedStr === word || reversedStr === word) {
-      matched = word
-      break
-    }
-  }
-
-  if (matched && !activeDbActivityFoundWords.value.includes(matched)) {
-    activeDbActivityFoundWords.value.push(matched)
-    activeDbActivitySelectedLetters.value = []
-    if (activeDbSopaHintTimer) clearTimeout(activeDbSopaHintTimer)
-    activeDbSopaSelectionHint.value = { ok: true, msg: `✓ "${matched}" encontrada!` }
-    activeDbSopaHintTimer = setTimeout(() => { activeDbSopaSelectionHint.value = null }, 2000)
-  } else {
-    const canContinue = activeDbActivitySopaWords.value.some(word => {
-      return word.startsWith(selectedStr) || word.startsWith(reversedStr)
-    })
-    if (!canContinue && selectedStr.length > 1) {
-      activeDbActivitySelectedLetters.value = []
-      if (activeDbSopaHintTimer) clearTimeout(activeDbSopaHintTimer)
-      activeDbSopaSelectionHint.value = { ok: false, msg: 'Selección inválida, intenta de nuevo.' }
-      activeDbSopaHintTimer = setTimeout(() => { activeDbSopaSelectionHint.value = null }, 2000)
-    }
-  }
-}
-
-function isActiveDbCellFoundWord(idx) {
-  const cell = activeDbActivitySopaGrid.value[idx]
-  if (!cell || cell.wordIdx === -1) return false
-  const word = activeDbActivitySopaWords.value[cell.wordIdx]
-  return activeDbActivityFoundWords.value.includes(word)
-}
-
-function selectActiveDbActivity(act) {
-  activeDbActivity.value = act
-}
-
-function resetActiveDbDemo() {
-  activeDbSelectedAnswer.value = null
-  activeDbTypedPhrase.value = ''
-  activeDbFeedbackSuccess.value = null
-  activeDbActivityFoundWords.value = []
-  activeDbActivitySelectedLetters.value = []
-  activeDbSopaSelectionHint.value = null
-  if (activeDbSopaHintTimer) { clearTimeout(activeDbSopaHintTimer); activeDbSopaHintTimer = null }
-  activeDbGridInputs.value = {}
-  if (crosswordLayout.value && crosswordLayout.value.success) {
-    Object.keys(crosswordLayout.value.grid).forEach(key => {
-      activeDbGridInputs.value[key] = ''
-    })
-  }
-  activeDbSelectedTerm.value = ''
-  activeDbSelectedMeaning.value = ''
-  activeDbMatchedPairs.value = []
-  activeDbRecording.value = false
-  activeDbVoiceRecorded.value = false
-}
-
-function selectActiveDbTerm(term) {
-  if (activeDbMatchedPairs.value.includes(term)) return
-  activeDbSelectedTerm.value = term
-  checkActiveDbMatch()
-}
-
-function selectActiveDbMeaning(meaning) {
-  if (activeDbMatchedPairs.value.includes(meaning)) return
-  activeDbSelectedMeaning.value = meaning
-  checkActiveDbMatch()
-}
-
-function checkActiveDbMatch() {
-  if (activeDbSelectedTerm.value && activeDbSelectedMeaning.value) {
-    if (activeDbSelectedTerm.value === activeDbActivity.value.matchTerm && activeDbSelectedMeaning.value === activeDbActivity.value.matchMeaning) {
-      activeDbMatchedPairs.value.push(activeDbSelectedTerm.value, activeDbSelectedMeaning.value)
-    }
-    activeDbSelectedTerm.value = ''
-    activeDbSelectedMeaning.value = ''
-  }
-}
-
-function playActiveDbListeningAudio() {
-  if ('speechSynthesis' in window && activeDbActivity.value?.listeningPhrase) {
-    const utterance = new SpeechSynthesisUtterance(activeDbActivity.value.listeningPhrase)
+// Helper speech synthesis function
+function speakEnglish(text, rate = 0.85) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'en-US'
+    utterance.rate = rate
     window.speechSynthesis.speak(utterance)
-  } else {
-    alert('Reproduciendo: ' + (activeDbActivity.value?.listeningPhrase || 'Audio'))
   }
-}
-
-function simulateActiveDbMicRecording() {
-  if (activeDbRecording.value) {
-    activeDbRecording.value = false
-    activeDbVoiceRecorded.value = true
-  } else {
-    activeDbRecording.value = true
-    activeDbVoiceRecorded.value = false
-    setTimeout(() => {
-      if (activeDbRecording.value) {
-        activeDbRecording.value = false
-        activeDbVoiceRecorded.value = true
-      }
-    }, 3000)
-  }
-}
-
-function validateActiveDbSubmission() {
-  if (!activeDbActivity.value) return
-
-  const act = activeDbActivity.value
-  let success = false
-
-  if (act.template === 'quiz' || act.template === 'preguntas') {
-    if (activeDbSelectedAnswer.value === 'correct') {
-      success = true
-    }
-  } else if (act.template === 'sopa') {
-    const allWords = activeDbActivitySopaWords.value
-    if (allWords.length > 0 && allWords.every(w => activeDbActivityFoundWords.value.includes(w))) {
-      success = true
-    }
-  } else if (act.template === 'crucigrama') {
-    const layout = crosswordLayout.value
-    if (!layout || !layout.success) {
-      success = false
-    } else {
-      let allCorrect = true
-      for (const [key, cell] of Object.entries(layout.grid)) {
-        const entered = (activeDbGridInputs.value[key] || '').trim().toUpperCase()
-        const correct = cell.char.toUpperCase()
-        if (entered !== correct) {
-          allCorrect = false
-          break
-        }
-      }
-      success = allCorrect
-    }
-  } else if (act.template === 'match') {
-    if (activeDbMatchedPairs.value.includes(act.matchTerm)) {
-      success = true
-    }
-  } else if (act.template === 'listening') {
-    const phrase = (act.listeningPhrase || '').trim().toLowerCase()
-    const entered = activeDbTypedPhrase.value.trim().toLowerCase()
-    const cleanPhrase = phrase.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
-    const cleanEntered = entered.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
-    if (cleanPhrase && cleanEntered.includes(cleanPhrase)) {
-      success = true
-    }
-  } else if (act.template === 'pronunciation') {
-    if (activeDbVoiceRecorded.value) {
-      success = true
-    }
-  }
-
-  if (success) {
-    activeDbFeedbackSuccess.value = true
-    if (!completedActivityIds.value.includes(act.id)) {
-      completedActivityIds.value.push(act.id)
-    }
-    updatePhaseProgress()
-  } else {
-    activeDbFeedbackSuccess.value = false
-  }
-}
-
-function updatePhaseProgress() {
-  // 1. Phase 1 (Inicio)
-  const phase1DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Preparación')
-  const p1DbCompleted = phase1DbActs.every(a => completedActivityIds.value.includes(a.id))
-  const p1BaseCompleted = videoCompleted.value && gameSuccess.value === true
-  phaseProgress.value.inicio = (p1BaseCompleted && p1DbCompleted) ? 100 : 0
-
-  // 2. Phase 2 (Estudio)
-  const phase2DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Absorción')
-  const p2DbCompleted = phase2DbActs.every(a => completedActivityIds.value.includes(a.id))
-  const p2BaseCompleted = vocabList.value.every(v => v.played)
-  phaseProgress.value.estudio = (p2BaseCompleted && p2DbCompleted) ? 100 : 0
-
-  // 3. Phase 3 (Práctica)
-  const phase3DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Práctica')
-  const p3DbCompleted = phase3DbActs.every(a => completedActivityIds.value.includes(a.id))
-  const p3BaseCompleted = profileFormSuccess.value === true && spellingAllCorrect.value === true && voiceRecorded.value
-  phaseProgress.value.practica = (p3BaseCompleted && p3DbCompleted) ? 100 : 0
-
-  // 4. Phase 4 (Evaluación)
-  const phase4DbActs = dbActivities.value.filter(a => a.course === courseTitle.value && a.phase === 'Cierre')
-  const p4DbCompleted = phase4DbActs.every(a => completedActivityIds.value.includes(a.id))
-  const p4BaseCompleted = examPassed.value
-  phaseProgress.value.evaluacion = (p4BaseCompleted && p4DbCompleted) ? 100 : 0
-  
-  saveProgress()
 }
 
 // -----------------------------------------------------------------
-// Phase 1: Welcome Video & Warm-up Game State (Greetings / Sun-Moon match)
+// Phase 1 State (Warm-up Match Game)
 // -----------------------------------------------------------------
 const videoPlaying = ref(false)
 const videoCompleted = ref(false)
 const videoProgress = ref(0)
 let videoTimer = null
 
-const leftItems = ['Sun', 'Afternoon', 'Moon']
-const rightItems = ['Good morning', 'Good afternoon', 'Good evening']
+// M1 warm-up items
+const m1LeftItems = ['Sun', 'Afternoon', 'Moon']
+const m1RightItems = ['Good morning', 'Good afternoon', 'Good evening']
+
+// M2 warm-up items (Hospital Shifts & Handover greetings)
+const m2LeftItems = ['Morning Shift (07:00 AM)', 'Afternoon Shift (03:00 PM)', 'Night Shift (11:00 PM)']
+const m2RightItems = ['Good morning, Nurse', 'Good afternoon, Team', 'Good evening, Shift']
+
+const activeLeftItems = computed(() => isModule2.value ? m2LeftItems : m1LeftItems)
+const activeRightItems = computed(() => isModule2.value ? m2RightItems : m1RightItems)
+
 const selectedLeft = ref(null)
 const selectedRight = ref(null)
-const matchedPairs = ref([]) // matched left & right items
+const matchedPairs = ref([])
 const gameSuccess = ref(null)
 const isGameCompleted = computed(() => phaseProgress.value.inicio === 100)
 
@@ -1680,11 +1436,16 @@ function selectRightItem(item) {
 
 function checkWarmupMatch() {
   if (selectedLeft.value && selectedRight.value) {
-    const correctPairs = {
+    const correctPairs = isModule2.value ? {
+      'Morning Shift (07:00 AM)': 'Good morning, Nurse',
+      'Afternoon Shift (03:00 PM)': 'Good afternoon, Team',
+      'Night Shift (11:00 PM)': 'Good evening, Shift'
+    } : {
       'Sun': 'Good morning',
       'Afternoon': 'Good afternoon',
       'Moon': 'Good evening'
     }
+
     if (correctPairs[selectedLeft.value] === selectedRight.value) {
       matchedPairs.value.push(selectedLeft.value, selectedRight.value)
     }
@@ -1708,31 +1469,22 @@ function resetWarmupGame() {
   saveProgress()
 }
 
-function validateWarmupGame() {
-  if (matchedPairs.value.length === 6) {
-    gameSuccess.value = true
-    phaseProgress.value.inicio = 100
-  } else {
-    gameSuccess.value = false
-  }
-}
-
 function checkPhase1Completion() {
   if (videoCompleted.value && gameSuccess.value === true) {
     phaseProgress.value.inicio = 100
   }
 }
 
-// Watch game success & video complete
 watch([videoCompleted, gameSuccess], () => {
   checkPhase1Completion()
 })
 
 // -----------------------------------------------------------------
-// Phase 2: Highlighted Grammar, Audio Vocabulary, Dialogue (Sarah & John)
+// Phase 2 State: Grammar Pill, Vocabulary Flashcards, Storybook
 // -----------------------------------------------------------------
 const activeGrammarFilters = ref(['subject', 'verb', 'complement'])
-// Grammar Pill — Basic Sentence Structure (RAP 1)
+
+// Module 1 Grammar Sentence
 const grammarSentence = [
   { text: 'I ', type: 'subject' },
   { text: 'am ', type: 'verb' },
@@ -1754,65 +1506,120 @@ const grammarLegend = [
   { id: 'complement', label: 'Complemento (Complement)', bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', dotBg: 'bg-amber-500' }
 ]
 
-// Vocabulary Laboratory — RAP 1: Getting to Know Other People
-const vocabList = ref([
-  // Greetings & Farewells
-  { id: 'v1', word: 'Hello', ipa: '/həˈloʊ/', translation: 'Hola (Saludo general)', played: false, speed: 1.0 },
-  { id: 'v2', word: 'Hi', ipa: '/haɪ/', translation: 'Hola (Saludo informal)', played: false, speed: 1.0 },
-  { id: 'v3', word: 'Good morning', ipa: '/ɡʊd ˈmɔːr.nɪŋ/', translation: 'Buenos días (hasta mediodía)', played: false, speed: 1.0 },
-  { id: 'v4', word: 'Good afternoon', ipa: '/ɡʊd ˌæf.tɚˈnuːn/', translation: 'Buenas tardes (12pm–6pm)', played: false, speed: 1.0 },
-  { id: 'v5', word: 'Good evening', ipa: '/ɡʊd ˈiːv.nɪŋ/', translation: 'Buenas noches (al llegar)', played: false, speed: 1.0 },
-  { id: 'v6', word: 'Goodbye', ipa: '/ɡʊdˈbaɪ/', translation: 'Adiós (despedida formal)', played: false, speed: 1.0 },
-  { id: 'v7', word: 'See you later', ipa: '/siː juː ˈleɪ.t̬ɚ/', translation: 'Hasta luego (despedida informal)', played: false, speed: 1.0 },
-  // Personal Information
-  { id: 'v8', word: 'Name', ipa: '/neɪm/', translation: 'Nombre — What is your name?', played: false, speed: 1.0 },
-  { id: 'v9', word: 'Last name', ipa: '/læst neɪm/', translation: 'Apellido — What is your last name?', played: false, speed: 1.0 },
-  { id: 'v10', word: 'Age', ipa: '/eɪdʒ/', translation: 'Edad — How old are you?', played: false, speed: 1.0 },
-  { id: 'v11', word: 'Nationality', ipa: '/ˌnæʃ.ənˈæl.ə.t̬i/', translation: 'Nacionalidad — What is your nationality?', played: false, speed: 1.0 },
-  { id: 'v12', word: 'Phone number', ipa: '/foʊn ˈnʌm.bɚ/', translation: 'Número de teléfono — What is your phone number?', played: false, speed: 1.0 },
-  { id: 'v13', word: 'Spelling', ipa: '/ˈspel.ɪŋ/', translation: 'Deletreo — How do you spell your name?', played: false, speed: 1.0 },
-  { id: 'v14', word: 'Nice to meet you', ipa: '/naɪs tuː miːt juː/', translation: 'Mucho gusto / Encantado de conocerte', played: false, speed: 1.0 },
-])
-
-const playingVocabId = ref(null)
-const vocabAudioProgress = ref(0)
-let vocabAudioInterval = null
-
-// Storybook — Greetings and Presentations (RAP 1)
-const dialogue = [
-  { role: 'nurse', english: 'Good morning. My name is Sarah.', spanish: 'Buenos días. Mi nombre es Sarah.' },
-  { role: 'patient', english: 'Good morning, Sarah. I\'m David.', spanish: 'Buenos días, Sarah. Soy David.' },
-  { role: 'nurse', english: 'Nice to meet you, David.', spanish: 'Mucho gusto, David.' },
-  { role: 'patient', english: 'Nice to meet you too.', spanish: 'Igualmente.' },
-  { role: 'nurse', english: 'What\'s your last name?', spanish: '¿Cuál es su apellido?' },
-  { role: 'patient', english: 'My last name is Smith. S-M-I-T-H.', spanish: 'Mi apellido es Smith. S-M-I-T-H.' },
-  { role: 'nurse', english: 'How old are you?', spanish: '¿Cuántos años tiene?' },
-  { role: 'patient', english: 'I\'m 25 years old.', spanish: 'Tengo 25 años.' },
-  { role: 'nurse', english: 'Where are you from?', spanish: '¿De dónde es usted?' },
-  { role: 'patient', english: 'I\'m from Colombia.', spanish: 'Soy de Colombia.' },
-  { role: 'nurse', english: 'What is your phone number?', spanish: '¿Cuál es su número de teléfono?' },
-  { role: 'patient', english: 'My phone number is 312 456 7890.', spanish: 'Mi número de teléfono es 312 456 7890.' },
+// Module 2 Grammar Examples (Mr. Thomas Case)
+const m2PastExamples = [
+  { subject: 'He', verb: 'fell down', complement: 'at the hotel.', spanish: 'Él se cayó en el hotel.', full: 'He fell down at the hotel.' },
+  { subject: 'He', verb: 'had', complement: 'an accident yesterday.', spanish: 'Él tuvo un accidente ayer.', full: 'He had an accident yesterday.' },
+  { subject: 'He', verb: 'arrived', complement: 'at the emergency room at night.', spanish: 'Él llegó a urgencias en la noche.', full: 'He arrived at the emergency room at night.' },
+  { subject: 'The doctor', verb: 'examined', complement: 'his right arm.', spanish: 'El doctor examinó su brazo derecho.', full: 'The doctor examined his right arm.' },
+  { subject: 'He', verb: 'felt', complement: 'severe pain in his shoulder.', spanish: 'Él sintió dolor severo en su hombro.', full: 'He felt severe pain in his shoulder.' },
 ]
 
+const m2PresentExamples = [
+  { subject: 'He', verb: 'is', adjective: 'pale and weak.', spanish: 'Él está pálido y débil.', full: 'He is pale and weak.' },
+  { subject: 'The room', verb: 'is', adjective: 'cold and quiet.', spanish: 'La habitación está fría y silenciosa.', full: 'The room is cold and quiet.' },
+  { subject: 'His right arm', verb: 'is', adjective: 'swollen and painful.', spanish: 'Su brazo derecho está hinchado y doloroso.', full: 'His right arm is swollen and painful.' },
+  { subject: 'He', verb: 'is', adjective: 'stable today.', spanish: 'Él está estable hoy.', full: 'He is stable today.' },
+  { subject: 'He', verb: 'feels', adjective: 'dizzy when walking.', spanish: 'Se siente mareado al caminar.', full: 'He feels dizzy when walking.' },
+]
+
+// Module 1 Vocabulary
+const m1VocabList = ref([
+  { id: 'v1', word: 'Hello', ipa: '/həˈloʊ/', translation: 'Hola (Saludo general)', category: 'Saludo', emoji: '👋', played: false },
+  { id: 'v2', word: 'Good morning', ipa: '/ɡʊd ˈmɔːr.nɪŋ/', translation: 'Buenos días (hasta 12pm)', category: 'Saludo', emoji: '🌅', played: false },
+  { id: 'v3', word: 'Good afternoon', ipa: '/ɡʊd ˌæf.tɚˈnuːn/', translation: 'Buenas tardes (12pm–6pm)', category: 'Saludo', emoji: '☀️', played: false },
+  { id: 'v4', word: 'Good evening', ipa: '/ɡʊd ˈiːv.nɪŋ/', translation: 'Buenas noches (al llegar)', category: 'Saludo', emoji: '🌆', played: false },
+  { id: 'v5', word: 'Goodbye', ipa: '/ɡʊdˈbaɪ/', translation: 'Adiós (despedida formal)', category: 'Despedida', emoji: '🚶', played: false },
+  { id: 'v6', word: 'See you later', ipa: '/siː juː ˈleɪ.t̬ɚ/', translation: 'Hasta luego', category: 'Despedida', emoji: '👋', played: false },
+  { id: 'v7', word: 'Name', ipa: '/neɪm/', translation: 'Nombre — What is your name?', category: 'Personal', emoji: '🪪', played: false },
+  { id: 'v8', word: 'Last name', ipa: '/læst neɪm/', translation: 'Apellido — What is your last name?', category: 'Personal', emoji: '📋', played: false },
+  { id: 'v9', word: 'Age', ipa: '/eɪdʒ/', translation: 'Edad — How old are you?', category: 'Personal', emoji: '🎂', played: false },
+  { id: 'v10', word: 'Nationality', ipa: '/ˌnæʃ.ənˈæl.ə.t̬i/', translation: 'Nacionalidad', category: 'Personal', emoji: '🌎', played: false },
+  { id: 'v11', word: 'Phone number', ipa: '/foʊn ˈnʌm.bɚ/', translation: 'Número de teléfono', category: 'Personal', emoji: '📞', played: false },
+  { id: 'v12', word: 'Spelling', ipa: '/ˈspel.ɪŋ/', translation: 'Deletreo de nombres', category: 'Habilidad', emoji: '🔤', played: false },
+])
+
+// Module 2 Vocabulary (Body parts & Hospital Environment)
+const m2VocabList = ref([
+  { id: 'm2_v1', word: 'Head', ipa: '/hɛd/', translation: 'Cabeza — "He has a minor head injury"', category: 'Anatomía', emoji: '🧠', played: false },
+  { id: 'm2_v2', word: 'Arm', ipa: '/ɑːrm/', translation: 'Brazo — "His right arm is injured"', category: 'Anatomía', emoji: '💪', played: false },
+  { id: 'm2_v3', word: 'Leg', ipa: '/lɛɡ/', translation: 'Pierna — "He can move his left leg"', category: 'Anatomía', emoji: '🦵', played: false },
+  { id: 'm2_v4', word: 'Chest', ipa: '/tʃɛst/', translation: 'Pecho — "Chest sounds are normal"', category: 'Anatomía', emoji: '🫁', played: false },
+  { id: 'm2_v5', word: 'Waiting room', ipa: '/ˈweɪtɪŋ ruːm/', translation: 'Sala de espera hospitalaria', category: 'Entorno', emoji: '🪑', played: false },
+  { id: 'm2_v6', word: 'Stretcher', ipa: '/ˈstrɛtʃər/', translation: 'Camilla de traslado', category: 'Entorno', emoji: '🚑', played: false },
+  { id: 'm2_v7', word: 'Hospital room', ipa: '/ˈhɒspɪtl ruːm/', translation: 'Habitación de hospital (Room 204)', category: 'Entorno', emoji: '🏥', played: false },
+  { id: 'm2_v8', word: 'Bandage', ipa: '/ˈbændɪdʒ/', translation: 'Vendaje elástico de protección', category: 'Tratamiento', emoji: '🩹', played: false },
+  { id: 'm2_v9', word: 'Fracture', ipa: '/ˈfræktʃər/', translation: 'Fractura ósea diagnosticada', category: 'Diagnóstico', emoji: '🦴', played: false },
+  { id: 'm2_v10', word: 'Swollen', ipa: '/ˈswoʊlən/', translation: 'Hinchado / Inflamado', category: 'Signo clínico', emoji: '🔴', played: false },
+  { id: 'm2_v11', word: 'Pale', ipa: '/peɪl/', translation: 'Pálido — aspecto del paciente', category: 'Signo clínico', emoji: '⚪', played: false },
+  { id: 'm2_v12', word: 'Dizzy', ipa: '/ˈdɪzi/', translation: 'Mareado al levantarse', category: 'Síntoma', emoji: '💫', played: false },
+])
+
+const activeVocabList = computed(() => isModule2.value ? m2VocabList.value : m1VocabList.value)
+const playingVocabId = ref(null)
+
+// Dialogues
+const m1Dialogue = [
+  { role: 'nurse', speaker: 'Nurse Sarah', english: 'Good morning. My name is Sarah.', spanish: 'Buenos días. Mi nombre es Sarah.' },
+  { role: 'patient', speaker: 'Nurse David', english: 'Good morning, Sarah. I\'m David.', spanish: 'Buenos días, Sarah. Soy David.' },
+  { role: 'nurse', speaker: 'Nurse Sarah', english: 'Nice to meet you, David.', spanish: 'Mucho gusto, David.' },
+  { role: 'patient', speaker: 'Nurse David', english: 'Nice to meet you too.', spanish: 'Igualmente.' },
+  { role: 'nurse', speaker: 'Nurse Sarah', english: 'What\'s your last name?', spanish: '¿Cuál es su apellido?' },
+  { role: 'patient', speaker: 'Nurse David', english: 'My last name is Smith. S-M-I-T-H.', spanish: 'Mi apellido es Smith. S-M-I-T-H.' },
+  { role: 'nurse', speaker: 'Nurse Sarah', english: 'How old are you?', spanish: '¿Cuántos años tiene?' },
+  { role: 'patient', speaker: 'Nurse David', english: 'I\'m 25 years old.', spanish: 'Tengo 25 años.' },
+  { role: 'nurse', speaker: 'Nurse Sarah', english: 'What is your phone number?', spanish: '¿Cuál es su número de teléfono?' },
+  { role: 'patient', speaker: 'Nurse David', english: 'My phone number is 312 456 7890.', spanish: 'Mi número de teléfono es 312 456 7890.' },
+]
+
+const m2Dialogue = [
+  { role: 'nurseA', speaker: 'Nurse Andrea (Nurse A)', english: 'Good morning, Nurse Carlos. How is Mr. Thomas in room 204?', spanish: 'Buenos días, enfermero Carlos. ¿Cómo está el Sr. Thomas en la habitación 204?' },
+  { role: 'nurseB', speaker: 'Nurse Carlos (Nurse B)', english: 'Good morning, Andrea. He is a tall, 68-year-old man. He feels tired today.', spanish: 'Buenos días, Andrea. Es un hombre alto de 68 años. Se siente cansado hoy.' },
+  { role: 'nurseA', speaker: 'Nurse Andrea (Nurse A)', english: 'What happened to him yesterday?', spanish: '¿Qué le ocurrió ayer?' },
+  { role: 'nurseB', speaker: 'Nurse Carlos (Nurse B)', english: 'Yesterday, he fell at the hotel and injured his right arm. He arrived at emergency at 9 PM.', spanish: 'Ayer se cayó en el hotel y se lastimó el brazo derecho. Llegó a urgencias a las 9 PM.' },
+  { role: 'nurseA', speaker: 'Nurse Andrea (Nurse A)', english: 'Did the doctor confirm any fracture?', spanish: '¿El doctor confirmó alguna fractura?' },
+  { role: 'nurseB', speaker: 'Nurse Carlos (Nurse B)', english: 'Yes, a minor fracture. His arm is swollen, but he has a bandage and is resting in bed now.', spanish: 'Sí, una fractura menor. Su brazo está hinchado, pero tiene un vendaje y está descansando en cama.' },
+  { role: 'nurseA', speaker: 'Nurse Andrea (Nurse A)', english: 'Is room 204 quiet for his recovery?', spanish: '¿La habitación 204 está tranquila para su recuperación?' },
+  { role: 'nurseB', speaker: 'Nurse Carlos (Nurse B)', english: 'Yes, the room is quiet and clean. He received painkillers and his vitals are stable.', spanish: 'Sí, la habitación está limpia y tranquila. Recibió analgésicos y sus signos vitales están estables.' },
+]
+
+const activeDialogue = computed(() => isModule2.value ? m2Dialogue : m1Dialogue)
 const isStudyCompleted = computed(() => phaseProgress.value.estudio === 100)
 
+function playVocabAudio(vocabItem) {
+  playingVocabId.value = vocabItem.id
+  speakEnglish(vocabItem.word)
+  setTimeout(() => {
+    playingVocabId.value = null
+    vocabItem.played = true
+    checkPhase2Completion()
+  }, 1000)
+}
+
+function checkPhase2Completion() {
+  const allPlayed = activeVocabList.value.every(v => v.played)
+  if (allPlayed) {
+    phaseProgress.value.estudio = 100
+    saveProgress()
+  }
+}
+
+function validateStudyPhase() {
+  phaseProgress.value.estudio = 100
+  saveProgress()
+  goToPhase('practica')
+}
+
 // -----------------------------------------------------------------
-// Phase 3: Profile Form & Spelling Tasks (Guided Practice 1 & 2)
+// Phase 3 State: Practice & Voice Recorder
 // -----------------------------------------------------------------
-// Guided Practice 1 — Complete the Profile (RAP 1: 6 fields)
-const profileForm = ref({
-  firstName: '',
-  lastName: '',
-  age: '',
-  nationality: '',
-  phone: '',
-  email: ''
-})
+
+// Module 1 Practice 1: Profile Form
+const profileForm = ref({ firstName: '', lastName: '', age: '', nationality: '', phone: '', email: '' })
 const profileFormSuccess = ref(null)
 
 function validateProfileForm() {
   const f = profileForm.value
-  // RAP 1 validation: Subject + Verb + Complement structure required
   const fnOk = f.firstName.trim().toLowerCase().startsWith('i am') || f.firstName.trim().toLowerCase().startsWith('my name is')
   const lnOk = f.lastName.trim().toLowerCase().includes('is') || f.lastName.trim().toLowerCase().startsWith('my last name is')
   const ageOk = f.age.trim().toLowerCase().startsWith('i am') && f.age.trim().toLowerCase().includes('old')
@@ -1820,37 +1627,50 @@ function validateProfileForm() {
   const phoneOk = f.phone.trim().toLowerCase().includes('my phone number is') || f.phone.trim().replace(/\s/g,'').match(/^\d{7,}$/)
   const emailOk = f.email.trim().includes('@') && f.email.trim().length > 5
 
-  if (fnOk && lnOk && ageOk && natOk && phoneOk && emailOk) {
-    profileFormSuccess.value = true
-  } else {
-    profileFormSuccess.value = false
-  }
+  profileFormSuccess.value = fnOk && lnOk && ageOk && natOk && phoneOk && emailOk
   checkPhase3Completion()
 }
 
-// Guided Practice 2 — Listening & Spelling (RAP 1)
+// Module 2 Practice 1: Listening & Nursing Notes Form
+const m2Notes = ref({ fracture: '', yesterday: '', waitingRoom: '', bandage: '', swollen: '' })
+const m2NotesSuccess = ref(null)
+const drMillerPlaying = ref(false)
+
+function playDrMillerReport() {
+  drMillerPlaying.value = true
+  const script = "Clinical report for Mr. Thomas in room 204. The patient fell yesterday at the hotel. In the waiting room, an X-ray confirmed an arm fracture. His right arm was swollen, so we applied a sterile bandage. Today he is resting in bed and vitals are stable."
+  speakEnglish(script, 0.8)
+  setTimeout(() => {
+    drMillerPlaying.value = false
+  }, 9000)
+}
+
+function validateM2Notes() {
+  const n = m2Notes.value
+  const fOk = n.fracture.trim().toLowerCase().includes('fracture')
+  const yOk = n.yesterday.trim().toLowerCase().includes('yesterday')
+  const wOk = n.waitingRoom.trim().toLowerCase().includes('waiting') || n.waitingRoom.trim().toLowerCase().includes('room')
+  const bOk = n.bandage.trim().toLowerCase().includes('bandage')
+  const sOk = n.swollen.trim().toLowerCase().includes('swollen')
+
+  m2NotesSuccess.value = fOk && yOk && wOk && bOk && sOk
+  checkPhase3Completion()
+}
+
+// Module 1 Practice 2: Spelling Tasks
 const spellingTasks = [
   { text: 'john', audioText: 'J O H N', hint: 'Nombre: J-O-H-N' },
   { text: 'smith', audioText: 'S M I T H', hint: 'Apellido: S-M-I-T-H' },
   { text: 'brown', audioText: 'B R O W N', hint: 'Apellido: B-R-O-W-N' },
-  { text: 'john.smith@gmail.com', audioText: 'J O H N dot S M I T H at G M A I L dot C O M', hint: 'Correo electrónico deletreado' },
-  { text: '312-456-7890', audioText: '3 1 2 4 5 6 7 8 9 0', hint: 'Número de teléfono dígito a dígito' },
+  { text: 'john.smith@gmail.com', audioText: 'J O H N dot S M I T H at G M A I L dot C O M', hint: 'Correo electrónico' },
+  { text: '312-456-7890', audioText: '3 1 2 4 5 6 7 8 9 0', hint: 'Número telefónico' },
 ]
-
 const spellingAnswers = ref(['', '', '', '', ''])
 const spellingResults = ref([null, null, null, null, null])
 const spellingAllCorrect = ref(false)
 
 function playSpellingAudio(text) {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'en-US'
-    utterance.rate = 0.65 // slower rate for clarity
-    window.speechSynthesis.speak(utterance)
-  } else {
-    alert('Spelled audio: ' + text)
-  }
+  speakEnglish(text, 0.65)
 }
 
 function validateSpellingTasks() {
@@ -1869,64 +1689,156 @@ function validateSpellingTasks() {
   checkPhase3Completion()
 }
 
+// Module 2 Practice 2: Room 204 Scene Dropdowns
+const m2RoomScene = ref({
+  s1_sub: '', s1_v: '', s1_comp: '',
+  s2_sub: '', s2_v: '', s2_comp: '',
+  s3_sub: '', s3_v: '', s3_comp: '',
+  s4_sub: '', s4_v: '', s4_comp: ''
+})
+const m2RoomSceneSuccess = ref(null)
+
+function validateM2RoomScene() {
+  const r = m2RoomScene.value
+  const s1Ok = r.s1_sub === 'The patient' && r.s1_v === 'is' && r.s1_comp === 'in the bed'
+  const s2Ok = r.s2_sub === 'He' && r.s2_v === 'has' && r.s2_comp === 'a bandage on his arm'
+  const s3Ok = r.s3_sub === 'The room' && r.s3_v === 'is' && r.s3_comp === 'quiet and clean'
+  const s4Ok = r.s4_sub === 'His right arm' && r.s4_v === 'is' && r.s4_comp === 'swollen and painful'
+
+  m2RoomSceneSuccess.value = s1Ok && s2Ok && s3Ok && s4Ok
+  checkPhase3Completion()
+}
+
+// Voice Recorder State
 const isRecording = ref(false)
 const voiceRecorded = ref(false)
 const recordingSeconds = ref(0)
 const voicePreviewPlaying = ref(false)
 let recorderInterval = null
 
+async function toggleRecording() {
+  if (isRecording.value) {
+    isRecording.value = false
+    if (recorderInterval) clearInterval(recorderInterval)
+    voiceRecorded.value = true
+    checkPhase3Completion()
+  } else {
+    isRecording.value = true
+    voiceRecorded.value = false
+    recordingSeconds.value = 0
+    if (recorderInterval) clearInterval(recorderInterval)
+    recorderInterval = setInterval(() => {
+      recordingSeconds.value++
+      if (recordingSeconds.value >= 60) {
+        clearInterval(recorderInterval)
+        isRecording.value = false
+        voiceRecorded.value = true
+        checkPhase3Completion()
+      }
+    }, 1000)
+  }
+}
+
+function formatRecordTime(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2, '0')
+  const s = (sec % 60).toString().padStart(2, '0')
+  return `${m}:${s}`
+}
+
+function playVoicePreview() {
+  voicePreviewPlaying.value = true
+  setTimeout(() => {
+    voicePreviewPlaying.value = false
+  }, 2000)
+}
+
 const isPracticeCompleted = computed(() => phaseProgress.value.practica === 100)
 
+function checkPhase3Completion() {
+  if (isModule2.value) {
+    if (m2NotesSuccess.value === true && m2RoomSceneSuccess.value === true && voiceRecorded.value) {
+      phaseProgress.value.practica = 100
+    } else {
+      phaseProgress.value.practica = 0
+    }
+  } else {
+    if (profileFormSuccess.value === true && spellingAllCorrect.value === true && voiceRecorded.value) {
+      phaseProgress.value.practica = 100
+    } else {
+      phaseProgress.value.practica = 0
+    }
+  }
+  updatePhaseProgress()
+}
+
+function validatePracticePhase() {
+  phaseProgress.value.practica = 100
+  saveProgress()
+  goToPhase('evaluacion')
+}
+
 // -----------------------------------------------------------------
-// Phase 4: Exam & Badges (Knowledge Check)
+// Phase 4 State: Exam Questions & Badges
 // -----------------------------------------------------------------
 const examAnswers = ref({})
 const examPassed = ref(false)
 const showBadgeAward = ref(false)
 const examScoreMessage = ref('')
 
-// Test Your Knowledge — RAP 1: Getting to Know Other People (6 questions)
-const examQuestions = [
-  {
-    id: 'q1',
-    question: 'Which greeting is correct for the morning?',
-    options: ['Good night', 'Good morning', 'Goodbye', 'See you'],
-    correct: 'Good morning',
-  },
-  {
-    id: 'q2',
-    question: 'Identify the VERB in: "I am a nurse."',
-    options: ['I', 'am', 'a', 'nurse'],
-    correct: 'am',
-  },
-  {
-    id: 'q3',
-    question: 'How do you ask someone for their name?',
-    options: ['Where are you from?', 'How old are you?', 'What is your name?', 'What is your phone number?'],
-    correct: 'What is your name?',
-  },
-  {
-    id: 'q4',
-    question: 'How do you spell the name JOHN?',
-    options: ['G-O-H-N', 'J-O-H-N', 'J-O-N', 'J-H-O-N'],
-    correct: 'J-O-H-N',
-  },
-  {
-    id: 'q5',
-    question: 'Which sentence is grammatically correct? (Subject + Verb + Complement)',
-    options: ['Am Colombian I.', 'Colombian am I.', 'I am Colombian.', 'I Colombian am.'],
-    correct: 'I am Colombian.',
-  },
-  {
-    id: 'q6',
-    question: 'What is the correct farewell used when leaving for the day?',
-    options: ['Good morning', 'Nice to meet you', 'Goodbye', 'Good afternoon'],
-    correct: 'Goodbye',
-  },
+// Module 1 Exam Questions
+const m1ExamQuestions = [
+  { id: 'q1', question: 'Which greeting is correct for the morning?', options: ['Good night', 'Good morning', 'Goodbye', 'See you'], correct: 'Good morning' },
+  { id: 'q2', question: 'Identify the VERB in: "I am a nurse."', options: ['I', 'am', 'a', 'nurse'], correct: 'am' },
+  { id: 'q3', question: 'How do you ask someone for their name?', options: ['Where are you from?', 'How old are you?', 'What is your name?', 'What is your phone number?'], correct: 'What is your name?' },
+  { id: 'q4', question: 'How do you spell the name JOHN?', options: ['G-O-H-N', 'J-O-H-N', 'J-O-N', 'J-H-O-N'], correct: 'J-O-H-N' },
+  { id: 'q5', question: 'Which sentence is grammatically correct? (Subject + Verb + Complement)', options: ['Am Colombian I.', 'Colombian am I.', 'I am Colombian.', 'I Colombian am.'], correct: 'I am Colombian.' },
+  { id: 'q6', question: 'What is the correct farewell used when leaving for the day?', options: ['Good morning', 'Nice to meet you', 'Goodbye', 'Good afternoon'], correct: 'Goodbye' },
 ]
 
+// Module 2 Exam Questions (Mr. Thomas Case, Anatomy & Past Simple)
+const m2ExamQuestions = [
+  { id: 'm2_q1', question: 'What happened to Mr. Thomas yesterday?', options: ['He had knee surgery', 'He fell at the hotel and injured his arm', 'He caught a cold at the hospital', 'He visited a friend'], correct: 'He fell at the hotel and injured his arm' },
+  { id: 'm2_q2', question: 'Identify the PAST SIMPLE verb in: "The patient arrived at the emergency room."', options: ['patient', 'arrived', 'emergency', 'room'], correct: 'arrived' },
+  { id: 'm2_q3', question: 'Which descriptive adjective describes the state of Mr. Thomas\'s arm?', options: ['Tall', 'Swollen', 'Cold', 'Dizzy'], correct: 'Swollen' },
+  { id: 'm2_q4', question: 'Complete the sentence: "He _____ a bandage on his right arm today."', options: ['has', 'fell', 'was', 'yesterday'], correct: 'has' },
+  { id: 'm2_q5', question: 'Where is Mr. Thomas located according to the handover report?', options: ['In the waiting room', 'In room 204', 'In the pharmacy', 'At the hotel'], correct: 'In room 204' },
+  { id: 'm2_q6', question: 'Which sentence correctly describes a past clinical event?', options: ['The room is quiet.', 'He is pale today.', 'He fell down and had an accident.', 'He has a clean bandage.'], correct: 'He fell down and had an accident.' },
+]
+
+const activeExamQuestions = computed(() => isModule2.value ? m2ExamQuestions : m1ExamQuestions)
+
+function submitExam() {
+  let correctCount = 0
+  activeExamQuestions.value.forEach(q => {
+    if (examAnswers.value[q.id] === q.correct) {
+      correctCount++
+    }
+  })
+  
+  const pct = (correctCount / activeExamQuestions.value.length) * 100
+  
+  if (pct >= 75) {
+    examPassed.value = true
+    showBadgeAward.value = true
+    phaseProgress.value.evaluacion = 100
+    examScoreMessage.value = ''
+    saveProgress()
+  } else {
+    examScoreMessage.value = `Calificación: ${Math.round(pct)}%. Necesitas al menos 75% (5 de 6 preguntas correctas) para aprobar. Intenta de nuevo.`
+  }
+}
+
+function resetExamForReview() {
+  examPassed.value = false
+  showBadgeAward.value = false
+  examAnswers.value = {}
+  examScoreMessage.value = ''
+  phaseProgress.value.evaluacion = 0
+  saveProgress()
+}
+
 // -----------------------------------------------------------------
-// Sequential Access Restriction checks
+// Phase Navigation & Locks
 // -----------------------------------------------------------------
 function isPhaseLocked(phaseId) {
   if (phaseId === 'inicio') return false
@@ -1942,43 +1854,14 @@ function goToPhase(phaseId) {
   }
 }
 
-// -----------------------------------------------------------------
-// Pre-Check Simulation Helpers
-// -----------------------------------------------------------------
 function toggleSimulatedMediaFailure() {
   simulatedMediaFailure.value = !simulatedMediaFailure.value
-  if (simulatedMediaFailure.value) {
-    mediaWarningMessage.value = 'Fallo al inicializar codec de audio/video. Se simula una caída de archivos multimedia, pero puedes continuar con la parte de texto.'
-  } else {
-    mediaWarningMessage.value = null
-  }
+  mediaWarningMessage.value = simulatedMediaFailure.value 
+    ? 'Fallo al inicializar codec de audio/video. El módulo continuará en modo texto.' 
+    : null
 }
 
-async function verifyMediaResource(resourceName) {
-  // Pre-check simulation: wait 300ms
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (simulatedMediaFailure.value) {
-        mediaWarningMessage.value = `Advertencia: No se pudo verificar el archivo "${resourceName}". Comprueba tu conexión a Internet. El módulo continuará en modo texto.`
-        resolve(false)
-      } else {
-        resolve(true)
-      }
-    }, 300)
-  })
-}
-
-// -----------------------------------------------------------------
-// Phase 1 Actions
-// -----------------------------------------------------------------
 async function playVideo() {
-  const ready = await verifyMediaResource('Basics_Intro_Video.mp4')
-  if (!ready) {
-    // Media fails, but we allow user to skip or validate directly as not to block
-    videoCompleted.value = true
-    return
-  }
-  
   videoPlaying.value = true
   videoProgress.value = 0
   videoTimer = setInterval(() => {
@@ -2022,154 +1905,118 @@ function toggleGrammarLegend(id) {
   }
 }
 
-async function playVocabAudio(vocabItem) {
-  if (playingVocabId.value === vocabItem.id) {
-    // Pause
-    playingVocabId.value = null
-    if (vocabAudioInterval) clearInterval(vocabAudioInterval)
-    return
-  }
+// -----------------------------------------------------------------
+// Dynamic DB Complementary Activities
+// -----------------------------------------------------------------
+const activeDbActivity = ref(null)
+const activeDbSelectedAnswer = ref(null)
+const activeDbTypedPhrase = ref('')
+const activeDbFeedbackSuccess = ref(null)
+const activeDbSelectedTerm = ref('')
+const activeDbSelectedMeaning = ref('')
+const activeDbMatchedPairs = ref([])
+const activeDbRecording = ref(false)
+const activeDbVoiceRecorded = ref(false)
 
-  // Pre-check resource
-  const ready = await verifyMediaResource(`${vocabItem.word}_pronunciation.mp3`)
-  
-  playingVocabId.value = vocabItem.id
-  vocabAudioProgress.value = 0
-  
-  if (vocabAudioInterval) clearInterval(vocabAudioInterval)
-  
-  // Calculate speed interval multiplier
-  const intervalMs = Math.round(100 / (vocabItem.speed || 1.0))
+function selectActiveDbActivity(act) {
+  activeDbActivity.value = act
+  activeDbFeedbackSuccess.value = null
+  activeDbSelectedAnswer.value = null
+  activeDbTypedPhrase.value = ''
+  activeDbSelectedTerm.value = ''
+  activeDbSelectedMeaning.value = ''
+  activeDbMatchedPairs.value = []
+  activeDbRecording.value = false
+  activeDbVoiceRecorded.value = false
+}
 
-  vocabAudioInterval = setInterval(() => {
-    vocabAudioProgress.value += 10
-    if (vocabAudioProgress.value >= 100) {
-      clearInterval(vocabAudioInterval)
-      playingVocabId.value = null
-      vocabItem.played = true
-      checkPhase2Completion()
+function resetActiveDbDemo() {
+  activeDbFeedbackSuccess.value = null
+  activeDbSelectedAnswer.value = null
+  activeDbTypedPhrase.value = ''
+  activeDbSelectedTerm.value = ''
+  activeDbSelectedMeaning.value = ''
+  activeDbMatchedPairs.value = []
+  activeDbRecording.value = false
+  activeDbVoiceRecorded.value = false
+}
+
+function selectActiveDbTerm(term) {
+  if (activeDbMatchedPairs.value.includes(term)) return
+  activeDbSelectedTerm.value = term
+  checkActiveDbMatch()
+}
+
+function selectActiveDbMeaning(meaning) {
+  if (activeDbMatchedPairs.value.includes(meaning)) return
+  activeDbSelectedMeaning.value = meaning
+  checkActiveDbMatch()
+}
+
+function checkActiveDbMatch() {
+  if (activeDbSelectedTerm.value && activeDbSelectedMeaning.value) {
+    if (activeDbSelectedTerm.value === activeDbActivity.value.matchTerm && activeDbSelectedMeaning.value === activeDbActivity.value.matchMeaning) {
+      activeDbMatchedPairs.value.push(activeDbSelectedTerm.value, activeDbSelectedMeaning.value)
     }
-  }, intervalMs)
-}
-
-function checkPhase2Completion() {
-  const allPlayed = vocabList.value.every(v => v.played)
-  if (allPlayed) {
-    phaseProgress.value.estudio = 100
+    activeDbSelectedTerm.value = ''
+    activeDbSelectedMeaning.value = ''
   }
 }
 
-function validateStudyPhase() {
-  phaseProgress.value.estudio = 100
-  goToPhase('practica')
-}
-
-// -----------------------------------------------------------------
-// Phase 3 Actions
-// -----------------------------------------------------------------
-async function toggleRecording() {
-  if (isRecording.value) {
-    // Stop recording
-    isRecording.value = false
-    if (recorderInterval) clearInterval(recorderInterval)
-    voiceRecorded.value = true
-    checkPhase3Completion()
-  } else {
-    // Start recording
-    const ready = await verifyMediaResource('microphone_hardware_check')
-    
-    isRecording.value = true
-    voiceRecorded.value = false
-    recordingSeconds.value = 0
-    
-    if (recorderInterval) clearInterval(recorderInterval)
-    
-    recorderInterval = setInterval(() => {
-      recordingSeconds.value++
-      if (recordingSeconds.value >= 60) {
-        clearInterval(recorderInterval)
-        isRecording.value = false
-        voiceRecorded.value = true
-        checkPhase3Completion()
-      }
-    }, 1000)
+function playActiveDbListeningAudio() {
+  if (activeDbActivity.value?.listeningPhrase) {
+    speakEnglish(activeDbActivity.value.listeningPhrase)
   }
 }
 
-function formatRecordTime(sec) {
-  const m = Math.floor(sec / 60).toString().padStart(2, '0')
-  const s = (sec % 60).toString().padStart(2, '0')
-  return `${m}:${s}`
-}
-
-function playVoicePreview() {
-  voicePreviewPlaying.value = true
-  setTimeout(() => {
-    voicePreviewPlaying.value = false
-  }, 2000)
-}
-
-function checkPhase3Completion() {
-  const f = profileFormSuccess.value === true
-  const s = spellingAllCorrect.value === true
-  
-  if (f && s && voiceRecorded.value) {
-    phaseProgress.value.practica = 100
-  } else {
-    phaseProgress.value.practica = 0
+function simulateActiveDbMicRecording() {
+  activeDbRecording.value = !activeDbRecording.value
+  if (activeDbRecording.value) {
+    setTimeout(() => {
+      activeDbRecording.value = false
+      activeDbVoiceRecorded.value = true
+    }, 2000)
   }
-  updatePhaseProgress()
 }
 
-watch([profileFormSuccess, spellingAllCorrect, voiceRecorded], () => {
-  checkPhase3Completion()
-})
+function validateActiveDbSubmission() {
+  if (!activeDbActivity.value) return
+  const act = activeDbActivity.value
+  let success = false
 
-function validatePracticePhase() {
-  phaseProgress.value.practica = 100
-  goToPhase('evaluacion')
-}
+  if (act.template === 'quiz' || act.template === 'preguntas') {
+    if (activeDbSelectedAnswer.value === 'correct') success = true
+  } else if (act.template === 'match') {
+    if (activeDbMatchedPairs.value.includes(act.matchTerm)) success = true
+  } else if (act.template === 'listening') {
+    const phrase = (act.listeningPhrase || '').trim().toLowerCase()
+    const entered = activeDbTypedPhrase.value.trim().toLowerCase()
+    if (phrase && entered.includes(phrase)) success = true
+  } else if (act.template === 'pronunciation') {
+    if (activeDbVoiceRecorded.value) success = true
+  }
 
-// -----------------------------------------------------------------
-// Phase 4 Actions
-// -----------------------------------------------------------------
-function submitExam() {
-  let correctCount = 0
-  
-  examQuestions.forEach(q => {
-    if (examAnswers.value[q.id] === q.correct) {
-      correctCount++
+  if (success) {
+    activeDbFeedbackSuccess.value = true
+    if (!completedActivityIds.value.includes(act.id)) {
+      completedActivityIds.value.push(act.id)
     }
-  })
-  
-  const pct = (correctCount / examQuestions.length) * 100
-  
-  if (pct >= 75) {
-    examPassed.value = true
-    showBadgeAward.value = true
-    phaseProgress.value.evaluacion = 100
-    examScoreMessage.value = ''
-    saveProgress()
+    updatePhaseProgress()
   } else {
-    examScoreMessage.value = `Calificación: ${Math.round(pct)}%. Necesitas al menos 75% (5 de 6 preguntas correctas) para aprobar el RAP 1. Intenta de nuevo.`
+    activeDbFeedbackSuccess.value = false
   }
 }
 
-function resetExamForReview() {
-  examPassed.value = false
-  showBadgeAward.value = false
-  examAnswers.value = {}
-  examScoreMessage.value = ''
-  phaseProgress.value.evaluacion = 0
+function updatePhaseProgress() {
   saveProgress()
 }
 
 // -----------------------------------------------------------------
-// LocalStorage Auto-Saving Progress
+// LocalStorage Auto-Saving Progress (Specific to courseId)
 // -----------------------------------------------------------------
 const storageKey = computed(() => {
   const apprenticeId = auth.user?.id || 'guest'
-  return `nursing_academy_progress_${apprenticeId}_course_${courseId}`
+  return `nursing_academy_progress_${apprenticeId}_course_${courseId.value}`
 })
 
 function saveProgress() {
@@ -2179,12 +2026,16 @@ function saveProgress() {
     videoCompleted: videoCompleted.value,
     gameSuccess: gameSuccess.value,
     matchedPairs: matchedPairs.value,
-    vocabPlayed: vocabList.value.map(v => ({ id: v.id, played: v.played })),
+    vocabPlayed: activeVocabList.value.map(v => ({ id: v.id, played: v.played })),
     profileForm: profileForm.value,
     profileFormSuccess: profileFormSuccess.value,
     spellingAnswers: spellingAnswers.value,
     spellingResults: spellingResults.value,
     spellingAllCorrect: spellingAllCorrect.value,
+    m2Notes: m2Notes.value,
+    m2NotesSuccess: m2NotesSuccess.value,
+    m2RoomScene: m2RoomScene.value,
+    m2RoomSceneSuccess: m2RoomSceneSuccess.value,
     voiceRecorded: voiceRecorded.value,
     examPassed: examPassed.value,
     showBadgeAward: showBadgeAward.value,
@@ -2197,76 +2048,57 @@ function saveProgress() {
 function loadProgress() {
   try {
     const raw = localStorage.getItem(storageKey.value)
-    if (!raw) return
+    if (!raw) {
+      // Reset state for new course
+      phaseProgress.value = { inicio: 0, estudio: 0, practica: 0, evaluacion: 0 }
+      currentPhase.value = 'inicio'
+      videoCompleted.value = false
+      gameSuccess.value = null
+      matchedPairs.value = []
+      voiceRecorded.value = false
+      examPassed.value = false
+      showBadgeAward.value = false
+      examAnswers.value = {}
+      return
+    }
     const state = JSON.parse(raw)
-    
     if (state.currentPhase) currentPhase.value = state.currentPhase
     if (state.phaseProgress) phaseProgress.value = state.phaseProgress
-    if (state.videoCompleted) videoCompleted.value = state.videoCompleted
-    if (state.gameSuccess) gameSuccess.value = state.gameSuccess
+    if (state.videoCompleted !== undefined) videoCompleted.value = state.videoCompleted
+    if (state.gameSuccess !== undefined) gameSuccess.value = state.gameSuccess
     if (state.matchedPairs) matchedPairs.value = state.matchedPairs
-    
     if (state.vocabPlayed) {
       state.vocabPlayed.forEach(sp => {
-        const item = vocabList.value.find(v => v.id === sp.id)
+        const item = activeVocabList.value.find(v => v.id === sp.id)
         if (item) item.played = sp.played
       })
     }
-    
     if (state.profileForm) profileForm.value = state.profileForm
     if (state.profileFormSuccess !== undefined) profileFormSuccess.value = state.profileFormSuccess
     if (state.spellingAnswers) spellingAnswers.value = state.spellingAnswers
     if (state.spellingResults) spellingResults.value = state.spellingResults
     if (state.spellingAllCorrect !== undefined) spellingAllCorrect.value = state.spellingAllCorrect
-    if (state.voiceRecorded) voiceRecorded.value = state.voiceRecorded
-    if (state.examPassed) examPassed.value = state.examPassed
-    if (state.showBadgeAward) showBadgeAward.value = state.showBadgeAward
+    if (state.m2Notes) m2Notes.value = state.m2Notes
+    if (state.m2NotesSuccess !== undefined) m2NotesSuccess.value = state.m2NotesSuccess
+    if (state.m2RoomScene) m2RoomScene.value = state.m2RoomScene
+    if (state.m2RoomSceneSuccess !== undefined) m2RoomSceneSuccess.value = state.m2RoomSceneSuccess
+    if (state.voiceRecorded !== undefined) voiceRecorded.value = state.voiceRecorded
+    if (state.examPassed !== undefined) examPassed.value = state.examPassed
+    if (state.showBadgeAward !== undefined) showBadgeAward.value = state.showBadgeAward
     if (state.examAnswers) examAnswers.value = state.examAnswers
     if (state.completedActivityIds) completedActivityIds.value = state.completedActivityIds
-    
   } catch (err) {
-    console.error('Error loading progress from localStorage:', err)
+    console.error('Error loading progress:', err)
   }
 }
 
-// Watch relevant state changes and auto-save
-watch([
-  currentPhase, 
-  phaseProgress, 
-  videoCompleted, 
-  gameSuccess, 
-  matchedPairs, 
-  profileForm,
-  profileFormSuccess,
-  spellingAnswers,
-  spellingResults,
-  spellingAllCorrect,
-  voiceRecorded, 
-  examPassed,
-  showBadgeAward,
-  examAnswers,
-  completedActivityIds
-], () => {
-  saveProgress()
-}, { deep: true })
+watch(courseId, () => {
+  loadProgress()
+})
 
 onMounted(async () => {
-  // Update Course title based on ID if we want
-  const titles = {
-    '1': 'Fundamentos de Enfermería',
-    '2': 'Farmacología Clínica',
-    '3': 'Cuidados Críticos UCI',
-    '4': 'Salud Mental y Psiquiatría',
-    '5': 'Atención Materno-Infantil',
-    '6': 'Urgencias y Emergencias',
-  }
-  if (titles[courseId]) {
-    courseTitle.value = titles[courseId]
-  }
-
   await fetchDbActivities()
   loadProgress()
-  updatePhaseProgress()
 })
 </script>
 

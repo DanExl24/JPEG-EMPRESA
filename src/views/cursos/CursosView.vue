@@ -602,7 +602,7 @@ async function fetchActivities() {
 
 onMounted(fetchActivities)
 
-// Initial Courses Data State — Módulo 1 RAP 1
+// Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2 y RAP 3
 const courses = ref([
   {
     id: 1,
@@ -617,6 +617,20 @@ const courses = ref([
     icon: 'medical_services',
     bg: 'bg-teal-50',
     iconColor: '#006688'
+  },
+  {
+    id: 2,
+    title: 'Work Life Interaction',
+    description: 'Módulo 2 — Fase Planeación · RAP 2 y 3. Caso Mr. Thomas: Pasado simple, adjetivos descriptivos, partes del cuerpo, notas de enfermería y entrega de turno (Handover).',
+    category: 'Intermedio',
+    categoryBg: 'bg-indigo-100',
+    categoryText: 'text-indigo-700',
+    duration: '12h',
+    students: 285,
+    progress: 0,
+    icon: 'assignment_ind',
+    bg: 'bg-indigo-50',
+    iconColor: '#4f46e5'
   },
 ])
 
