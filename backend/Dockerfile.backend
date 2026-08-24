@@ -12,7 +12,7 @@ WORKDIR /app
 ENV CI=true
 
 # Copiar archivos de dependencias del backend
-COPY backend/package.json backend/pnpm-lock.yaml* backend/pnpm-workspace.yaml ./
+COPY backend/package.json backend/pnpm-lock.yaml* backend/pnpm-workspace.yaml* backend/.npmrc* ./
 
 # Instalar dependencias del backend
 RUN pnpm install --no-frozen-lockfile

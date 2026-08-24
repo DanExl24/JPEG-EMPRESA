@@ -1,6 +1,7 @@
-allowBuilds:
-  '@prisma/engines': true
-  '@prisma/client': true
-  bcrypt: true
-  better-sqlite3: true
-  prisma: true
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - '@prisma/client'
+  - bcrypt
+  - better-sqlite3
+  - esbuild
+  - prisma
