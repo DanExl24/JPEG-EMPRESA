@@ -602,7 +602,7 @@ async function fetchActivities() {
 
 onMounted(fetchActivities)
 
-// Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2 y RAP 3
+// Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2/3 y RAP 4/5
 const courses = ref([
   {
     id: 1,
@@ -631,6 +631,20 @@ const courses = ref([
     icon: 'assignment_ind',
     bg: 'bg-indigo-50',
     iconColor: '#4f46e5'
+  },
+  {
+    id: 3,
+    title: 'Workplace Communication',
+    description: 'Módulo 3 — Fase Ejecución · RAP 4 y 5. Comunicación con médicos, colegas y visitantes: Presente simple vs. continuo, herramientas médicas, checklist clínico y propuestas de mejora.',
+    category: 'Avanzado',
+    categoryBg: 'bg-amber-100',
+    categoryText: 'text-amber-700',
+    duration: '14h',
+    students: 195,
+    progress: 0,
+    icon: 'groups',
+    bg: 'bg-amber-50',
+    iconColor: '#d97706'
   },
 ])
 
