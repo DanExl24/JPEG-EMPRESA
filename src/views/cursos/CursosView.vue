@@ -602,7 +602,7 @@ async function fetchActivities() {
 
 onMounted(fetchActivities)
 
-// Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2/3 y RAP 4/5
+// Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2/3, RAP 4/5 y RAP 6
 const courses = ref([
   {
     id: 1,
@@ -645,6 +645,20 @@ const courses = ref([
     icon: 'groups',
     bg: 'bg-amber-50',
     iconColor: '#d97706'
+  },
+  {
+    id: 4,
+    title: 'Professional Practice',
+    description: 'Módulo 4 — Fase Evaluación · RAP 6. ¡Mr. Thomas se va a casa! Instrucciones de alta médica, recomendaciones de cuidado en casa con modales y análisis de listas de verificación.',
+    category: 'Profesional',
+    categoryBg: 'bg-emerald-100',
+    categoryText: 'text-emerald-700',
+    duration: '10h',
+    students: 160,
+    progress: 0,
+    icon: 'verified_user',
+    bg: 'bg-emerald-50',
+    iconColor: '#059669'
   },
 ])
 

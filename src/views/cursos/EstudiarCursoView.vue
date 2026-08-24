@@ -13,6 +13,7 @@
         <div class="flex items-center gap-2">
           <h2 class="text-2xl font-black text-gray-800">{{ currentCourseTitle }}</h2>
           <span :class="`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+            moduleNumber === 4 ? 'bg-emerald-100 text-emerald-700' :
             moduleNumber === 3 ? 'bg-amber-100 text-amber-700' :
             moduleNumber === 2 ? 'bg-indigo-100 text-indigo-700' : 
             'bg-teal-100 text-teal-700'
@@ -103,6 +104,7 @@
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
             {{ currentCourseTitle }}
             <span :class="`text-xs font-bold px-2 py-0.5 rounded-full ml-2 ${
+              moduleNumber === 4 ? 'bg-emerald-100 text-emerald-700' :
               moduleNumber === 3 ? 'bg-amber-100 text-amber-700' :
               moduleNumber === 2 ? 'bg-indigo-100 text-indigo-700' : 
               'bg-[#006688]/10 text-[#006688]'
@@ -111,7 +113,9 @@
             </span>
           </h3>
           <p class="text-xs text-gray-500 mt-1">
-            {{ moduleNumber === 3
+            {{ moduleNumber === 4
+              ? 'Momento 1: ¡Mr. Thomas se va a casa! Completa el video de alta médica y el juego de calentamiento de verificación de estados clínicos.'
+              : moduleNumber === 3
               ? 'Momento 1: ¡Tu turno ha comenzado! Completa el video introductorio y el juego de calentamiento de acciones clínicas y roles hospitalarios.'
               : moduleNumber === 2
               ? 'Momento 1: Acompaña a Mr. Thomas en su hospitalización. Completa el video introductorio y el juego de calentamiento de turnos hospitalarios.' 
@@ -128,7 +132,7 @@
               <div v-if="!videoPlaying && !videoCompleted" class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white p-6 text-center space-y-3 z-10">
                 <span class="material-symbols-outlined text-5xl text-[#006688] bg-white rounded-full p-3 shadow-lg group-hover:scale-105 transition-transform cursor-pointer" @click="playVideo">play_arrow</span>
                 <p class="font-bold text-sm">
-                  {{ moduleNumber === 3 ? 'Video Clínico: ¡Tu turno en el hospital ha comenzado!' : moduleNumber === 2 ? 'Caso Clínico: Hospitalización de Mr. Thomas (Habitación 204)' : 'Video de Bienvenida: Nursing Basics Introduction' }}
+                  {{ moduleNumber === 4 ? 'Video Clínico: ¡Mr. Thomas se va a casa! (Discharge Preparation)' : moduleNumber === 3 ? 'Video Clínico: ¡Tu turno en el hospital ha comenzado!' : moduleNumber === 2 ? 'Caso Clínico: Hospitalización de Mr. Thomas (Habitación 204)' : 'Video de Bienvenida: Nursing Basics Introduction' }}
                 </p>
                 <p class="text-[10px] text-gray-300">Duración estimada: 25s (Simulado)</p>
               </div>
@@ -153,7 +157,7 @@
               <!-- Static BG representation -->
               <div class="absolute inset-0 bg-gradient-to-tr from-cyan-900 to-indigo-950 flex items-center justify-center">
                 <span class="material-symbols-outlined text-8xl text-white/5">
-                  {{ moduleNumber === 3 ? 'groups' : moduleNumber === 2 ? 'hotel' : 'clinical_notes' }}
+                  {{ moduleNumber === 4 ? 'verified_user' : moduleNumber === 3 ? 'groups' : moduleNumber === 2 ? 'hotel' : 'clinical_notes' }}
                 </span>
               </div>
             </div>
@@ -165,8 +169,18 @@
               ¿Qué aprenderás? — Objetivos {{ currentCourseBadge }}
             </h4>
             
+            <!-- Module 4 Objectives -->
+            <ul v-if="moduleNumber === 4" class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
+              <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold mt-0.5">✓</span> Dar instrucciones y órdenes de alta médica (*Discharge Orders*)</li>
+              <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold mt-0.5">✓</span> Usar verbos modales para consejos de salud (*You must, You should*)</li>
+              <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold mt-0.5">✓</span> Reportar estados y resultados finales (*Vitals stable, Pain resolved*)</li>
+              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">💊</span> Vocabulario ocupacional (*Prescription, Painkiller, Follow-up*)</li>
+              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">📋</span> Evaluar y cerrar listas de verificación (*Nursing Checklist*)</li>
+              <li class="flex items-start gap-1.5"><span class="text-teal-600 font-bold mt-0.5">🎓</span> Acceder al <strong>Post-Test Global</strong> de certificación</li>
+            </ul>
+
             <!-- Module 3 Objectives -->
-            <ul v-if="moduleNumber === 3" class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
+            <ul v-else-if="moduleNumber === 3" class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
               <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold mt-0.5">✓</span> Explicar procedimientos clínicos de rutina (Present Simple)</li>
               <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold mt-0.5">✓</span> Comunicar acciones en progreso en el momento (Present Continuous)</li>
               <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold mt-0.5">✓</span> Interactuar cortésmente con familiares y visitantes de pacientes</li>
@@ -198,7 +212,9 @@
             </ul>
 
             <p class="text-[10px] text-[#006688] italic mt-3 border-t border-[#006688]/10 pt-2">
-              {{ moduleNumber === 3
+              {{ moduleNumber === 4
+                ? '"¡Mr. Thomas se va a casa! En este último módulo, aprenderás a dar instrucciones de alta médica, recomendaciones de cuidado en casa y a evaluar los resultados de tu trabajo analizando las listas de verificación en inglés."'
+                : moduleNumber === 3
                 ? '"¡Tu turno ha comenzado! En este módulo aprenderás a comunicarte con médicos, colegas y familiares de pacientes. Al final, podrás explicar procedimientos de rutina, interactuar con visitantes y proponer mejoras en tu entorno laboral."'
                 : moduleNumber === 2 
                 ? '"En este módulo acompañarás a Mr. Thomas en su hospitalización. Al final, serás capaz de describir el estado físico de tus pacientes, detallar su entorno hospitalario y relatar antecedentes clínicos."' 
@@ -212,7 +228,9 @@
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
             <h4 class="font-bold text-gray-800 text-sm">
-              {{ moduleNumber === 3
+              {{ moduleNumber === 4
+                ? 'Warm-Up: Estados de Alta Médica — Empareja los estados con el criterio de la lista de verificación'
+                : moduleNumber === 3
                 ? 'Warm-Up: Acciones Rutinarias & Roles — Empareja cada acción con su destinatario'
                 : moduleNumber === 2 
                 ? 'Warm-Up: Hospital Shifts & Handover — Empareja los turnos con el saludo de relevo' 
@@ -220,7 +238,9 @@
             </h4>
           </div>
           <p class="text-xs text-gray-600">
-            {{ moduleNumber === 3
+            {{ moduleNumber === 4
+              ? 'Instrucción: Empareja el estado clínico del paciente a la izquierda con el indicador de la lista de verificación de alta a la derecha.'
+              : moduleNumber === 3
               ? 'Instrucción: Empareja la acción rutinaria de enfermería de la izquierda con la persona o rol hospitalario correspondiente en la derecha.'
               : moduleNumber === 2 
               ? 'Instrucción: Empareja el horario y turno hospitalario de la izquierda con la expresión y saludo de relevo correspondiente en inglés.' 
@@ -232,7 +252,7 @@
             <!-- Left column -->
             <div class="space-y-2">
               <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                {{ moduleNumber === 3 ? 'Acción Rutinaria de Enfermería' : moduleNumber === 2 ? 'Turno Hospitalario / Momento' : 'Momento del día' }}
+                {{ moduleNumber === 4 ? 'Estado Clínico Final' : moduleNumber === 3 ? 'Acción Rutinaria de Enfermería' : moduleNumber === 2 ? 'Turno Hospitalario / Momento' : 'Momento del día' }}
               </span>
               <button 
                 v-for="item in activeLeftItems" 
@@ -250,7 +270,7 @@
               >
                 <div class="flex items-center gap-2">
                   <span class="material-symbols-outlined text-base">
-                    {{ moduleNumber === 3 ? 'vital_signs' : (item.includes('Morning') || item === 'Sun' ? 'light_mode' : (item.includes('Afternoon') || item === 'Afternoon' ? 'wb_twilight' : 'dark_mode')) }}
+                    {{ moduleNumber === 4 ? 'verified' : moduleNumber === 3 ? 'vital_signs' : (item.includes('Morning') || item === 'Sun' ? 'light_mode' : (item.includes('Afternoon') || item === 'Afternoon' ? 'wb_twilight' : 'dark_mode')) }}
                   </span>
                   <span>{{ item }}</span>
                 </div>
@@ -261,7 +281,7 @@
             <!-- Right column -->
             <div class="space-y-2">
               <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                {{ moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : 'Saludos en Inglés' }}
+                {{ moduleNumber === 4 ? 'Criterio de Checklist (Verificado)' : moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : 'Saludos en Inglés' }}
               </span>
               <button 
                 v-for="item in activeRightItems" 
@@ -331,7 +351,9 @@
             Momento 2 — Absorción de Conocimiento
           </h3>
           <p class="text-xs text-gray-500 mt-1">
-            {{ moduleNumber === 3
+            {{ moduleNumber === 4
+              ? 'Momento 2: Aprende a estructurar órdenes y consejos médicos con verbos modales (Medical Advice) y a reportar resultados finales de la lista de verificación (Reporting Results).'
+              : moduleNumber === 3
               ? 'Momento 2: Explora el Presente Simple (rutinas) vs. Presente Continuo (acciones ahora), fórmulas de sugerencias de mejora, flashcards de herramientas médicas y el diálogo de atención.'
               : moduleNumber === 2 
               ? 'Momento 2: Explora el Pasado Simple vs. Adjetivos Descriptivos, interactúa con las flashcards de anatomía/hospital y analiza el Storybook de entrega de turno.' 
@@ -339,8 +361,79 @@
           </p>
         </div>
 
-        <!-- MODULE 3 GRAMMAR PILL: Present Simple vs. Continuous & Polite Suggestions -->
-        <div v-if="moduleNumber === 3" class="space-y-6">
+        <!-- MODULE 4 GRAMMAR PILL: Medical Advice with Modals vs Reporting Results -->
+        <div v-if="moduleNumber === 4" class="space-y-6">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">table_chart</span>
+            <h4 class="font-bold text-gray-800 text-sm">1. Grammar Pill — Medical Advice (Verbos Modales) vs. Reporting Results</h4>
+          </div>
+          <p class="text-xs text-gray-600">
+            Aprende a dar órdenes e instrucciones terapéuticas usando <strong>You must</strong> (obligación estricta), <strong>You should</strong> (recomendación/consejo) y a reportar estados finales con <strong>Reporting Results</strong>.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+            
+            <!-- Column 1: Medical Advice -->
+            <div class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center justify-between border-b border-emerald-200 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-emerald-700 text-lg">medical_information</span>
+                  <span class="text-xs font-black text-emerald-900 uppercase tracking-wide">Medical Advice (Must / Should)</span>
+                </div>
+                <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">Instrucciones de alta</span>
+              </div>
+              <p class="text-[11px] text-emerald-800 font-medium">Usa modales para guiar el tratamiento del paciente en casa:</p>
+              
+              <div class="space-y-2">
+                <div v-for="(item, idx) in m4AdviceExamples" :key="idx" class="bg-white p-3 rounded-xl border border-emerald-100 shadow-xs flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-xs font-bold text-gray-800">
+                      <span class="text-emerald-800 font-black">{{ item.subject }}</span>
+                      <span class="bg-emerald-100 text-emerald-900 px-1 py-0.5 rounded font-black mx-1 underline">{{ item.modal }}</span>
+                      <span>{{ item.action }}</span>
+                    </p>
+                    <p class="text-[10px] text-gray-500 italic mt-0.5">{{ item.spanish }}</p>
+                  </div>
+                  <button @click="speakEnglish(item.full)" class="text-emerald-700 hover:bg-emerald-50 p-1.5 rounded-lg shrink-0" title="Escuchar">
+                    <span class="material-symbols-outlined text-base">volume_up</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 2: Reporting Results -->
+            <div class="bg-teal-50/80 border border-teal-200 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center justify-between border-b border-teal-200 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-teal-700 text-lg">verified</span>
+                  <span class="text-xs font-black text-teal-900 uppercase tracking-wide">Reporting Results (Reporte Final)</span>
+                </div>
+                <span class="text-[10px] font-bold bg-teal-200 text-teal-800 px-2 py-0.5 rounded-full">Evaluación de checklist</span>
+              </div>
+              <p class="text-[11px] text-teal-800 font-medium">Usa frases sencillas para confirmar que todo se cumplió con éxito:</p>
+              
+              <div class="space-y-2">
+                <div v-for="(item, idx) in m4ResultsExamples" :key="idx" class="bg-white p-3 rounded-xl border border-teal-100 shadow-xs flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-xs font-bold text-gray-800">
+                      <span class="text-teal-800 font-black">{{ item.subject }}</span>
+                      <span class="bg-teal-100 text-teal-900 px-1 py-0.5 rounded font-black mx-1">{{ item.verb }}</span>
+                      <span>{{ item.complement }}</span>
+                    </p>
+                    <p class="text-[10px] text-gray-500 italic mt-0.5">{{ item.spanish }}</p>
+                  </div>
+                  <button @click="speakEnglish(item.full)" class="text-teal-700 hover:bg-teal-50 p-1.5 rounded-lg shrink-0" title="Escuchar">
+                    <span class="material-symbols-outlined text-base">volume_up</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- MODULE 3 GRAMMAR PILL -->
+        <div v-else-if="moduleNumber === 3" class="space-y-6">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">table_chart</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Grammar Pill — Present Simple vs. Present Continuous & Sugerencias de Mejora</h4>
@@ -350,8 +443,6 @@
           </p>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            
-            <!-- Column 1: Daily Routine -->
             <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-5 space-y-3">
               <div class="flex items-center justify-between border-b border-amber-200 pb-2">
                 <div class="flex items-center gap-2">
@@ -360,8 +451,6 @@
                 </div>
                 <span class="text-[10px] font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">Rutinas laborales</span>
               </div>
-              <p class="text-[11px] text-amber-800 font-medium">Usa el Presente Simple para horarios, frecuencias y procedimientos habituales:</p>
-              
               <div class="space-y-2">
                 <div v-for="(item, idx) in m3RoutineExamples" :key="idx" class="bg-white p-3 rounded-xl border border-amber-100 shadow-xs flex items-center justify-between gap-2">
                   <div>
@@ -379,7 +468,6 @@
               </div>
             </div>
 
-            <!-- Column 2: Happening Now -->
             <div class="bg-sky-50/70 border border-sky-200 rounded-2xl p-5 space-y-3">
               <div class="flex items-center justify-between border-b border-sky-200 pb-2">
                 <div class="flex items-center gap-2">
@@ -388,8 +476,6 @@
                 </div>
                 <span class="text-[10px] font-bold bg-sky-200 text-sky-800 px-2 py-0.5 rounded-full">Acciones en progreso</span>
               </div>
-              <p class="text-[11px] text-sky-800 font-medium">Usa "am/is/are + verbo-ing" para procedimientos en ejecución en este momento:</p>
-              
               <div class="space-y-2">
                 <div v-for="(item, idx) in m3ContinuousExamples" :key="idx" class="bg-white p-3 rounded-xl border border-sky-100 shadow-xs flex items-center justify-between gap-2">
                   <div>
@@ -406,27 +492,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Full Width Polite Suggestions Box -->
-            <div class="md:col-span-2 bg-teal-50 border border-teal-200 rounded-2xl p-4 space-y-3">
-              <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-teal-700 text-lg">tips_and_updates</span>
-                <span class="text-xs font-black text-teal-900 uppercase tracking-wide">Fórmulas de Cortesía para Proponer Mejoras (Polite Suggestions)</span>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div v-for="(sug, sIdx) in m3SuggestionExamples" :key="sIdx" class="bg-white p-3 rounded-xl border border-teal-100 shadow-xs space-y-1">
-                  <div class="flex justify-between items-start">
-                    <span class="text-xs font-black text-[#006688]">{{ sug.pattern }}</span>
-                    <button @click="speakEnglish(sug.english)" class="text-[#006688] hover:bg-[#006688]/10 p-1 rounded" title="Escuchar">
-                      <span class="material-symbols-outlined text-sm">volume_up</span>
-                    </button>
-                  </div>
-                  <p class="text-xs font-bold text-gray-800">{{ sug.english }}</p>
-                  <p class="text-[10px] text-gray-500 italic">{{ sug.spanish }}</p>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -436,19 +501,10 @@
             <span class="material-symbols-outlined text-xl text-[#006688]">table_chart</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Grammar Pill — Pasado Simple vs. Adjetivos Descriptivos (Caso Mr. Thomas)</h4>
           </div>
-          <p class="text-xs text-gray-600">
-            Aprende a diferenciar qué le ocurrió al paciente en el pasado (<strong>Past Simple</strong>) de cómo se encuentra en el momento actual (<strong>Descriptive Adjectives & Present</strong>).
-          </p>
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            <!-- Column 1: Patient's History -->
             <div class="bg-purple-50/70 border border-purple-200 rounded-2xl p-5 space-y-3">
               <div class="flex items-center justify-between border-b border-purple-200 pb-2">
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-purple-700 text-lg">history</span>
-                  <span class="text-xs font-black text-purple-900 uppercase tracking-wide">Patient's History (Past Simple)</span>
-                </div>
-                <span class="text-[10px] font-bold bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">Qué le ocurrió</span>
+                <span class="text-xs font-black text-purple-900 uppercase">Patient's History (Past Simple)</span>
               </div>
               <div class="space-y-2">
                 <div v-for="(item, idx) in m2PastExamples" :key="idx" class="bg-white p-3 rounded-xl border border-purple-100 shadow-xs flex items-center justify-between gap-2">
@@ -460,21 +516,16 @@
                     </p>
                     <p class="text-[10px] text-gray-500 italic mt-0.5">{{ item.spanish }}</p>
                   </div>
-                  <button @click="speakEnglish(item.full)" class="text-purple-600 hover:bg-purple-50 p-1.5 rounded-lg shrink-0" title="Escuchar">
+                  <button @click="speakEnglish(item.full)" class="text-purple-600 hover:bg-purple-50 p-1.5 rounded-lg shrink-0">
                     <span class="material-symbols-outlined text-base">volume_up</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Column 2: Current Status -->
             <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5 space-y-3">
               <div class="flex items-center justify-between border-b border-emerald-200 pb-2">
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-emerald-700 text-lg">vital_signs</span>
-                  <span class="text-xs font-black text-emerald-900 uppercase tracking-wide">Current Status (Adjectives)</span>
-                </div>
-                <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">Cómo está hoy</span>
+                <span class="text-xs font-black text-emerald-900 uppercase">Current Status (Adjectives)</span>
               </div>
               <div class="space-y-2">
                 <div v-for="(item, idx) in m2PresentExamples" :key="idx" class="bg-white p-3 rounded-xl border border-emerald-100 shadow-xs flex items-center justify-between gap-2">
@@ -486,7 +537,7 @@
                     </p>
                     <p class="text-[10px] text-gray-500 italic mt-0.5">{{ item.spanish }}</p>
                   </div>
-                  <button @click="speakEnglish(item.full)" class="text-emerald-600 hover:bg-emerald-50 p-1.5 rounded-lg shrink-0" title="Escuchar">
+                  <button @click="speakEnglish(item.full)" class="text-emerald-600 hover:bg-emerald-50 p-1.5 rounded-lg shrink-0">
                     <span class="material-symbols-outlined text-base">volume_up</span>
                   </button>
                 </div>
@@ -501,10 +552,6 @@
             <span class="material-symbols-outlined text-xl text-[#006688]">palette</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Grammar Pill — Basic Sentence Structure (Subject + Verb + Complement)</h4>
           </div>
-          <p class="text-xs text-gray-600">
-            Haz clic en los botones de leyenda para activar o desactivar el resaltado de colores en las oraciones de ejemplo del RAP 1.
-          </p>
-
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-6">
             <div class="text-base sm:text-lg font-semibold text-gray-800 leading-relaxed text-center px-4">
               <span 
@@ -540,7 +587,9 @@
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-xl text-[#006688]">style</span>
               <h4 class="font-bold text-gray-800 text-sm">
-                {{ moduleNumber === 3
+                {{ moduleNumber === 4
+                  ? '2. Laboratorio de Vocabulario — Alta Médica, Prescripción y Evaluación (Discharge Summary)'
+                  : moduleNumber === 3
                   ? '2. Laboratorio de Vocabulario — Herramientas de Uso Diario y Verbos de Acción Clínica'
                   : moduleNumber === 2 
                   ? '2. Laboratorio de Vocabulario — Flashcards (Partes del Cuerpo y Entorno Hospitalario)' 
@@ -552,7 +601,9 @@
             </span>
           </div>
           <p class="text-xs text-gray-600">
-            {{ moduleNumber === 3
+            {{ moduleNumber === 4
+              ? 'Interactúa con las flashcards simulando una orden de alta y prescripción médica. Escucha la pronunciación técnica de cada término de egreso.'
+              : moduleNumber === 3
               ? 'Interactúa con las flashcards de instrumentos clínicos y verbos de acción. Escucha la pronunciación correcta de cada herramienta médica.'
               : moduleNumber === 2 
               ? 'Interactúa con las tarjetas interactivas (Flashcards). Escucha la pronunciación correcta de cada término anatómico y hospitalario.' 
@@ -602,7 +653,9 @@
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">forum</span>
             <h4 class="font-bold text-gray-800 text-sm">
-              {{ moduleNumber === 3
+              {{ moduleNumber === 4
+                ? '3. Storybook — Cierre de Caso y Alta Médica (2 Escenas de Evaluación)'
+                : moduleNumber === 3
                 ? '3. Storybook — Atendiendo al Visitante y al Médico (2 Escenarios Reales)'
                 : moduleNumber === 2 
                 ? '3. Storybook — Recibo de Turno: Nurse Andrea & Nurse Carlos' 
@@ -610,10 +663,12 @@
             </h4>
           </div>
           <p class="text-xs text-gray-600">
-            {{ moduleNumber === 3
+            {{ moduleNumber === 4
+              ? 'Observa cómo el enfermero le entrega las recomendaciones de alta a Mr. Thomas (Escena 1) y revisa el cierre del checklist con la Head Nurse (Escena 2).'
+              : moduleNumber === 3
               ? 'Observa cómo el enfermero atiende cortésmente a la hija del paciente (Escena 1 - RAP 4) y propone una mejora en el checklist al Nurse Manager (Escena 2 - RAP 5).'
               : moduleNumber === 2 
-              ? 'Observa la conversación dinámica de entrega de turno sobre el caso clínico de Mr. Thomas en la habitación 204. Haz clic en el audio para escuchar cada intervención.' 
+              ? 'Observa la conversación dinámica de entrega de turno sobre el caso clínico de Mr. Thomas en la habitación 204.' 
               : 'Revisa la conversación de presentación entre dos enfermeras — un escenario real de inicio de turno.' }}
           </p>
 
@@ -626,7 +681,7 @@
               <div :class="`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm ${bubble.avatarBg || 'bg-[#006688]'}`">
                 {{ bubble.avatar || '👩‍⚕️' }}
               </div>
-              <div :class="`p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed ${bubble.alignLeft ? 'bg-white text-gray-800 rounded-tl-none border-gray-100' : 'bg-amber-50/70 text-gray-800 rounded-tr-none border-amber-100'}`">
+              <div :class="`p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed ${bubble.alignLeft ? 'bg-white text-gray-800 rounded-tl-none border-gray-100' : 'bg-emerald-50/80 text-gray-800 rounded-tr-none border-emerald-100'}`">
                 <div class="flex items-center justify-between gap-4 mb-1">
                   <span class="font-bold text-[10px] uppercase tracking-widest text-gray-400">
                     {{ bubble.speaker }}
@@ -678,468 +733,304 @@
             Momento 3 — Práctica y Aplicación ({{ currentCourseBadge }})
           </h3>
           <p class="text-xs text-gray-500 mt-1">
-            {{ moduleNumber === 3
-              ? 'Completa el Nursing Checklist digital, escucha las instrucciones del Dr. Smith y graba tu evidencia oral en dos misiones (visitante y colega).'
+            {{ moduleNumber === 4
+              ? 'Completa el Discharge Summary escuchando las órdenes del médico, analiza el resultado de la lista de verificación y graba tus recomendaciones de alta.'
+              : moduleNumber === 3
+              ? 'Completa el Nursing Checklist digital, escucha las instrucciones del Dr. Smith y graba tu evidencia oral en dos misiones.'
               : moduleNumber === 2 
               ? 'Completa las notas de enfermería escuchando el reporte médico, describe la habitación de Mr. Thomas y graba tu entrega de turno (Handover Report).' 
               : 'Completa el perfil personal, realiza los deletreos y graba tu presentación personal como evidencia de aprendizaje.' }}
           </p>
         </div>
 
-        <!-- MODULE 3 PRACTICE 1: Nursing Checklist -->
-        <div v-if="moduleNumber === 3" class="space-y-4">
+        <!-- MODULE 4 PRACTICE 1: Discharge Summary Form with Audio -->
+        <div v-if="moduleNumber === 4" class="space-y-4">
           <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-[#006688]">checklist</span>
-            <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Nursing Checklist Digital (Lista de Verificación Clínica)</h4>
+            <span class="material-symbols-outlined text-xl text-[#006688]">description</span>
+            <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Formato Digital "Discharge Summary"</h4>
           </div>
           <p class="text-xs text-gray-600">
-            Completa la lista de verificación digital de Mr. Thomas seleccionando en los menús desplegables las acciones y herramientas médicas adecuadas.
+            Escucha al médico dictando las órdenes finales de alta de Mr. Thomas y escribe exactamente las medicinas, dosis, descansos y cuidados para completar el resumen de egreso.
           </p>
 
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
             
-            <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-4">
-              <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-                <span class="text-xs font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
-                  <span class="material-symbols-outlined text-sm text-[#006688]">fact_check</span>
-                  Daily Clinical Nursing Checklist — Shift Care
-                </span>
-                <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">Mr. Thomas (Room 204)</span>
-              </div>
-
-              <div class="space-y-3">
-                <!-- Checklist Row 1 -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-150">
-                  <div class="space-y-0.5">
-                    <span class="text-xs font-bold text-gray-700">1. Rutina de Signos Vitales (08:00 AM)</span>
-                    <p class="text-[10px] text-gray-500">Selecciona la acción y el equipo correspondiente:</p>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <select v-model="m3Checklist.r1_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Acción --</option>
-                      <option value="Check vital signs">Check vital signs</option>
-                      <option value="Disinfect floor">Disinfect floor</option>
-                    </select>
-                    <select v-model="m3Checklist.r1_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Equipo --</option>
-                      <option value="Blood pressure monitor & Thermometer">Blood pressure monitor & Thermometer</option>
-                      <option value="Wheelchair">Wheelchair</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Checklist Row 2 -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-150">
-                  <div class="space-y-0.5">
-                    <span class="text-xs font-bold text-gray-700">2. Administración de Antibióticos (10:00 AM)</span>
-                    <p class="text-[10px] text-gray-500">Selecciona la acción y el equipo correspondiente:</p>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <select v-model="m3Checklist.r2_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Acción --</option>
-                      <option value="Administer medication">Administer medication</option>
-                      <option value="Serve breakfast">Serve breakfast</option>
-                    </select>
-                    <select v-model="m3Checklist.r2_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Equipo --</option>
-                      <option value="Syringe & Prescription chart">Syringe & Prescription chart</option>
-                      <option value="Bandage only">Bandage only</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Checklist Row 3 -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-150">
-                  <div class="space-y-0.5">
-                    <span class="text-xs font-bold text-gray-700">3. Higiene y Bioseguridad post-turno</span>
-                    <p class="text-[10px] text-gray-500">Selecciona la acción y el producto correspondiente:</p>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <select v-model="m3Checklist.r3_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Acción --</option>
-                      <option value="Disinfect equipment">Disinfect equipment</option>
-                      <option value="Order lunch">Order lunch</option>
-                    </select>
-                    <select v-model="m3Checklist.r3_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Producto --</option>
-                      <option value="Antiseptic wipes">Antiseptic wipes</option>
-                      <option value="Water bottle">Water bottle</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Checklist Row 4 -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-150">
-                  <div class="space-y-0.5">
-                    <span class="text-xs font-bold text-gray-700">4. Monitoreo de Saturación de Oxígeno</span>
-                    <p class="text-[10px] text-gray-500">Selecciona la acción y el dispositivo correspondiente:</p>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <select v-model="m3Checklist.r4_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Acción --</option>
-                      <option value="Monitor oxygen level">Monitor oxygen level</option>
-                      <option value="Check email">Check email</option>
-                    </select>
-                    <select v-model="m3Checklist.r4_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
-                      <option value="">-- Dispositivo --</option>
-                      <option value="Pulse oximeter">Pulse oximeter</option>
-                      <option value="Stethoscope">Stethoscope</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-3 pt-2">
-                <button @click="validateM3Checklist" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
-                  Verificar Checklist Clínico
-                </button>
-                <span v-if="m3ChecklistSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">check_circle</span>
-                  ¡Checklist completado y validado correctamente!
-                </span>
-                <span v-if="m3ChecklistSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">cancel</span>
-                  Revisa las opciones seleccionadas. Asegúrate de asociar cada acción con su equipo correcto.
-                </span>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- MODULE 3 PRACTICE 2: Dr. Smith Audio & Confirmation Input -->
-        <div v-if="moduleNumber === 3" class="space-y-4 pt-4 border-t border-gray-100">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-[#006688]">headphones</span>
-            <h4 class="font-bold text-gray-800 text-sm">2. Práctica Guiada 2 — Listening & Instrucciones del Dr. Smith</h4>
-          </div>
-          <p class="text-xs text-gray-600">
-            Escucha las instrucciones de rutina dadas por el Dr. Smith y escribe exactamente las palabras clave de equipos y horarios para confirmar el procedimiento.
-          </p>
-
-          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
-            <!-- Audio Card -->
+            <!-- Dr. Miller Audio Card -->
             <div class="bg-white p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
               <div class="flex items-center gap-3">
                 <button 
-                  @click="playDrSmithAudio" 
+                  @click="playM4DoctorAudio" 
                   class="w-10 h-10 rounded-full bg-[#006688] text-white flex items-center justify-center shadow hover:scale-105 transition-transform"
                 >
                   <span class="material-symbols-outlined text-xl">
-                    {{ drSmithPlaying ? 'pause' : 'play_arrow' }}
+                    {{ m4DoctorPlaying ? 'pause' : 'play_arrow' }}
                   </span>
                 </button>
                 <div>
-                  <span class="text-xs font-bold text-gray-800">Audio: Dr. Smith's Routine Instructions</span>
-                  <p class="text-[11px] text-gray-500">Instrucciones sobre auscultación, temperatura, oxígeno y horarios.</p>
+                  <span class="text-xs font-bold text-gray-800">Audio: Dr. Miller's Discharge Orders for Mr. Thomas</span>
+                  <p class="text-[11px] text-gray-500">Instrucciones de medicamentos, descanso, vendaje y cita de control.</p>
                 </div>
               </div>
               <button 
-                @click="playDrSmithAudio"
+                @click="playM4DoctorAudio"
                 type="button" 
                 class="px-3 py-1.5 text-xs font-bold text-[#006688] bg-[#006688]/10 rounded-lg hover:bg-[#006688]/20 transition-all"
               >
-                {{ drSmithPlaying ? 'Detener Audio' : 'Escuchar Instrucciones' }}
+                {{ m4DoctorPlaying ? 'Detener Audio' : 'Escuchar Órdenes de Alta' }}
               </button>
             </div>
 
-            <!-- 5 Fields Confirmation Form -->
-            <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-3">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">1. Instrumento para auscultar el pecho:</label>
-                  <input type="text" v-model="m3Inputs.stethoscope" placeholder="Escribe el instrumento..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                </div>
-                <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">2. Instrumento para monitorear temperatura:</label>
-                  <input type="text" v-model="m3Inputs.thermometer" placeholder="Escribe el instrumento..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                </div>
-                <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">3. Dispositivo de oxígeno:</label>
-                  <input type="text" v-model="m3Inputs.oximeter" placeholder="Escribe el dispositivo..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                </div>
-                <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">4. Horario programado para la dosis (e.g., 4:00 PM):</label>
-                  <input type="text" v-model="m3Inputs.time" placeholder="4:00 PM" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                </div>
-                <div class="sm:col-span-2 space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">5. Formato digital que debe firmarse tras el procedimiento:</label>
-                  <input type="text" v-model="m3Inputs.checklist" placeholder="Escribe el formato..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                </div>
-              </div>
-
-              <div class="flex items-center gap-3 pt-2">
-                <button @click="validateM3Inputs" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
-                  Verificar Confirmación
-                </button>
-                <span v-if="m3InputsSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">check_circle</span>
-                  ¡Términos y horarios confirmados correctamente!
+            <!-- Digital Discharge Summary Form -->
+            <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs space-y-4">
+              <div class="flex items-center justify-between border-b border-emerald-100 pb-2">
+                <span class="text-xs font-black text-emerald-900 uppercase tracking-wide flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm text-emerald-600">verified</span>
+                  Official Hospital Discharge Summary & Home Care Plan
                 </span>
-                <span v-if="m3InputsSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">cancel</span>
-                  Revisa la ortografía de los instrumentos o el formato de hora (4:00 PM).
-                </span>
+                <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Room 204 — Patient: Mr. Thomas</span>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- MODULE 2 PRACTICE 1: Listening & Nursing Notes -->
-        <div v-else-if="moduleNumber === 2" class="space-y-4">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-[#006688]">clinical_notes</span>
-            <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Completar Notas de Enfermería</h4>
-          </div>
-          <p class="text-xs text-gray-600">
-            Escucha el audio del médico describiendo el ingreso y antecedentes de Mr. Thomas. Llena los 5 espacios en blanco con las palabras clave en inglés.
-          </p>
-
-          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
-            <div class="bg-white p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
-              <div class="flex items-center gap-3">
-                <button 
-                  @click="playDrMillerReport" 
-                  class="w-10 h-10 rounded-full bg-[#006688] text-white flex items-center justify-center shadow hover:scale-105 transition-transform"
-                >
-                  <span class="material-symbols-outlined text-xl">
-                    {{ drMillerPlaying ? 'pause' : 'play_arrow' }}
-                  </span>
-                </button>
-                <div>
-                  <span class="text-xs font-bold text-gray-800">Audio Clínico: Dr. Miller's Admission Report</span>
-                  <p class="text-[11px] text-gray-500">Escucha con atención las palabras clave para completar el cuadro clínico.</p>
-                </div>
-              </div>
-              <button 
-                @click="playDrMillerReport"
-                type="button" 
-                class="px-3 py-1.5 text-xs font-bold text-[#006688] bg-[#006688]/10 rounded-lg hover:bg-[#006688]/20 transition-all"
-              >
-                {{ drMillerPlaying ? 'Detener Audio' : 'Reproducir Audio Completo' }}
-              </button>
-            </div>
-
-            <!-- Nursing Notes Form with Blanks -->
-            <div class="bg-amber-50/50 border border-amber-200 rounded-2xl p-5 space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">1. Diagnóstico de la lesión (X-ray confirmed a...):</label>
-                  <input type="text" v-model="m2Notes.fracture" placeholder="Palabra clave..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                  <label class="text-[11px] font-bold text-gray-700">1. Tipo de medicamento prescrito para el dolor:</label>
+                  <input type="text" v-model="m4Summary.painkiller" placeholder="e.g. painkiller / ibuprofen" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">2. Cuándo ocurrió la caída (The accident happened...):</label>
-                  <input type="text" v-model="m2Notes.yesterday" placeholder="Palabra clave..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                  <label class="text-[11px] font-bold text-gray-700">2. Frecuencia de la toma (e.g. every 8 hours):</label>
+                  <input type="text" v-model="m4Summary.frequency" placeholder="every 8 hours" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">3. Lugar inicial de espera (Patient waited in the...):</label>
-                  <input type="text" v-model="m2Notes.waitingRoom" placeholder="Palabra clave..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                  <label class="text-[11px] font-bold text-gray-700">3. Tiempo de reposo en casa recomendado (e.g. 3 days):</label>
+                  <input type="text" v-model="m4Summary.restDays" placeholder="3 days" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">4. Tratamiento aplicado (Applied a clean...):</label>
-                  <input type="text" v-model="m2Notes.bandage" placeholder="Palabra clave..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                  <label class="text-[11px] font-bold text-gray-700">4. Día de la cita de control (e.g. Monday):</label>
+                  <input type="text" v-model="m4Summary.appointmentDay" placeholder="Monday" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
                 </div>
                 <div class="sm:col-span-2 space-y-1">
-                  <label class="text-[11px] font-bold text-gray-700">5. Signo físico observado (His right arm is...):</label>
-                  <input type="text" v-model="m2Notes.swollen" placeholder="Palabra clave..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                  <label class="text-[11px] font-bold text-gray-700">5. Condición en la que debe mantenerse el vendaje:</label>
+                  <input type="text" v-model="m4Summary.bandageCare" placeholder="clean and dry" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" />
                 </div>
               </div>
 
               <div class="flex items-center gap-3 pt-2">
-                <button @click="validateM2Notes" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
-                  Verificar Notas de Enfermería
+                <button @click="validateM4Summary" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
+                  Verificar Resumen de Alta
                 </button>
-                <span v-if="m2NotesSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+                <span v-if="m4SummarySuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
                   <span class="material-symbols-outlined text-sm">check_circle</span>
-                  ¡Notas clínicas verificadas correctamente!
+                  ¡Resumen de alta completado y verificado correctamente!
                 </span>
-                <span v-if="m2NotesSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
+                <span v-if="m4SummarySuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
                   <span class="material-symbols-outlined text-sm">cancel</span>
-                  Revisa las palabras clave tecleadas.
+                  Revisa los datos tecleados (revisa: painkiller, every 8 hours, 3 days, Monday, clean and dry).
                 </span>
               </div>
             </div>
+
           </div>
         </div>
 
-        <!-- MODULE 2 PRACTICE 2: Room 204 Scene Dropdowns -->
-        <div v-if="moduleNumber === 2" class="space-y-4 pt-4 border-t border-gray-100">
+        <!-- MODULE 4 PRACTICE 2: Checklist Analysis with Dropdowns -->
+        <div v-if="moduleNumber === 4" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-[#006688]">dashboard_customize</span>
-            <h4 class="font-bold text-gray-800 text-sm">2. Práctica Guiada 2 — Descripción Clínica (Habitación de Mr. Thomas)</h4>
+            <span class="material-symbols-outlined text-xl text-[#006688]">fact_check</span>
+            <h4 class="font-bold text-gray-800 text-sm">2. Práctica Guiada 2 — Lectura y Análisis de Lista de Verificación (Checklist)</h4>
           </div>
           <p class="text-xs text-gray-600">
-            Observa la escena panorámica de la habitación 204 y selecciona en cada menú desplegable la opción correcta para describir la escena usando la estructura gramatical clínica.
+            Observa la lista de verificación final de Mr. Thomas y selecciona en cada menú desplegable las frases correctas en inglés que describan el resultado clínico del turno.
           </p>
 
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+            
+            <!-- Real Filled Checklist Visual Banner -->
+            <div class="bg-gradient-to-r from-emerald-900 to-teal-950 p-6 rounded-2xl text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-2xl text-emerald-400">check_circle</span>
+                  <span class="text-xs font-bold uppercase tracking-widest text-emerald-300">Final Shift Checklist — All items verified</span>
+                </div>
+                <p class="text-sm font-semibold text-gray-200">
+                  Presión 120/80 (Normal) · Dolor 1/10 (Resuelto) · Vendaje limpio y seco · Órdenes de alta firmadas por el Dr. Miller.
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">🩺 Vitals OK</span>
+                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">✨ Pain low</span>
+                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">📋 Signed</span>
+              </div>
+            </div>
+
+            <!-- 4 Dropdown Statements -->
             <div class="space-y-3">
               <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
-                <span class="text-gray-400 font-mono">1.</span>
-                <select v-model="m2RoomScene.s1_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Sujeto --</option>
-                  <option value="The patient">The patient</option>
-                  <option value="The doctor">The doctor</option>
-                </select>
-                <select v-model="m2RoomScene.s1_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Verbo --</option>
-                  <option value="is">is</option>
-                  <option value="was">was</option>
-                </select>
-                <select v-model="m2RoomScene.s1_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Complemento --</option>
-                  <option value="in the bed">in the bed</option>
-                  <option value="at the hotel">at the hotel</option>
+                <span class="text-gray-400 font-mono">1. Signos vitales:</span>
+                <select v-model="m4CheckAnalysis.s1" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Selecciona frase descriptiva --</option>
+                  <option value="The vital signs are stable">The vital signs are stable</option>
+                  <option value="The vital signs are high">The vital signs are high</option>
                 </select>
               </div>
 
               <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
-                <span class="text-gray-400 font-mono">2.</span>
-                <select v-model="m2RoomScene.s2_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Sujeto --</option>
-                  <option value="He">He</option>
-                  <option value="She">She</option>
-                </select>
-                <select v-model="m2RoomScene.s2_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Verbo --</option>
-                  <option value="has">has</option>
-                  <option value="had">had</option>
-                </select>
-                <select v-model="m2RoomScene.s2_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Complemento --</option>
-                  <option value="a bandage on his arm">a bandage on his arm</option>
-                  <option value="a cast on his leg">a cast on his leg</option>
+                <span class="text-gray-400 font-mono">2. Nivel de dolor:</span>
+                <select v-model="m4CheckAnalysis.s2" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Selecciona frase descriptiva --</option>
+                  <option value="The pain level is low and resolved">The pain level is low and resolved</option>
+                  <option value="The pain is unbearable">The pain is unbearable</option>
                 </select>
               </div>
 
               <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
-                <span class="text-gray-400 font-mono">3.</span>
-                <select v-model="m2RoomScene.s3_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Sujeto --</option>
-                  <option value="The room">The room</option>
-                  <option value="The hotel">The hotel</option>
-                </select>
-                <select v-model="m2RoomScene.s3_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Verbo --</option>
-                  <option value="is">is</option>
-                  <option value="were">were</option>
-                </select>
-                <select v-model="m2RoomScene.s3_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Complemento --</option>
-                  <option value="quiet and clean">quiet and clean</option>
-                  <option value="noisy and dark">noisy and dark</option>
+                <span class="text-gray-400 font-mono">3. Estado del paciente:</span>
+                <select v-model="m4CheckAnalysis.s3" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Selecciona frase descriptiva --</option>
+                  <option value="The patient is ready for discharge">The patient is ready for discharge</option>
+                  <option value="The patient is in emergency surgery">The patient is in emergency surgery</option>
                 </select>
               </div>
 
               <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 text-xs font-bold">
-                <span class="text-gray-400 font-mono">4.</span>
-                <select v-model="m2RoomScene.s4_sub" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Sujeto --</option>
-                  <option value="His right arm">His right arm</option>
-                  <option value="His left foot">His left foot</option>
-                </select>
-                <select v-model="m2RoomScene.s4_v" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Verbo --</option>
-                  <option value="is">is</option>
-                  <option value="was">was</option>
-                </select>
-                <select v-model="m2RoomScene.s4_comp" class="px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
-                  <option value="">-- Complemento --</option>
-                  <option value="swollen and painful">swollen and painful</option>
-                  <option value="healthy and fine">healthy and fine</option>
+                <span class="text-gray-400 font-mono">4. Lista y órdenes médicas:</span>
+                <select v-model="m4CheckAnalysis.s4" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none">
+                  <option value="">-- Selecciona frase descriptiva --</option>
+                  <option value="The discharge summary is signed and complete">The discharge summary is signed and complete</option>
+                  <option value="The checklist is lost">The checklist is lost</option>
                 </select>
               </div>
             </div>
 
             <div class="flex items-center gap-3 pt-2">
-              <button @click="validateM2RoomScene" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
-                Verificar Descripción Clínica
+              <button @click="validateM4CheckAnalysis" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
+                Verificar Análisis de Checklist
               </button>
-              <span v-if="m2RoomSceneSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+              <span v-if="m4CheckAnalysisSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">check_circle</span>
-                ¡Todas las oraciones descriptivas son correctas!
+                ¡Análisis de la lista de verificación correcto!
               </span>
-              <span v-if="m2RoomSceneSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
+              <span v-if="m4CheckAnalysisSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">cancel</span>
-                Algunas opciones no coinciden con la escena.
+                Revisa las frases seleccionadas.
               </span>
             </div>
+
           </div>
         </div>
 
-        <!-- MODULE 1 PRACTICE 1: Complete the Profile -->
-        <div v-if="moduleNumber === 1" class="space-y-4">
+        <!-- MODULE 3 PRACTICE 1 -->
+        <div v-else-if="moduleNumber === 3" class="space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">checklist</span>
+            <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Nursing Checklist Digital</h4>
+          </div>
+          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+            <div class="space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-150">
+                <span class="text-xs font-bold text-gray-700">1. Rutina de Signos Vitales (08:00 AM)</span>
+                <div class="flex items-center gap-2">
+                  <select v-model="m3Checklist.r1_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Acción --</option>
+                    <option value="Check vital signs">Check vital signs</option>
+                  </select>
+                  <select v-model="m3Checklist.r1_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Equipo --</option>
+                    <option value="Blood pressure monitor & Thermometer">Blood pressure monitor & Thermometer</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-150">
+                <span class="text-xs font-bold text-gray-700">2. Administración de Antibióticos (10:00 AM)</span>
+                <div class="flex items-center gap-2">
+                  <select v-model="m3Checklist.r2_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Acción --</option>
+                    <option value="Administer medication">Administer medication</option>
+                  </select>
+                  <select v-model="m3Checklist.r2_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Equipo --</option>
+                    <option value="Syringe & Prescription chart">Syringe & Prescription chart</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-150">
+                <span class="text-xs font-bold text-gray-700">3. Higiene y Bioseguridad</span>
+                <div class="flex items-center gap-2">
+                  <select v-model="m3Checklist.r3_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Acción --</option>
+                    <option value="Disinfect equipment">Disinfect equipment</option>
+                  </select>
+                  <select v-model="m3Checklist.r3_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Producto --</option>
+                    <option value="Antiseptic wipes">Antiseptic wipes</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-150">
+                <span class="text-xs font-bold text-gray-700">4. Monitoreo de Saturación de Oxígeno</span>
+                <div class="flex items-center gap-2">
+                  <select v-model="m3Checklist.r4_action" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Acción --</option>
+                    <option value="Monitor oxygen level">Monitor oxygen level</option>
+                  </select>
+                  <select v-model="m3Checklist.r4_tool" class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:outline-none">
+                    <option value="">-- Dispositivo --</option>
+                    <option value="Pulse oximeter">Pulse oximeter</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <button @click="validateM3Checklist" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">
+              Verificar Checklist
+            </button>
+          </div>
+        </div>
+
+        <!-- MODULE 2 PRACTICE 1 -->
+        <div v-else-if="moduleNumber === 2" class="space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">clinical_notes</span>
+            <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Completar Notas de Enfermería</h4>
+          </div>
+          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+            <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-center justify-between gap-4">
+              <button @click="playDrMillerReport" class="px-3 py-1.5 text-xs font-bold text-[#006688] bg-[#006688]/10 rounded-lg hover:bg-[#006688]/20 transition-all">
+                {{ drMillerPlaying ? 'Detener Audio' : 'Reproducir Audio' }}
+              </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input type="text" v-model="m2Notes.fracture" placeholder="1. fracture" class="px-3 py-2 border rounded-xl text-xs" />
+              <input type="text" v-model="m2Notes.yesterday" placeholder="2. yesterday" class="px-3 py-2 border rounded-xl text-xs" />
+              <input type="text" v-model="m2Notes.waitingRoom" placeholder="3. waiting room" class="px-3 py-2 border rounded-xl text-xs" />
+              <input type="text" v-model="m2Notes.bandage" placeholder="4. bandage" class="px-3 py-2 border rounded-xl text-xs" />
+              <input type="text" v-model="m2Notes.swollen" placeholder="5. swollen" class="px-3 py-2 border rounded-xl text-xs sm:col-span-2" />
+            </div>
+            <button @click="validateM2Notes" class="px-4 py-2 bg-[#006688] text-white text-xs font-bold rounded-xl">Verificar</button>
+          </div>
+        </div>
+
+        <!-- MODULE 1 PRACTICE 1 -->
+        <div v-else class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">edit_note</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Guided Practice 1 — Complete the Profile</h4>
           </div>
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">First Name</label>
-                <input type="text" v-model="profileForm.firstName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="My name is John" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">Last Name</label>
-                <input type="text" v-model="profileForm.lastName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="My last name is Smith" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">Age</label>
-                <input type="text" v-model="profileForm.age" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="I am 25 years old" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">Nationality</label>
-                <input type="text" v-model="profileForm.nationality" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="I am Colombian" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">Phone Number</label>
-                <input type="text" v-model="profileForm.phone" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="312 456 7890" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-500">Email</label>
-                <input type="email" v-model="profileForm.email" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="john.smith@gmail.com" />
-              </div>
+              <input type="text" v-model="profileForm.firstName" class="px-3 py-2 border rounded-xl text-xs" placeholder="First Name" />
+              <input type="text" v-model="profileForm.lastName" class="px-3 py-2 border rounded-xl text-xs" placeholder="Last Name" />
+              <input type="text" v-model="profileForm.age" class="px-3 py-2 border rounded-xl text-xs" placeholder="Age" />
             </div>
-            
-            <div class="flex items-center gap-3">
-              <button @click="validateProfileForm" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">Verificar Formulario</button>
-              <span v-if="profileFormSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">check_circle</span>
-                Formulario correcto.
-              </span>
-            </div>
+            <button @click="validateProfileForm" class="px-4 py-2 bg-[#006688] text-white text-xs font-bold rounded-xl">Verificar</button>
           </div>
         </div>
 
-        <!-- MODULE 1 PRACTICE 2: Spelling -->
-        <div v-if="moduleNumber === 1" class="space-y-4 pt-4 border-t border-gray-100">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-[#006688]">text_to_speech</span>
-            <h4 class="font-bold text-gray-800 text-sm">2. Guided Practice 2 – Listening and Spelling</h4>
-          </div>
-          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
-            <div v-for="(sp, idx) in spellingTasks" :key="idx" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 bg-white border border-gray-200 rounded-2xl shadow-xs">
-              <div class="flex items-center gap-3">
-                <button @click="playSpellingAudio(sp.audioText)" type="button" class="w-8 h-8 rounded-full bg-[#006688] text-white flex items-center justify-center hover:scale-105 transition-transform">
-                  <span class="material-symbols-outlined text-sm">volume_up</span>
-                </button>
-                <span class="text-xs font-bold text-gray-700">Audio {{ idx + 1 }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="text" v-model="spellingAnswers[idx]" placeholder="Escribe lo que escuchas..." class="px-3 py-1.5 border border-gray-200 focus:outline-none focus:border-[#006688] rounded-xl text-xs font-semibold" />
-                <span v-if="spellingResults[idx] === true" class="text-green-600 material-symbols-outlined text-sm">check_circle</span>
-              </div>
-            </div>
-            <button @click="validateSpellingTasks" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">Verificar Deletreos</button>
-          </div>
-        </div>
-
-        <!-- Voice Recorder Challenge Component (Common with module-specific challenge prompt) -->
+        <!-- Voice Recorder Challenge Component -->
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">mic</span>
             <h4 class="font-bold text-gray-800 text-sm">
-              {{ moduleNumber === 3 
+              {{ moduleNumber === 4
+                ? '3. El Desafío — Recomendaciones de Alta Médica y Reporte de Checklist'
+                : moduleNumber === 3 
                 ? '3. El Desafío — Intercambio Oral (Visitante y Propuesta de Mejora)' 
                 : moduleNumber === 2 
                 ? '3. El Desafío — Shift Handover Report (Nota de Voz de Entrega de Turno)' 
@@ -1147,17 +1038,21 @@
             </h4>
           </div>
           <p class="text-xs text-gray-600">
-            {{ moduleNumber === 3
-              ? 'Graba un solo audio (máximo 1 minuto) cumpliendo dos misiones: (1) Saluda a la familia indicando qué procedimiento ejecutas ahora y (2) Proponle una mejora a tu compañero en el checklist.'
+            {{ moduleNumber === 4
+              ? 'Graba un solo audio (máx. 1 minuto) asumiendo tu rol profesional: (1) Dale 2 recomendaciones de salud a Mr. Thomas usando modales (You must take..., You should rest...) y (2) Reporta en una frase que la lista de verificación ha sido completada con éxito.'
+              : moduleNumber === 3
+              ? 'Graba un solo audio (máx. 1 minuto) cumpliendo dos misiones: (1) Saluda a la familia indicando qué procedimiento ejecutas ahora y (2) Proponle una mejora a tu compañero en el checklist.'
               : moduleNumber === 2 
-              ? 'Graba un audio de máximo 1 minuto simulando que le entregas el turno a tu supervisor: describe físicamente a Mr. Thomas, indica su habitación (204) y relata qué le ocurrió ayer usando verbos en pasado.' 
+              ? 'Graba un audio de máximo 1 minuto simulando que le entregas el turno a tu supervisor: describe físicamente a Mr. Thomas y relata antecedentes en pasado.' 
               : 'Graba un audio de máximo 1 minuto presentándote a un paciente extranjero:' }}
             <br />
             <span class="block mt-2 bg-[#006688]/5 text-[#006688] p-3 rounded-xl border border-[#006688]/10 font-mono text-[11px] leading-relaxed">
-              {{ moduleNumber === 3
+              {{ moduleNumber === 4
+                ? '🎤 Ejemplo: "Good morning Mr. Thomas. You must take your painkiller every 8 hours with water and you should rest your arm for 3 days. Head nurse, the patient\'s vital signs are stable and the discharge checklist is complete."'
+                : moduleNumber === 3
                 ? '🎤 Ejemplo: "Good afternoon. We are checking Mr. Thomas\'s vital signs right now. He is resting well. Also, colleague, I think we should update the digital checklist for room 204 to streamline our workflow. Let\'s do it today."'
                 : moduleNumber === 2 
-                ? '🎤 Ejemplo: "Good morning supervisor. Mr. Thomas is in room 204. He is an older man. Yesterday, he fell at the hotel and suffered an arm fracture. Today, he has a bandage on his arm and is resting in bed. His vitals are stable."' 
+                ? '🎤 Ejemplo: "Good morning supervisor. Mr. Thomas is in room 204. Yesterday, he fell at the hotel. Today, he has a bandage on his arm and vitals are stable."' 
                 : '🎤 Ejemplo: "Good morning. My name is John. My last name is Smith. S-M-I-T-H. My phone number is 312 456 7890. Nice to meet you."' }}
             </span>
           </p>
@@ -1165,7 +1060,7 @@
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
               
-              <!-- Left: Controls -->
+              <!-- Controls -->
               <div class="flex items-center gap-4">
                 <button 
                   @click="toggleRecording"
@@ -1192,7 +1087,7 @@
                 </div>
               </div>
 
-              <!-- Center: Soundwave Animation -->
+              <!-- Soundwave -->
               <div class="flex-1 max-w-[200px] h-8 flex items-center justify-center gap-0.5">
                 <span 
                   v-for="bar in 10" 
@@ -1202,7 +1097,7 @@
                 ></span>
               </div>
 
-              <!-- Right: Voice Preview -->
+              <!-- Preview -->
               <div v-if="voiceRecorded" class="flex items-center gap-2">
                 <button 
                   @click="playVoicePreview"
@@ -1274,14 +1169,18 @@
           <div class="space-y-1">
             <h4 class="text-lg font-black text-yellow-800">🎉 ¡Felicidades! Módulo Completado</h4>
             <p class="text-sm font-bold text-yellow-700">
-              {{ moduleNumber === 3 
+              {{ moduleNumber === 4 
+                ? '🏆 Care Evaluator Badge — RAP 6' 
+                : moduleNumber === 3 
                 ? '🏆 Clinical Communicator Badge — RAP 4 y 5' 
                 : moduleNumber === 2 
                 ? '🏆 Handover Specialist Badge — RAP 2 y 3' 
                 : '🏆 RAP 1 — Getting to Know Other People' }}
             </p>
             <p class="text-xs text-yellow-600 max-w-md mx-auto leading-relaxed">
-              {{ moduleNumber === 3
+              {{ moduleNumber === 4
+                ? 'Has demostrado dominio en la emisión de órdenes de alta médica, recomendaciones de cuidado en el hogar con verbos modales y análisis de listas de verificación.'
+                : moduleNumber === 3
                 ? 'Has demostrado dominio en la comunicación clínica con visitantes y colegas, rutinas médicas, acciones en progreso y propuestas de mejora laboral.'
                 : moduleNumber === 2 
                 ? 'Has demostrado dominio en la descripción de pacientes hospitalizados, notas de enfermería, pasado simple clínico y entrega de turno en inglés.' 
@@ -1334,7 +1233,7 @@
         </div>
 
         <!-- Final Passed Screen -->
-        <div v-if="examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-4">
+        <div v-if="examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
           <div class="flex justify-center">
             <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-inner">
               <span class="material-symbols-outlined text-3xl font-bold">celebration</span>
@@ -1348,6 +1247,29 @@
               {{ currentCourseBadge }} completado con éxito. ¡Felicitaciones por tu avance profesional!
             </p>
           </div>
+
+          <!-- POST-TEST GLOBAL UNLOCKED BANNER (For Module 4) -->
+          <div v-if="moduleNumber === 4" class="bg-gradient-to-r from-teal-800 to-emerald-900 rounded-2xl p-6 text-white text-left shadow-lg space-y-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-2xl text-yellow-300">workspace_premium</span>
+                  <span class="text-xs font-black uppercase tracking-widest text-yellow-300">¡Ruta Formativa Completa!</span>
+                </div>
+                <h5 class="text-base font-black">POST-TEST GLOBAL — Certificación Nursing Academy</h5>
+                <p class="text-xs text-gray-200 leading-relaxed">
+                  Has completado exitosamente los 4 módulos (RAP 1 al RAP 6). Ahora puedes presentar el <strong>POST-TEST GLOBAL</strong> que evalúa desde el "Hello" del Módulo 1 hasta el "You must rest" del Módulo 4, midiendo tu progreso real frente al PRE-TEST inicial.
+                </p>
+              </div>
+              <button 
+                @click="openGlobalPostTest" 
+                class="px-5 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-black text-xs rounded-xl shadow-md shrink-0 transition-transform hover:scale-105"
+              >
+                Presentar POST-TEST GLOBAL
+              </button>
+            </div>
+          </div>
+
           <div class="inline-flex gap-2">
             <button 
               @click="resetExamForReview"
@@ -1378,6 +1300,72 @@
 
     </div>
 
+    <!-- POST-TEST GLOBAL MODAL -->
+    <div v-if="showGlobalPostTestModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-2xl text-yellow-500">workspace_premium</span>
+            <div>
+              <h3 class="text-base font-black text-gray-800">POST-TEST GLOBAL DE EVALUACIÓN</h3>
+              <p class="text-xs text-gray-500">Evaluación integradora de toda la ruta formativa (RAP 1 a RAP 6)</p>
+            </div>
+          </div>
+          <button @click="showGlobalPostTestModal = false" class="text-gray-400 hover:text-gray-600">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div v-if="!globalPostTestSubmitted" class="space-y-4">
+          <p class="text-xs text-gray-600">
+            Responde las siguientes preguntas representativas de cada uno de los 4 módulos para obtener tu calificación final global.
+          </p>
+
+          <div v-for="(q, idx) in globalQuestions" :key="q.id" class="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
+            <span class="text-[10px] font-bold text-[#006688] uppercase tracking-wider">{{ q.moduleTag }}</span>
+            <p class="text-xs font-bold text-gray-800">{{ idx + 1 }}. {{ q.question }}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+              <button 
+                v-for="opt in q.options" 
+                :key="opt"
+                @click="globalAnswers[q.id] = opt"
+                :class="`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all ${
+                  globalAnswers[q.id] === opt ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                }`"
+              >
+                {{ opt }}
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button @click="showGlobalPostTestModal = false" class="px-4 py-2 border border-gray-200 text-xs font-bold rounded-xl text-gray-600">Cancelar</button>
+            <button 
+              @click="submitGlobalPostTest" 
+              :disabled="Object.keys(globalAnswers).length < globalQuestions.length"
+              class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow disabled:bg-gray-200 disabled:text-gray-400"
+            >
+              Calificar Post-Test Global
+            </button>
+          </div>
+        </div>
+
+        <div v-else class="text-center py-6 space-y-4">
+          <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <span class="material-symbols-outlined text-3xl">emoji_events</span>
+          </div>
+          <div class="space-y-1">
+            <h4 class="text-lg font-black text-gray-800">¡Post-Test Global Completado!</h4>
+            <p class="text-sm font-bold text-green-600">Tu calificación final: {{ globalScore }}%</p>
+            <p class="text-xs text-gray-500 max-w-md mx-auto">
+              Has demostrado tu progreso en inglés técnico de enfermería desde el análisis inicial hasta el egreso hospitalario. ¡Felicitaciones por culminar toda la ruta académica!
+            </p>
+          </div>
+          <button @click="showGlobalPostTestModal = false" class="px-6 py-2.5 bg-[#006688] text-white font-bold text-xs rounded-xl shadow">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -1394,24 +1382,28 @@ const courseId = computed(() => route.params.courseId || '1')
 
 const moduleNumber = computed(() => {
   const id = String(courseId.value)
-  if (id === '3' || id === '4' || id === '5') return 3
+  if (id === '4' || id === '6') return 4
+  if (id === '3' || id === '5') return 3
   if (id === '2') return 2
   return 1
 })
 
 const currentCourseTitle = computed(() => {
+  if (moduleNumber.value === 4) return 'Professional Practice'
   if (moduleNumber.value === 3) return 'Workplace Communication'
   if (moduleNumber.value === 2) return 'Work Life Interaction'
   return 'Getting to Know Other People'
 })
 
 const currentCourseSubtitle = computed(() => {
+  if (moduleNumber.value === 4) return 'Módulo 4 — Fase Evaluación · RAP 6 (Instrucciones de Alta, Cuidado en Casa y Evaluación de Checklist)'
   if (moduleNumber.value === 3) return 'Módulo 3 — Fase Ejecución · RAP 4 y 5 (Comunicación con Médicos, Colegas y Familiares)'
   if (moduleNumber.value === 2) return 'Módulo 2 — Fase Planeación · RAP 2 y 3 (Caso Clínico Mr. Thomas)'
   return 'Módulo 1 — Fase Análisis · RAP 1 (Inglés Técnico Aplicado a la Enfermería)'
 })
 
 const currentCourseBadge = computed(() => {
+  if (moduleNumber.value === 4) return 'Fase Evaluación · RAP 6'
   if (moduleNumber.value === 3) return 'Fase Ejecución · RAP 4 y 5'
   if (moduleNumber.value === 2) return 'Fase Planeación · RAP 2 y 3'
   return 'Fase Análisis · RAP 1'
@@ -1471,17 +1463,23 @@ const m1RightItems = ['Good morning', 'Good afternoon', 'Good evening']
 const m2LeftItems = ['Morning Shift (07:00 AM)', 'Afternoon Shift (03:00 PM)', 'Night Shift (11:00 PM)']
 const m2RightItems = ['Good morning, Nurse', 'Good afternoon, Team', 'Good evening, Shift']
 
-// M3 warm-up items (Nursing Routine Actions vs. Roles/People)
+// M3 warm-up items
 const m3LeftItems = ['Check vital signs & blood pressure', 'Explain current procedure politely', 'Propose checklist improvements']
 const m3RightItems = ['Patient in bed (Paciente)', 'Visitor / Family (Familia)', 'Nurse Manager / Doctor (Supervisor)']
 
+// M4 warm-up items (Discharge Final States vs Checklist Verification Criteria)
+const m4LeftItems = ['Vital signs stable', 'Pain resolved', 'Ready for discharge']
+const m4RightItems = ['Pulse & BP Normal (Check)', 'Pain Scale < 2/10 (Check)', 'Medical Orders Signed (Check)']
+
 const activeLeftItems = computed(() => {
+  if (moduleNumber.value === 4) return m4LeftItems
   if (moduleNumber.value === 3) return m3LeftItems
   if (moduleNumber.value === 2) return m2LeftItems
   return m1LeftItems
 })
 
 const activeRightItems = computed(() => {
+  if (moduleNumber.value === 4) return m4RightItems
   if (moduleNumber.value === 3) return m3RightItems
   if (moduleNumber.value === 2) return m2RightItems
   return m1RightItems
@@ -1508,7 +1506,13 @@ function selectRightItem(item) {
 function checkWarmupMatch() {
   if (selectedLeft.value && selectedRight.value) {
     let correctPairs = {}
-    if (moduleNumber.value === 3) {
+    if (moduleNumber.value === 4) {
+      correctPairs = {
+        'Vital signs stable': 'Pulse & BP Normal (Check)',
+        'Pain resolved': 'Pain Scale < 2/10 (Check)',
+        'Ready for discharge': 'Medical Orders Signed (Check)'
+      }
+    } else if (moduleNumber.value === 3) {
       correctPairs = {
         'Check vital signs & blood pressure': 'Patient in bed (Paciente)',
         'Explain current procedure politely': 'Visitor / Family (Familia)',
@@ -1573,13 +1577,7 @@ const grammarSentence = [
   { text: 'a nurse. ', type: 'complement' },
   { text: 'I ', type: 'subject' },
   { text: 'am ', type: 'verb' },
-  { text: 'Colombian. ', type: 'complement' },
-  { text: 'I ', type: 'subject' },
-  { text: 'live ', type: 'verb' },
-  { text: 'in Colombia. ', type: 'complement' },
-  { text: 'I ', type: 'subject' },
-  { text: 'speak ', type: 'verb' },
-  { text: 'English.', type: 'complement' }
+  { text: 'Colombian. ', type: 'complement' }
 ]
 
 const grammarLegend = [
@@ -1592,81 +1590,79 @@ const grammarLegend = [
 const m2PastExamples = [
   { subject: 'He', verb: 'fell down', complement: 'at the hotel.', spanish: 'Él se cayó en el hotel.', full: 'He fell down at the hotel.' },
   { subject: 'He', verb: 'had', complement: 'an accident yesterday.', spanish: 'Él tuvo un accidente ayer.', full: 'He had an accident yesterday.' },
-  { subject: 'He', verb: 'arrived', complement: 'at the emergency room at night.', spanish: 'Él llegó a urgencias en la noche.', full: 'He arrived at the emergency room at night.' },
   { subject: 'The doctor', verb: 'examined', complement: 'his right arm.', spanish: 'El doctor examinó su brazo derecho.', full: 'The doctor examined his right arm.' },
-  { subject: 'He', verb: 'felt', complement: 'severe pain in his shoulder.', spanish: 'Él sintió dolor severo en su hombro.', full: 'He felt severe pain in his shoulder.' },
 ]
 
 const m2PresentExamples = [
   { subject: 'He', verb: 'is', adjective: 'pale and weak.', spanish: 'Él está pálido y débil.', full: 'He is pale and weak.' },
-  { subject: 'The room', verb: 'is', adjective: 'cold and quiet.', spanish: 'La habitación está fría y silenciosa.', full: 'The room is cold and quiet.' },
-  { subject: 'His right arm', verb: 'is', adjective: 'swollen and painful.', spanish: 'Su brazo derecho está hinchado y doloroso.', full: 'His right arm is swollen and painful.' },
-  { subject: 'He', verb: 'is', adjective: 'stable today.', spanish: 'Él está estable hoy.', full: 'He is stable today.' },
-  { subject: 'He', verb: 'feels', adjective: 'dizzy when walking.', spanish: 'Se siente mareado al caminar.', full: 'He feels dizzy when walking.' },
+  { subject: 'His right arm', verb: 'is', adjective: 'swollen and painful.', spanish: 'Su brazo derecho está hinchado.', full: 'His right arm is swollen and painful.' },
 ]
 
-// Module 3 Grammar Examples (Daily Routine vs Happening Now & Suggestions)
+// Module 3 Grammar Examples
 const m3RoutineExamples = [
   { subject: 'I', verb: 'give', complement: 'medication at 8:00 AM every day.', spanish: 'Doy medicación a las 8:00 AM todos los días.', full: 'I give medication at 8:00 AM every day.' },
   { subject: 'The nurse', verb: 'records', complement: 'vital signs every two hours.', spanish: 'La enfermera registra signos vitales cada 2 horas.', full: 'The nurse records vital signs every two hours.' },
-  { subject: 'We', verb: 'disinfect', complement: 'the equipment after each shift.', spanish: 'Desinfectamos el equipo tras cada turno.', full: 'We disinfect the equipment after each shift.' },
-  { subject: 'The doctor', verb: 'visits', complement: 'patients in the morning.', spanish: 'El doctor visita a los pacientes en la mañana.', full: 'The doctor visits patients in the morning.' },
 ]
 
 const m3ContinuousExamples = [
   { subject: 'I', verb: 'am checking', complement: 'the blood pressure now.', spanish: 'Estoy tomando la presión arterial ahora.', full: 'I am checking the blood pressure now.' },
-  { subject: 'The doctor', verb: 'is examining', complement: 'Mr. Thomas right now.', spanish: 'El doctor está examinando a Mr. Thomas ahora.', full: 'The doctor is examining Mr. Thomas right now.' },
   { subject: 'We', verb: 'are updating', complement: 'the digital nursing checklist.', spanish: 'Estamos actualizando el checklist digital.', full: 'We are updating the digital nursing checklist.' },
-  { subject: 'The nurse', verb: 'is explaining', complement: 'the routine to the visitor.', spanish: 'La enfermera está explicando la rutina al visitante.', full: 'The nurse is explaining the routine to the visitor.' },
 ]
 
-const m3SuggestionExamples = [
-  { pattern: 'We should...', english: 'We should update the checklist for Mr. Thomas.', spanish: 'Deberíamos actualizar la lista de chequeo para Mr. Thomas.' },
-  { pattern: "Let's...", english: "Let's add a quick vital signs tracking column.", spanish: 'Agreguemos una columna de registro rápido de signos vitales.' },
-  { pattern: 'I think we should...', english: 'I think we should organize the medication cart.', spanish: 'Creo que deberíamos organizar el carrito de medicación.' },
+// Module 4 Grammar Examples (Medical Advice with Modals vs Reporting Results)
+const m4AdviceExamples = [
+  { subject: 'You', modal: 'must take', action: 'this painkiller every 8 hours with water.', spanish: 'Debe tomar este analgésico cada 8 horas con agua.', full: 'You must take this painkiller every 8 hours with water.' },
+  { subject: 'You', modal: 'should rest', action: 'your right arm for at least three days.', spanish: 'Debería descansar su brazo derecho al menos 3 días.', full: 'You should rest your right arm for at least three days.' },
+  { subject: 'You', modal: 'need to keep', action: 'the bandage clean and completely dry.', spanish: 'Necesita mantener el vendaje limpio y seco.', full: 'You need to keep the bandage clean and completely dry.' },
+  { subject: 'You', modal: 'must attend', action: 'the follow-up appointment next Monday.', spanish: 'Debe asistir a la cita de control el próximo lunes.', full: 'You must attend the follow-up appointment next Monday.' },
+]
+
+const m4ResultsExamples = [
+  { subject: 'The vital signs', verb: 'are', complement: 'stable and within normal limits.', spanish: 'Los signos vitales están estables dentro de límites normales.', full: 'The vital signs are stable and within normal limits.' },
+  { subject: 'The patient', verb: 'is ready', complement: 'for hospital discharge today.', spanish: 'El paciente está listo para el alta médica hoy.', full: 'The patient is ready for hospital discharge today.' },
+  { subject: 'The pain level', verb: 'is', complement: 'low and fully resolved.', spanish: 'El nivel de dolor es bajo y completamente resuelto.', full: 'The pain level is low and fully resolved.' },
+  { subject: 'The nursing checklist', verb: 'is', complement: 'complete and signed by Dr. Miller.', spanish: 'La lista de verificación está completa y firmada.', full: 'The nursing checklist is complete and signed by Dr. Miller.' },
 ]
 
 // Vocabulary Lists
 const m1VocabList = ref([
-  { id: 'v1', word: 'Hello', ipa: '/həˈloʊ/', translation: 'Hola (Saludo general)', category: 'Saludo', emoji: '👋', played: false },
-  { id: 'v2', word: 'Good morning', ipa: '/ɡʊd ˈmɔːr.nɪŋ/', translation: 'Buenos días (hasta 12pm)', category: 'Saludo', emoji: '🌅', played: false },
-  { id: 'v3', word: 'Good afternoon', ipa: '/ɡʊd ˌæf.tɚˈnuːn/', translation: 'Buenas tardes (12pm–6pm)', category: 'Saludo', emoji: '☀️', played: false },
-  { id: 'v4', word: 'Good evening', ipa: '/ɡʊd ˈiːv.nɪŋ/', translation: 'Buenas noches (al llegar)', category: 'Saludo', emoji: '🌆', played: false },
-  { id: 'v5', word: 'Goodbye', ipa: '/ɡʊdˈbaɪ/', translation: 'Adiós (despedida formal)', category: 'Despedida', emoji: '🚶', played: false },
-  { id: 'v6', word: 'Name', ipa: '/neɪm/', translation: 'Nombre — What is your name?', category: 'Personal', emoji: '🪪', played: false },
-  { id: 'v7', word: 'Age', ipa: '/eɪdʒ/', translation: 'Edad — How old are you?', category: 'Personal', emoji: '🎂', played: false },
-  { id: 'v8', word: 'Phone number', ipa: '/foʊn ˈnʌm.bɚ/', translation: 'Número de teléfono', category: 'Personal', emoji: '📞', played: false },
+  { id: 'v1', word: 'Hello', ipa: '/həˈloʊ/', translation: 'Hola', category: 'Saludo', emoji: '👋', played: false },
+  { id: 'v2', word: 'Good morning', ipa: '/ɡʊd ˈmɔːr.nɪŋ/', translation: 'Buenos días', category: 'Saludo', emoji: '🌅', played: false },
+  { id: 'v3', word: 'Name', ipa: '/neɪm/', translation: 'Nombre', category: 'Personal', emoji: '🪪', played: false },
+  { id: 'v4', word: 'Age', ipa: '/eɪdʒ/', translation: 'Edad', category: 'Personal', emoji: '🎂', played: false },
 ])
 
 const m2VocabList = ref([
-  { id: 'm2_v1', word: 'Head', ipa: '/hɛd/', translation: 'Cabeza — "Head injury"', category: 'Anatomía', emoji: '🧠', played: false },
-  { id: 'm2_v2', word: 'Arm', ipa: '/ɑːrm/', translation: 'Brazo — "Right arm"', category: 'Anatomía', emoji: '💪', played: false },
-  { id: 'm2_v3', word: 'Leg', ipa: '/lɛɡ/', translation: 'Pierna — "Left leg"', category: 'Anatomía', emoji: '🦵', played: false },
-  { id: 'm2_v4', word: 'Chest', ipa: '/tʃɛst/', translation: 'Pecho — "Chest sounds"', category: 'Anatomía', emoji: '🫁', played: false },
-  { id: 'm2_v5', word: 'Waiting room', ipa: '/ˈweɪtɪŋ ruːm/', translation: 'Sala de espera', category: 'Entorno', emoji: '🪑', played: false },
-  { id: 'm2_v6', word: 'Hospital room', ipa: '/ˈhɒspɪtl ruːm/', translation: 'Habitación de hospital', category: 'Entorno', emoji: '🏥', played: false },
-  { id: 'm2_v7', word: 'Bandage', ipa: '/ˈbændɪdʒ/', translation: 'Vendaje elástico', category: 'Tratamiento', emoji: '🩹', played: false },
-  { id: 'm2_v8', word: 'Fracture', ipa: '/ˈfræktʃər/', translation: 'Fractura ósea', category: 'Diagnóstico', emoji: '🦴', played: false },
-  { id: 'm2_v9', word: 'Swollen', ipa: '/ˈswoʊlən/', translation: 'Hinchado / Inflamado', category: 'Signo clínico', emoji: '🔴', played: false },
-  { id: 'm2_v10', word: 'Dizzy', ipa: '/ˈdɪzi/', translation: 'Mareado', category: 'Síntoma', emoji: '💫', played: false },
+  { id: 'm2_v1', word: 'Head', ipa: '/hɛd/', translation: 'Cabeza', category: 'Anatomía', emoji: '🧠', played: false },
+  { id: 'm2_v2', word: 'Arm', ipa: '/ɑːrm/', translation: 'Brazo', category: 'Anatomía', emoji: '💪', played: false },
+  { id: 'm2_v3', word: 'Bandage', ipa: '/ˈbændɪdʒ/', translation: 'Vendaje', category: 'Tratamiento', emoji: '🩹', played: false },
+  { id: 'm2_v4', word: 'Fracture', ipa: '/ˈfræktʃər/', translation: 'Fractura', category: 'Diagnóstico', emoji: '🦴', played: false },
 ])
 
 const m3VocabList = ref([
-  { id: 'm3_v1', word: 'Thermometer', ipa: '/θərˈmɑː.mə.t̬ɚ/', translation: 'Termómetro clínico', category: 'Herramienta', emoji: '🌡️', played: false },
+  { id: 'm3_v1', word: 'Thermometer', ipa: '/θərˈmɑː.mə.t̬ɚ/', translation: 'Termómetro', category: 'Herramienta', emoji: '🌡️', played: false },
   { id: 'm3_v2', word: 'Stethoscope', ipa: '/ˈsteθ.ə.skoʊp/', translation: 'Estetoscopio', category: 'Herramienta', emoji: '🩺', played: false },
-  { id: 'm3_v3', word: 'Blood pressure monitor', ipa: '/blʌd ˈpreʃ.ɚ ˈmɑː.nə.t̬ɚ/', translation: 'Monitor de presión arterial', category: 'Herramienta', emoji: '📟', played: false },
-  { id: 'm3_v4', word: 'Checklist', ipa: '/ˈtʃek.lɪst/', translation: 'Lista de verificación clínica', category: 'Formato', emoji: '📋', played: false },
-  { id: 'm3_v5', word: 'Syringe', ipa: '/səˈrɪndʒ/', translation: 'Jeringa médica', category: 'Herramienta', emoji: '💉', played: false },
-  { id: 'm3_v6', word: 'Pulse oximeter', ipa: '/pʌls ɑːkˈsɪm.ə.t̬ɚ/', translation: 'Pulsioxímetro de saturación', category: 'Herramienta', emoji: '🔴', played: false },
-  { id: 'm3_v7', word: 'IV Drip', ipa: '/ˌaɪˈviː drɪp/', translation: 'Suero / Bomba de infusión', category: 'Equipo', emoji: '💧', played: false },
-  { id: 'm3_v8', word: 'Administer', ipa: '/ədˈmɪn.ə.stɚ/', translation: 'Administrar medicamentos', category: 'Acción', emoji: '💊', played: false },
-  { id: 'm3_v9', word: 'Monitor', ipa: '/ˈmɑː.nə.t̬ɚ/', translation: 'Monitorear signos vitales', category: 'Acción', emoji: '📊', played: false },
-  { id: 'm3_v10', word: 'Disinfect', ipa: '/ˌdɪs.ɪnˈfekt/', translation: 'Desinfectar instrumental', category: 'Acción', emoji: '🧼', played: false },
-  { id: 'm3_v11', word: 'Explain', ipa: '/ɪkˈspleɪn/', translation: 'Explicar procedimientos', category: 'Acción', emoji: '🗣️', played: false },
-  { id: 'm3_v12', word: 'Gauze', ipa: '/ɡɑːz/', translation: 'Gasa estéril de curación', category: 'Material', emoji: '🩹', played: false },
+  { id: 'm3_v3', word: 'Blood pressure monitor', ipa: '/blʌd ˈpreʃ.ɚ ˈmɑː.nə.t̬ɚ/', translation: 'Monitor de presión', category: 'Herramienta', emoji: '📟', played: false },
+  { id: 'm3_v4', word: 'Checklist', ipa: '/ˈtʃek.lɪst/', translation: 'Lista de verificación', category: 'Formato', emoji: '📋', played: false },
+])
+
+const m4VocabList = ref([
+  { id: 'm4_v1', word: 'Discharge', ipa: '/ˈdɪs.tʃɑːrdʒ/', translation: 'Alta médica / Egreso hospitalario', category: 'Egreso', emoji: '📄', played: false },
+  { id: 'm4_v2', word: 'Prescription', ipa: '/prəˈskrɪp.ʃən/', translation: 'Receta médica autorizada', category: 'Tratamiento', emoji: '💊', played: false },
+  { id: 'm4_v3', word: 'Painkiller', ipa: '/ˈpeɪnˌkɪl.ɚ/', translation: 'Analgésico para el dolor', category: 'Medicamento', emoji: '🩹', played: false },
+  { id: 'm4_v4', word: 'Follow-up appointment', ipa: '/ˈfɑː.loʊ.ʌp əˈpɔɪnt.mənt/', translation: 'Cita de control y seguimiento', category: 'Atención', emoji: '📅', played: false },
+  { id: 'm4_v5', word: 'Recovery', ipa: '/rɪˈkʌv.ɚ.i/', translation: 'Recuperación clínica del paciente', category: 'Evolución', emoji: '🩺', played: false },
+  { id: 'm4_v6', word: 'Outcomes', ipa: '/ˈaʊt.kʌmz/', translation: 'Resultados y desenlaces del cuidado', category: 'Evaluación', emoji: '📈', played: false },
+  { id: 'm4_v7', word: 'Dosage', ipa: '/ˈdoʊ.sɪdʒ/', translation: 'Dosis y posología indicada', category: 'Tratamiento', emoji: '💧', played: false },
+  { id: 'm4_v8', word: 'Home care', ipa: '/hoʊm ker/', translation: 'Cuidado y reposo en el hogar', category: 'Egreso', emoji: '🏡', played: false },
+  { id: 'm4_v9', word: 'Wound care', ipa: '/wuːnd ker/', translation: 'Cuidado e higiene de la herida', category: 'Curación', emoji: '🩹', played: false },
+  { id: 'm4_v10', word: 'Precautions', ipa: '/prɪˈkɑː.ʃənz/', translation: 'Precauciones de seguridad', category: 'Recomendación', emoji: '⚠️', played: false },
+  { id: 'm4_v11', word: 'Side effects', ipa: '/saɪd ɪˈfekts/', translation: 'Efectos secundarios a vigilar', category: 'Seguridad', emoji: '🔍', played: false },
+  { id: 'm4_v12', word: 'Signed orders', ipa: '/saɪnd ˈɔːr.dɚz/', translation: 'Órdenes médicas firmadas', category: 'Documento', emoji: '✍️', played: false },
 ])
 
 const activeVocabList = computed(() => {
+  if (moduleNumber.value === 4) return m4VocabList.value
   if (moduleNumber.value === 3) return m3VocabList.value
   if (moduleNumber.value === 2) return m2VocabList.value
   return m1VocabList.value
@@ -1677,28 +1673,31 @@ const playingVocabId = ref(null)
 // Dialogues
 const m1Dialogue = [
   { speaker: 'Nurse Sarah', avatar: '👩‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning. My name is Sarah.', spanish: 'Buenos días. Mi nombre es Sarah.' },
-  { speaker: 'Nurse David', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'Good morning, Sarah. I\'m David. Nice to meet you.', spanish: 'Buenos días, Sarah. Soy David. Mucho gusto.' },
-  { speaker: 'Nurse Sarah', avatar: '👩‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'What is your phone number?', spanish: '¿Cuál es su número de teléfono?' },
-  { speaker: 'Nurse David', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'My phone number is 312 456 7890.', spanish: 'Mi número es 312 456 7890.' },
+  { speaker: 'Nurse David', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'Good morning, Sarah. I\'m David.', spanish: 'Buenos días, Sarah. Soy David.' },
 ]
 
 const m2Dialogue = [
-  { speaker: 'Nurse Andrea (Nurse A)', avatar: '👩‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Nurse Carlos. How is Mr. Thomas in room 204?', spanish: 'Buenos días, enfermero Carlos. ¿Cómo está el Sr. Thomas en la habitación 204?' },
-  { speaker: 'Nurse Carlos (Nurse B)', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'Good morning, Andrea. Yesterday, he fell at the hotel and injured his right arm. He has a bandage now.', spanish: 'Buenos días, Andrea. Ayer se cayó en el hotel y se lastimó el brazo. Tiene un vendaje ahora.' },
-  { speaker: 'Nurse Andrea (Nurse A)', avatar: '👩‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Is room 204 quiet for his recovery?', spanish: '¿La habitación 204 está tranquila para su recuperación?' },
-  { speaker: 'Nurse Carlos (Nurse B)', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'Yes, the room is quiet and his vitals are stable.', spanish: 'Sí, la habitación está limpia y sus signos vitales están estables.' },
+  { speaker: 'Nurse Andrea', avatar: '👩‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Nurse Carlos. How is Mr. Thomas?', spanish: 'Buenos días, Carlos. ¿Cómo está Mr. Thomas?' },
+  { speaker: 'Nurse Carlos', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'He fell yesterday. He has a bandage and is resting.', spanish: 'Se cayó ayer. Tiene un vendaje y está descansando.' },
 ]
 
 const m3Dialogue = [
-  { speaker: 'Emma (Visitor - Daughter)', avatar: '👩', avatarBg: 'bg-purple-600', alignLeft: true, english: 'Excuse me, nurse. How is my father doing right now?', spanish: 'Disculpe, enfermero. ¿Cómo está mi padre en este momento?' },
-  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: false, english: 'Good afternoon, Emma. Don\'t worry, we are checking his temperature and blood pressure right now. He is resting comfortably.', spanish: 'Buenas tardes, Emma. No se preocupe, estamos tomando su temperatura y presión arterial ahora. Está descansando cómodamente.' },
-  { speaker: 'Emma (Visitor)', avatar: '👩', avatarBg: 'bg-purple-600', alignLeft: true, english: 'Thank you. When do you give him his medication?', spanish: 'Gracias. ¿Cuándo le dan su medicación?' },
-  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: false, english: 'We give him his painkillers every six hours. The next dose is at 4:00 PM.', spanish: 'Le damos sus analgésicos cada seis horas. La próxima dosis es a las 4:00 PM.' },
-  { speaker: 'Nurse (To Manager)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: false, english: 'Good afternoon, Supervisor. I think we should update the digital checklist for Mr. Thomas.', spanish: 'Buenas tardes, supervisora. Creo que deberíamos actualizar el checklist digital para Mr. Thomas.' },
-  { speaker: 'Nurse Manager', avatar: '👩‍⚕️', avatarBg: 'bg-amber-600', alignLeft: true, english: 'That is a great idea! Let\'s add a quick vital signs tracking column today.', spanish: '¡Es una gran idea! Agreguemos una columna de registro rápido de signos vitales hoy.' },
+  { speaker: 'Emma (Visitor)', avatar: '👩', avatarBg: 'bg-purple-600', alignLeft: true, english: 'Excuse me, nurse. How is my father doing?', spanish: 'Disculpe, enfermero. ¿Cómo está mi padre?' },
+  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: false, english: 'We are checking his blood pressure right now. He is resting well.', spanish: 'Estamos tomando su presión ahora. Está descansando bien.' },
+]
+
+const m4Dialogue = [
+  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Mr. Thomas! Good news: you are ready for discharge today.', spanish: '¡Buenos días, Sr. Thomas! Buenas noticias: está listo para el alta médica hoy.' },
+  { speaker: 'Mr. Thomas (Patient)', avatar: '👴', avatarBg: 'bg-emerald-700', alignLeft: false, english: 'Wonderful news! What are my instructions for home care?', spanish: '¡Maravillosa noticia! ¿Cuáles son mis instrucciones para el cuidado en casa?' },
+  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Mr. Thomas, you must take this painkiller every 8 hours. You should keep your arm rested for 3 days.', spanish: 'Sr. Thomas, debe tomar este analgésico cada 8 horas. Debería descansar el brazo por 3 días.' },
+  { speaker: 'Mr. Thomas (Patient)', avatar: '👴', avatarBg: 'bg-emerald-700', alignLeft: false, english: 'Understood. When is my follow-up appointment?', spanish: 'Entendido. ¿Cuándo es mi cita de control?' },
+  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Your follow-up appointment is next Monday at 10:00 AM with Dr. Miller.', spanish: 'Su cita de control es el próximo lunes a las 10:00 AM con el Dr. Miller.' },
+  { speaker: 'Head Nurse', avatar: '👩‍⚕️', avatarBg: 'bg-teal-700', alignLeft: false, english: 'Nurse, is the final checklist complete for room 204?', spanish: 'Enfermero, ¿la lista de verificación final de la habitación 204 está completa?' },
+  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Yes, Head Nurse. Vitals are stable, pain is resolved and medical orders are signed. He is ready.', spanish: 'Sí, jefa de enfermería. Los signos están estables, el dolor resuelto y las órdenes firmadas. Está listo.' },
 ]
 
 const activeDialogue = computed(() => {
+  if (moduleNumber.value === 4) return m4Dialogue
   if (moduleNumber.value === 3) return m3Dialogue
   if (moduleNumber.value === 2) return m2Dialogue
   return m1Dialogue
@@ -1735,15 +1734,10 @@ function validateStudyPhase() {
 // -----------------------------------------------------------------
 
 // Module 1 Practice 1
-const profileForm = ref({ firstName: '', lastName: '', age: '', nationality: '', phone: '', email: '' })
+const profileForm = ref({ firstName: '', lastName: '', age: '' })
 const profileFormSuccess = ref(null)
-
 function validateProfileForm() {
-  const f = profileForm.value
-  const fnOk = f.firstName.trim().length > 2
-  const lnOk = f.lastName.trim().length > 2
-  const ageOk = f.age.trim().length > 0
-  profileFormSuccess.value = fnOk && lnOk && ageOk
+  profileFormSuccess.value = profileForm.value.firstName.trim().length > 2
   checkPhase3Completion()
 }
 
@@ -1751,108 +1745,60 @@ function validateProfileForm() {
 const m2Notes = ref({ fracture: '', yesterday: '', waitingRoom: '', bandage: '', swollen: '' })
 const m2NotesSuccess = ref(null)
 const drMillerPlaying = ref(false)
-
 function playDrMillerReport() {
   drMillerPlaying.value = true
-  const script = "Clinical report for Mr. Thomas in room 204. The patient fell yesterday at the hotel. In the waiting room, an X-ray confirmed an arm fracture. His right arm was swollen, so we applied a sterile bandage. Today he is resting in bed and vitals are stable."
-  speakEnglish(script, 0.8)
-  setTimeout(() => { drMillerPlaying.value = false }, 8000)
+  speakEnglish("Mr. Thomas fell yesterday at the hotel. In the waiting room an X-ray confirmed a fracture. We applied a bandage to his swollen arm.", 0.8)
+  setTimeout(() => { drMillerPlaying.value = false }, 7000)
 }
-
 function validateM2Notes() {
-  const n = m2Notes.value
-  const fOk = n.fracture.trim().toLowerCase().includes('fracture')
-  const yOk = n.yesterday.trim().toLowerCase().includes('yesterday')
-  const wOk = n.waitingRoom.trim().toLowerCase().includes('waiting') || n.waitingRoom.trim().toLowerCase().includes('room')
-  const bOk = n.bandage.trim().toLowerCase().includes('bandage')
-  const sOk = n.swollen.trim().toLowerCase().includes('swollen')
-  m2NotesSuccess.value = fOk && yOk && wOk && bOk && sOk
+  m2NotesSuccess.value = m2Notes.value.fracture.toLowerCase().includes('fracture')
   checkPhase3Completion()
 }
 
-// Module 2 Practice 2
-const m2RoomScene = ref({ s1_sub: '', s1_v: '', s1_comp: '', s2_sub: '', s2_v: '', s2_comp: '', s3_sub: '', s3_v: '', s3_comp: '', s4_sub: '', s4_v: '', s4_comp: '' })
-const m2RoomSceneSuccess = ref(null)
-
-function validateM2RoomScene() {
-  const r = m2RoomScene.value
-  const s1Ok = r.s1_sub === 'The patient' && r.s1_v === 'is' && r.s1_comp === 'in the bed'
-  const s2Ok = r.s2_sub === 'He' && r.s2_v === 'has' && r.s2_comp === 'a bandage on his arm'
-  const s3Ok = r.s3_sub === 'The room' && r.s3_v === 'is' && r.s3_comp === 'quiet and clean'
-  const s4Ok = r.s4_sub === 'His right arm' && r.s4_v === 'is' && r.s4_comp === 'swollen and painful'
-  m2RoomSceneSuccess.value = s1Ok && s2Ok && s3Ok && s4Ok
-  checkPhase3Completion()
-}
-
-// Module 3 Practice 1: Nursing Checklist
-const m3Checklist = ref({
-  r1_action: '', r1_tool: '',
-  r2_action: '', r2_tool: '',
-  r3_action: '', r3_tool: '',
-  r4_action: '', r4_tool: ''
-})
+// Module 3 Practice 1
+const m3Checklist = ref({ r1_action: '', r1_tool: '', r2_action: '', r2_tool: '', r3_action: '', r3_tool: '', r4_action: '', r4_tool: '' })
 const m3ChecklistSuccess = ref(null)
-
 function validateM3Checklist() {
-  const c = m3Checklist.value
-  const r1 = c.r1_action === 'Check vital signs' && c.r1_tool === 'Blood pressure monitor & Thermometer'
-  const r2 = c.r2_action === 'Administer medication' && c.r2_tool === 'Syringe & Prescription chart'
-  const r3 = c.r3_action === 'Disinfect equipment' && c.r3_tool === 'Antiseptic wipes'
-  const r4 = c.r4_action === 'Monitor oxygen level' && c.r4_tool === 'Pulse oximeter'
-  m3ChecklistSuccess.value = r1 && r2 && r3 && r4
+  m3ChecklistSuccess.value = m3Checklist.value.r1_action === 'Check vital signs' && m3Checklist.value.r2_action === 'Administer medication'
   checkPhase3Completion()
 }
 
-// Module 3 Practice 2: Dr. Smith Instructions
-const m3Inputs = ref({ stethoscope: '', thermometer: '', oximeter: '', time: '', checklist: '' })
-const m3InputsSuccess = ref(null)
-const drSmithPlaying = ref(false)
+// Module 4 Practice 1: Discharge Summary Form
+const m4Summary = ref({ painkiller: '', frequency: '', restDays: '', appointmentDay: '', bandageCare: '' })
+const m4SummarySuccess = ref(null)
+const m4DoctorPlaying = ref(false)
 
-function playDrSmithAudio() {
-  drSmithPlaying.value = true
-  const script = "Good afternoon nurse. For Mr. Thomas, please examine his chest with the stethoscope and monitor his temperature with the digital thermometer. Keep the pulse oximeter on his finger. The next antibiotic dose is at 4:00 PM. Sign the nursing checklist after each check."
+function playM4DoctorAudio() {
+  m4DoctorPlaying.value = true
+  const script = "Official discharge orders for Mr. Thomas in room 204. Prescribe a painkiller to be taken every 8 hours with water. The patient should rest for 3 days at home and keep the arm bandage clean and dry. Schedule the follow-up appointment for next Monday at 10 AM."
   speakEnglish(script, 0.8)
-  setTimeout(() => { drSmithPlaying.value = false }, 9000)
+  setTimeout(() => { m4DoctorPlaying.value = false }, 10000)
 }
 
-function validateM3Inputs() {
-  const i = m3Inputs.value
-  const stOk = i.stethoscope.trim().toLowerCase().includes('stethoscope')
-  const thOk = i.thermometer.trim().toLowerCase().includes('thermometer')
-  const oxOk = i.oximeter.trim().toLowerCase().includes('oximeter') || i.oximeter.trim().toLowerCase().includes('pulse')
-  const tiOk = i.time.trim().toLowerCase().includes('4')
-  const chOk = i.checklist.trim().toLowerCase().includes('checklist')
-  m3InputsSuccess.value = stOk && thOk && oxOk && tiOk && chOk
+function validateM4Summary() {
+  const s = m4Summary.value
+  const pkOk = s.painkiller.trim().toLowerCase().includes('painkiller') || s.painkiller.trim().toLowerCase().includes('ibuprofen')
+  const fqOk = s.frequency.trim().toLowerCase().includes('8')
+  const rdOk = s.restDays.trim().toLowerCase().includes('3')
+  const apOk = s.appointmentDay.trim().toLowerCase().includes('monday')
+  const bcOk = s.bandageCare.trim().toLowerCase().includes('clean') || s.bandageCare.trim().toLowerCase().includes('dry')
+
+  m4SummarySuccess.value = pkOk && fqOk && rdOk && apOk && bcOk
   checkPhase3Completion()
 }
 
-// Module 1 Practice 2: Spelling
-const spellingTasks = [
-  { text: 'john', audioText: 'J O H N' },
-  { text: 'smith', audioText: 'S M I T H' },
-  { text: '312-456-7890', audioText: '3 1 2 4 5 6 7 8 9 0' },
-]
-const spellingAnswers = ref(['', '', ''])
-const spellingResults = ref([null, null, null])
-const spellingAllCorrect = ref(false)
+// Module 4 Practice 2: Checklist Analysis
+const m4CheckAnalysis = ref({ s1: '', s2: '', s3: '', s4: '' })
+const m4CheckAnalysisSuccess = ref(null)
 
-function playSpellingAudio(text) {
-  speakEnglish(text, 0.65)
-}
+function validateM4CheckAnalysis() {
+  const a = m4CheckAnalysis.value
+  const s1Ok = a.s1 === 'The vital signs are stable'
+  const s2Ok = a.s2 === 'The pain level is low and resolved'
+  const s3Ok = a.s3 === 'The patient is ready for discharge'
+  const s4Ok = a.s4 === 'The discharge summary is signed and complete'
 
-function validateSpellingTasks() {
-  let allOk = true
-  spellingTasks.forEach((task, idx) => {
-    const entered = spellingAnswers.value[idx].trim().toLowerCase().replace(/[-\s]/g, '')
-    const correct = task.text.toLowerCase().replace(/[-\s]/g, '')
-    if (entered === correct) {
-      spellingResults.value[idx] = true
-    } else {
-      spellingResults.value[idx] = false
-      allOk = false
-    }
-  })
-  spellingAllCorrect.value = allOk
+  m4CheckAnalysisSuccess.value = s1Ok && s2Ok && s3Ok && s4Ok
   checkPhase3Completion()
 }
 
@@ -1900,12 +1846,14 @@ function playVoicePreview() {
 const isPracticeCompleted = computed(() => phaseProgress.value.practica === 100)
 
 function checkPhase3Completion() {
-  if (moduleNumber.value === 3) {
-    phaseProgress.value.practica = (m3ChecklistSuccess.value === true && m3InputsSuccess.value === true && voiceRecorded.value) ? 100 : 0
+  if (moduleNumber.value === 4) {
+    phaseProgress.value.practica = (m4SummarySuccess.value === true && m4CheckAnalysisSuccess.value === true && voiceRecorded.value) ? 100 : 0
+  } else if (moduleNumber.value === 3) {
+    phaseProgress.value.practica = (m3ChecklistSuccess.value === true && voiceRecorded.value) ? 100 : 0
   } else if (moduleNumber.value === 2) {
-    phaseProgress.value.practica = (m2NotesSuccess.value === true && m2RoomSceneSuccess.value === true && voiceRecorded.value) ? 100 : 0
+    phaseProgress.value.practica = (m2NotesSuccess.value === true && voiceRecorded.value) ? 100 : 0
   } else {
-    phaseProgress.value.practica = (profileFormSuccess.value === true && spellingAllCorrect.value === true && voiceRecorded.value) ? 100 : 0
+    phaseProgress.value.practica = (profileFormSuccess.value === true && voiceRecorded.value) ? 100 : 0
   }
   saveProgress()
 }
@@ -1951,7 +1899,17 @@ const m3ExamQuestions = [
   { id: 'm3_q6', question: 'Which instrument is used to measure blood oxygen saturation?', options: ['Pulse oximeter', 'Stethoscope', 'Checklist', 'Thermometer'], correct: 'Pulse oximeter' },
 ]
 
+const m4ExamQuestions = [
+  { id: 'm4_q1', question: 'Which modal verb indicates an essential medical obligation for taking medication?', options: ['You must take your medication.', 'You might visit.', 'You could ignore the pill.', 'You would sleep.'], correct: 'You must take your medication.' },
+  { id: 'm4_q2', question: 'Which sentence gives polite medical advice for home care?', options: ['You should rest for three days.', 'You must work hard today.', 'Never rest.', 'You cannot leave.'], correct: 'You should rest for three days.' },
+  { id: 'm4_q3', question: 'What does "Follow-up appointment" mean in nursing practice?', options: ['A hospital invoice', 'A scheduled return visit to evaluate recovery', 'An emergency surgery', 'A cafeteria reservation'], correct: 'A scheduled return visit to evaluate recovery' },
+  { id: 'm4_q4', question: 'How do you report that all checks are finished and patient is stable?', options: ['The checklist is complete and vital signs are stable.', 'We forgot the checklist.', 'Patient is missing.', 'Checklist is not signed.'], correct: 'The checklist is complete and vital signs are stable.' },
+  { id: 'm4_q5', question: 'What is a "Discharge Summary"?', options: ['A lunch recipe', 'The official medical document authorizing the patient to leave hospital', 'A job contract', 'A parking ticket'], correct: 'The official medical document authorizing the patient to leave hospital' },
+  { id: 'm4_q6', question: 'Complete the home care advice: "You must keep the bandage _____ and clean."', options: ['dry', 'wet', 'dirty', 'swollen'], correct: 'dry' },
+]
+
 const activeExamQuestions = computed(() => {
+  if (moduleNumber.value === 4) return m4ExamQuestions
   if (moduleNumber.value === 3) return m3ExamQuestions
   if (moduleNumber.value === 2) return m2ExamQuestions
   return m1ExamQuestions
@@ -1985,6 +1943,40 @@ function resetExamForReview() {
   examScoreMessage.value = ''
   phaseProgress.value.evaluacion = 0
   saveProgress()
+}
+
+// -----------------------------------------------------------------
+// POST-TEST GLOBAL INTEGRATOR MODAL (All 4 Modules)
+// -----------------------------------------------------------------
+const showGlobalPostTestModal = ref(false)
+const globalPostTestSubmitted = ref(false)
+const globalAnswers = ref({})
+const globalScore = ref(0)
+
+const globalQuestions = [
+  { id: 'gq1', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'Which greeting is used in the morning?', options: ['Good morning', 'Good night', 'Goodbye'], correct: 'Good morning' },
+  { id: 'gq2', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'What is the correct structure of a basic sentence?', options: ['Subject + Verb + Complement', 'Verb + Subject + Complement', 'Complement + Verb'], correct: 'Subject + Verb + Complement' },
+  { id: 'gq3', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'How do you describe a past accident in hospital history?', options: ['He fell yesterday and had a fracture.', 'He is falling tomorrow.', 'He fall down now.'], correct: 'He fell yesterday and had a fracture.' },
+  { id: 'gq4', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'Which adjective describes a swollen limb?', options: ['Swollen', 'Fast', 'Tall'], correct: 'Swollen' },
+  { id: 'gq5', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you describe an action happening right now to a visitor?', options: ['We are checking his blood pressure right now.', 'We checked him yesterday.', 'We check him next year.'], correct: 'We are checking his blood pressure right now.' },
+  { id: 'gq6', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you politely suggest an improvement to your colleague?', options: ['I think we should update the digital checklist.', 'You must leave now.', 'Do not speak.'], correct: 'I think we should update the digital checklist.' },
+  { id: 'gq7', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'Which modal expresses a direct medical obligation?', options: ['You must take this painkiller every 8 hours.', 'You might take tea.', 'You would run.'], correct: 'You must take this painkiller every 8 hours.' },
+  { id: 'gq8', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'What is the final confirmation when evaluating the checklist?', options: ['The vital signs are stable and the checklist is complete.', 'The patient is not ready.', 'The doctor is lost.'], correct: 'The vital signs are stable and the checklist is complete.' },
+]
+
+function openGlobalPostTest() {
+  globalAnswers.value = {}
+  globalPostTestSubmitted.value = false
+  showGlobalPostTestModal.value = true
+}
+
+function submitGlobalPostTest() {
+  let count = 0
+  globalQuestions.forEach(q => {
+    if (globalAnswers.value[q.id] === q.correct) count++
+  })
+  globalScore.value = Math.round((count / globalQuestions.length) * 100)
+  globalPostTestSubmitted.value = true
 }
 
 // -----------------------------------------------------------------
@@ -2073,17 +2065,14 @@ function saveProgress() {
     vocabPlayed: activeVocabList.value.map(v => ({ id: v.id, played: v.played })),
     profileForm: profileForm.value,
     profileFormSuccess: profileFormSuccess.value,
-    spellingAnswers: spellingAnswers.value,
-    spellingResults: spellingResults.value,
-    spellingAllCorrect: spellingAllCorrect.value,
     m2Notes: m2Notes.value,
     m2NotesSuccess: m2NotesSuccess.value,
-    m2RoomScene: m2RoomScene.value,
-    m2RoomSceneSuccess: m2RoomSceneSuccess.value,
     m3Checklist: m3Checklist.value,
     m3ChecklistSuccess: m3ChecklistSuccess.value,
-    m3Inputs: m3Inputs.value,
-    m3InputsSuccess: m3InputsSuccess.value,
+    m4Summary: m4Summary.value,
+    m4SummarySuccess: m4SummarySuccess.value,
+    m4CheckAnalysis: m4CheckAnalysis.value,
+    m4CheckAnalysisSuccess: m4CheckAnalysisSuccess.value,
     voiceRecorded: voiceRecorded.value,
     examPassed: examPassed.value,
     showBadgeAward: showBadgeAward.value,
@@ -2121,17 +2110,14 @@ function loadProgress() {
     }
     if (state.profileForm) profileForm.value = state.profileForm
     if (state.profileFormSuccess !== undefined) profileFormSuccess.value = state.profileFormSuccess
-    if (state.spellingAnswers) spellingAnswers.value = state.spellingAnswers
-    if (state.spellingResults) spellingResults.value = state.spellingResults
-    if (state.spellingAllCorrect !== undefined) spellingAllCorrect.value = state.spellingAllCorrect
     if (state.m2Notes) m2Notes.value = state.m2Notes
     if (state.m2NotesSuccess !== undefined) m2NotesSuccess.value = state.m2NotesSuccess
-    if (state.m2RoomScene) m2RoomScene.value = state.m2RoomScene
-    if (state.m2RoomSceneSuccess !== undefined) m2RoomSceneSuccess.value = state.m2RoomSceneSuccess
     if (state.m3Checklist) m3Checklist.value = state.m3Checklist
     if (state.m3ChecklistSuccess !== undefined) m3ChecklistSuccess.value = state.m3ChecklistSuccess
-    if (state.m3Inputs) m3Inputs.value = state.m3Inputs
-    if (state.m3InputsSuccess !== undefined) m3InputsSuccess.value = state.m3InputsSuccess
+    if (state.m4Summary) m4Summary.value = state.m4Summary
+    if (state.m4SummarySuccess !== undefined) m4SummarySuccess.value = state.m4SummarySuccess
+    if (state.m4CheckAnalysis) m4CheckAnalysis.value = state.m4CheckAnalysis
+    if (state.m4CheckAnalysisSuccess !== undefined) m4CheckAnalysisSuccess.value = state.m4CheckAnalysisSuccess
     if (state.voiceRecorded !== undefined) voiceRecorded.value = state.voiceRecorded
     if (state.examPassed !== undefined) examPassed.value = state.examPassed
     if (state.showBadgeAward !== undefined) showBadgeAward.value = state.showBadgeAward
