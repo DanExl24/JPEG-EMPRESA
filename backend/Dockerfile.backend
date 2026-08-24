@@ -6,19 +6,19 @@ RUN apk add --no-cache python3 make g++
 # Instalar pnpm
 RUN corepack enable && corepack prepare pnpm@11 --activate
 
-
 WORKDIR /app
 
-# Modo no interactivo para pnpm (evita ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY)
+# Modo no interactivo para pnpm
 ENV CI=true
 
 # Copiar archivos de dependencias del backend
 COPY backend/package.json backend/pnpm-lock.yaml* backend/pnpm-workspace.yaml ./
 
 # Instalar dependencias del backend
-RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm install --no-frozen-lockfile
 
-# Copiar el código fuente del backend
+# Copiar carpeta shared y código fuente del backend
+COPY shared/ /shared/
 COPY backend/ ./
 
 # Generar el cliente de Prisma
