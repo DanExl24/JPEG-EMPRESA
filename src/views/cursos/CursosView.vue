@@ -600,7 +600,25 @@ async function fetchActivities() {
   }
 }
 
-onMounted(fetchActivities)
+onMounted(() => {
+  fetchActivities()
+  const apprenticeId = auth.user?.id || 'guest'
+  courses.value.forEach(course => {
+    try {
+      const key = `nursing_academy_progress_${apprenticeId}_course_${course.id}`
+      const raw = localStorage.getItem(key)
+      if (raw) {
+        const data = JSON.parse(raw)
+        if (data.phaseProgress) {
+          const sum = Object.values(data.phaseProgress).reduce((a, b) => a + b, 0)
+          course.progress = Math.round(sum / Object.keys(data.phaseProgress).length)
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  })
+})
 
 // Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2/3, RAP 4/5 y RAP 6
 const courses = ref([

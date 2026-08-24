@@ -170,45 +170,45 @@
             </h4>
             
             <!-- Module 4 Objectives -->
-            <ul v-if="moduleNumber === 4" class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
-              <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold mt-0.5">✓</span> Dar instrucciones y órdenes de alta médica (*Discharge Orders*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold mt-0.5">✓</span> Usar verbos modales para consejos de salud (*You must, You should*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold mt-0.5">✓</span> Reportar estados y resultados finales (*Vitals stable, Pain resolved*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">💊</span> Vocabulario ocupacional (*Prescription, Painkiller, Follow-up*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">📋</span> Evaluar y cerrar listas de verificación (*Nursing Checklist*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-teal-600 font-bold mt-0.5">🎓</span> Acceder al <strong>Post-Test Global</strong> de certificación</li>
+            <ul v-if="moduleNumber === 4" class="text-xs text-gray-600 leading-relaxed space-y-1.5 mt-2 list-none">
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-emerald-600 shrink-0 mt-0.5">check_circle</span> <span>Dar instrucciones y órdenes de alta médica (<i>Discharge Orders</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-emerald-600 shrink-0 mt-0.5">check_circle</span> <span>Usar verbos modales para consejos de salud (<i>You must, You should</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-emerald-600 shrink-0 mt-0.5">check_circle</span> <span>Reportar estados y resultados finales (<i>Vitals stable, Pain resolved</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">medication</span> <span>Vocabulario ocupacional (<i>Prescription, Painkiller, Follow-up</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">fact_check</span> <span>Evaluar y cerrar listas de verificación (<i>Nursing Checklist</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-teal-600 shrink-0 mt-0.5">workspace_premium</span> <span>Acceder al <strong>Post-Test Global</strong> de certificación</span></li>
             </ul>
 
             <!-- Module 3 Objectives -->
-            <ul v-else-if="moduleNumber === 3" class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
-              <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold mt-0.5">✓</span> Explicar procedimientos clínicos de rutina (Present Simple)</li>
-              <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold mt-0.5">✓</span> Comunicar acciones en progreso en el momento (Present Continuous)</li>
-              <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold mt-0.5">✓</span> Interactuar cortésmente con familiares y visitantes de pacientes</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">💡</span> Proponer mejoras en el flujo de trabajo laboral (*We should..., Let's...*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">🧰</span> Vocabulario técnico de herramientas médicas diarias (*Thermometer, Checklist*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-teal-600 font-bold mt-0.5">📋</span> Manejar listas de verificación clínica (*Nursing Checklist*)</li>
+            <ul v-else-if="moduleNumber === 3" class="text-xs text-gray-600 leading-relaxed space-y-1.5 mt-2 list-none">
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-amber-600 shrink-0 mt-0.5">check_circle</span> <span>Explicar procedimientos clínicos de rutina (Present Simple)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-amber-600 shrink-0 mt-0.5">check_circle</span> <span>Comunicar acciones en progreso en el momento (Present Continuous)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-amber-600 shrink-0 mt-0.5">check_circle</span> <span>Interactuar cortésmente con familiares y visitantes de pacientes</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">lightbulb</span> <span>Proponer mejoras en el flujo de trabajo laboral (<i>We should..., Let's...</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">home_repair_service</span> <span>Vocabulario técnico de herramientas médicas diarias (<i>Thermometer, Checklist</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-teal-600 shrink-0 mt-0.5">checklist</span> <span>Manejar listas de verificación clínica (<i>Nursing Checklist</i>)</span></li>
             </ul>
 
             <!-- Module 2 Objectives -->
-            <ul v-else-if="moduleNumber === 2" class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Describir el estado físico de los pacientes y lesiones comunes</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Detallar el entorno hospitalario (habitaciones, camillas, sala de espera)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Identificar partes del cuerpo humano y anatomía básica</li>
-              <li class="flex items-start gap-1.5"><span class="text-indigo-600 font-bold mt-0.5">⏱️</span> Usar el <strong>Pasado Simple</strong> para relatar antecedentes clínicos (*He fell, He had*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-teal-600 font-bold mt-0.5">📋</span> Usar <strong>Adjetivos Descriptivos</strong> para el estado actual (*He is pale, The room is cold*)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">🏥</span> Realizar una <strong>Entrega de Turno (Shift Handover)</strong> en inglés</li>
+            <ul v-else-if="moduleNumber === 2" class="text-xs text-gray-600 leading-relaxed space-y-1.5 mt-2 list-none">
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Describir el estado físico de los pacientes y lesiones comunes</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Detallar el entorno hospitalario (habitaciones, camillas, sala de espera)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Identificar partes del cuerpo humano y anatomía básica</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-indigo-600 shrink-0 mt-0.5">history</span> <span>Usar el <strong>Pasado Simple</strong> para relatar antecedentes clínicos (<i>He fell, He had</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-teal-600 shrink-0 mt-0.5">format_list_bulleted</span> <span>Usar <strong>Adjetivos Descriptivos</strong> para el estado actual (<i>He is pale, The room is cold</i>)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">medical_services</span> <span>Realizar una <strong>Entrega de Turno (Shift Handover)</strong> en inglés</span></li>
             </ul>
 
             <!-- Module 1 Objectives -->
-            <ul v-else class="text-xs text-gray-600 leading-relaxed space-y-1 mt-2 list-none">
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Saludar y despedirte correctamente en inglés</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Presentarte e introducir a otras personas</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Dar información personal básica (nombre, edad, nacionalidad)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Preguntar información básica a otra persona</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Deletrear nombres y apellidos (spelling)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Utilizar números (teléfono, edad)</li>
-              <li class="flex items-start gap-1.5"><span class="text-[#006688] font-bold mt-0.5">✓</span> Construir oraciones básicas (Subject + Verb + Complement)</li>
-              <li class="flex items-start gap-1.5"><span class="text-teal-600 font-bold mt-0.5">🏥</span> Aplicar estas expresiones con pacientes extranjeros</li>
+            <ul v-else class="text-xs text-gray-600 leading-relaxed space-y-1.5 mt-2 list-none">
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Saludar y despedirte correctamente en inglés</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Presentarte e introducir a otras personas</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Dar información personal básica (nombre, edad, nacionalidad)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Preguntar información básica a otra persona</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Deletrear nombres y apellidos (spelling)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Utilizar números (teléfono, edad)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Construir oraciones básicas (Subject + Verb + Complement)</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-teal-600 shrink-0 mt-0.5">local_hospital</span> <span>Aplicar estas expresiones con pacientes extranjeros</span></li>
             </ul>
 
             <p class="text-[10px] text-[#006688] italic mt-3 border-t border-[#006688]/10 pt-2">
@@ -610,7 +610,7 @@
               : 'Reproduce el audio de cada expresión del módulo. Escucha todos los ítems para habilitar la siguiente fase.' }}
           </p>
 
-          <!-- Vocabulary Flashcard Grid -->
+          <!-- Vocabulary Flashcard Grid (Clean Icons & Modern Medical UI) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div 
               v-for="v in activeVocabList" 
@@ -618,12 +618,16 @@
               class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-[#006688] transition-all flex flex-col justify-between group"
             >
               <div class="space-y-2">
-                <div class="flex justify-between items-start">
-                  <span class="text-base font-bold text-gray-800 flex items-center gap-1.5">
-                    <span v-if="v.emoji" class="text-lg">{{ v.emoji }}</span>
-                    {{ v.word }}
-                  </span>
-                  <span v-if="v.played" class="text-green-600 material-symbols-outlined text-sm">check_circle</span>
+                <div class="flex justify-between items-start gap-2">
+                  <div class="flex items-center gap-2.5">
+                    <div :class="`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${v.iconBg || 'bg-[#006688]/10 text-[#006688] border-[#006688]/20'}`">
+                      <span class="material-symbols-outlined text-lg">{{ v.icon || 'medical_services' }}</span>
+                    </div>
+                    <span class="text-sm font-black text-gray-800 tracking-tight leading-tight">
+                      {{ v.word }}
+                    </span>
+                  </div>
+                  <span v-if="v.played" class="text-green-600 material-symbols-outlined text-sm bg-green-50 rounded-full p-0.5 border border-green-200">check_circle</span>
                 </div>
                 <div class="inline-flex items-center gap-1 text-[11px] font-bold text-[#006688] bg-[#006688]/8 px-2 py-0.5 rounded-md">
                   <span class="text-[9px] text-gray-400 font-bold uppercase">Pron:</span>
@@ -681,8 +685,8 @@
               :key="bIdx" 
               :class="`flex gap-3 max-w-[85%] ${bubble.alignLeft ? 'mr-auto' : 'ml-auto flex-row-reverse'}`"
             >
-              <div :class="`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm ${bubble.avatarBg || 'bg-[#006688]'}`">
-                {{ bubble.avatar || '👩‍⚕️' }}
+              <div :class="`w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-white shadow-sm border border-white/20 ${bubble.avatarBg || 'bg-[#006688]'}`">
+                <span class="material-symbols-outlined text-base">{{ bubble.avatarIcon || 'person' }}</span>
               </div>
               <div :class="`p-3.5 rounded-2xl text-xs shadow-sm border leading-relaxed ${bubble.alignLeft ? 'bg-white text-gray-800 rounded-tl-none border-gray-100' : 'bg-emerald-50/80 text-gray-800 rounded-tr-none border-emerald-100'}`">
                 <div class="flex items-center justify-between gap-4 mb-1">
@@ -826,7 +830,7 @@
                 </span>
                 <span v-if="m4SummarySuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
                   <span class="material-symbols-outlined text-sm">cancel</span>
-                  Revisa los datos tecleados (revisa: painkiller, every 8 hours, 3 days, Monday, clean and dry).
+                  Revisa los datos tecleados.
                 </span>
               </div>
             </div>
@@ -858,9 +862,9 @@
                 </p>
               </div>
               <div class="flex gap-2">
-                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">🩺 Vitals OK</span>
-                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">✨ Pain low</span>
-                <span class="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold">📋 Signed</span>
+                <span class="flex items-center gap-1 px-3 py-1 bg-white/10 rounded-lg text-xs font-bold"><span class="material-symbols-outlined text-sm">stethoscope</span> Vitals OK</span>
+                <span class="flex items-center gap-1 px-3 py-1 bg-white/10 rounded-lg text-xs font-bold"><span class="material-symbols-outlined text-sm">sentiment_satisfied</span> Pain low</span>
+                <span class="flex items-center gap-1 px-3 py-1 bg-white/10 rounded-lg text-xs font-bold"><span class="material-symbols-outlined text-sm">draw</span> Signed</span>
               </div>
             </div>
 
@@ -1050,13 +1054,17 @@
               : 'Graba un audio de máximo 1 minuto presentándote a un paciente extranjero:' }}
             <br />
             <span class="block mt-2 bg-[#006688]/5 text-[#006688] p-3 rounded-xl border border-[#006688]/10 font-mono text-[11px] leading-relaxed">
+              <span class="flex items-center gap-1 font-bold mb-1">
+                <span class="material-symbols-outlined text-sm">record_voice_over</span>
+                <span>Guión modelo de pronunciación:</span>
+              </span>
               {{ moduleNumber === 4
-                ? '🎤 Ejemplo: "Good morning Mr. Thomas. You must take your painkiller every 8 hours with water and you should rest your arm for 3 days. Head nurse, the patient\'s vital signs are stable and the discharge checklist is complete."'
+                ? '"Good morning Mr. Thomas. You must take your painkiller every 8 hours with water and you should rest your arm for 3 days. Head nurse, the patient\'s vital signs are stable and the discharge checklist is complete."'
                 : moduleNumber === 3
-                ? '🎤 Ejemplo: "Good afternoon. We are checking Mr. Thomas\'s vital signs right now. He is resting well. Also, colleague, I think we should update the digital checklist for room 204 to streamline our workflow. Let\'s do it today."'
+                ? '"Good afternoon. We are checking Mr. Thomas\'s vital signs right now. He is resting well. Also, colleague, I think we should update the digital checklist for room 204 to streamline our workflow. Let\'s do it today."'
                 : moduleNumber === 2 
-                ? '🎤 Ejemplo: "Good morning supervisor. Mr. Thomas is in room 204. Yesterday, he fell at the hotel. Today, he has a bandage on his arm and vitals are stable."' 
-                : '🎤 Ejemplo: "Good morning. My name is John. My last name is Smith. S-M-I-T-H. My phone number is 312 456 7890. Nice to meet you."' }}
+                ? '"Good morning supervisor. Mr. Thomas is in room 204. Yesterday, he fell at the hotel. Today, he has a bandage on his arm and vitals are stable."' 
+                : '"Good morning. My name is John. My last name is Smith. S-M-I-T-H. My phone number is 312 456 7890. Nice to meet you."' }}
             </span>
           </p>
 
@@ -1627,65 +1635,65 @@ const m4ResultsExamples = [
   { subject: 'The nursing checklist', verb: 'is', complement: 'complete and signed by Dr. Miller.', spanish: 'La lista de verificación está completa y firmada.', full: 'The nursing checklist is complete and signed by Dr. Miller.' },
 ]
 
-// Vocabulary Lists (Clear Spanish-friendly pronunciation guides)
+// Vocabulary Lists (Sleek Material Icons & Pronunciation Guides)
 const m1VocabList = ref([
-  { id: 'v1', word: 'Hello', pronunciation: '[je-lóu]', translation: 'Hola (Saludo general)', category: 'Saludo', emoji: '👋', played: false },
-  { id: 'v2', word: 'Good morning', pronunciation: '[gud mór-ning]', translation: 'Buenos días (hasta 12pm)', category: 'Saludo', emoji: '🌅', played: false },
-  { id: 'v3', word: 'Good afternoon', pronunciation: '[gud áf-ter-nun]', translation: 'Buenas tardes (12pm–6pm)', category: 'Saludo', emoji: '☀️', played: false },
-  { id: 'v4', word: 'Good evening', pronunciation: '[gud ív-ning]', translation: 'Buenas noches (al llegar)', category: 'Saludo', emoji: '🌆', played: false },
-  { id: 'v5', word: 'Goodbye', pronunciation: '[gud-bái]', translation: 'Adiós (despedida formal)', category: 'Despedida', emoji: '🚶', played: false },
-  { id: 'v6', word: 'See you later', pronunciation: '[si yu léi-ter]', translation: 'Hasta luego', category: 'Despedida', emoji: '👋', played: false },
-  { id: 'v7', word: 'Name', pronunciation: '[néim]', translation: 'Nombre personal', category: 'Personal', emoji: '🪪', played: false },
-  { id: 'v8', word: 'Last name', pronunciation: '[last néim]', translation: 'Apellido', category: 'Personal', emoji: '📋', played: false },
-  { id: 'v9', word: 'Age', pronunciation: '[éidch]', translation: 'Edad en años', category: 'Personal', emoji: '🎂', played: false },
-  { id: 'v10', word: 'Nationality', pronunciation: '[na-shon-á-li-ti]', translation: 'Nacionalidad u origen', category: 'Personal', emoji: '🌎', played: false },
-  { id: 'v11', word: 'Phone number', pronunciation: '[fóun nám-ber]', translation: 'Número de teléfono', category: 'Personal', emoji: '📞', played: false },
-  { id: 'v12', word: 'Spelling', pronunciation: '[spé-ling]', translation: 'Deletreo de letras', category: 'Habilidad', emoji: '🔤', played: false },
+  { id: 'v1', word: 'Hello', pronunciation: '[je-lóu]', translation: 'Hola (Saludo general)', category: 'Saludo', icon: 'waving_hand', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
+  { id: 'v2', word: 'Good morning', pronunciation: '[gud mór-ning]', translation: 'Buenos días (hasta 12pm)', category: 'Saludo', icon: 'wb_sunny', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
+  { id: 'v3', word: 'Good afternoon', pronunciation: '[gud áf-ter-nun]', translation: 'Buenas tardes (12pm–6pm)', category: 'Saludo', icon: 'light_mode', iconBg: 'bg-orange-50 text-orange-600 border-orange-100', played: false },
+  { id: 'v4', word: 'Good evening', pronunciation: '[gud ív-ning]', translation: 'Buenas noches (al llegar)', category: 'Saludo', icon: 'bedtime', iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-100', played: false },
+  { id: 'v5', word: 'Goodbye', pronunciation: '[gud-bái]', translation: 'Adiós (despedida formal)', category: 'Despedida', icon: 'directions_walk', iconBg: 'bg-rose-50 text-rose-600 border-rose-100', played: false },
+  { id: 'v6', word: 'See you later', pronunciation: '[si yu léi-ter]', translation: 'Hasta luego', category: 'Despedida', icon: 'pan_tool', iconBg: 'bg-teal-50 text-teal-600 border-teal-100', played: false },
+  { id: 'v7', word: 'Name', pronunciation: '[néim]', translation: 'Nombre personal', category: 'Personal', icon: 'badge', iconBg: 'bg-cyan-50 text-cyan-600 border-cyan-100', played: false },
+  { id: 'v8', word: 'Last name', pronunciation: '[last néim]', translation: 'Apellido', category: 'Personal', icon: 'assignment_ind', iconBg: 'bg-purple-50 text-purple-600 border-purple-100', played: false },
+  { id: 'v9', word: 'Age', pronunciation: '[éidch]', translation: 'Edad en años', category: 'Personal', icon: 'cake', iconBg: 'bg-pink-50 text-pink-600 border-pink-100', played: false },
+  { id: 'v10', word: 'Nationality', pronunciation: '[na-shon-á-li-ti]', translation: 'Nacionalidad u origen', category: 'Personal', icon: 'public', iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-100', played: false },
+  { id: 'v11', word: 'Phone number', pronunciation: '[fóun nám-ber]', translation: 'Número de teléfono', category: 'Personal', icon: 'call', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
+  { id: 'v12', word: 'Spelling', pronunciation: '[spé-ling]', translation: 'Deletreo de letras', category: 'Habilidad', icon: 'spellcheck', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
 ])
 
 const m2VocabList = ref([
-  { id: 'm2_v1', word: 'Head', pronunciation: '[jed]', translation: 'Cabeza (Anatomía)', category: 'Anatomía', emoji: '🧠', played: false },
-  { id: 'm2_v2', word: 'Arm', pronunciation: '[arm]', translation: 'Brazo (Anatomía)', category: 'Anatomía', emoji: '💪', played: false },
-  { id: 'm2_v3', word: 'Leg', pronunciation: '[leg]', translation: 'Pierna (Anatomía)', category: 'Anatomía', emoji: '🦵', played: false },
-  { id: 'm2_v4', word: 'Chest', pronunciation: '[chest]', translation: 'Pecho / Tórax', category: 'Anatomía', emoji: '🫁', played: false },
-  { id: 'm2_v5', word: 'Waiting room', pronunciation: '[wéi-ting rum]', translation: 'Sala de espera hospitalaria', category: 'Entorno', emoji: '🪑', played: false },
-  { id: 'm2_v6', word: 'Stretcher', pronunciation: '[stré-cher]', translation: 'Camilla de traslado', category: 'Entorno', emoji: '🚑', played: false },
-  { id: 'm2_v7', word: 'Hospital room', pronunciation: '[jós-pi-tal rum]', translation: 'Habitación de hospital (Room 204)', category: 'Entorno', emoji: '🏥', played: false },
-  { id: 'm2_v8', word: 'Bandage', pronunciation: '[bán-didch]', translation: 'Vendaje elástico de protección', category: 'Tratamiento', emoji: '🩹', played: false },
-  { id: 'm2_v9', word: 'Fracture', pronunciation: '[frák-chur]', translation: 'Fractura ósea confirmada', category: 'Diagnóstico', emoji: '🦴', played: false },
-  { id: 'm2_v10', word: 'Swollen', pronunciation: '[suó-len]', translation: 'Hinchado / Inflamado', category: 'Signo clínico', emoji: '🔴', played: false },
-  { id: 'm2_v11', word: 'Pale', pronunciation: '[péil]', translation: 'Pálido (Aspecto físico)', category: 'Signo clínico', emoji: '⚪', played: false },
-  { id: 'm2_v12', word: 'Dizzy', pronunciation: '[dí-zi]', translation: 'Mareado / Inestable', category: 'Síntoma', emoji: '💫', played: false },
+  { id: 'm2_v1', word: 'Head', pronunciation: '[jed]', translation: 'Cabeza (Anatomía)', category: 'Anatomía', icon: 'psychology', iconBg: 'bg-purple-50 text-purple-600 border-purple-100', played: false },
+  { id: 'm2_v2', word: 'Arm', pronunciation: '[arm]', translation: 'Brazo (Anatomía)', category: 'Anatomía', icon: 'front_hand', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
+  { id: 'm2_v3', word: 'Leg', pronunciation: '[leg]', translation: 'Pierna (Anatomía)', category: 'Anatomía', icon: 'accessible', iconBg: 'bg-teal-50 text-teal-600 border-teal-100', played: false },
+  { id: 'm2_v4', word: 'Chest', pronunciation: '[chest]', translation: 'Pecho / Tórax', category: 'Anatomía', icon: 'favorite', iconBg: 'bg-rose-50 text-rose-600 border-rose-100', played: false },
+  { id: 'm2_v5', word: 'Waiting room', pronunciation: '[wéi-ting rum]', translation: 'Sala de espera hospitalaria', category: 'Entorno', icon: 'chair', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
+  { id: 'm2_v6', word: 'Stretcher', pronunciation: '[stré-cher]', translation: 'Camilla de traslado', category: 'Entorno', icon: 'airline_seat_flat', iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-100', played: false },
+  { id: 'm2_v7', word: 'Hospital room', pronunciation: '[jós-pi-tal rum]', translation: 'Habitación de hospital (Room 204)', category: 'Entorno', icon: 'hotel', iconBg: 'bg-sky-50 text-sky-600 border-sky-100', played: false },
+  { id: 'm2_v8', word: 'Bandage', pronunciation: '[bán-didch]', translation: 'Vendaje elástico de protección', category: 'Tratamiento', icon: 'healing', iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-100', played: false },
+  { id: 'm2_v9', word: 'Fracture', pronunciation: '[frák-chur]', translation: 'Fractura ósea confirmada', category: 'Diagnóstico', icon: 'personal_injury', iconBg: 'bg-red-50 text-red-600 border-red-100', played: false },
+  { id: 'm2_v10', word: 'Swollen', pronunciation: '[suó-len]', translation: 'Hinchado / Inflamado', category: 'Signo clínico', icon: 'radio_button_checked', iconBg: 'bg-orange-50 text-orange-600 border-orange-100', played: false },
+  { id: 'm2_v11', word: 'Pale', pronunciation: '[péil]', translation: 'Pálido (Aspecto físico)', category: 'Signo clínico', icon: 'contrast', iconBg: 'bg-gray-50 text-gray-600 border-gray-200', played: false },
+  { id: 'm2_v12', word: 'Dizzy', pronunciation: '[dí-zi]', translation: 'Mareado / Inestable', category: 'Síntoma', icon: 'sync_problem', iconBg: 'bg-yellow-50 text-yellow-600 border-yellow-100', played: false },
 ])
 
 const m3VocabList = ref([
-  { id: 'm3_v1', word: 'Thermometer', pronunciation: '[zer-mó-me-ter]', translation: 'Termómetro clínico', category: 'Herramienta', emoji: '🌡️', played: false },
-  { id: 'm3_v2', word: 'Stethoscope', pronunciation: '[sté-zo-scoup]', translation: 'Estetoscopio de auscultación', category: 'Herramienta', emoji: '🩺', played: false },
-  { id: 'm3_v3', word: 'Blood pressure monitor', pronunciation: '[blad pré-shur mó-ni-tor]', translation: 'Monitor de presión arterial', category: 'Herramienta', emoji: '📟', played: false },
-  { id: 'm3_v4', word: 'Checklist', pronunciation: '[chék-list]', translation: 'Lista de verificación clínica', category: 'Formato', emoji: '📋', played: false },
-  { id: 'm3_v5', word: 'Syringe', pronunciation: '[se-ríndch]', translation: 'Jeringa médica descartable', category: 'Herramienta', emoji: '💉', played: false },
-  { id: 'm3_v6', word: 'Pulse oximeter', pronunciation: '[pals ok-sí-me-ter]', translation: 'Pulsioxímetro de saturación', category: 'Herramienta', emoji: '🔴', played: false },
-  { id: 'm3_v7', word: 'IV Drip', pronunciation: '[ái-vi drip]', translation: 'Suero / Bomba de infusión', category: 'Equipo', emoji: '💧', played: false },
-  { id: 'm3_v8', word: 'Administer', pronunciation: '[ad-mí-nis-ter]', translation: 'Administrar medicamentos', category: 'Acción', emoji: '💊', played: false },
-  { id: 'm3_v9', word: 'Monitor', pronunciation: '[mó-ni-tor]', translation: 'Monitorear signos vitales', category: 'Acción', emoji: '📊', played: false },
-  { id: 'm3_v10', word: 'Disinfect', pronunciation: '[dis-in-féct]', translation: 'Desinfectar instrumental', category: 'Acción', emoji: '🧼', played: false },
-  { id: 'm3_v11', word: 'Explain', pronunciation: '[ex-pléin]', translation: 'Explicar procedimientos', category: 'Acción', emoji: '🗣️', played: false },
-  { id: 'm3_v12', word: 'Gauze', pronunciation: '[goz]', translation: 'Gasa estéril de curación', category: 'Material', emoji: '🩹', played: false },
+  { id: 'm3_v1', word: 'Thermometer', pronunciation: '[zer-mó-me-ter]', translation: 'Termómetro clínico', category: 'Herramienta', icon: 'device_thermostat', iconBg: 'bg-red-50 text-red-600 border-red-100', played: false },
+  { id: 'm3_v2', word: 'Stethoscope', pronunciation: '[sté-zo-scoup]', translation: 'Estetoscopio de auscultación', category: 'Herramienta', icon: 'stethoscope', iconBg: 'bg-cyan-50 text-cyan-600 border-cyan-100', played: false },
+  { id: 'm3_v3', word: 'Blood pressure monitor', pronunciation: '[blad pré-shur mó-ni-tor]', translation: 'Monitor de presión arterial', category: 'Herramienta', icon: 'monitor_heart', iconBg: 'bg-rose-50 text-rose-600 border-rose-100', played: false },
+  { id: 'm3_v4', word: 'Checklist', pronunciation: '[chék-list]', translation: 'Lista de verificación clínica', category: 'Formato', icon: 'checklist', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
+  { id: 'm3_v5', word: 'Syringe', pronunciation: '[se-ríndch]', translation: 'Jeringa médica descartable', category: 'Herramienta', icon: 'vaccines', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
+  { id: 'm3_v6', word: 'Pulse oximeter', pronunciation: '[pals ok-sí-me-ter]', translation: 'Pulsioxímetro de saturación', category: 'Herramienta', icon: 'sensors', iconBg: 'bg-purple-50 text-purple-600 border-purple-100', played: false },
+  { id: 'm3_v7', word: 'IV Drip', pronunciation: '[ái-vi drip]', translation: 'Suero / Bomba de infusión', category: 'Equipo', icon: 'water_drop', iconBg: 'bg-sky-50 text-sky-600 border-sky-100', played: false },
+  { id: 'm3_v8', word: 'Administer', pronunciation: '[ad-mí-nis-ter]', translation: 'Administrar medicamentos', category: 'Acción', icon: 'medication', iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-100', played: false },
+  { id: 'm3_v9', word: 'Monitor', pronunciation: '[mó-ni-tor]', translation: 'Monitorear signos vitales', category: 'Acción', icon: 'vital_signs', iconBg: 'bg-teal-50 text-teal-600 border-teal-100', played: false },
+  { id: 'm3_v10', word: 'Disinfect', pronunciation: '[dis-in-féct]', translation: 'Desinfectar instrumental', category: 'Acción', icon: 'cleaning_services', iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-100', played: false },
+  { id: 'm3_v11', word: 'Explain', pronunciation: '[ex-pléin]', translation: 'Explicar procedimientos', category: 'Acción', icon: 'record_voice_over', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
+  { id: 'm3_v12', word: 'Gauze', pronunciation: '[goz]', translation: 'Gasa estéril de curación', category: 'Material', icon: 'healing', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
 ])
 
 const m4VocabList = ref([
-  { id: 'm4_v1', word: 'Discharge', pronunciation: '[dis-chárdch]', translation: 'Alta médica / Egreso hospitalario', category: 'Egreso', emoji: '📄', played: false },
-  { id: 'm4_v2', word: 'Prescription', pronunciation: '[pris-críp-shon]', translation: 'Receta médica autorizada', category: 'Tratamiento', emoji: '💊', played: false },
-  { id: 'm4_v3', word: 'Painkiller', pronunciation: '[péin-ki-ler]', translation: 'Analgésico para el dolor', category: 'Medicamento', emoji: '🩹', played: false },
-  { id: 'm4_v4', word: 'Follow-up appointment', pronunciation: '[fó-lou-ap a-póint-ment]', translation: 'Cita de control y seguimiento', category: 'Atención', emoji: '📅', played: false },
-  { id: 'm4_v5', word: 'Recovery', pronunciation: '[ri-kó-ve-ri]', translation: 'Recuperación clínica del paciente', category: 'Evolución', emoji: '🩺', played: false },
-  { id: 'm4_v6', word: 'Outcomes', pronunciation: '[áut-cams]', translation: 'Resultados y desenlaces del cuidado', category: 'Evaluación', emoji: '📈', played: false },
-  { id: 'm4_v7', word: 'Dosage', pronunciation: '[dóu-sidch]', translation: 'Dosis y posología indicada', category: 'Tratamiento', emoji: '💧', played: false },
-  { id: 'm4_v8', word: 'Home care', pronunciation: '[jóum quer]', translation: 'Cuidado y reposo en el hogar', category: 'Egreso', emoji: '🏡', played: false },
-  { id: 'm4_v9', word: 'Wound care', pronunciation: '[wund quer]', translation: 'Cuidado e higiene de la herida', category: 'Curación', emoji: '🩹', played: false },
-  { id: 'm4_v10', word: 'Precautions', pronunciation: '[pri-có-shons]', translation: 'Precauciones de seguridad', category: 'Recomendación', emoji: '⚠️', played: false },
-  { id: 'm4_v11', word: 'Side effects', pronunciation: '[sáid i-fécts]', translation: 'Efectos secundarios a vigilar', category: 'Seguridad', emoji: '🔍', played: false },
-  { id: 'm4_v12', word: 'Signed orders', pronunciation: '[sáind ór-ders]', translation: 'Órdenes médicas firmadas', category: 'Documento', emoji: '✍️', played: false },
+  { id: 'm4_v1', word: 'Discharge', pronunciation: '[dis-chárdch]', translation: 'Alta médica / Egreso hospitalario', category: 'Egreso', icon: 'door_open', iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-100', played: false },
+  { id: 'm4_v2', word: 'Prescription', pronunciation: '[pris-críp-shon]', translation: 'Receta médica autorizada', category: 'Tratamiento', icon: 'receipt_long', iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-100', played: false },
+  { id: 'm4_v3', word: 'Painkiller', pronunciation: '[péin-ki-ler]', translation: 'Analgésico para el dolor', category: 'Medicamento', icon: 'medication', iconBg: 'bg-rose-50 text-rose-600 border-rose-100', played: false },
+  { id: 'm4_v4', word: 'Follow-up appointment', pronunciation: '[fó-lou-ap a-póint-ment]', translation: 'Cita de control y seguimiento', category: 'Atención', icon: 'event_available', iconBg: 'bg-sky-50 text-sky-600 border-sky-100', played: false },
+  { id: 'm4_v5', word: 'Recovery', pronunciation: '[ri-kó-ve-ri]', translation: 'Recuperación clínica del paciente', category: 'Evolución', icon: 'health_and_safety', iconBg: 'bg-teal-50 text-teal-600 border-teal-100', played: false },
+  { id: 'm4_v6', word: 'Outcomes', pronunciation: '[áut-cams]', translation: 'Resultados y desenlaces del cuidado', category: 'Evaluación', icon: 'trending_up', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
+  { id: 'm4_v7', word: 'Dosage', pronunciation: '[dóu-sidch]', translation: 'Dosis y posología indicada', category: 'Tratamiento', icon: 'vaccines', iconBg: 'bg-cyan-50 text-cyan-600 border-cyan-100', played: false },
+  { id: 'm4_v8', word: 'Home care', pronunciation: '[jóum quer]', translation: 'Cuidado y reposo en el hogar', category: 'Egreso', icon: 'home_health', iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-100', played: false },
+  { id: 'm4_v9', word: 'Wound care', pronunciation: '[wund quer]', translation: 'Cuidado e higiene de la herida', category: 'Curación', icon: 'healing', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
+  { id: 'm4_v10', word: 'Precautions', pronunciation: '[pri-có-shons]', translation: 'Precauciones de seguridad', category: 'Recomendación', icon: 'security', iconBg: 'bg-yellow-50 text-yellow-600 border-yellow-100', played: false },
+  { id: 'm4_v11', word: 'Side effects', pronunciation: '[sáid i-fécts]', translation: 'Efectos secundarios a vigilar', category: 'Seguridad', icon: 'troubleshoot', iconBg: 'bg-purple-50 text-purple-600 border-purple-100', played: false },
+  { id: 'm4_v12', word: 'Signed orders', pronunciation: '[sáind ór-ders]', translation: 'Órdenes médicas firmadas', category: 'Documento', icon: 'draw', iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-100', played: false },
 ])
 
 const activeVocabList = computed(() => {
@@ -1699,28 +1707,28 @@ const playingVocabId = ref(null)
 
 // Dialogues
 const m1Dialogue = [
-  { speaker: 'Nurse Sarah', avatar: '👩‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning. My name is Sarah.', spanish: 'Buenos días. Mi nombre es Sarah.' },
-  { speaker: 'Nurse David', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'Good morning, Sarah. I\'m David.', spanish: 'Buenos días, Sarah. Soy David.' },
+  { speaker: 'Nurse Sarah', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning. My name is Sarah.', spanish: 'Buenos días. Mi nombre es Sarah.' },
+  { speaker: 'Nurse David', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'Good morning, Sarah. I\'m David.', spanish: 'Buenos días, Sarah. Soy David.' },
 ]
 
 const m2Dialogue = [
-  { speaker: 'Nurse Andrea', avatar: '👩‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Nurse Carlos. How is Mr. Thomas?', spanish: 'Buenos días, Carlos. ¿Cómo está Mr. Thomas?' },
-  { speaker: 'Nurse Carlos', avatar: '👨‍⚕️', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'He fell yesterday. He has a bandage and is resting.', spanish: 'Se cayó ayer. Tiene un vendaje y está descansando.' },
+  { speaker: 'Nurse Andrea', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Nurse Carlos. How is Mr. Thomas?', spanish: 'Buenos días, Carlos. ¿Cómo está Mr. Thomas?' },
+  { speaker: 'Nurse Carlos', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'He fell yesterday. He has a bandage and is resting.', spanish: 'Se cayó ayer. Tiene un vendaje y está descansando.' },
 ]
 
 const m3Dialogue = [
-  { speaker: 'Emma (Visitor)', avatar: '👩', avatarBg: 'bg-purple-600', alignLeft: true, english: 'Excuse me, nurse. How is my father doing?', spanish: 'Disculpe, enfermero. ¿Cómo está mi padre?' },
-  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: false, english: 'We are checking his blood pressure right now. He is resting well.', spanish: 'Estamos tomando su presión ahora. Está descansando bien.' },
+  { speaker: 'Emma (Visitor)', avatarIcon: 'family_restroom', avatarBg: 'bg-purple-600', alignLeft: true, english: 'Excuse me, nurse. How is my father doing?', spanish: 'Disculpe, enfermero. ¿Cómo está mi padre?' },
+  { speaker: 'Nurse (You)', avatarIcon: 'medical_services', avatarBg: 'bg-[#006688]', alignLeft: false, english: 'We are checking his blood pressure right now. He is resting well.', spanish: 'Estamos tomando su presión ahora. Está descansando bien.' },
 ]
 
 const m4Dialogue = [
-  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Mr. Thomas! Good news: you are ready for discharge today.', spanish: '¡Buenos días, Sr. Thomas! Buenas noticias: está listo para el alta médica hoy.' },
-  { speaker: 'Mr. Thomas (Patient)', avatar: '👴', avatarBg: 'bg-emerald-700', alignLeft: false, english: 'Wonderful news! What are my instructions for home care?', spanish: '¡Maravillosa noticia! ¿Cuáles son mis instrucciones para el cuidado en casa?' },
-  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Mr. Thomas, you must take this painkiller every 8 hours. You should keep your arm rested for 3 days.', spanish: 'Sr. Thomas, debe tomar este analgésico cada 8 horas. Debería descansar el brazo por 3 días.' },
-  { speaker: 'Mr. Thomas (Patient)', avatar: '👴', avatarBg: 'bg-emerald-700', alignLeft: false, english: 'Understood. When is my follow-up appointment?', spanish: 'Entendido. ¿Cuándo es mi cita de control?' },
-  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Your follow-up appointment is next Monday at 10:00 AM with Dr. Miller.', spanish: 'Su cita de control es el próximo lunes a las 10:00 AM con el Dr. Miller.' },
-  { speaker: 'Head Nurse', avatar: '👩‍⚕️', avatarBg: 'bg-teal-700', alignLeft: false, english: 'Nurse, is the final checklist complete for room 204?', spanish: 'Enfermero, ¿la lista de verificación final de la habitación 204 está completa?' },
-  { speaker: 'Nurse (You)', avatar: '👨‍⚕️', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Yes, Head Nurse. Vitals are stable, pain is resolved and medical orders are signed. He is ready.', spanish: 'Sí, jefa de enfermería. Los signos están estables, el dolor resuelto y las órdenes firmadas. Está listo.' },
+  { speaker: 'Nurse (You)', avatarIcon: 'medical_services', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Mr. Thomas! Good news: you are ready for discharge today.', spanish: '¡Buenos días, Sr. Thomas! Buenas noticias: está listo para el alta médica hoy.' },
+  { speaker: 'Mr. Thomas (Patient)', avatarIcon: 'elderly', avatarBg: 'bg-emerald-700', alignLeft: false, english: 'Wonderful news! What are my instructions for home care?', spanish: '¡Maravillosa noticia! ¿Cuáles son mis instrucciones para el cuidado en casa?' },
+  { speaker: 'Nurse (You)', avatarIcon: 'medical_services', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Mr. Thomas, you must take this painkiller every 8 hours. You should keep your arm rested for 3 days.', spanish: 'Sr. Thomas, debe tomar este analgésico cada 8 horas. Debería descansar el brazo por 3 días.' },
+  { speaker: 'Mr. Thomas (Patient)', avatarIcon: 'elderly', avatarBg: 'bg-emerald-700', alignLeft: false, english: 'Understood. When is my follow-up appointment?', spanish: 'Entendido. ¿Cuándo es mi cita de control?' },
+  { speaker: 'Nurse (You)', avatarIcon: 'medical_services', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Your follow-up appointment is next Monday at 10:00 AM with Dr. Miller.', spanish: 'Su cita de control es el próximo lunes a las 10:00 AM con el Dr. Miller.' },
+  { speaker: 'Head Nurse', avatarIcon: 'health_and_safety', avatarBg: 'bg-teal-700', alignLeft: false, english: 'Nurse, is the final checklist complete for room 204?', spanish: 'Enfermero, ¿la lista de verificación final de la habitación 204 está completa?' },
+  { speaker: 'Nurse (You)', avatarIcon: 'medical_services', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Yes, Head Nurse. Vitals are stable, pain is resolved and medical orders are signed. He is ready.', spanish: 'Sí, jefa de enfermería. Los signos están estables, el dolor resuelto y las órdenes firmadas. Está listo.' },
 ]
 
 const activeDialogue = computed(() => {
