@@ -36,6 +36,10 @@ function isValidPassword(password: string): boolean {
  * Procesa el inicio de sesión unificado para Admin, Instructor y Aprendiz.
  */
 export async function login(req: Request<unknown, unknown, LoginRequestBody>, res: Response): Promise<void> {
+  console.log(`\n--- 🔑 [AUTH LOGIN CONTROLLER ENTRY] ---`)
+  console.log(`[Auth Login] Headers:`, JSON.stringify(req.headers))
+  console.log(`[Auth Login] Body recibido:`, JSON.stringify(req.body))
+
   try {
     const { identifier, password } = req.body || {}
 
@@ -43,13 +47,14 @@ export async function login(req: Request<unknown, unknown, LoginRequestBody>, re
     const cleanPassword = typeof password === 'string' ? password : ''
 
     if (!cleanIdentifier || !cleanPassword) {
+      console.warn(`[Auth Login] ❌ Campos faltantes. identifier="${cleanIdentifier}", passwordLength=${cleanPassword.length}`)
       res.status(400).json({
         message: 'Por favor ingresa tu usuario/correo y contraseña.'
       })
       return
     }
 
-    console.log(`[Auth Login] Intento de login para identificador: "${cleanIdentifier}"`)
+    console.log(`[Auth Login] 🔍 Buscando usuario en base de datos para identificador: "${cleanIdentifier}"`)
 
     // Búsqueda insensible a mayúsculas por correo o documento (cédula)
     const user = await prisma.user.findFirst({
@@ -62,15 +67,17 @@ export async function login(req: Request<unknown, unknown, LoginRequestBody>, re
     })
 
     if (!user) {
-      console.warn(`[Auth Login] Usuario no encontrado para: "${cleanIdentifier}"`)
+      console.warn(`[Auth Login] ❌ Usuario NO encontrado en base de datos: "${cleanIdentifier}"`)
       res.status(401).json({ message: 'Credenciales inválidas.' })
       return
     }
 
+    console.log(`[Auth Login] 👤 Usuario encontrado: ID=${user.id}, Correo=${user.correo}, Cedula=${user.cedula}, Rol=${user.rol}, FailedAttempts=${user.failedAttempts}`)
+
     // Verificar si la cuenta está bloqueada
     if (isLocked(user.lockedUntil)) {
       const minutesLeft = lockoutTimeRemaining(user.lockedUntil)
-      console.warn(`[Auth Login] Cuenta bloqueada para ${user.correo || user.cedula}. Minutos restantes: ${minutesLeft}`)
+      console.warn(`[Auth Login] 🔒 Cuenta bloqueada para ${user.correo || user.cedula}. Minutos restantes: ${minutesLeft}`)
       res.status(423).json({
         message: `Cuenta bloqueada temporalmente por intentos fallidos. Intenta de nuevo en ${minutesLeft} minutos.`
       })
@@ -78,7 +85,9 @@ export async function login(req: Request<unknown, unknown, LoginRequestBody>, re
     }
 
     // Verificar contraseña
+    console.log(`[Auth Login] 🔐 Verificando hash de contraseña...`)
     const passwordMatches = verifyPassword(cleanPassword, user.passwordHash)
+    console.log(`[Auth Login] 🔐 Resultado verificación contraseña: ${passwordMatches ? 'COINCIDE ✅' : 'NO COINCIDE ❌'}`)
 
     if (passwordMatches) {
       // Restablecer intentos fallidos
@@ -106,7 +115,7 @@ export async function login(req: Request<unknown, unknown, LoginRequestBody>, re
 
       const fullName = [user.nombre, user.apellido].filter(Boolean).join(' ') || 'Usuario'
 
-      console.log(`[Auth Login] ✅ Inicio de sesión exitoso: ${user.correo || user.cedula} (Rol: ${roleNormalized})`)
+      console.log(`[Auth Login] 🎉 Inicio de sesión EXITOSO: ${user.correo || user.cedula} (Rol: ${roleNormalized})`)
 
       const userDto: UserAuthDto = {
         id: user.id,
@@ -152,7 +161,7 @@ export async function login(req: Request<unknown, unknown, LoginRequestBody>, re
     console.warn(`[Auth Login] ❌ Contraseña incorrecta para: "${cleanIdentifier}". Intento ${nextAttempts}/${MAX_FAILED_ATTEMPTS}`)
     res.status(401).json({ message: 'Credenciales inválidas.' })
   } catch (error) {
-    console.error('[Auth Login Fatal Error]:', error)
+    console.error('💥 [Auth Login Fatal Error]:', error)
     res.status(500).json({
       message: 'Error interno del servidor al procesar el inicio de sesión.'
     })
@@ -163,6 +172,9 @@ export async function login(req: Request<unknown, unknown, LoginRequestBody>, re
  * Registro de nuevos aprendices
  */
 export async function register(req: Request<unknown, unknown, RegisterRequestBody>, res: Response): Promise<void> {
+  console.log(`\n--- 📝 [AUTH REGISTER CONTROLLER ENTRY] ---`)
+  console.log(`[Auth Register] Body recibido:`, JSON.stringify(req.body))
+
   try {
     const { nombre, apellido, cedula, correo, password } = req.body || {}
     if (!nombre || !apellido || !cedula || !correo || !password) {
@@ -209,9 +221,10 @@ export async function register(req: Request<unknown, unknown, RegisterRequestBod
       }
     })
 
+    console.log(`[Auth Register] ✅ Usuario creado exitosamente: ${cleanCorreo} / ${cleanCedula}`)
     res.status(201).json({ message: 'Usuario registrado exitosamente.' })
   } catch (error) {
-    console.error('[Auth Register Error]:', error)
+    console.error('💥 [Auth Register Error]:', error)
     res.status(500).json({ message: 'Error interno al registrar usuario.' })
   }
 }
@@ -286,7 +299,7 @@ export async function getMe(req: Request, res: Response): Promise<void> {
 
     res.json({ user: userDto })
   } catch (error) {
-    console.error('[Auth getMe Error]:', error)
+    console.error('💥 [Auth getMe Error]:', error)
     res.status(500).json({ message: 'Error al obtener sesión del usuario.' })
   }
 }

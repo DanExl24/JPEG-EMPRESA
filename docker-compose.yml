@@ -58,6 +58,7 @@ services:
       - backend
     networks:
       - proxy-network
+      - jpeg
 
 volumes:
   jpeg_db:
