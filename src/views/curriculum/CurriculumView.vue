@@ -221,9 +221,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
 
+const auth = useAuthStore()
 const notificationStore = useNotificationStore()
 const apiBaseUrl = getApiBaseUrl()
 
@@ -266,6 +268,8 @@ const filteredRaps = computed(() => {
 })
 
 function getToken() {
+  if (auth.token) return auth.token
+  if (auth.user?.token) return auth.user.token
   const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
   return stored ? JSON.parse(stored)?.token : null
 }
@@ -274,29 +278,27 @@ async function loadData() {
   loading.value = true
   error.value = null
   const token = getToken()
-  if (!token) {
-    error.value = 'Sesión no válida. Inicia sesión de nuevo.'
-    loading.value = false
-    return
-  }
 
   try {
-    const headers = { Authorization: `Bearer ${token}` }
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
     
     // Fetch all programs
     const progRes = await fetch(`${apiBaseUrl}/api/admin/curriculum/programs`, { headers })
     if (!progRes.ok) throw new Error('Error al cargar programas.')
-    programs.value = await progRes.json()
+    const progData = await progRes.json()
+    programs.value = Array.isArray(progData) ? progData : (progData?.data || [])
 
     // Fetch competencies
     const compRes = await fetch(`${apiBaseUrl}/api/admin/curriculum/competencies`, { headers })
     if (!compRes.ok) throw new Error('Error al cargar competencias.')
-    competencies.value = await compRes.json()
+    const compData = await compRes.json()
+    competencies.value = Array.isArray(compData) ? compData : (compData?.data || [])
 
     // Fetch RAPs
     const rapsRes = await fetch(`${apiBaseUrl}/api/admin/curriculum/raps`, { headers })
     if (!rapsRes.ok) throw new Error('Error al cargar RAPs.')
-    raps.value = await rapsRes.json()
+    const rapsData = await rapsRes.json()
+    raps.value = Array.isArray(rapsData) ? rapsData : (rapsData?.data || [])
   } catch (err) {
     console.error(err)
     error.value = err.message || 'Error al conectar con el servidor.'

@@ -255,6 +255,8 @@ const activeDialogueLines = computed(() => {
 })
 
 function getToken() {
+  if (auth.token) return auth.token
+  if (auth.user?.token) return auth.user.token
   const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
   return stored ? JSON.parse(stored)?.token : null
 }
@@ -265,12 +267,16 @@ async function loadDialogues() {
   try {
     const token = getToken()
     const res = await fetch(`${apiBaseUrl}/api/content/dialogues`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
     })
     if (!res.ok) throw new Error('No se pudieron cargar los diálogos.')
-    dialogues.value = await res.json()
-    if (dialogues.value.length > 0 && !activeDialogue.value) {
-      activeDialogue.value = dialogues.value[0]
+    const responseData = await res.json()
+    const list = Array.isArray(responseData) ? responseData : (responseData?.data || [])
+    dialogues.value = list
+    if (list.length > 0 && !activeDialogue.value) {
+      activeDialogue.value = list[0]
     }
   } catch (err) {
     console.error(err)
