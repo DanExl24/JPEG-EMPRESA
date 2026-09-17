@@ -613,11 +613,14 @@ async function loadProfile() {
     })
 
     if (res.ok) {
-      const data = await res.json()
-      profile.value = data
-      editForm.nombre = data.nombre || ''
-      editForm.apellido = data.apellido || ''
-      recentActivity.value = data.recentActivity || []
+      const isJson = res.headers.get('content-type')?.includes('application/json')
+      if (isJson) {
+        const data = await res.json()
+        profile.value = data
+        editForm.nombre = data.nombre || ''
+        editForm.apellido = data.apellido || ''
+        recentActivity.value = data.recentActivity || []
+      }
     }
   } catch (err) {
     console.error('Error al cargar perfil:', err)
@@ -667,9 +670,10 @@ async function saveProfile() {
       })
     })
 
-    const updated = await res.json()
+    const isJson = res.headers.get('content-type')?.includes('application/json')
+    const updated = isJson ? await res.json() : null
     if (!res.ok) {
-      throw new Error(updated.message || 'Error al guardar el perfil.')
+      throw new Error(updated?.message || `Error del servidor (${res.status})`)
     }
 
     profile.value = { ...profile.value, ...updated }
@@ -750,9 +754,10 @@ async function handleChangePassword() {
       })
     })
 
-    const data = await res.json()
+    const isJson = res.headers.get('content-type')?.includes('application/json')
+    const data = isJson ? await res.json() : null
     if (!res.ok) {
-      throw new Error(data.message || 'Error al cambiar la contraseña.')
+      throw new Error(data?.message || `Error del servidor (${res.status})`)
     }
 
     notificationStore.notify({
