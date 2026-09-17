@@ -602,12 +602,15 @@ async function fetchActivities() {
 
 async function fetchCourses() {
   try {
-    const res = await fetch(`${apiBaseUrl}/api/courses`)
+    const res = await fetch(`${apiBaseUrl}/api/courses`, {
+      headers: auth.token ? { 'Authorization': `Bearer ${auth.token}` } : {}
+    })
     if (res.ok) {
       const data = await res.json()
-      if (Array.isArray(data) && data.length > 0) {
+      const list = Array.isArray(data) ? data : (data?.data || [])
+      if (Array.isArray(list) && list.length > 0) {
         // Merge with existing course properties to preserve icons and layout colors if needed
-        courses.value = data.map((c, i) => {
+        courses.value = list.map((c, i) => {
           const fallback = courses.value[i] || courses.value[0] || {}
           return {
             ...fallback,

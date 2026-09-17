@@ -169,11 +169,14 @@ const form = ref({ wordEn: '', wordEs: '', category: 'Signos Vitales', definitio
 const canManage = computed(() => auth.isAdmin || auth.isInstructor)
 
 const categories = computed(() => {
-  const cats = new Set(vocabulary.value.map(v => v.category))
+  const list = Array.isArray(vocabulary.value) ? vocabulary.value : []
+  const cats = new Set(list.map(v => v.category).filter(Boolean))
   return ['Todos', ...Array.from(cats)].sort()
 })
 
 function getToken() {
+  if (auth.token) return auth.token
+  if (auth.user?.token) return auth.user.token
   const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
   return stored ? JSON.parse(stored)?.token : null
 }
@@ -184,10 +187,14 @@ async function loadVocabulary() {
   try {
     const token = getToken()
     const res = await fetch(`${apiBaseUrl}/api/content/vocabulary`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
     })
     if (!res.ok) throw new Error('No se pudo cargar el vocabulario.')
-    vocabulary.value = await res.json()
+    const responseData = await res.json()
+    const list = Array.isArray(responseData) ? responseData : (responseData.data || [])
+    vocabulary.value = list
   } catch (err) {
     console.error(err)
     error.value = err.message
@@ -197,16 +204,16 @@ async function loadVocabulary() {
 }
 
 const filteredTerms = computed(() => {
-  let list = vocabulary.value
+  let list = Array.isArray(vocabulary.value) ? vocabulary.value : []
   if (activeCategory.value !== 'Todos') {
     list = list.filter(t => t.category === activeCategory.value)
   }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
     list = list.filter(t =>
-      t.wordEn.toLowerCase().includes(q) ||
-      t.wordEs.toLowerCase().includes(q) ||
-      t.definition.toLowerCase().includes(q)
+      (t.wordEn || '').toLowerCase().includes(q) ||
+      (t.wordEs || '').toLowerCase().includes(q) ||
+      (t.definition || '').toLowerCase().includes(q)
     )
   }
   return list

@@ -5,11 +5,9 @@ import {
   getGlossary, createGlossaryTerm, updateGlossaryTerm, deleteGlossaryTerm,
   getDialogues, getDialogueById, createDialogue, updateDialogue, deleteDialogue
 } from '../controllers/content.controller.js'
-import { authenticate } from '../lib/middleware.js'
+import { authenticate, optionalAuthenticate } from '../lib/middleware.js'
 
 const router = Router()
-
-router.use(authenticate)
 
 // Helper middleware to restrict writes to ADMIN/INSTRUCTOR
 const requireAdminOrInstructor = (req: Request, res: Response, next: NextFunction): void => {
@@ -22,22 +20,22 @@ const requireAdminOrInstructor = (req: Request, res: Response, next: NextFunctio
 }
 
 // --- Vocabulary ---
-router.get('/vocabulary', getVocabulary)
-router.post('/vocabulary', requireAdminOrInstructor, createVocabularyTerm)
-router.put('/vocabulary/:id', requireAdminOrInstructor, updateVocabularyTerm)
-router.delete('/vocabulary/:id', requireAdminOrInstructor, deleteVocabularyTerm)
+router.get('/vocabulary', optionalAuthenticate, getVocabulary)
+router.post('/vocabulary', authenticate, requireAdminOrInstructor, createVocabularyTerm)
+router.put('/vocabulary/:id', authenticate, requireAdminOrInstructor, updateVocabularyTerm)
+router.delete('/vocabulary/:id', authenticate, requireAdminOrInstructor, deleteVocabularyTerm)
 
 // --- Glossary (GlosarioView.vue) ---
-router.get('/glossary', getGlossary)
-router.post('/glossary', requireAdminOrInstructor, createGlossaryTerm)
-router.put('/glossary/:id', requireAdminOrInstructor, updateGlossaryTerm)
-router.delete('/glossary/:id', requireAdminOrInstructor, deleteGlossaryTerm)
+router.get('/glossary', optionalAuthenticate, getGlossary)
+router.post('/glossary', authenticate, requireAdminOrInstructor, createGlossaryTerm)
+router.put('/glossary/:id', authenticate, requireAdminOrInstructor, updateGlossaryTerm)
+router.delete('/glossary/:id', authenticate, requireAdminOrInstructor, deleteGlossaryTerm)
 
 // --- Dialogues ---
-router.get('/dialogues', getDialogues)
-router.get('/dialogues/:id', getDialogueById)
-router.post('/dialogues', requireAdminOrInstructor, createDialogue)
-router.put('/dialogues/:id', requireAdminOrInstructor, updateDialogue)
-router.delete('/dialogues/:id', requireAdminOrInstructor, deleteDialogue)
+router.get('/dialogues', optionalAuthenticate, getDialogues)
+router.get('/dialogues/:id', optionalAuthenticate, getDialogueById)
+router.post('/dialogues', authenticate, requireAdminOrInstructor, createDialogue)
+router.put('/dialogues/:id', authenticate, requireAdminOrInstructor, updateDialogue)
+router.delete('/dialogues/:id', authenticate, requireAdminOrInstructor, deleteDialogue)
 
 export default router

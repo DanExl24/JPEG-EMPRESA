@@ -8,7 +8,7 @@ export class CourseController {
     try {
       const userId = req.user?.id ? Number(req.user.id) : undefined
       const courses = await CourseService.listCourses(userId)
-      ApiResponse.success(res, courses)
+      res.json(courses)
     } catch (error) {
       next(error)
     }

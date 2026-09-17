@@ -22,6 +22,20 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
   }
 }
 
+export function optionalAuthenticate(req: Request, _res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1]
+    try {
+      const payload = jwt.verify(token, JWT_SECRET) as JwtPayloadAuth
+      req.user = payload
+    } catch {
+      // Token inválido o expirado: se ignora para permitir lectura pública
+    }
+  }
+  next()
+}
+
 export function requireRole(role: string) {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || req.user.role !== role.toUpperCase()) {

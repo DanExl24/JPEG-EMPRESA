@@ -9,7 +9,7 @@ export async function getVocabulary(req: Request, res: Response, next: NextFunct
     const category = req.query.category as string | undefined
     const search = req.query.search as string | undefined
     const list = await ContentService.getVocabulary(category, search)
-    ApiResponse.success(res, list)
+    res.json(list)
   } catch (err) {
     next(err)
   }
@@ -52,7 +52,7 @@ export async function getGlossary(req: Request, res: Response, next: NextFunctio
     const letter = req.query.letter as string | undefined
     const search = req.query.search as string | undefined
     const list = await ContentService.getGlossary(letter, search)
-    ApiResponse.success(res, list)
+    res.json(list)
   } catch (err) {
     next(err)
   }
@@ -93,7 +93,7 @@ export async function deleteGlossaryTerm(req: Request, res: Response, next: Next
 export async function getDialogues(_req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const list = await ContentService.getDialogues()
-    ApiResponse.success(res, list)
+    res.json(list)
   } catch (err) {
     next(err)
   }
@@ -104,7 +104,7 @@ export async function getDialogueById(req: Request, res: Response, next: NextFun
     const id = Number(req.params.id)
     if (isNaN(id)) throw new BadRequestError('ID inválido.')
     const item = await ContentService.getDialogueById(id)
-    ApiResponse.success(res, item)
+    res.json(item)
   } catch (err) {
     next(err)
   }

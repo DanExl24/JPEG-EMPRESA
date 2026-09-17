@@ -1,13 +1,13 @@
 import { Router } from 'express'
 import { CourseController } from '../controllers/course.controller.js'
-import { authenticate } from '../lib/middleware.js'
+import { authenticate, optionalAuthenticate } from '../lib/middleware.js'
 import { requireRole } from '../middlewares/role.middleware.js'
 
 const router = Router()
 
-// Catálogo de cursos (opcionalmente autenticado para calcular avance del usuario)
-router.get('/', authenticate, CourseController.listCourses)
-router.get('/:id', CourseController.getCourseById)
+// Catálogo de cursos (público con cálculo opcional de progreso si hay sesión)
+router.get('/', optionalAuthenticate, CourseController.listCourses)
+router.get('/:id', optionalAuthenticate, CourseController.getCourseById)
 
 // Progreso por fases de un curso para el aprendiz conectado
 router.get('/:id/progress', authenticate, CourseController.getCourseProgress)
