@@ -30,15 +30,65 @@
     <!-- Activity List -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="p-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-4">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
           <span class="material-symbols-outlined text-gray-400">filter_list</span>
-          <div class="flex gap-2">
+          
+          <!-- Pills de Estado -->
+          <div class="flex gap-1.5 flex-wrap">
             <button v-for="f in filters" :key="f.value" @click="activeFilter = f.value"
               :class="`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${activeFilter === f.value ? 'bg-[#006688] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`">
               {{ f.label }}
             </button>
           </div>
+
+          <!-- Separador -->
+          <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+
+          <!-- Filtro por Fase -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-gray-400 font-semibold hidden md:inline">Fase:</span>
+            <select
+              v-model="selectedPhaseFilter"
+              class="bg-gray-50 border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#006688] cursor-pointer"
+            >
+              <option value="all">Todas las Fases</option>
+              <option value="Preparación">Preparación</option>
+              <option value="Absorción">Absorción</option>
+              <option value="Práctica">Práctica</option>
+              <option value="Cierre">Cierre</option>
+            </select>
+          </div>
+
+          <!-- Filtro por Tipo / Plantilla -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-gray-400 font-semibold hidden md:inline">Tipo:</span>
+            <select
+              v-model="selectedTemplateFilter"
+              class="bg-gray-50 border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#006688] cursor-pointer"
+            >
+              <option value="all">Todos los Tipos</option>
+              <option value="quiz">Quizzes / Preguntas</option>
+              <option value="crucigrama">Crucigramas</option>
+              <option value="sopa">Sopa de Letras</option>
+              <option value="fillblank">Completar Oración</option>
+              <option value="match">Conectar Significado</option>
+              <option value="listening">Escucha (Audio)</option>
+              <option value="pronunciation">Pronunciación (Voz)</option>
+            </select>
+          </div>
+
+          <!-- Botón Limpiar filtros -->
+          <button
+            v-if="activeFilter !== 'all' || selectedPhaseFilter !== 'all' || selectedTemplateFilter !== 'all'"
+            @click="resetFilters"
+            class="text-xs text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg font-bold flex items-center gap-0.5 transition-colors cursor-pointer"
+            title="Limpiar todos los filtros"
+          >
+            <span class="material-symbols-outlined text-xs">close</span>
+            Limpiar
+          </button>
         </div>
+
         <div v-if="auth.isAdmin || auth.isInstructor" class="text-xs bg-[#006688]/5 border border-[#006688]/10 text-[#006688] font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
           <span class="material-symbols-outlined text-sm">lock</span>
           <span>Las actividades resueltas por alumnos están bloqueadas para edición.</span>
@@ -46,6 +96,16 @@
       </div>
 
       <div class="divide-y divide-gray-50">
+        <!-- Empty state when filters return 0 activities -->
+        <div v-if="filteredActivities.length === 0" class="p-12 text-center text-gray-400 space-y-2">
+          <span class="material-symbols-outlined text-4xl text-gray-300">search_off</span>
+          <p class="text-sm font-bold text-gray-600">No se encontraron actividades</p>
+          <p class="text-xs text-gray-400">No hay actividades que coincidan con los filtros seleccionados.</p>
+          <button @click="resetFilters" class="mt-2 text-xs font-bold text-[#006688] hover:underline cursor-pointer">
+            Restablecer todos los filtros
+          </button>
+        </div>
+
         <div v-for="act in filteredActivities" :key="act.id" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 hover:bg-gray-50 transition-colors">
           
           <div class="flex items-center gap-4">
@@ -1086,6 +1146,15 @@ function getToken() {
 }
 
 const activeFilter = ref('all')
+const selectedPhaseFilter = ref('all')
+const selectedTemplateFilter = ref('all')
+
+function resetFilters() {
+  activeFilter.value = 'all'
+  selectedPhaseFilter.value = 'all'
+  selectedTemplateFilter.value = 'all'
+}
+
 const filters = computed(() => {
   if (auth.isAdmin || auth.isInstructor) {
     return [
@@ -1884,19 +1953,36 @@ function simulateMicRecording() {
 
 // Filtered / Summary computeds
 const filteredActivities = computed(() => {
-  if (activeFilter.value === 'all') return activities.value
-  if (auth.isAdmin || auth.isInstructor) {
-    if (activeFilter.value === 'with_submissions') {
-      return activities.value.filter(a => a.hasStudentSubmissions)
+  const normalize = (str) => (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+
+  return activities.value.filter(a => {
+    // 1. Status Filter
+    if (activeFilter.value !== 'all') {
+      if (auth.isAdmin || auth.isInstructor) {
+        if (activeFilter.value === 'with_submissions' && !a.hasStudentSubmissions) return false
+        if (activeFilter.value === 'editable' && a.hasStudentSubmissions) return false
+        if (activeFilter.value === 'needs_grading' && !(a.pendingReviewsCount > 0)) return false
+      } else {
+        if (a.state !== activeFilter.value) return false
+      }
     }
-    if (activeFilter.value === 'editable') {
-      return activities.value.filter(a => !a.hasStudentSubmissions)
+
+    // 2. Phase Filter
+    if (selectedPhaseFilter.value !== 'all') {
+      if (normalize(a.phase) !== normalize(selectedPhaseFilter.value)) return false
     }
-    if (activeFilter.value === 'needs_grading') {
-      return activities.value.filter(a => (a.pendingReviewsCount || 0) > 0)
+
+    // 3. Template / Type Filter
+    if (selectedTemplateFilter.value !== 'all') {
+      if (selectedTemplateFilter.value === 'quiz') {
+        if (a.template !== 'quiz' && a.template !== 'preguntas') return false
+      } else if (a.template !== selectedTemplateFilter.value) {
+        return false
+      }
     }
-  }
-  return activities.value.filter(a => a.state === activeFilter.value)
+
+    return true
+  })
 })
 
 const summary = computed(() => {
