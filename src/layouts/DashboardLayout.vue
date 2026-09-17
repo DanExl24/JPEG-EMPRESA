@@ -105,6 +105,43 @@ const router = useRouter()
 const sidebarOpen = ref(true)
 
 const menuGroups = computed(() => {
+  if (auth.role === 'admin') {
+    return [
+      {
+        label: '',
+        items: [
+          { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+        ]
+      },
+      {
+        label: 'Gestión Académica',
+        items: [
+          { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+          { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+          { name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' },
+          { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
+          { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
+          { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
+        ]
+      },
+      {
+        label: 'Gestión Institucional',
+        items: [
+          { name: 'Usuarios', path: '/dashboard/usuarios', icon: 'group' },
+          { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
+          { name: 'Catálogo de Logros', path: '/dashboard/logros', icon: 'emoji_events' },
+        ]
+      },
+      {
+        label: 'Sistema',
+        items: [
+          { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
+          { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
+        ]
+      },
+    ]
+  }
+
   if (auth.role === 'instructor') {
     return [
       {
@@ -114,38 +151,30 @@ const menuGroups = computed(() => {
         ]
       },
       {
-        label: 'Aprendizaje',
+        label: 'Docencia y Cursos',
         items: [
           { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
           { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+          { name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' },
           { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
           { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
           { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
-          { name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' },
         ]
       },
       {
-        label: 'Comunidad',
+        label: 'Seguimiento',
         items: [
-          { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+          { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
         ]
-      }
+      },
+      {
+        label: 'Cuenta',
+        items: [
+          { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
+          { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
+        ]
+      },
     ]
-  }
-
-  const learningItems = [
-    { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-    { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-  ]
-  if (auth.role === 'aprendiz') {
-    learningItems.push({ name: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' })
-  }
-  learningItems.push({ name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' })
-  learningItems.push({ name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' })
-  learningItems.push({ name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' })
-  
-  if (auth.role === 'admin') {
-    learningItems.push({ name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' })
   }
 
   return [
@@ -157,21 +186,21 @@ const menuGroups = computed(() => {
     },
     {
       label: 'Aprendizaje',
-      items: learningItems
+      items: [
+        { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+        { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+        { name: 'Mi Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
+        { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
+        { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
+        { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
+      ]
     },
     {
       label: 'Comunidad',
       items: [
         { name: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
-        { name: 'Logros', path: '/dashboard/logros', icon: 'emoji_events' },
+        { name: 'Mis Logros', path: '/dashboard/logros', icon: 'emoji_events' },
         { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
-      ]
-    },
-    {
-      label: 'Gestión',
-      items: [
-        { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
-        { name: 'Usuarios', path: '/dashboard/usuarios', icon: 'group' },
       ]
     },
     {

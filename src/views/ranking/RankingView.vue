@@ -2,7 +2,9 @@
   <div class="space-y-6">
     <div>
       <h2 class="text-2xl font-bold text-gray-800">Ranking</h2>
-      <p class="text-gray-500 mt-1">Tabla de líderes. ¡Completa actividades y sube posiciones!</p>
+      <p class="text-gray-500 mt-1">
+        {{ auth.isAdmin ? 'Monitoreo del cuadro de honor estudiantil y líderes de rendimiento.' : 'Tabla de líderes. ¡Completa actividades y sube posiciones!' }}
+      </p>
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-24 gap-4 flex-col">
@@ -105,7 +107,7 @@ async function loadLeaderboard() {
       const data = await res.json()
       ranking.value = data.map(entry => ({
         ...entry,
-        isMe: entry.id === auth.user?.id
+        isMe: !auth.isAdmin && entry.id === auth.user?.id
       }))
     }
   } catch (e) { console.error(e) } finally { loading.value = false }

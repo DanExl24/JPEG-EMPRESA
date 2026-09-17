@@ -83,35 +83,62 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
 const apiBaseUrl = getApiBaseUrl()
 
-const visibleStats = ref([
-  { label: 'Cursos Activos', value: '12', change: '+2 esta semana', icon: 'school', bg: 'bg-blue-50', iconColor: '#3b82f6' },
-  { label: 'Usuarios', value: '1,240', change: '+18 nuevos', icon: 'group', bg: 'bg-purple-50', iconColor: '#8b5cf6' },
-  { label: 'Mi Progreso', value: '68%', change: '+5% este mes', icon: 'trending_up', bg: 'bg-green-50', iconColor: '#10b981' },
-  { label: 'Logros', value: '7', change: '+1 desbloqueado', icon: 'emoji_events', bg: 'bg-yellow-50', iconColor: '#f59e0b' },
-  { label: 'Actividades', value: '34', change: '5 pendientes', icon: 'task', bg: 'bg-orange-50', iconColor: '#f97316' },
-  { label: 'Ranking', value: '#3', change: 'Subiste 2 posiciones', icon: 'leaderboard', bg: 'bg-red-50', iconColor: '#ef4444' },
-  { label: 'Ingresos Cursos', value: '$4,820', change: '+12% mensual', icon: 'payments', bg: 'bg-teal-50', iconColor: '#14b8a6' },
-  { label: 'Tiempo Estudio', value: '24h', change: '+3h esta semana', icon: 'schedule', bg: 'bg-indigo-50', iconColor: '#6366f1' },
-])
-
-const quickActions = [
-  { label: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
-  { label: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-  { label: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-  { label: 'Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
-  { label: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
-  { label: 'Logros', path: '/dashboard/logros', icon: 'emoji_events' },
-  { label: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
-  { label: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
-  { label: 'Usuarios', path: '/dashboard/usuarios', icon: 'manage_accounts' },
+const defaultAdminStats = [
+  { label: 'Cursos Activos', value: '...', change: 'Catálogo institucional', icon: 'school', bg: 'bg-blue-50', iconColor: '#3b82f6' },
+  { label: 'Total Usuarios', value: '...', change: 'Aprendices e instructores', icon: 'group', bg: 'bg-purple-50', iconColor: '#8b5cf6' },
+  { label: 'Programas SENA', value: '...', change: 'Fichas activas', icon: 'schema', bg: 'bg-teal-50', iconColor: '#14b8a6' },
+  { label: 'Banco Actividades', value: '...', change: 'Catálogo pedagógico', icon: 'task', bg: 'bg-orange-50', iconColor: '#f97316' },
+  { label: 'Tasa de Aprobación', value: '...', change: 'Promedio global', icon: 'trending_up', bg: 'bg-green-50', iconColor: '#10b981' },
+  { label: 'Entregas Registradas', value: '...', change: 'Evaluaciones realizadas', icon: 'fact_check', bg: 'bg-indigo-50', iconColor: '#6366f1' },
+  { label: 'Fichas / Cohortes', value: '...', change: 'Grupos en formación', icon: 'domain', bg: 'bg-rose-50', iconColor: '#e11d48' },
+  { label: 'Catálogo de Logros', value: '...', change: 'Insignias configuradas', icon: 'emoji_events', bg: 'bg-yellow-50', iconColor: '#f59e0b' },
 ]
+
+const defaultAprendizStats = [
+  { label: 'Cursos Activos', value: '...', change: 'Disponibles para ti', icon: 'school', bg: 'bg-blue-50', iconColor: '#3b82f6' },
+  { label: 'Mi Progreso', value: '...', change: 'Rendimiento en cursos', icon: 'trending_up', bg: 'bg-green-50', iconColor: '#10b981' },
+  { label: 'Mis Logros', value: '...', change: 'Insignias desbloqueadas', icon: 'emoji_events', bg: 'bg-yellow-50', iconColor: '#f59e0b' },
+  { label: 'Actividades', value: '...', change: 'Retos pedagógicos', icon: 'task', bg: 'bg-orange-50', iconColor: '#f97316' },
+  { label: 'Mi Ranking', value: '...', change: 'Cuadro de honor', icon: 'leaderboard', bg: 'bg-red-50', iconColor: '#ef4444' },
+  { label: 'Mis Entregas', value: '...', change: 'Tareas completadas', icon: 'fact_check', bg: 'bg-teal-50', iconColor: '#14b8a6' },
+  { label: 'Puntos XP', value: '...', change: 'Nivel académico', icon: 'stars', bg: 'bg-purple-50', iconColor: '#8b5cf6' },
+  { label: 'Juegos y Retos', value: 'Activo', change: 'Supera mini-juegos', icon: 'sports_esports', bg: 'bg-indigo-50', iconColor: '#6366f1' },
+]
+
+const visibleStats = ref(auth.isAdmin ? defaultAdminStats : defaultAprendizStats)
+
+const quickActions = computed(() => {
+  if (auth.isAdmin) {
+    return [
+      { label: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+      { label: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+      { label: 'Currículo SENA', path: '/dashboard/curriculum', icon: 'schema' },
+      { label: 'Usuarios', path: '/dashboard/usuarios', icon: 'manage_accounts' },
+      { label: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
+      { label: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
+      { label: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
+      { label: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
+    ]
+  }
+
+  return [
+    { label: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
+    { label: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
+    { label: 'Mi Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
+    { label: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
+    { label: 'Mis Logros', path: '/dashboard/logros', icon: 'emoji_events' },
+    { label: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+    { label: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
+    { label: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
+  ]
+})
 
 const recentActivity = ref([
   { id: 1, title: 'Completaste "Fundamentos de Enfermería"', time: 'Hace 2 horas', icon: 'school', bg: 'bg-blue-100', iconColor: '#3b82f6', badge: 'Completado', badgeBg: 'bg-green-100', badgeText: 'text-green-700' },

@@ -120,72 +120,153 @@ export class AnalyticsService {
       }
     }
 
-    const stats = [
-      {
-        label: 'Cursos Activos',
-        value: String(coursesCount),
-        change: `${coursesCount} disponibles`,
-        icon: 'school',
-        bg: 'bg-blue-50',
-        iconColor: '#3b82f6'
-      },
-      {
-        label: 'Usuarios',
-        value: usersCount.toLocaleString(),
-        change: `${usersCount} registrados`,
-        icon: 'group',
-        bg: 'bg-purple-50',
-        iconColor: '#8b5cf6'
-      },
-      {
-        label: 'Mi Progreso',
-        value: `${myProgressPct}%`,
-        change: userRole === 'ADMIN' ? 'Promedio global' : `${mySubmissionsCount} tareas realizadas`,
-        icon: 'trending_up',
-        bg: 'bg-green-50',
-        iconColor: '#10b981'
-      },
-      {
-        label: 'Logros',
-        value: userId && userRole === 'APRENDIZ' ? `${userBadgesCount}/${badgesCount}` : String(badgesCount),
-        change: `${userXp} XP acumulados`,
-        icon: 'emoji_events',
-        bg: 'bg-yellow-50',
-        iconColor: '#f59e0b'
-      },
-      {
-        label: 'Actividades',
-        value: String(activitiesCount),
-        change: 'Catálogo pedagógico',
-        icon: 'task',
-        bg: 'bg-orange-50',
-        iconColor: '#f97316'
-      },
-      {
-        label: 'Ranking',
-        value: userRole === 'ADMIN' ? '#1' : `#${userRank}`,
-        change: userRole === 'ADMIN' ? 'Panel de control' : 'Posición académica',
-        icon: 'leaderboard',
-        bg: 'bg-red-50',
-        iconColor: '#ef4444'
-      },
-      {
-        label: 'Programas SENA',
-        value: String(programsCount),
-        change: 'Estructura curricular',
-        icon: 'schema',
-        bg: 'bg-teal-50',
-        iconColor: '#14b8a6'
-      },
-      {
-        label: 'Entregas Totales',
-        value: String(totalSubmissions),
-        change: `${passedSubmissions} aprobadas`,
-        icon: 'schedule',
-        bg: 'bg-indigo-50',
-        iconColor: '#6366f1'
-      }
-    ]
+    let stats = []
+
+    if (userRole === 'ADMIN') {
+      const apprenticesCount = await prisma.user.count({ where: { rol: 'APRENDIZ' } })
+      const instructorsCount = await prisma.user.count({ where: { rol: 'INSTRUCTOR' } })
+      const cohortsCount = await prisma.cohort.count()
+      const competenciesCount = await prisma.competency.count()
+      const globalCompletionRate = totalSubmissions > 0 ? Math.round((passedSubmissions / totalSubmissions) * 100) : 0
+
+      stats = [
+        {
+          label: 'Cursos Activos',
+          value: String(coursesCount),
+          change: `${coursesCount} en catálogo`,
+          icon: 'school',
+          bg: 'bg-blue-50',
+          iconColor: '#3b82f6'
+        },
+        {
+          label: 'Total Usuarios',
+          value: usersCount.toLocaleString(),
+          change: `${apprenticesCount} aprendices · ${instructorsCount} inst.`,
+          icon: 'group',
+          bg: 'bg-purple-50',
+          iconColor: '#8b5cf6'
+        },
+        {
+          label: 'Programas SENA',
+          value: String(programsCount),
+          change: `${cohortsCount} fichas activas`,
+          icon: 'schema',
+          bg: 'bg-teal-50',
+          iconColor: '#14b8a6'
+        },
+        {
+          label: 'Banco Actividades',
+          value: String(activitiesCount),
+          change: 'Catálogo pedagógico',
+          icon: 'task',
+          bg: 'bg-orange-50',
+          iconColor: '#f97316'
+        },
+        {
+          label: 'Tasa de Aprobación',
+          value: `${globalCompletionRate}%`,
+          change: 'Promedio institucional',
+          icon: 'trending_up',
+          bg: 'bg-green-50',
+          iconColor: '#10b981'
+        },
+        {
+          label: 'Entregas Registradas',
+          value: String(totalSubmissions),
+          change: `${passedSubmissions} aprobadas`,
+          icon: 'fact_check',
+          bg: 'bg-indigo-50',
+          iconColor: '#6366f1'
+        },
+        {
+          label: 'Fichas / Cohortes',
+          value: String(cohortsCount),
+          change: `${competenciesCount} competencias asociadas`,
+          icon: 'domain',
+          bg: 'bg-rose-50',
+          iconColor: '#e11d48'
+        },
+        {
+          label: 'Catálogo de Logros',
+          value: String(badgesCount),
+          change: 'Insignias configuradas',
+          icon: 'emoji_events',
+          bg: 'bg-yellow-50',
+          iconColor: '#f59e0b'
+        }
+      ]
+    } else {
+      const myPassedCount = userId ? await prisma.activitySubmission.count({
+        where: { apprenticeId: userId, passed: true }
+      }) : 0
+
+      stats = [
+        {
+          label: 'Cursos Activos',
+          value: String(coursesCount),
+          change: `${coursesCount} disponibles`,
+          icon: 'school',
+          bg: 'bg-blue-50',
+          iconColor: '#3b82f6'
+        },
+        {
+          label: 'Mi Progreso',
+          value: `${myProgressPct}%`,
+          change: `${mySubmissionsCount} tareas realizadas`,
+          icon: 'trending_up',
+          bg: 'bg-green-50',
+          iconColor: '#10b981'
+        },
+        {
+          label: 'Mis Logros',
+          value: `${userBadgesCount}/${badgesCount}`,
+          change: `${userXp} XP acumulados`,
+          icon: 'emoji_events',
+          bg: 'bg-yellow-50',
+          iconColor: '#f59e0b'
+        },
+        {
+          label: 'Actividades',
+          value: String(activitiesCount),
+          change: 'Retos pedagógicos',
+          icon: 'task',
+          bg: 'bg-orange-50',
+          iconColor: '#f97316'
+        },
+        {
+          label: 'Mi Ranking',
+          value: `#${userRank}`,
+          change: 'Posición académica',
+          icon: 'leaderboard',
+          bg: 'bg-red-50',
+          iconColor: '#ef4444'
+        },
+        {
+          label: 'Mis Entregas',
+          value: String(mySubmissionsCount),
+          change: `${myPassedCount} aprobadas`,
+          icon: 'fact_check',
+          bg: 'bg-teal-50',
+          iconColor: '#14b8a6'
+        },
+        {
+          label: 'Puntos XP',
+          value: `${userXp} XP`,
+          change: `Nivel ${Math.floor(userXp / 100) + 1}`,
+          icon: 'stars',
+          bg: 'bg-purple-50',
+          iconColor: '#8b5cf6'
+        },
+        {
+          label: 'Juegos y Retos',
+          value: 'Activo',
+          change: 'Supera mini-juegos',
+          icon: 'sports_esports',
+          bg: 'bg-indigo-50',
+          iconColor: '#6366f1'
+        }
+      ]
+    }
 
     // Obtener las últimas entradas de auditoría
     const recentLogs = await prisma.auditLog.findMany({
