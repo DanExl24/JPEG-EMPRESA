@@ -58,9 +58,13 @@
                 <span class="text-[9px] uppercase tracking-wider font-extrabold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
                   {{ act.templateLabel }}
                 </span>
-                <span v-if="act.hasStudentSubmissions" class="text-[9px] uppercase tracking-wider font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <span v-if="act.hasStudentSubmissions" class="text-[9px] uppercase tracking-wider font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                   <span class="material-symbols-outlined text-[10px]">done_all</span>
-                  Resuelta
+                  Resuelta ({{ act.submissionCount || 0 }} {{ act.submissionCount === 1 ? 'entrega' : 'entregas' }})
+                </span>
+                <span v-if="act.pendingReviewsCount" class="text-[9px] uppercase tracking-wider font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-[10px]">pending_actions</span>
+                  {{ act.pendingReviewsCount }} por calificar
                 </span>
               </div>
               <p class="text-xs text-gray-500 mt-0.5">
@@ -70,7 +74,7 @@
           </div>
 
           <div class="flex items-center justify-end gap-3 shrink-0">
-            <span :class="`text-xs font-bold px-2 py-1 rounded-full ${act.statusBg} ${act.statusText}`">{{ act.status }}</span>
+            <span :class="`text-xs font-bold px-2.5 py-1 rounded-full ${act.statusBg} ${act.statusText}`">{{ act.status }}</span>
             
             <!-- Student Action -->
             <router-link
@@ -83,26 +87,42 @@
             </router-link>
 
             <!-- Instructor Actions -->
-            <div v-else class="flex gap-2">
+            <div v-else class="flex items-center gap-2 flex-wrap">
               <button
-                v-if="act.template === 'quiz' || act.template === 'preguntas'"
+                v-if="act.hasStudentSubmissions || act.template === 'quiz' || act.template === 'preguntas'"
                 @click="openReviewModal(act)"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-amber-50 text-amber-700 border-amber-200 hover:border-amber-400 flex items-center gap-1"
-                title="Revisar entregas con preguntas abiertas"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-amber-50 text-amber-700 border-amber-200 hover:border-amber-400 flex items-center gap-1 shadow-xs"
+                title="Ver entregas de estudiantes"
               >
-                <span class="material-symbols-outlined text-xs">fact_check</span>
-                Revisar Entregas
+                <span class="material-symbols-outlined text-xs">group</span>
+                Ver Entregas
+                <span v-if="act.pendingReviewsCount" class="ml-1 px-1.5 py-0.2 bg-amber-200 text-amber-900 rounded-full text-[10px] font-extrabold">
+                  {{ act.pendingReviewsCount }}
+                </span>
+                <span v-else-if="act.submissionCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded-full text-[10px] font-extrabold">
+                  {{ act.submissionCount }}
+                </span>
               </button>
 
               <!-- CSV Export Button: only shown when there are student submissions -->
               <button
                 v-if="act.hasStudentSubmissions"
                 @click="downloadCsv(act)"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 flex items-center gap-1"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all border bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100 flex items-center gap-1 shadow-xs"
                 title="Exportar entregas como CSV"
               >
                 <span class="material-symbols-outlined text-xs">download</span>
                 Exportar CSV
+              </button>
+
+              <!-- Duplicar Button -->
+              <button
+                @click="duplicateActivity(act)"
+                class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#006688] border border-blue-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-xs"
+                title="Duplicar como nueva actividad"
+              >
+                <span class="material-symbols-outlined text-xs">content_copy</span>
+                Duplicar
               </button>
 
               <button
@@ -901,56 +921,148 @@
     <!-- Review Open-Question Submissions Modal -->
     <div v-if="showReviewModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
       <div class="bg-white rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden border border-gray-100 flex flex-col my-8 max-h-[90vh] animate-slide-up">
-        <div class="bg-amber-600 text-white p-6 flex justify-between items-center shrink-0">
-          <h3 class="text-lg font-black">Revisar Entregas: {{ reviewingActivity?.title }}</h3>
-          <button @click="showReviewModal = false" class="text-white hover:text-amber-200 transition-colors">
+        <!-- Header -->
+        <div class="bg-[#006688] text-white p-6 flex justify-between items-center shrink-0">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl">group</span>
+              <h3 class="text-lg font-black">Entregas de Estudiantes</h3>
+            </div>
+            <p class="text-xs text-cyan-100 mt-1">
+              {{ reviewingActivity?.title }} · {{ reviewSubmissions.length }} {{ reviewSubmissions.length === 1 ? 'entrega registrada' : 'entregas registradas' }}
+            </p>
+          </div>
+          <button @click="showReviewModal = false" class="text-white hover:text-cyan-200 transition-colors">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
+        <!-- Body -->
         <div class="p-6 overflow-y-auto flex-1 space-y-5">
-          <p v-if="reviewSubmissions.length === 0" class="text-sm text-gray-400 text-center py-10">
-            Aún no hay entregas para esta actividad.
-          </p>
-
-          <div v-for="sub in reviewSubmissions" :key="sub.apprenticeId" class="border border-gray-150 rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <p class="font-bold text-gray-800 text-sm">
-                {{ sub.apprentice ? `${sub.apprentice.nombre} ${sub.apprentice.apellido}` : `Aprendiz #${sub.apprenticeId}` }}
-              </p>
-              <span :class="`text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${
-                sub.reviewStatus === 'pending' ? 'bg-amber-100 text-amber-700' : sub.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`">
-                {{ sub.reviewStatus === 'pending' ? 'Pendiente' : sub.passed ? 'Aprobado' : 'Desaprobado' }}
-              </span>
+          <!-- Empty state -->
+          <div v-if="reviewSubmissions.length === 0" class="text-center py-12 space-y-3">
+            <div class="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto text-gray-400">
+              <span class="material-symbols-outlined text-3xl">inbox</span>
             </div>
+            <p class="text-sm font-bold text-gray-700">Aún no hay entregas para esta actividad</p>
+            <p class="text-xs text-gray-400 max-w-sm mx-auto">
+              Ningún aprendiz ha enviado respuestas todavía. Una vez que un estudiante la resuelva, aquí verás su nombre, fecha de entrega y respuestas detalladas.
+            </p>
+          </div>
 
-            <template v-if="sub.reviewStatus === 'pending'">
-              <div v-for="a in sub.answers.filter(x => x.type === 'open')" :key="a.qIdx" class="bg-gray-50 p-3 rounded-xl space-y-2">
-                <p class="text-xs font-bold text-gray-600">{{ getReviewQuestionText(reviewingActivity, a.qIdx) }}</p>
-                <p class="text-xs text-gray-800 bg-white p-2 rounded-lg border border-gray-200">{{ a.text || '(sin respuesta)' }}</p>
-                <div class="flex gap-3">
-                  <label class="flex items-center gap-1.5 text-xs font-bold text-green-700 cursor-pointer">
-                    <input type="radio" :name="`open-${sub.apprenticeId}-${a.qIdx}`" :checked="reviewDecisions[sub.apprenticeId]?.[a.qIdx] === true" @change="reviewDecisions[sub.apprenticeId][a.qIdx] = true" />
-                    Correcta
-                  </label>
-                  <label class="flex items-center gap-1.5 text-xs font-bold text-red-600 cursor-pointer">
-                    <input type="radio" :name="`open-${sub.apprenticeId}-${a.qIdx}`" :checked="reviewDecisions[sub.apprenticeId]?.[a.qIdx] === false" @change="reviewDecisions[sub.apprenticeId][a.qIdx] = false" />
-                    Incorrecta
-                  </label>
+          <!-- List of Student Submissions -->
+          <div v-for="sub in reviewSubmissions" :key="sub.apprenticeId" class="border border-gray-200 rounded-2xl p-5 space-y-4 hover:border-gray-300 transition-all bg-white shadow-xs">
+            
+            <!-- Student Header -->
+            <div class="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-gray-100">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#006688]/10 text-[#006688] font-black flex items-center justify-center text-sm">
+                  {{ ((sub.apprentice?.nombre?.[0] || 'A') + (sub.apprentice?.apellido?.[0] || '')).toUpperCase() }}
+                </div>
+                <div>
+                  <p class="font-bold text-gray-800 text-sm">
+                    {{ sub.apprentice ? `${sub.apprentice.nombre} ${sub.apprentice.apellido}` : `Aprendiz #${sub.apprenticeId}` }}
+                  </p>
+                  <p class="text-[11px] text-gray-500">
+                    <span v-if="sub.apprentice?.cedula" class="mr-2">CC: {{ sub.apprentice.cedula }}</span>
+                    <span>Entregado: {{ formatSubmissionDate(sub.submittedAt) }}</span>
+                  </p>
                 </div>
               </div>
 
-              <div class="flex gap-2 pt-1">
-                <button @click="submitReview(sub, true)" class="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-bold transition-all">
-                  Aprobar
+              <div class="flex items-center gap-2">
+                <span :class="`text-xs font-black px-3 py-1 rounded-full flex items-center gap-1 ${
+                  sub.reviewStatus === 'pending'
+                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                    : sub.passed
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : 'bg-red-100 text-red-800 border border-red-200'
+                }`">
+                  <span class="material-symbols-outlined text-xs">
+                    {{ sub.reviewStatus === 'pending' ? 'hourglass_top' : sub.passed ? 'check_circle' : 'cancel' }}
+                  </span>
+                  {{ sub.reviewStatus === 'pending' ? 'Pendiente de Calificar' : sub.passed ? 'Aprobado' : 'No Aprobado' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Answers Detail -->
+            <div v-if="sub.answers && sub.answers.length" class="space-y-3">
+              <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Respuestas del estudiante:</p>
+
+              <div v-for="a in sub.answers" :key="a.qIdx" class="bg-gray-50 p-3.5 rounded-xl border border-gray-150 space-y-2">
+                <div class="flex items-start justify-between gap-2">
+                  <p class="text-xs font-bold text-gray-700">
+                    {{ getReviewQuestionText(reviewingActivity, a.qIdx) }}
+                  </p>
+                  <span v-if="a.type !== 'open'" :class="`text-[10px] font-extrabold px-2 py-0.5 rounded ${
+                    a.correct ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                  }`">
+                    {{ a.correct ? 'Correcta' : 'Incorrecta' }}
+                  </span>
+                </div>
+
+                <!-- Answer Content -->
+                <div v-if="a.type === 'open'" class="space-y-2">
+                  <p class="text-xs text-gray-800 bg-white p-2.5 rounded-lg border border-gray-200 font-medium">
+                    {{ a.text || '(sin respuesta escrita)' }}
+                  </p>
+                  <!-- Pending review actions -->
+                  <div v-if="sub.reviewStatus === 'pending'" class="flex items-center justify-between gap-3 pt-1">
+                    <div class="flex gap-4">
+                      <label class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 cursor-pointer">
+                        <input type="radio" :name="`open-${sub.apprenticeId}-${a.qIdx}`" :checked="reviewDecisions[sub.apprenticeId]?.[a.qIdx] === true" @change="reviewDecisions[sub.apprenticeId][a.qIdx] = true" />
+                        Correcta
+                      </label>
+                      <label class="flex items-center gap-1.5 text-xs font-bold text-red-600 cursor-pointer">
+                        <input type="radio" :name="`open-${sub.apprenticeId}-${a.qIdx}`" :checked="reviewDecisions[sub.apprenticeId]?.[a.qIdx] === false" @change="reviewDecisions[sub.apprenticeId][a.qIdx] = false" />
+                        Incorrecta
+                      </label>
+                    </div>
+                  </div>
+                  <!-- Already reviewed badge -->
+                  <div v-else class="text-xs font-semibold text-gray-600">
+                    Evaluación docente:
+                    <span :class="a.correct ? 'text-emerald-700 font-bold' : 'text-red-600 font-bold'">
+                      {{ a.correct ? 'Aprobada' : 'No aprobada' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Multiple choice or True/False answer text -->
+                <div v-else class="text-xs bg-white p-2.5 rounded-lg border border-gray-200">
+                  <span class="text-gray-500 font-semibold">Respuesta seleccionada:</span>
+                  <span class="font-bold text-gray-800 ml-1">{{ getAnswerDetail(reviewingActivity, a) }}</span>
+                </div>
+              </div>
+
+              <!-- Submit Review button for pending submissions -->
+              <div v-if="sub.reviewStatus === 'pending'" class="flex items-center gap-2 pt-2">
+                <button @click="submitReview(sub, true)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">check</span>
+                  Aprobar Entrega
                 </button>
-                <button @click="submitReview(sub, false)" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-all">
-                  Desaprobar
+                <button @click="submitReview(sub, false)" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">close</span>
+                  Desaprobar Entrega
                 </button>
               </div>
-            </template>
+            </div>
+
+            <!-- Non-quiz activity notice -->
+            <div v-else class="text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-150 flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm text-emerald-600">verified</span>
+              <span>Actividad interactiva completada y validada automáticamente por la plataforma.</span>
+            </div>
+
           </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end shrink-0">
+          <button @click="showReviewModal = false" class="px-5 py-2 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 font-bold text-xs rounded-xl transition-all">
+            Cerrar
+          </button>
         </div>
       </div>
     </div>
@@ -967,13 +1079,29 @@ import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
+
+function getToken() {
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
 const activeFilter = ref('all')
-const filters = [
-  { label: 'Todas', value: 'all' },
-  { label: 'Pendientes', value: 'pending' },
-  { label: 'Completadas', value: 'done' },
-  { label: 'Vencidas', value: 'overdue' },
-]
+const filters = computed(() => {
+  if (auth.isAdmin || auth.isInstructor) {
+    return [
+      { label: 'Todas', value: 'all' },
+      { label: 'Con Entregas', value: 'with_submissions' },
+      { label: 'Editables / Disponibles', value: 'editable' },
+      { label: 'Por Calificar', value: 'needs_grading' },
+    ]
+  }
+  return [
+    { label: 'Todas', value: 'all' },
+    { label: 'Pendientes', value: 'pending' },
+    { label: 'Completadas', value: 'done' },
+    { label: 'En Calificación', value: 'grading' },
+  ]
+})
 
 const apiBaseUrl = getApiBaseUrl()
 
@@ -983,9 +1111,37 @@ const activities = ref([])
 // Per-apprentice submissions (only loaded for aprendiz role)
 const mySubmissions = ref([])
 
+const defaultCourses = [
+  'Fundamentos de Enfermería',
+  'Farmacología Clínica',
+  'Cuidados Críticos UCI',
+  'Salud Mental y Psiquiatría',
+  'Atención Materno-Infantil',
+  'Urgencias y Emergencias',
+]
+const courseOptions = ref([...defaultCourses])
+
+async function fetchCourses() {
+  try {
+    const token = getToken()
+    const response = await fetch(`${apiBaseUrl}/api/courses`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (response.ok) {
+      const data = await response.json()
+      if (Array.isArray(data) && data.length > 0) {
+        courseOptions.value = data.map(c => c.title || c.name).filter(Boolean)
+      }
+    }
+  } catch (err) {
+    console.error('Error al obtener cursos para actividades:', err)
+  }
+}
+
 function mapActivity(act, submissionsMap = new Map(), isApprenticeMode = false) {
   const tpl = templateOptions.find(t => t.id === act.template) || { label: 'Actividad', icon: 'task' }
-  const courseId = courseOptions.indexOf(act.course) + 1
+  const courseIdx = courseOptions.value ? courseOptions.value.indexOf(act.course) : -1
+  const courseId = courseIdx >= 0 ? courseIdx + 1 : 1
   
   // Color mapping based on template type
   let iconBg = 'bg-blue-50'
@@ -1004,22 +1160,37 @@ function mapActivity(act, submissionsMap = new Map(), isApprenticeMode = false) 
     iconColor = '#8b5cf6'
   }
 
-  // For apprentices: use THEIR own submission status (submissionsMap from their personal records)
-  // For admins/instructors: use global hasStudentSubmissions flag
-  const mySubmission = isApprenticeMode ? submissionsMap.get(act.id) : null
-  const isDone = isApprenticeMode
-    ? Boolean(mySubmission)
-    : act.hasStudentSubmissions
-  const isGrading = isDone && mySubmission?.reviewStatus === 'pending'
+  let state = 'pending'
+  let status = 'Pendiente'
+  let statusBg = 'bg-orange-100'
+  let statusText = 'text-orange-700'
 
-  const state = isGrading ? 'grading' : isDone ? 'done' : 'pending'
-  const status = isGrading ? 'Calificando' : isDone ? 'Completada' : 'Pendiente'
-  const statusBg = isGrading ? 'bg-amber-100' : isDone ? 'bg-green-100' : 'bg-orange-100'
-  const statusText = isGrading ? 'text-amber-700' : isDone ? 'text-green-700' : 'text-orange-700'
+  if (isApprenticeMode) {
+    const mySubmission = submissionsMap.get(act.id)
+    const isDone = Boolean(mySubmission)
+    const isGrading = isDone && mySubmission?.reviewStatus === 'pending'
+    state = isGrading ? 'grading' : isDone ? 'done' : 'pending'
+    status = isGrading ? 'Calificando' : isDone ? 'Completada' : 'Pendiente'
+    statusBg = isGrading ? 'bg-amber-100' : isDone ? 'bg-green-100' : 'bg-orange-100'
+    statusText = isGrading ? 'text-amber-700' : isDone ? 'text-green-700' : 'text-orange-700'
+  } else {
+    // Admin / Instructor view
+    if (act.hasStudentSubmissions) {
+      state = 'with_submissions'
+      status = 'Con Entregas'
+      statusBg = 'bg-emerald-100'
+      statusText = 'text-emerald-800'
+    } else {
+      state = 'editable'
+      status = 'Disponible'
+      statusBg = 'bg-blue-100'
+      statusText = 'text-blue-800'
+    }
+  }
 
   return {
     ...act,
-    courseId: courseId > 0 ? courseId : 1,
+    courseId,
     due: 'Próxima semana',
     status,
     statusBg,
@@ -1034,7 +1205,10 @@ function mapActivity(act, submissionsMap = new Map(), isApprenticeMode = false) 
 
 async function fetchActivities() {
   try {
-    const response = await fetch(`${apiBaseUrl}/api/activities`)
+    const token = getToken()
+    const response = await fetch(`${apiBaseUrl}/api/activities`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
     if (!response.ok) throw new Error('Error al obtener actividades.')
     const data = await response.json()
 
@@ -1042,7 +1216,9 @@ async function fetchActivities() {
     let submissionsMap = new Map()
     if (isApprenticeMode) {
       try {
-        const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${auth.user.id}`)
+        const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${auth.user.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        })
         if (subRes.ok) {
           const subs = await subRes.json()
           mySubmissions.value = subs
@@ -1075,29 +1251,16 @@ async function fetchRaps() {
   }
 }
 
-function getToken() {
-  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
-  return stored ? JSON.parse(stored)?.token : null
-}
-
 onMounted(() => {
+  fetchCourses()
   fetchActivities()
   fetchRaps()
 })
 onActivated(() => {
+  fetchCourses()
   fetchActivities()
   fetchRaps()
 })
-
-
-const courseOptions = [
-  'Fundamentos de Enfermería',
-  'Farmacología Clínica',
-  'Cuidados Críticos UCI',
-  'Salud Mental y Psiquiatría',
-  'Atención Materno-Infantil',
-  'Urgencias y Emergencias',
-]
 
 const templateOptions = [
   { id: 'sopa', label: 'Sopa de letras', icon: 'grid_on' },
@@ -1163,13 +1326,51 @@ function getReviewQuestionText(act, qIdx) {
   }
 }
 
+function getAnswerDetail(act, answer) {
+  if (!act || !answer) return ''
+  if (answer.type === 'truefalse') {
+    return answer.selected ? 'Verdadero' : 'Falso'
+  }
+  if (answer.type === 'multiple') {
+    try {
+      const parsed = JSON.parse(act?.quizQuestion || '{}')
+      const q = parsed.questions?.[answer.qIdx]
+      if (q && q.options && q.options[answer.selected]) {
+        return q.options[answer.selected].text
+      }
+    } catch {
+      // ignore
+    }
+    return `Opción #${answer.selected !== undefined ? Number(answer.selected) + 1 : '-'}`
+  }
+  return answer.text || '(sin respuesta escrita)'
+}
+
+function formatSubmissionDate(dateStr) {
+  if (!dateStr) return 'Sin fecha'
+  try {
+    return new Date(dateStr).toLocaleString('es-CO', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch {
+    return String(dateStr)
+  }
+}
+
 async function openReviewModal(act) {
   reviewingActivity.value = act
   showReviewModal.value = true
   reviewSubmissions.value = []
   reviewDecisions.value = {}
   try {
-    const res = await fetch(`${apiBaseUrl}/api/activities/${act.id}/submissions`)
+    const token = getToken()
+    const res = await fetch(`${apiBaseUrl}/api/activities/${act.id}/submissions`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
     if (!res.ok) throw new Error('Error al obtener entregas.')
     reviewSubmissions.value = await res.json()
     reviewSubmissions.value.forEach(sub => {
@@ -1190,15 +1391,21 @@ async function submitReview(sub, approved) {
     return { ...a, correct: !!reviewDecisions.value[sub.apprenticeId]?.[a.qIdx] }
   })
   try {
+    const token = getToken()
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
     const res = await fetch(`${apiBaseUrl}/api/activities/${reviewingActivity.value.id}/submissions/${sub.apprenticeId}/review`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ answers: updatedAnswers, approved })
     })
     if (!res.ok) throw new Error('Error al revisar la entrega.')
     sub.reviewStatus = 'reviewed'
     sub.passed = approved
     sub.answers = updatedAnswers
+    await fetchActivities()
     notificationStore.notify({
       type: approved ? 'success' : 'warning',
       title: approved ? 'Entrega aprobada' : 'Entrega desaprobada',
@@ -1213,7 +1420,10 @@ async function submitReview(sub, approved) {
 // ── Exportación CSV de entregas (instructor) ──
 async function downloadCsv(act) {
   try {
-    const res = await fetch(`${apiBaseUrl}/api/activities/${act.id}/submissions/export-csv`)
+    const token = getToken()
+    const res = await fetch(`${apiBaseUrl}/api/activities/${act.id}/submissions/export-csv`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
     if (!res.ok) throw new Error('Error al exportar CSV.')
 
     const blob = await res.blob()
@@ -1675,18 +1885,43 @@ function simulateMicRecording() {
 // Filtered / Summary computeds
 const filteredActivities = computed(() => {
   if (activeFilter.value === 'all') return activities.value
+  if (auth.isAdmin || auth.isInstructor) {
+    if (activeFilter.value === 'with_submissions') {
+      return activities.value.filter(a => a.hasStudentSubmissions)
+    }
+    if (activeFilter.value === 'editable') {
+      return activities.value.filter(a => !a.hasStudentSubmissions)
+    }
+    if (activeFilter.value === 'needs_grading') {
+      return activities.value.filter(a => (a.pendingReviewsCount || 0) > 0)
+    }
+  }
   return activities.value.filter(a => a.state === activeFilter.value)
 })
 
 const summary = computed(() => {
+  if (auth.isAdmin || auth.isInstructor) {
+    const totalCount = activities.value.length
+    const withSubsCount = activities.value.filter(a => a.hasStudentSubmissions).length
+    const editableCount = activities.value.filter(a => !a.hasStudentSubmissions).length
+    const pendingReviewsCount = activities.value.reduce((acc, a) => acc + (a.pendingReviewsCount || 0), 0)
+
+    return [
+      { label: 'Total Actividades', count: totalCount, icon: 'format_list_bulleted', bg: 'bg-blue-100', text: 'text-blue-800' },
+      { label: 'Con Entregas', count: withSubsCount, icon: 'done_all', bg: 'bg-emerald-100', text: 'text-emerald-800' },
+      { label: 'Editables / Disponibles', count: editableCount, icon: 'edit_note', bg: 'bg-purple-100', text: 'text-purple-800' },
+      { label: 'Por Calificar', count: pendingReviewsCount, icon: 'pending_actions', bg: 'bg-amber-100', text: 'text-amber-800' },
+    ]
+  }
+
   const pendingCount = activities.value.filter(a => a.state === 'pending').length
   const completedCount = activities.value.filter(a => a.state === 'done').length
-  const overdueCount = activities.value.filter(a => a.state === 'overdue').length
-  
+  const gradingCount = activities.value.filter(a => a.state === 'grading').length
+
   return [
     { label: 'Pendientes', count: pendingCount, icon: 'pending', bg: 'bg-orange-100', text: 'text-orange-700' },
     { label: 'Completadas', count: completedCount, icon: 'check_circle', bg: 'bg-green-100', text: 'text-green-700' },
-    { label: 'Vencidas', count: overdueCount, icon: 'warning', bg: 'bg-red-100', text: 'text-red-700' },
+    { label: 'En Calificación', count: gradingCount, icon: 'hourglass_top', bg: 'bg-amber-100', text: 'text-amber-700' },
   ]
 })
 
@@ -1697,7 +1932,7 @@ function openNewActivityModal() {
   
   form.value = {
     title: 'Nueva Actividad Médica',
-    course: 'Fundamentos de Enfermería',
+    course: courseOptions.value[0] || 'Fundamentos de Enfermería',
     phase: 'Práctica',
     template: 'quiz',
     points: 10,
@@ -1726,19 +1961,7 @@ function openNewActivityModal() {
   showModal.value = true
 }
 
-function openEditActivityModal(act) {
-  if (act.hasStudentSubmissions) {
-    notificationStore.notify({
-      type: 'warning',
-      title: 'Actividad Bloqueada',
-      message: 'Esta actividad ya fue resuelta por aprendices y no puede ser modificada.'
-    })
-    return
-  }
-
-  editingAct.value = act
-  previewMode.value = false
-
+function populateFormFromActivity(act) {
   let crosswordWords = [{ word: '', clue: '', orientation: 'horizontal' }]
   let layoutMode = 'automatic'
   if (act.template === 'crucigrama') {
@@ -1768,7 +1991,6 @@ function openEditActivityModal(act) {
       try {
         const parsed = JSON.parse(qStr)
         if (parsed && Array.isArray(parsed.questions) && parsed.questions.length) {
-          // Compatibilidad con formatos anteriores { question, correct, incorrect } sin options[]/type
           quizQuestions = parsed.questions.map(q => {
             if (q.type === 'truefalse' || q.type === 'open') return q
             if (Array.isArray(q.options)) return { type: 'multiple', ...q }
@@ -1813,9 +2035,37 @@ function openEditActivityModal(act) {
     crosswordWords,
     layoutMode
   }
+}
 
+function openEditActivityModal(act) {
+  if (act.hasStudentSubmissions) {
+    notificationStore.notify({
+      type: 'warning',
+      title: 'Actividad Bloqueada',
+      message: 'Esta actividad ya fue resuelta por aprendices y no puede ser modificada. Puedes usar "Duplicar" para crear una nueva versión editable.'
+    })
+    return
+  }
+
+  editingAct.value = act
+  previewMode.value = false
+  populateFormFromActivity(act)
   resetDemo()
   showModal.value = true
+}
+
+function duplicateActivity(act) {
+  editingAct.value = null
+  previewMode.value = false
+  populateFormFromActivity(act)
+  form.value.title = `${act.title} (Copia)`
+  resetDemo()
+  showModal.value = true
+  notificationStore.notify({
+    type: 'info',
+    title: 'Actividad Duplicada',
+    message: 'Se cargaron los datos como nueva actividad. Puedes ajustarla y guardarla.'
+  })
 }
 
 async function saveActivity() {
@@ -1897,17 +2147,22 @@ async function saveActivity() {
   }
 
   try {
+    const token = getToken()
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
     let response
     if (editingAct.value) {
       response = await fetch(`${apiBaseUrl}/api/activities/${editingAct.value.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload)
       })
     } else {
       response = await fetch(`${apiBaseUrl}/api/activities`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload)
       })
     }
@@ -1919,6 +2174,11 @@ async function saveActivity() {
 
     await fetchActivities()
     showModal.value = false
+    notificationStore.notify({
+      type: 'success',
+      title: 'Actividad Guardada',
+      message: 'La actividad se guardó correctamente en la plataforma.'
+    })
   } catch (err) {
     console.error(err)
     notificationStore.notify({
@@ -1933,8 +2193,10 @@ async function deleteActivity(id) {
   if (!confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return
 
   try {
+    const token = getToken()
     const response = await fetch(`${apiBaseUrl}/api/activities/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
 
     if (!response.ok) {
@@ -1943,6 +2205,11 @@ async function deleteActivity(id) {
     }
 
     await fetchActivities()
+    notificationStore.notify({
+      type: 'success',
+      title: 'Actividad Eliminada',
+      message: 'La actividad se eliminó correctamente.'
+    })
   } catch (err) {
     console.error(err)
     notificationStore.notify({

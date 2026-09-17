@@ -228,7 +228,7 @@ const DEFAULT_ACTIVITIES = [
     quizQuestion: '¿Qué mide un esfigmomanómetro?',
     quizCorrect: 'Presión arterial',
     quizIncorrect: 'Ritmo cardíaco',
-    hasStudentSubmissions: true
+    hasStudentSubmissions: false
   },
   {
     title: 'Quiz: Farmacología Básica',
@@ -241,7 +241,7 @@ const DEFAULT_ACTIVITIES = [
     quizQuestion: '¿Qué mide un esfigmomanómetro?',
     quizCorrect: 'Presión arterial',
     quizIncorrect: 'Ritmo cardíaco',
-    hasStudentSubmissions: true
+    hasStudentSubmissions: false
   },
   {
     title: 'Simulación: RCP Avanzado',
@@ -281,12 +281,25 @@ const DEFAULT_ACTIVITIES = [
 
 export async function ensureDefaultActivities(): Promise<void> {
   const count = await prisma.activity.count()
-  if (count > 0) return
-
-  for (const act of DEFAULT_ACTIVITIES) {
-    await prisma.activity.create({ data: act })
+  if (count === 0) {
+    for (const act of DEFAULT_ACTIVITIES) {
+      await prisma.activity.create({ data: act })
+    }
+    console.log('Actividades de prueba sembradas.')
   }
-  console.log('Actividades de prueba sembradas.')
+
+  // Sincronizar columna has_student_submissions con la realidad de activity_submissions
+  try {
+    await prisma.$executeRaw`
+      UPDATE activities
+      SET has_student_submissions = false
+      WHERE id NOT IN (
+        SELECT DISTINCT activity_id FROM activity_submissions
+      ) AND has_student_submissions = true;
+    `
+  } catch (e) {
+    console.error('Error sincronizando has_student_submissions:', e)
+  }
 }
 
 export async function ensureDefaultCurriculum(): Promise<void> {

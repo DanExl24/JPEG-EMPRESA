@@ -8,9 +8,27 @@ export async function getActivities(_req: Request, res: Response): Promise<void>
   try {
     const activities = await prisma.activity.findMany({
       orderBy: { id: 'asc' },
-      include: { learningOutcome: true }
+      include: {
+        learningOutcome: true,
+        submissions: {
+          select: { id: true, reviewStatus: true }
+        }
+      }
     })
-    res.json(activities)
+
+    const formatted = activities.map(act => {
+      const submissionCount = act.submissions?.length || 0
+      const pendingReviewsCount = act.submissions?.filter(s => s.reviewStatus === 'pending').length || 0
+      const { submissions, ...rest } = act
+      return {
+        ...rest,
+        hasStudentSubmissions: submissionCount > 0,
+        submissionCount,
+        pendingReviewsCount
+      }
+    })
+
+    res.json(formatted)
   } catch (error) {
     console.error('Error fetching activities:', error)
     res.status(500).json({ message: 'Error interno del servidor al obtener actividades.' })
@@ -125,9 +143,9 @@ export async function getActivitySubmissions(req: Request<{ id: string }>, res: 
     const apprenticeIds = submissions.map((s: { apprenticeId: number }) => s.apprenticeId)
     const apprentices = await prisma.user.findMany({
       where: { id: { in: apprenticeIds } },
-      select: { id: true, nombre: true, apellido: true }
+      select: { id: true, nombre: true, apellido: true, cedula: true, correo: true }
     })
-    const apprenticeMap = Object.fromEntries(apprentices.map((a: { id: number; nombre: string; apellido: string }) => [a.id, a]))
+    const apprenticeMap = Object.fromEntries(apprentices.map((a: { id: number; nombre: string; apellido: string; cedula?: string; correo?: string | null }) => [a.id, a]))
 
     const result = submissions.map((s: { answers: string | null; apprenticeId: number; [key: string]: any }) => ({
       ...s,
@@ -289,7 +307,11 @@ export async function updateActivity(req: Request<{ id: string }, unknown, Parti
       return
     }
 
-    if (existing.hasStudentSubmissions) {
+    const realSubmissions = await prisma.activitySubmission.count({
+      where: { activityId: id }
+    })
+
+    if (realSubmissions > 0) {
       res.status(400).json({ message: 'Esta actividad ya fue resuelta por aprendices y no puede ser modificada.' })
       return
     }
@@ -431,7 +453,11 @@ export async function deleteActivity(req: Request<{ id: string }>, res: Response
       return
     }
 
-    if (existing.hasStudentSubmissions) {
+    const realSubmissions = await prisma.activitySubmission.count({
+      where: { activityId: id }
+    })
+
+    if (realSubmissions > 0) {
       res.status(400).json({ message: 'Esta actividad ya fue resuelta por aprendices y no puede ser eliminada.' })
       return
     }

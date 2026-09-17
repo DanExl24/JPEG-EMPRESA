@@ -11,18 +11,20 @@ import {
   updateActivity,
   deleteActivity
 } from '../controllers/activity.controller.js'
+import { authenticate, optionalAuthenticate } from '../lib/middleware.js'
+import { requireRole } from '../middlewares/role.middleware.js'
 
 const router = Router()
 
-router.get('/', getActivities)
-router.get('/my-submissions', getMySubmissions)
-router.get('/:id', getActivityById)
-router.post('/', createActivity)
-router.post('/:id/submit', submitActivity)
-router.get('/:id/submissions/export-csv', exportSubmissionsCsv)
-router.get('/:id/submissions', getActivitySubmissions)
-router.patch('/:id/submissions/:apprenticeId/review', reviewSubmission)
-router.put('/:id', updateActivity)
-router.delete('/:id', deleteActivity)
+router.get('/', optionalAuthenticate, getActivities)
+router.get('/my-submissions', authenticate, getMySubmissions)
+router.get('/:id', optionalAuthenticate, getActivityById)
+router.post('/', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createActivity)
+router.post('/:id/submit', authenticate, submitActivity)
+router.get('/:id/submissions/export-csv', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), exportSubmissionsCsv)
+router.get('/:id/submissions', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), getActivitySubmissions)
+router.patch('/:id/submissions/:apprenticeId/review', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), reviewSubmission)
+router.put('/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateActivity)
+router.delete('/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteActivity)
 
 export default router
