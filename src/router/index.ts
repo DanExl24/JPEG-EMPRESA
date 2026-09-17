@@ -91,7 +91,8 @@ router.afterEach(() => {
     const i18n = useI18nStore()
     if (i18n.locale !== 'es') {
       setTimeout(() => i18n.translateDOM(), 30)
-      setTimeout(() => i18n.translateDOM(), 220)
+      setTimeout(() => i18n.translateDOM(), 200)
+      setTimeout(() => i18n.translateDOM(), 600)
     }
   } catch {}
 })

@@ -412,6 +412,156 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Docente e Instructor Clínico': 'Clinical Faculty & Instructor',
     'Administración Total y Curricular': 'Total & Curriculum Administration',
 
+    // Cursos View (CursosView.vue & EstudiarCursoView.vue)
+    'Gestiona todos los cursos y estandariza los módulos de aprendizaje.': 'Manage all courses and standardize learning modules.',
+    'Explora y continúa tu aprendizaje.': 'Explore and continue your learning.',
+    'Nuevo Curso': 'New Course',
+    'Crear Nuevo Curso': 'Create New Course',
+    'Editar Curso y Módulos': 'Edit Course and Modules',
+    'Estructura Pedagógica Obligatoria': 'Mandatory Pedagogical Structure',
+    'Título del Curso': 'Course Title',
+    'Categoría': 'Category',
+    'Duración': 'Duration',
+    'Descripción del Curso': 'Course Description',
+    'Programa de Formación': 'Training Program',
+    'Guardar Módulo': 'Save Module',
+    'actividades pedagógicas': 'learning activities',
+    'actividad pedagógica': 'learning activity',
+    'estudiantes': 'students',
+    'estudiante': 'student',
+    'Continuar': 'Continue',
+    'Editar': 'Edit',
+    'Eliminar': 'Delete',
+    'Básico': 'Basic',
+    'Especialidad': 'Specialty',
+    'Farmacia': 'Pharmacy',
+    'semanas': 'weeks',
+    'semana': 'week',
+    'Todos': 'All',
+    'Todas': 'All',
+    'En Progreso': 'In Progress',
+    'Completados': 'Completed',
+    'Completadas': 'Completed',
+    'Completada': 'Completed',
+    'Nuevos': 'New',
+    'Volver a Cursos': 'Back to Courses',
+    'Progreso del Módulo': 'Module Progress',
+    'Editar este curso': 'Edit this course',
+    'Eliminar este curso': 'Delete this course',
+    '¿Estás seguro de que deseas eliminar este curso?': 'Are you sure you want to delete this course?',
+
+    // Course titles and descriptions
+    'Fundamentos de Enfermería': 'Nursing Fundamentals',
+    'Conceptos esenciales, protocolos de atención básica y ética del cuidado del paciente.': 'Essential concepts, basic care protocols, and patient care ethics.',
+    'Cardiología Clínica': 'Clinical Cardiology',
+    'Evaluación cardiovascular, lectura básica de ECG y manejo de fármacos antiarrítmicos.': 'Cardiovascular evaluation, basic ECG interpretation, and antiarrhythmic drug management.',
+    'Farmacología Aplicada': 'Applied Pharmacology',
+    'Cálculo de dosis, vías de administración e interacciones farmacológicas frecuentes.': 'Dosage calculation, routes of administration, and frequent drug interactions.',
+    'Pediatría y Neonatología': 'Pediatrics & Neonatology',
+    'Cuidados intensivos pediátricos, signos vitales y escalas de dolor en neonatos.': 'Pediatric intensive care, vital signs, and neonatal pain scales.',
+    'Urgencias y Triage': 'Emergency & Triage',
+    'Protocolo START, estabilización rápida y manejo de trauma prehospitalario.': 'START protocol, rapid stabilization, and pre-hospital trauma management.',
+    'Salud Mental y Psiquiatría': 'Mental Health & Psychiatry',
+    'Contención verbal, desescalada de crisis y protocolos de seguridad en psiquiatría.': 'Verbal de-escalation, crisis containment, and psychiatric safety protocols.',
+
+    // Vocabulario View (VocabularioView.vue)
+    'Vocabulario de Enfermería': 'Nursing Vocabulary',
+    'Términos clave en inglés y español para la práctica clínica': 'Key terms in English and Spanish for clinical practice',
+    'Agregar Término': 'Add Term',
+    'Nuevo Término': 'New Term',
+    'Editar Término': 'Edit Term',
+    'Guardar Término': 'Save Term',
+    'Buscar término...': 'Search term...',
+    'Cargando vocabulario...': 'Loading vocabulary...',
+    'Comunicación': 'Communication',
+    'Equipos': 'Equipment',
+    'Farmacología': 'Pharmacology',
+    'Procedimientos': 'Procedures',
+    'Signos Vitales': 'Vital Signs',
+    'Síntomas': 'Symptoms',
+    'Urgencias': 'Emergencies',
+    'Anatomía': 'Anatomy',
+    'General': 'General',
+    'Toma de muestra de sangre': 'Blood sample collection',
+    'Presión arterial': 'Blood pressure',
+    'Temperatura corporal': 'Body temperature',
+    'Cateterismo / Sondaje': 'Catheterization / Probing',
+    'Resumen de alta médica': 'Discharge summary',
+    'Antibiótico': 'Antibiotic',
+    'Extracción de sangre para análisis de laboratorio clínico.': 'Blood extraction for clinical laboratory analysis.',
+    'Fuerza ejercida por la sangre contra las paredes de los vasos sanguíneos.': 'Force exerted by circulating blood against the walls of blood vessels.',
+    'Grado de calor del cuerpo humano medido con termómetro.': 'Degree of heat of the human body measured with a thermometer.',
+    'Inserción de una sonda tubular en una cavidad corporal.': 'Insertion of a tubular catheter into a body cavity.',
+    'Documento con instrucciones y recomendaciones de egreso del paciente.': 'Document with discharge instructions and recommendations for the patient.',
+    'Sustancia que destruye o inhibe el crecimiento de bacterias.': 'Substance that destroys or inhibits bacterial growth.',
+    'Escuchar pronunciación en inglés': 'Listen to English pronunciation',
+    'Escuchar ejemplo en inglés': 'Listen to English example',
+    'Editar este término': 'Edit this term',
+    'Eliminar este término': 'Delete this term',
+    'Término en Inglés': 'English Term',
+    'Término en Español': 'Spanish Term',
+    'Definición en Español': 'Definition in Spanish',
+    'Ejemplo de Uso en Inglés': 'Usage Example in English',
+
+    // Glosario View (GlosarioView.vue)
+    'Glosario Clínico': 'Clinical Glossary',
+    'Definiciones detalladas de conceptos clínicos y médicos': 'Detailed definitions of clinical and medical concepts',
+    'Buscar concepto...': 'Search concept...',
+
+    // Diálogos Clínicos (DialogosView.vue)
+    'Escucha y practica conversaciones estándar de enfermería en inglés técnico.': 'Listen and practice standard nursing conversations in technical English.',
+    'Crear Diálogo': 'Create Dialogue',
+    'Cargando diálogos...': 'Loading dialogues...',
+
+    // Gestión Curricular (CurriculumView.vue)
+    'Administra programas de formación, competencias y resultados de aprendizaje (RAPs).': 'Manage training programs, competencies, and learning outcomes (RAPs).',
+    'Programas de Formación': 'Training Programs',
+    'Competencias': 'Competencies',
+    'Resultados de Aprendizaje': 'Learning Outcomes',
+    'Nuevo Programa': 'New Program',
+    'Nueva Competencia': 'New Competency',
+    'Nuevo RAP': 'New RAP',
+    'Cargando datos curriculares...': 'Loading curriculum data...',
+    'Código': 'Code',
+    'Denominación': 'Title / Denomination',
+    'Versión': 'Version',
+
+    // Actividades View (ActividadesView.vue & ActividadDetalleView.vue)
+    'Actividades Educativas': 'Educational Activities',
+    'Crea, configura y edita actividades basadas en plantillas interactivas.': 'Create, configure, and edit activities based on interactive templates.',
+    'Tus tareas y actividades pendientes.': 'Your pending tasks and activities.',
+    'Nueva Actividad': 'New Activity',
+    'Todas las Fases': 'All Phases',
+    'Preparación': 'Preparation',
+    'Absorción': 'Absorption',
+    'Práctica': 'Practice',
+    'Cierre': 'Closing',
+    'Pendientes': 'Pending',
+    'Pendiente': 'Pending',
+    'En Calificación': 'Under Grading',
+    'Calificadas': 'Graded',
+    'Fase: ': 'Phase: ',
+    'Fase:': 'Phase:',
+    'Buscar actividad...': 'Search activity...',
+    'Ver Detalle': 'View Details',
+    'Realizar Actividad': 'Start Activity',
+    'Fecha Límite': 'Due Date',
+    'Sin fecha límite': 'No due date',
+    'Intentos permitidos': 'Allowed attempts',
+    'Ilimitados': 'Unlimited',
+    'Obligatorio': 'Mandatory',
+    'Opcional': 'Optional',
+    'Fase 1: Preparación (Warm-up)': 'Phase 1: Warm-up',
+    'Fase 2: Absorción (Teoría y Vocabulario)': 'Phase 2: Absorption (Theory & Vocabulary)',
+    'Fase 3: Práctica Activa (Ejercicios y Voz)': 'Phase 3: Active Practice (Exercises & Voice)',
+    'Fase 4: Evaluación Final (Examen)': 'Phase 4: Final Evaluation (Exam)',
+    'Mensaje/Texto de Bienvenida': 'Welcome Message/Text',
+    'Palabras desordenadas para el Calentamiento': 'Scrambled Words for Warm-up',
+    'Explicación Gramatical': 'Grammar Explanation',
+    'Vocabulario Técnico de Escucha': 'Technical Listening Vocabulary',
+    'Texto para Rellenar Blanco': 'Fill-in-the-blank Text',
+    'Oración de Grabación de Voz': 'Voice Recording Sentence',
+
     // Dashboard View
     'Bienvenido': 'Welcome',
     'Sesión iniciada como': 'Signed in as',
@@ -472,11 +622,18 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Verificado': 'Verified',
     'Tareas evaluadas': 'Evaluated tasks',
 
-    // Users View
+    // Users View (UsuariosView.vue)
     'Gestión de Usuarios': 'User Management',
     'Administrar cuentas, roles y accesos al sistema': 'Manage accounts, roles, and system access',
+    'Administra los accesos, roles, credenciales y estado de todos los miembros de la plataforma.': 'Manage access, roles, credentials, and status of all platform members.',
     'Crear Usuario': 'Create User',
+    'Nuevo Usuario': 'New User',
+    'Refrescar': 'Refresh',
     'Todos los Roles': 'All Roles',
+    'Administradores': 'Administrators',
+    'Instructores': 'Instructors',
+    'Aprendices': 'Learners',
+    'Buscar usuario por nombre, correo o documento...': 'Search user by name, email or ID...',
     'Buscar por nombre, cédula o correo...': 'Search by name, ID or email...',
     'Nombre Completo': 'Full Name',
     'Documento': 'Document / ID',
@@ -484,12 +641,31 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Acciones': 'Actions',
     'Activo': 'Active',
     'Inactivo': 'Inactive',
+    'Activos': 'Active',
+    'Inactivos': 'Inactive',
     'Generar Contraseña': 'Generate Password',
     'Editar Usuario': 'Edit User',
     'Eliminar Usuario': 'Delete User',
+    'Restablecer Contraseña': 'Reset Password',
+    'Reenviar Credenciales': 'Resend Credentials',
     '¿Estás seguro de que deseas eliminar a este usuario?': 'Are you sure you want to delete this user?',
 
-    // Ranking & Badges
+    // Games View (JuegosView.vue)
+    'Arcade Lúdico & Gamificación': 'Arcade Games & Gamification',
+    'Centro de Control Docente': 'Teaching Control Center',
+    'Gestiona el catálogo de minijuegos del arcade, activa/pausa mecánicas, supervisa estadísticas reales y audita partidas de los aprendices.': 'Manage arcade games catalog, enable/pause mechanics, monitor real statistics, and audit learner game sessions.',
+    'Crear Juego': 'Create Game',
+    'Volver al Arcade': 'Back to Arcade',
+    'Modo Prueba Docente': 'Instructor Test Mode',
+    'Partida Oficial': 'Official Game',
+    'Salir al Panel': 'Exit to Dashboard',
+    'Premio:': 'Reward:',
+    'Siguiente Ronda': 'Next Round',
+    'Finalizar Calentamiento': 'Finish Warm-up',
+    '¡Calentamiento Superado!': 'Warm-up Completed!',
+    'Jugar de Nuevo': 'Play Again',
+
+    // Leaderboard, Progress & Analytics
     'Tabla de líderes. ¡Completa actividades y sube posiciones!': 'Leaderboard. Complete activities and climb ranks!',
     'Top 3 Líderes': 'Top 3 Leaders',
     'Tabla General — Top 10': 'General Table — Top 10',
@@ -502,19 +678,15 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'XP Requerido': 'XP Required',
     'Bloqueado': 'Locked',
     'Desbloqueado': 'Unlocked',
-
-    // Courses & Activities
-    'Cursos Disponibles': 'Available Courses',
-    'Explora los módulos de formación clínica': 'Explore clinical training modules',
-    'Estudiar Curso': 'Study Course',
-    'Ver Actividades': 'View Activities',
-    'Actividades de Aprendizaje': 'Learning Activities',
-    'Entrega de Tarea': 'Submit Assignment',
-    'Completada': 'Completed',
-    'Pendiente': 'Pending',
-    'En Progreso': 'In Progress',
-    'Aprobado': 'Passed',
-    'No Aprobado': 'Failed',
+    'Progreso General': 'Overall Progress',
+    'Progreso por Curso': 'Progress by Course',
+    'Calculando tu progreso...': 'Calculating your progress...',
+    'Visualiza tu avance real en actividades y cursos.': 'View your real progress across activities and courses.',
+    'Matriculaciones por Mes': 'Enrollments per Month',
+    'Métricas globales de la plataforma.': 'Global platform metrics.',
+    'Analítica de tus cursos y estudiantes.': 'Analytics for your courses and students.',
+    'Exportar': 'Export',
+    'vs mes anterior': 'vs previous month',
 
     // Settings View
     'Personaliza tu experiencia, idioma y notificaciones en la plataforma.': 'Customize your experience, language, and notifications across the platform.',
@@ -553,7 +725,6 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Cancelar': 'Cancel',
     'Guardar': 'Save',
     'Confirmar': 'Confirm',
-    'Eliminar': 'Delete',
     'Cargando...': 'Loading...',
     'Cerrar': 'Close',
     'Volver': 'Back',
@@ -564,7 +735,8 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Ver': 'View',
     'Detalles': 'Details',
     'Puntos': 'Points',
-    'Fecha': 'Date'
+    'Fecha': 'Date',
+    'Reintentar': 'Retry'
   },
 
   pt: {
@@ -607,6 +779,156 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Docente / Tutor': 'Docente / Tutor',
     'Docente e Instructor Clínico': 'Docente e Instrutor Clínico',
     'Administración Total y Curricular': 'Administração Total e Curricular',
+
+    // Cursos View
+    'Gestiona todos los cursos y estandariza los módulos de aprendizaje.': 'Gerencie todos os cursos e padronize os módulos de aprendizagem.',
+    'Explora y continúa tu aprendizaje.': 'Explore e continue sua aprendizagem.',
+    'Nuevo Curso': 'Novo Curso',
+    'Crear Nuevo Curso': 'Criar Novo Curso',
+    'Editar Curso y Módulos': 'Editar Curso e Módulos',
+    'Estructura Pedagógica Obligatoria': 'Estrutura Pedagógica Obrigatória',
+    'Título del Curso': 'Título do Curso',
+    'Categoría': 'Categoria',
+    'Duración': 'Duração',
+    'Descripción del Curso': 'Descrição do Curso',
+    'Programa de Formación': 'Programa de Formação',
+    'Guardar Módulo': 'Salvar Módulo',
+    'actividades pedagógicas': 'atividades pedagógicas',
+    'actividad pedagógica': 'atividade pedagógica',
+    'estudiantes': 'estudantes',
+    'estudiante': 'estudante',
+    'Continuar': 'Continuar',
+    'Editar': 'Editar',
+    'Eliminar': 'Excluir',
+    'Básico': 'Básico',
+    'Especialidad': 'Especialidade',
+    'Farmacia': 'Farmácia',
+    'semanas': 'semanas',
+    'semana': 'semana',
+    'Todos': 'Todos',
+    'Todas': 'Todas',
+    'En Progreso': 'Em Progresso',
+    'Completados': 'Concluídos',
+    'Completadas': 'Concluídas',
+    'Completada': 'Concluída',
+    'Nuevos': 'Novos',
+    'Volver a Cursos': 'Voltar aos Cursos',
+    'Progreso del Módulo': 'Progresso do Módulo',
+    'Editar este curso': 'Editar este curso',
+    'Eliminar este curso': 'Excluir este curso',
+    '¿Estás seguro de que deseas eliminar este curso?': 'Tem certeza de que deseja excluir este curso?',
+
+    // Course titles and descriptions
+    'Fundamentos de Enfermería': 'Fundamentos de Enfermagem',
+    'Conceptos esenciales, protocolos de atención básica y ética del cuidado del paciente.': 'Conceitos essenciais, protocolos de cuidados básicos e ética no atendimento ao paciente.',
+    'Cardiología Clínica': 'Cardiologia Clínica',
+    'Evaluación cardiovascular, lectura básica de ECG y manejo de fármacos antiarrítmicos.': 'Avaliação cardiovascular, leitura básica de ECG e manejo de medicamentos antiarrítmicos.',
+    'Farmacología Aplicada': 'Farmacologia Aplicada',
+    'Cálculo de dosis, vías de administración e interacciones farmacológicas frecuentes.': 'Cálculo de dosagem, vias de administração e interações medicamentosas frequentes.',
+    'Pediatría y Neonatología': 'Pediatria e Neonatologia',
+    'Cuidados intensivos pediátricos, signos vitales y escalas de dolor en neonatos.': 'Cuidados intensivos pediátricos, sinais vitais e escalas de dor em neonatos.',
+    'Urgencias y Triage': 'Urgência e Triagem',
+    'Protocolo START, estabilización rápida y manejo de trauma prehospitalario.': 'Protocolo START, estabilização rápida e manejo de trauma pré-hospitalar.',
+    'Salud Mental y Psiquiatría': 'Saúde Mental e Psiquiatria',
+    'Contención verbal, desescalada de crisis y protocolos de seguridad en psiquiatría.': 'Contenção verbal, desescalada de crises e protocolos de segurança em psiquiatria.',
+
+    // Vocabulario View
+    'Vocabulario de Enfermería': 'Vocabulário de Enfermagem',
+    'Términos clave en inglés y español para la práctica clínica': 'Termos-chave em inglês e espanhol para a prática clínica',
+    'Agregar Término': 'Adicionar Termo',
+    'Nuevo Término': 'Novo Termo',
+    'Editar Término': 'Editar Termo',
+    'Guardar Término': 'Salvar Termo',
+    'Buscar término...': 'Buscar termo...',
+    'Cargando vocabulario...': 'Carregando vocabulário...',
+    'Comunicación': 'Comunicação',
+    'Equipos': 'Equipamentos',
+    'Farmacología': 'Farmacologia',
+    'Procedimientos': 'Procedimentos',
+    'Signos Vitales': 'Sinais Vitais',
+    'Síntomas': 'Sintomas',
+    'Urgencias': 'Urgências',
+    'Anatomía': 'Anatomia',
+    'General': 'Geral',
+    'Toma de muestra de sangre': 'Coleta de amostra de sangue',
+    'Presión arterial': 'Pressão arterial',
+    'Temperatura corporal': 'Temperatura corporal',
+    'Cateterismo / Sondaje': 'Cateterismo / Sondagem',
+    'Resumen de alta médica': 'Resumo de alta médica',
+    'Antibiótico': 'Antibiótico',
+    'Extracción de sangre para análisis de laboratorio clínico.': 'Coleta de sangue para análise de laboratório clínico.',
+    'Fuerza ejercida por la sangre contra las paredes de los vasos sanguíneos.': 'Força exercida pelo sangue contra as paredes dos vasos sanguíneos.',
+    'Grado de calor del cuerpo humano medido con termómetro.': 'Grau de calor do corpo humano medido com termômetro.',
+    'Inserción de una sonda tubular en una cavidad corporal.': 'Inserção de uma sonda tubular em uma cavidade corporal.',
+    'Documento con instrucciones y recomendaciones de egreso del paciente.': 'Documento com instruções e recomendações de alta do paciente.',
+    'Sustancia que destruye o inhibe el crecimiento de bacterias.': 'Substância que destrói ou inibe o crescimento de bactérias.',
+    'Escuchar pronunciación en inglés': 'Ouvir pronúncia em inglês',
+    'Escuchar ejemplo en inglés': 'Ouvir exemplo em inglês',
+    'Editar este término': 'Editar este termo',
+    'Eliminar este término': 'Excluir este termo',
+    'Término en Inglés': 'Termo em Inglês',
+    'Término en Español': 'Termo em Espanhol',
+    'Definición en Español': 'Definição em Espanhol',
+    'Ejemplo de Uso en Inglés': 'Exemplo de Uso em Inglês',
+
+    // Glosario View
+    'Glosario Clínico': 'Glossário Clínico',
+    'Definiciones detalladas de conceptos clínicos y médicos': 'Definições detalhadas de conceitos clínicos e médicos',
+    'Buscar concepto...': 'Buscar conceito...',
+
+    // Diálogos Clínicos
+    'Escucha y practica conversaciones estándar de enfermería en inglés técnico.': 'Ouça e pratique conversas padrão de enfermagem em inglês técnico.',
+    'Crear Diálogo': 'Criar Diálogo',
+    'Cargando diálogos...': 'Carregando diálogos...',
+
+    // Gestión Curricular
+    'Administra programas de formación, competencias y resultados de aprendizaje (RAPs).': 'Gerencie programas de formação, competências e resultados de aprendizagem (RAPs).',
+    'Programas de Formación': 'Programas de Formação',
+    'Competencias': 'Competências',
+    'Resultados de Aprendizaje': 'Resultados de Aprendizagem',
+    'Nuevo Programa': 'Novo Programa',
+    'Nueva Competencia': 'Nova Competência',
+    'Nuevo RAP': 'Novo RAP',
+    'Cargando datos curriculares...': 'Carregando dados curriculares...',
+    'Código': 'Código',
+    'Denominación': 'Denominação',
+    'Versión': 'Versão',
+
+    // Actividades View
+    'Actividades Educativas': 'Atividades Educativas',
+    'Crea, configura y edita actividades basadas en plantillas interactivas.': 'Crie, configure e edite atividades baseadas em modelos interativos.',
+    'Tus tareas y actividades pendientes.': 'Suas tarefas e atividades pendentes.',
+    'Nueva Actividad': 'Nova Atividade',
+    'Todas las Fases': 'Todas as Fases',
+    'Preparación': 'Preparação',
+    'Absorción': 'Absorção',
+    'Práctica': 'Prática',
+    'Cierre': 'Encerramento',
+    'Pendientes': 'Pendentes',
+    'Pendiente': 'Pendente',
+    'En Calificación': 'Em Avaliação',
+    'Calificadas': 'Avaliadas',
+    'Fase: ': 'Fase: ',
+    'Fase:': 'Fase:',
+    'Buscar actividad...': 'Buscar atividade...',
+    'Ver Detalle': 'Ver Detalhes',
+    'Realizar Actividad': 'Realizar Atividade',
+    'Fecha Límite': 'Data Limite',
+    'Sin fecha límite': 'Sem data limite',
+    'Intentos permitidos': 'Tentativas permitidas',
+    'Ilimitados': 'Ilimitadas',
+    'Obligatorio': 'Obrigatório',
+    'Opcional': 'Opcional',
+    'Fase 1: Preparación (Warm-up)': 'Fase 1: Preparação (Warm-up)',
+    'Fase 2: Absorción (Teoría y Vocabulario)': 'Fase 2: Absorção (Teoria e Vocabulário)',
+    'Fase 3: Práctica Activa (Ejercicios y Voz)': 'Fase 3: Prática Ativa (Exercícios e Voz)',
+    'Fase 4: Evaluación Final (Examen)': 'Fase 4: Avaliação Final (Exame)',
+    'Mensaje/Texto de Bienvenida': 'Mensagem/Texto de Boas-vindas',
+    'Palabras desordenadas para el Calentamiento': 'Palavras desordenadas para o Aquecimento',
+    'Explicación Gramatical': 'Explicação Gramatical',
+    'Vocabulario Técnico de Escucha': 'Vocabulário Técnico de Escuta',
+    'Texto para Rellenar Blanco': 'Texto para Preencher Espaço',
+    'Oración de Grabación de Voz': 'Frase de Gravação de Voz',
 
     // Dashboard View
     'Bienvenido': 'Bem-vindo',
@@ -671,8 +993,15 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     // Users View
     'Gestión de Usuarios': 'Gestão de Usuários',
     'Administrar cuentas, roles y accesos al sistema': 'Gerenciar contas, funções e acessos ao sistema',
+    'Administra los accesos, roles, credenciales y estado de todos los miembros de la plataforma.': 'Gerencie acessos, funções, credenciais e status de todos os membros da plataforma.',
     'Crear Usuario': 'Criar Usuário',
+    'Nuevo Usuario': 'Novo Usuário',
+    'Refrescar': 'Atualizar',
     'Todos los Roles': 'Todas as Funções',
+    'Administradores': 'Administradores',
+    'Instructores': 'Instrutores',
+    'Aprendices': 'Aprendizes',
+    'Buscar usuario por nombre, correo o documento...': 'Buscar usuário por nome, e-mail ou documento...',
     'Buscar por nombre, cédula o correo...': 'Buscar por nome, documento ou e-mail...',
     'Nombre Completo': 'Nome Completo',
     'Documento': 'Documento',
@@ -680,12 +1009,31 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Acciones': 'Ações',
     'Activo': 'Ativo',
     'Inactivo': 'Inativo',
+    'Activos': 'Ativos',
+    'Inactivos': 'Inativos',
     'Generar Contraseña': 'Gerar Senha',
     'Editar Usuario': 'Editar Usuário',
     'Eliminar Usuario': 'Excluir Usuário',
+    'Restablecer Contraseña': 'Redefinir Senha',
+    'Reenviar Credenciales': 'Reenviar Credenciais',
     '¿Estás seguro de que deseas eliminar a este usuario?': 'Tem certeza de que deseja excluir este usuário?',
 
-    // Ranking & Badges
+    // Games View
+    'Arcade Lúdico & Gamificación': 'Jogos Arcade & Gamificação',
+    'Centro de Control Docente': 'Centro de Controle Docente',
+    'Gestiona el catálogo de minijuegos del arcade, activa/pausa mecánicas, supervisa estadísticas reales y audita partidas de los aprendices.': 'Gerencie o catálogo de jogos do arcade, ative/pause mecânicas, monitore estatísticas reais e audite sessões dos aprendizes.',
+    'Crear Juego': 'Criar Jogo',
+    'Volver al Arcade': 'Voltar ao Arcade',
+    'Modo Prueba Docente': 'Modo de Teste do Instrutor',
+    'Partida Oficial': 'Partida Oficial',
+    'Salir al Panel': 'Sair para o Painel',
+    'Premio:': 'Prêmio:',
+    'Siguiente Ronda': 'Próxima Rodada',
+    'Finalizar Calentamiento': 'Finalizar Aquecimento',
+    '¡Calentamiento Superado!': 'Aquecimento Concluído!',
+    'Jugar de Nuevo': 'Jogar Novamente',
+
+    // Leaderboard, Progress & Analytics
     'Tabla de líderes. ¡Completa actividades y sube posiciones!': 'Tabela de líderes. Complete atividades e suba posições!',
     'Top 3 Líderes': 'Top 3 Líderes',
     'Tabla General — Top 10': 'Tabela Geral — Top 10',
@@ -698,19 +1046,15 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'XP Requerido': 'XP Necessário',
     'Bloqueado': 'Bloqueado',
     'Desbloqueado': 'Desbloqueado',
-
-    // Courses & Activities
-    'Cursos Disponibles': 'Cursos Disponíveis',
-    'Explora los módulos de formación clínica': 'Explore os módulos de formação clínica',
-    'Estudiar Curso': 'Estudar Curso',
-    'Ver Actividades': 'Ver Atividades',
-    'Actividades de Aprendizaje': 'Atividades de Aprendizagem',
-    'Entrega de Tarea': 'Entregar Tarefa',
-    'Completada': 'Concluída',
-    'Pendiente': 'Pendente',
-    'En Progreso': 'Em Progresso',
-    'Aprobado': 'Aprovado',
-    'No Aprobado': 'Reprovado',
+    'Progreso General': 'Progresso Geral',
+    'Progreso por Curso': 'Progresso por Curso',
+    'Calculando tu progreso...': 'Calculando seu progresso...',
+    'Visualiza tu avance real en actividades y cursos.': 'Veja seu progresso real em atividades e cursos.',
+    'Matriculaciones por Mes': 'Matrículas por Mês',
+    'Métricas globales de la plataforma.': 'Métricas globais da plataforma.',
+    'Analítica de tus cursos y estudiantes.': 'Análise de seus cursos e estudantes.',
+    'Exportar': 'Exportar',
+    'vs mes anterior': 'vs mês anterior',
 
     // Settings View
     'Personaliza tu experiencia, idioma y notificaciones en la plataforma.': 'Personalize sua experiência, idioma e notificações na plataforma.',
@@ -749,7 +1093,6 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Cancelar': 'Cancelar',
     'Guardar': 'Salvar',
     'Confirmar': 'Confirmar',
-    'Eliminar': 'Excluir',
     'Cargando...': 'Carregando...',
     'Cerrar': 'Fechar',
     'Volver': 'Voltar',
@@ -760,11 +1103,12 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Ver': 'Ver',
     'Detalles': 'Detalhes',
     'Puntos': 'Pontos',
-    'Fecha': 'Data'
+    'Fecha': 'Data',
+    'Reintentar': 'Tentar Novamente'
   }
 }
 
-// Pre-sorted phrases by length descending to match longest matches first
+// Pre-sorted phrases by length descending to match longest phrases first (avoids sub-word collision)
 const SORTED_PHRASES: Record<'en' | 'pt', Array<{ es: string; target: string }>> = {
   en: Object.entries(PHRASE_DICTIONARY.en)
     .sort((a, b) => b[0].length - a[0].length)
@@ -793,19 +1137,28 @@ function translateText(text: string, targetLocale: SupportedLocale): string {
   const trimmed = text.trim()
   if (!trimmed) return text
 
-  // 0. If text is a dot notation key itself (like 'settings.title' or 'nav.dashboard')
+  // 0. Dot notation lookup
   const dotVal = getFromMessages(targetLocale, trimmed)
   if (dotVal) {
     return text.replace(trimmed, dotVal)
   }
 
-  // 1. Direct exact match in phrase dictionary
+  // 1. Direct exact match in dictionary
   const exact = PHRASE_DICTIONARY[targetLocale]?.[trimmed]
   if (exact) {
     return text.replace(trimmed, exact)
   }
 
-  // 2. Sequential phrase replacement
+  // 2. Case-insensitive exact match
+  const lowerTrimmed = trimmed.toLowerCase()
+  const matchEntry = Object.entries(PHRASE_DICTIONARY[targetLocale] || {}).find(
+    ([k]) => k.toLowerCase() === lowerTrimmed
+  )
+  if (matchEntry) {
+    return text.replace(trimmed, matchEntry[1])
+  }
+
+  // 3. Multi-phrase replacement with sorted phrases (longest matches first)
   let result = text
   const phrases = SORTED_PHRASES[targetLocale] || []
   for (const { es, target } of phrases) {
@@ -920,26 +1273,39 @@ export const useI18nStore = defineStore('i18n', () => {
       if (['script', 'style', 'code', 'pre', 'textarea'].includes(parentTag)) return
       if (node.parentElement?.closest('[data-no-translate]')) return
 
+      // Do NOT translate icon ligatures
+      if (
+        node.parentElement?.classList?.contains('material-symbols-outlined') ||
+        node.parentElement?.classList?.contains('material-icons')
+      ) {
+        return
+      }
+
       const currentText = node.textContent || ''
       if (!currentText.trim()) return
 
-      if ((node as any).__origText === undefined) {
+      // Track original text cleanly across Vue mutations
+      const lastTranslated = (node as any).__lastTranslated
+      if (lastTranslated === undefined || currentText !== lastTranslated) {
         (node as any).__origText = currentText
       }
 
       const orig = (node as any).__origText
+      if (!orig) return
+
+      let target = orig
       if (targetLocale === 'es') {
-        // In Spanish, if the node was previously showing a dot key or translated text, restore original or resolve dot key
         const dotVal = getFromMessages('es', orig.trim())
-        const target = dotVal ? orig.replace(orig.trim(), dotVal) : orig
-        if (node.textContent !== target) {
-          node.textContent = target
-        }
+        target = dotVal ? orig.replace(orig.trim(), dotVal) : orig
       } else {
-        const translated = translateText(orig, targetLocale)
-        if (node.textContent !== translated) {
-          node.textContent = translated
-        }
+        target = translateText(orig, targetLocale)
+      }
+
+      if (node.textContent !== target) {
+        node.textContent = target
+        ;(node as any).__lastTranslated = target
+      } else {
+        ;(node as any).__lastTranslated = currentText
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement
@@ -948,12 +1314,39 @@ export const useI18nStore = defineStore('i18n', () => {
       if (el.closest && el.closest('[data-no-translate]')) return
 
       // Translate placeholders
-      if (el instanceof HTMLInputElement && el.placeholder) {
-        if ((el as any).__origPlaceholder === undefined) {
+      if ((el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && el.placeholder) {
+        const lastPh = (el as any).__lastPlaceholder
+        if (lastPh === undefined || el.placeholder !== lastPh) {
           (el as any).__origPlaceholder = el.placeholder
         }
         const orig = (el as any).__origPlaceholder
-        el.placeholder = targetLocale === 'es' ? orig : translateText(orig, targetLocale)
+        if (orig) {
+          const target = targetLocale === 'es' ? orig : translateText(orig, targetLocale)
+          if (el.placeholder !== target) {
+            el.placeholder = target
+            ;(el as any).__lastPlaceholder = target
+          } else {
+            ;(el as any).__lastPlaceholder = el.placeholder
+          }
+        }
+      }
+
+      // Translate titles / tooltips
+      if (el.title) {
+        const lastTitle = (el as any).__lastTitle
+        if (lastTitle === undefined || el.title !== lastTitle) {
+          (el as any).__origTitle = el.title
+        }
+        const orig = (el as any).__origTitle
+        if (orig) {
+          const target = targetLocale === 'es' ? orig : translateText(orig, targetLocale)
+          if (el.title !== target) {
+            el.title = target
+            ;(el as any).__lastTitle = target
+          } else {
+            ;(el as any).__lastTitle = el.title
+          }
+        }
       }
 
       // Translate element children
@@ -992,6 +1385,9 @@ export const useI18nStore = defineStore('i18n', () => {
         if (m.type === 'childList' && m.addedNodes.length > 0) {
           shouldTranslate = true
           break
+        } else if (m.type === 'characterData') {
+          shouldTranslate = true
+          break
         }
       }
 
@@ -999,13 +1395,14 @@ export const useI18nStore = defineStore('i18n', () => {
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => {
           translateDOM()
-        }, 60)
+        }, 50)
       }
     })
 
     observer.observe(target, {
       childList: true,
-      subtree: true
+      subtree: true,
+      characterData: true
     })
   }
 
@@ -1027,3 +1424,4 @@ export const useI18nStore = defineStore('i18n', () => {
     startDOMObserver
   }
 })
+
