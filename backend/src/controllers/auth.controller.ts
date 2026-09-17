@@ -29,7 +29,7 @@ function lockoutTimeRemaining(lockedUntil: Date | null): number {
 }
 
 function isValidPassword(password: string): boolean {
-  return typeof password === 'string' && password.length >= 8 && /[A-Z]/.test(password) && /[@#$%&*]/.test(password)
+  return typeof password === 'string' && password.length >= 8 && /[A-Z]/.test(password) && /[@#$%&*!._-]/.test(password)
 }
 
 /**
@@ -301,5 +301,78 @@ export async function getMe(req: Request, res: Response): Promise<void> {
   } catch (error) {
     console.error('💥 [Auth getMe Error]:', error)
     res.status(500).json({ message: 'Error al obtener sesión del usuario.' })
+  }
+}
+
+/**
+ * Cambia la contraseña del usuario autenticado
+ */
+export async function changePassword(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = Number(req.user?.id)
+    if (!userId) {
+      res.status(401).json({ message: 'No autenticado.' })
+      return
+    }
+
+    const { currentPassword, newPassword } = req.body || {}
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ message: 'La contraseña actual y la nueva contraseña son obligatorias.' })
+      return
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      res.status(404).json({ message: 'Usuario no encontrado.' })
+      return
+    }
+
+    // Verificar contraseña actual
+    const currentMatches = verifyPassword(currentPassword, user.passwordHash)
+    if (!currentMatches) {
+      res.status(400).json({ message: 'La contraseña actual ingresada es incorrecta.' })
+      return
+    }
+
+    // Validar nueva contraseña
+    if (!isValidPassword(newPassword)) {
+      res.status(400).json({
+        message: 'La nueva contraseña debe tener mínimo 8 caracteres, al menos una mayúscula y un carácter especial (@#$%&*!._-).'
+      })
+      return
+    }
+
+    if (currentPassword === newPassword) {
+      res.status(400).json({
+        message: 'La nueva contraseña no puede ser idéntica a la contraseña actual.'
+      })
+      return
+    }
+
+    // Hashear y actualizar
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: hashPassword(newPassword)
+      }
+    })
+
+    // Registrar en auditoría
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'PASSWORD_CHANGED',
+        title: 'Actualizaste tu contraseña de acceso.',
+        badge: '🔐'
+      }
+    }).catch((e: any) => console.warn('Error registrando log de cambio de pass:', e))
+
+    res.json({ message: 'Contraseña actualizada exitosamente.' })
+  } catch (error) {
+    console.error('💥 [Auth changePassword Error]:', error)
+    res.status(500).json({ message: 'Error interno al cambiar la contraseña.' })
   }
 }

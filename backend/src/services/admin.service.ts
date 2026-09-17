@@ -61,6 +61,8 @@ export class AdminService {
 
       return {
         id: u.id,
+        nombre: u.nombre,
+        apellido: u.apellido,
         name: `${u.nombre} ${u.apellido}`,
         email: u.correo || 'Sin correo',
         cedula: u.cedula,
@@ -138,13 +140,32 @@ export class AdminService {
     const existing = await prisma.user.findUnique({ where: { id } })
     if (!existing) throw new NotFoundError(`Usuario #${id} no encontrado.`)
 
+    if (data.correo && data.correo.trim().toLowerCase() !== existing.correo?.toLowerCase()) {
+      const emailConflict = await prisma.user.findFirst({
+        where: {
+          correo: data.correo.trim().toLowerCase(),
+          NOT: { id }
+        }
+      })
+      if (emailConflict) {
+        throw new ConflictError('Ya existe otro usuario registrado con ese correo electrónico.')
+      }
+    }
+
+    if (data.password) {
+      if (!isValidPassword(data.password)) {
+        throw new BadRequestError('La contraseña debe tener mínimo 8 caracteres, al menos una mayúscula y un carácter especial (@#$%&*!._-).')
+      }
+    }
+
     return await prisma.user.update({
       where: { id },
       data: {
         ...(data.nombre ? { nombre: data.nombre.trim() } : {}),
         ...(data.apellido ? { apellido: data.apellido.trim() } : {}),
         ...(data.correo ? { correo: data.correo.trim().toLowerCase() } : {}),
-        ...(data.rol ? { rol: data.rol.toUpperCase() } : {})
+        ...(data.rol ? { rol: data.rol.toUpperCase() } : {}),
+        ...(data.password ? { passwordHash: hashPassword(data.password) } : {})
       },
       select: {
         id: true,
@@ -190,15 +211,42 @@ export class AdminService {
   /**
    * Actualiza preferencias de usuario (SettingsView.vue)
    */
-  static async updatePreferences(userId: number, data: Partial<{ emailNotifications: boolean; activityAlerts: boolean; rankingAlerts: boolean; theme: string; language: string }>) {
+  static async updatePreferences(
+    userId: number,
+    data: {
+      emailNotifications?: boolean
+      activityAlerts?: boolean
+      rankingAlerts?: boolean
+      theme?: string
+      language?: string
+    }
+  ) {
+    const updateData: Record<string, unknown> = {}
+
+    if (typeof data.emailNotifications === 'boolean') {
+      updateData.emailNotifications = data.emailNotifications
+    }
+    if (typeof data.activityAlerts === 'boolean') {
+      updateData.activityAlerts = data.activityAlerts
+    }
+    if (typeof data.rankingAlerts === 'boolean') {
+      updateData.rankingAlerts = data.rankingAlerts
+    }
+    if (typeof data.language === 'string') {
+      const normalizedLang = data.language.toLowerCase().trim()
+      if (['es', 'en', 'pt'].includes(normalizedLang)) {
+        updateData.language = normalizedLang
+      }
+    }
+
     return await prisma.userPreference.upsert({
       where: { userId },
       create: {
         userId,
-        ...data
+        ...updateData
       },
       update: {
-        ...data
+        ...updateData
       }
     })
   }

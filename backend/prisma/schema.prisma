@@ -296,5 +296,26 @@ model GameScore {
   @@map("game_scores")
 }
 
+model ArcadeGame {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  name        String
+  subtitle    String?
+  description String
+  template    String   @default("trivia_medica") // 'warmup_drag_match', 'trivia_medica', 'drug_match', 'listening_challenge'
+  icon        String   @default("sports_esports")
+  color       String   @default("text-blue-500")
+  bg          String   @default("bg-blue-50")
+  difficulty  String   @default("Medio") // 'Fácil', 'Medio', 'Difícil'
+  pts         Int      @default(100)
+  duration    String   @default("5 min")
+  active      Boolean  @default(true)
+  config      Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("arcade_games")
+}
+
 
 

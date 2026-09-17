@@ -4,6 +4,7 @@ import courseRoutes from './course.routes.js'
 import activityRoutes from './activity.routes.js'
 import contentRoutes from './content.routes.js'
 import curriculumRoutes from './curriculum.routes.js'
+import learnerRoutes from './learner.routes.js'
 import gamificationRoutes from './gamification.routes.js'
 import adminRoutes from './admin.routes.js'
 import analyticsRoutes from './analytics.routes.js'
@@ -18,7 +19,9 @@ apiRouter.use('/activities', activityRoutes)
 apiRouter.use('/content', contentRoutes)
 apiRouter.use('/admin/curriculum', curriculumRoutes)
 apiRouter.use('/admin', adminRoutes)
-apiRouter.use('/learner', gamificationRoutes)
+apiRouter.use('/learner', learnerRoutes)
+apiRouter.use('/user', learnerRoutes)
+apiRouter.use('/gamification', gamificationRoutes)
 apiRouter.use('/', analyticsRoutes)
 apiRouter.use('/test', testRoutes)
 

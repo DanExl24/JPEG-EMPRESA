@@ -20,17 +20,18 @@ Estas credenciales son para desarrollo local y corresponden a los usuarios semil
 
 - **Nombre:** `Laura Gomez`
 - **Rol:** `aprendiz`
-- **Identificador (Documento):** `1234567890`
+- **Identificador (Documento):** `1234567890` (o Correo: `aprendiz@nursingacademy.local`)
 - **Contraseña:** `Aprendiz123*`
 
 ---
 
 ## Notas Importantes
 
-1. **Campos de Validación:**
-   - Para el rol de **Aprendiz**, el identificador es su número de documento (debe ser numérico de 7 a 12 dígitos).
-   - Para los roles de **Administrador** e **Instructor**, el identificador es su correo electrónico.
+1. **Campos de Validación e Inicio de Sesión:**
+   - Para el rol de **Aprendiz**, puede ingresar tanto con su número de documento (`1234567890`) como con su correo (`aprendiz@nursingacademy.local`).
+   - Para los roles de **Administrador** e **Instructor**, el identificador principal es su correo electrónico, aunque el sistema también acepta sus códigos de cédula (`ADMIN001` e `INST001`).
    - Las contraseñas cumplen con las políticas de seguridad del formulario (mínimo 10 caracteres, una mayúscula, una minúscula, un número y un carácter especial del grupo `@#$%&*`).
 
-2. **Seguridad:**
-   - La base de datos guarda los passwords en formato hasheado dentro de `auth_users.password_hash` y `apprentices.password_hash`, por lo que no se pueden ver en texto plano directamente desde la base de datos SQLite. Si cambias o agregas otros usuarios de prueba en el código de semillas, asegúrate de mantener este archivo actualizado.
+2. **Seguridad y Persistencia:**
+   - La base de datos guarda las contraseñas con hash seguro (bcrypt/argon/hash) dentro de la tabla `users` (`password_hash`) en **PostgreSQL**.
+   - Cada vez que el backend se inicializa, el módulo `bootstrapAuth.ts` verifica automáticamente la existencia de estos 3 usuarios de prueba. Si fueron bloqueados por intentos fallidos o su contraseña fue alterada, son restaurados automáticamente para asegurar el acceso.
