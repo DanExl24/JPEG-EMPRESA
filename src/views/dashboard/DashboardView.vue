@@ -166,7 +166,7 @@
         <span class="text-xs text-gray-400 font-semibold">Eventos en vivo</span>
       </div>
 
-      <div class="space-y-3">
+      <div v-if="recentActivity.length > 0" class="space-y-3">
         <div 
           v-for="item in recentActivity" 
           :key="item.id" 
@@ -183,6 +183,11 @@
             {{ item.badge }}
           </span>
         </div>
+      </div>
+      <div v-else class="text-center py-8 bg-gray-50/60 rounded-2xl border border-dashed border-gray-200 space-y-2">
+        <span class="material-symbols-outlined text-4xl text-gray-300 block">history</span>
+        <p class="text-xs font-bold text-gray-500">Sin actividad registrada aún</p>
+        <p class="text-[11px] text-gray-400">Los eventos de aprendizaje y entregas de tus estudiantes aparecerán aquí en tiempo real a medida que interactúen con la plataforma.</p>
       </div>
     </div>
 
@@ -310,7 +315,7 @@ onMounted(async () => {
       if (Array.isArray(data.stats) && data.stats.length > 0) {
         visibleStats.value = data.stats
       }
-      if (Array.isArray(data.recentActivity) && data.recentActivity.length > 0) {
+      if (Array.isArray(data.recentActivity)) {
         recentActivity.value = data.recentActivity
       }
       if (Array.isArray(data.pendingReviews)) {

@@ -394,6 +394,76 @@ export class AnalyticsService {
       recentActivity = [...recentActivity, ...mappedSubs]
     }
 
+    // Si aún faltan elementos, consultar cursos completados o avances reales en la BD
+    if (recentActivity.length < 4) {
+      const recentProgress = await prisma.courseProgress.findMany({
+        where: { completed: true },
+        take: 4 - recentActivity.length,
+        orderBy: { completedAt: 'desc' },
+        include: {
+          user: { select: { nombre: true, apellido: true } },
+          course: { select: { title: true } }
+        }
+      })
+      const mappedProg = recentProgress.map((p: any) => ({
+        id: p.id + 20000,
+        title: `${p.user?.nombre || 'Aprendiz'} completó "${p.course?.title || 'Curso Clínico'}"`,
+        time: p.completedAt ? new Date(p.completedAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'Recientemente',
+        icon: 'school',
+        bg: 'bg-blue-100',
+        iconColor: '#006688',
+        badge: 'Completado',
+        badgeBg: 'bg-green-100',
+        badgeText: 'text-green-700'
+      }))
+      recentActivity = [...recentActivity, ...mappedProg]
+    }
+
+    // Si aún faltan elementos, consultar partidas reales del Arcade
+    if (recentActivity.length < 4) {
+      const recentScores = await prisma.gameScore.findMany({
+        take: 4 - recentActivity.length,
+        orderBy: { playedAt: 'desc' },
+        include: {
+          user: { select: { nombre: true, apellido: true } }
+        }
+      })
+      const mappedScores = recentScores.map((g: any) => ({
+        id: g.id + 30000,
+        title: `${g.user?.nombre || 'Aprendiz'} registró ${g.score} pts en el Arcade`,
+        time: new Date(g.playedAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        icon: 'sports_esports',
+        bg: 'bg-purple-100',
+        iconColor: '#8b5cf6',
+        badge: 'Arcade',
+        badgeBg: 'bg-purple-100',
+        badgeText: 'text-purple-700'
+      }))
+      recentActivity = [...recentActivity, ...mappedScores]
+    }
+
+    // Si aún faltan elementos, consultar nuevos aprendices registrados en la BD
+    if (recentActivity.length < 4) {
+      const recentUsers = await prisma.user.findMany({
+        where: { rol: 'APRENDIZ' },
+        take: 4 - recentActivity.length,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, nombre: true, apellido: true, createdAt: true }
+      })
+      const mappedUsers = recentUsers.map((u: any) => ({
+        id: u.id + 40000,
+        title: `${u.nombre} ${u.apellido} ingresó a la plataforma`,
+        time: new Date(u.createdAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        icon: 'person_add',
+        bg: 'bg-teal-100',
+        iconColor: '#0d9488',
+        badge: 'Nuevo Registro',
+        badgeBg: 'bg-teal-100',
+        badgeText: 'text-teal-700'
+      }))
+      recentActivity = [...recentActivity, ...mappedUsers]
+    }
+
     // Bandeja de revisiones / entregas para docentes y administradores
     let pendingReviews: any[] = []
     if (userRole === 'INSTRUCTOR' || userRole === 'ADMIN') {
