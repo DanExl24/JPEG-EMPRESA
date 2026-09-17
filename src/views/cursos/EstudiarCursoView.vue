@@ -1014,24 +1014,118 @@
           </div>
         </div>
 
-        <!-- MODULE 1 PRACTICE 1 -->
-        <div v-else class="space-y-4">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-[#006688]">edit_note</span>
-            <h4 class="font-bold text-gray-800 text-sm">1. Guided Practice 1 — Complete the Profile</h4>
-          </div>
-          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input type="text" v-model="profileForm.firstName" class="px-3 py-2 border rounded-xl text-xs" placeholder="First Name" />
-              <input type="text" v-model="profileForm.lastName" class="px-3 py-2 border rounded-xl text-xs" placeholder="Last Name" />
-              <input type="text" v-model="profileForm.age" class="px-3 py-2 border rounded-xl text-xs" placeholder="Age" />
+        <!-- MODULE 1 PRACTICE 1 & 2 -->
+        <div v-else class="space-y-6">
+
+          <!-- 3.1 — Interactive ID Card (Subject + Verb + Complement) -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">badge</span>
+              <h4 class="font-bold text-gray-800 text-sm">1. Guided Practice 1 — Complete your Registration ID Card</h4>
             </div>
-            <button @click="validateProfileForm" class="px-4 py-2 bg-[#006688] text-white text-xs font-bold rounded-xl">Verificar</button>
+            <p class="text-xs text-gray-600">
+              Completa los espacios en blanco de la tarjeta aplicando la regla <strong>Persona + Acción + Detalle</strong> (Subject + Verb + Complement). El sistema revisa cada campo al escribir.
+            </p>
+
+            <div class="bg-gradient-to-br from-[#006688] to-[#004e69] p-1 rounded-2xl shadow-lg max-w-lg mx-auto">
+              <div class="bg-white rounded-xl p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-2xl text-[#006688]">local_hospital</span>
+                    <div>
+                      <p class="text-[11px] font-black text-gray-800 uppercase tracking-wide">Nursing Academy</p>
+                      <p class="text-[9px] text-gray-400 uppercase tracking-widest">Staff Registration Card</p>
+                    </div>
+                  </div>
+                  <span class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-gray-400">person</span>
+                  </span>
+                </div>
+
+                <div v-for="field in idCardFields" :key="field.key" class="space-y-1">
+                  <label class="text-[11px] font-bold text-gray-700">{{ field.label }}</label>
+                  <div class="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-gray-700">
+                    <span v-if="field.prefix">{{ field.prefix }}</span>
+                    <div class="relative flex-1 min-w-[120px]">
+                      <input
+                        type="text"
+                        v-model="idCard[field.key]"
+                        :placeholder="field.placeholder"
+                        :class="`w-full px-3 py-2 pr-8 border rounded-xl text-xs font-semibold focus:outline-none transition-colors ${
+                          idCardChecks[field.key]
+                            ? 'border-green-400 bg-green-50 text-green-700'
+                            : 'border-gray-200 focus:border-[#006688]'
+                        }`"
+                      />
+                      <span v-if="idCardChecks[field.key]" class="material-symbols-outlined text-green-500 text-base absolute right-2 top-1/2 -translate-y-1/2">check_circle</span>
+                    </div>
+                    <span v-if="field.suffix">{{ field.suffix }}</span>
+                  </div>
+                  <p v-if="idCard[field.key] && !idCardChecks[field.key]" class="text-[10px] text-amber-600 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">lightbulb</span> {{ field.hint }}
+                  </p>
+                </div>
+
+                <div v-if="idCardComplete" class="flex items-center gap-1 text-green-600 text-xs font-bold pt-2 border-t border-gray-100">
+                  <span class="material-symbols-outlined text-sm">verified</span>
+                  ¡Tarjeta completada! Práctica 2 desbloqueada.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3.2 — Listen & Spell (name + email) -->
+          <div v-if="idCardComplete" class="space-y-4 pt-4 border-t border-gray-100 animate-fade-in">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">hearing</span>
+              <h4 class="font-bold text-gray-800 text-sm">2. Guided Practice 2 — Listen &amp; Spell (Name and Email)</h4>
+            </div>
+            <p class="text-xs text-gray-600">Escucha el deletreo pausado del nombre y el correo. Escribe exactamente lo que oyes, respetando mayúsculas y minúsculas.</p>
+
+            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+              <div class="bg-white p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+                <div class="flex items-center gap-3">
+                  <button @click="playSpellingAudio" type="button" class="w-10 h-10 rounded-full bg-[#006688] text-white flex items-center justify-center shadow hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-xl">{{ spellingPlaying ? 'pause' : 'play_arrow' }}</span>
+                  </button>
+                  <div>
+                    <span class="text-xs font-bold text-gray-800">Audio: Spelling of a name and an email</span>
+                    <p class="text-[11px] text-gray-500">Puedes pausar y volver a escuchar las veces que necesites.</p>
+                  </div>
+                </div>
+                <button @click="replaySpellingAudio" type="button" class="px-3 py-1.5 text-xs font-bold text-[#006688] bg-[#006688]/10 rounded-lg hover:bg-[#006688]/20 transition-all flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">replay</span> Volver a escuchar
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-[11px] font-bold text-gray-700">Nombre (Name):</label>
+                  <input type="text" v-model="spelling.name" placeholder="Escribe el nombre" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-mono tracking-widest focus:outline-none focus:border-[#006688]" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[11px] font-bold text-gray-700">Correo (Email):</label>
+                  <input type="text" v-model="spelling.email" placeholder="Escribe el correo" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-mono tracking-widest focus:outline-none focus:border-[#006688]" />
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <button @click="validateSpelling" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all shadow-xs">Comprobar</button>
+                <span v-if="spellingSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">check_circle</span> ¡Correcto! Has desbloqueado el desafío final.</span>
+                <span v-if="spellingSuccess === false" class="text-amber-600 text-xs font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">lightbulb</span> Revisa la ortografía y las mayúsculas/minúsculas.</span>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- Voice Recorder Challenge locked notice (Module 1 step-by-step) -->
+        <div v-if="moduleNumber === 1 && !(idCardComplete && spellingSuccess === true)" class="mt-4 p-6 rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400 flex flex-col items-center gap-2">
+          <span class="material-symbols-outlined text-2xl">lock</span>
+          Completa la Práctica 1 y la Práctica 2 para desbloquear el desafío final.
+        </div>
+
         <!-- Voice Recorder Challenge Component -->
-        <div class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="moduleNumber !== 1 || (idCardComplete && spellingSuccess === true)" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">mic</span>
             <h4 class="font-bold text-gray-800 text-sm">
@@ -1068,9 +1162,16 @@
             </span>
           </p>
 
+          <ul v-if="moduleNumber === 1" class="text-xs text-gray-600 space-y-1.5 bg-[#006688]/5 border border-[#006688]/10 rounded-xl p-4">
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-[#006688]">waving_hand</span> Saluda de manera adecuada.</li>
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-[#006688]">badge</span> Di tu nombre.</li>
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-[#006688]">spellcheck</span> Deletrea tu apellido.</li>
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-[#006688]">call</span> Dicta un número de teléfono de contacto.</li>
+          </ul>
+
           <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-              
+
               <!-- Controls -->
               <div class="flex items-center gap-4">
                 <button 
@@ -1093,7 +1194,7 @@
                     <span>{{ isRecording ? 'Grabando...' : (voiceRecorded ? 'Grabación lista' : 'Esperando micrófono...') }}</span>
                   </div>
                   <div class="text-xs text-gray-500 font-mono">
-                    {{ formatRecordTime(recordingSeconds) }} / 01:00
+                    {{ isRecording ? formatRecordTime(Math.max(0, 60 - recordingSeconds)) + ' restante' : formatRecordTime(recordingSeconds) }} / 01:00
                   </div>
                 </div>
               </div>
@@ -1110,7 +1211,7 @@
 
               <!-- Preview -->
               <div v-if="voiceRecorded" class="flex items-center gap-2">
-                <button 
+                <button
                   @click="playVoicePreview"
                   type="button"
                   class="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-bold transition-all hover:bg-green-200"
@@ -1120,9 +1221,37 @@
                   </span>
                   Escuchar Grabación
                 </button>
+                <button
+                  @click="reRecord"
+                  type="button"
+                  class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 border border-gray-200 rounded-lg text-xs font-bold transition-all hover:bg-gray-200"
+                >
+                  <span class="material-symbols-outlined text-xs">replay</span>
+                  Grabar de nuevo
+                </button>
               </div>
 
             </div>
+          </div>
+
+          <!-- Submit challenge (Module 1) -->
+          <div v-if="moduleNumber === 1" class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+            <button
+              @click="submitVoiceChallenge"
+              :disabled="!voiceRecorded || voiceSubmitted"
+              :class="`flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl transition-all shadow-xs ${
+                voiceRecorded && !voiceSubmitted
+                  ? 'bg-[#006688] hover:bg-[#004e69] text-white'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`"
+            >
+              <span class="material-symbols-outlined text-sm">send</span>
+              Enviar Presentación
+            </button>
+            <span v-if="voiceSubmitted" class="text-green-600 text-xs font-bold flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">check_circle</span>
+              ¡Entrega exitosa! Momento 4 (Cierre) desbloqueado.
+            </span>
           </div>
         </div>
 
@@ -1769,11 +1898,52 @@ function validateStudyPhase() {
 // Phase 3 State: Practice & Voice Recorder
 // -----------------------------------------------------------------
 
-// Module 1 Practice 1
-const profileForm = ref({ firstName: '', lastName: '', age: '' })
-const profileFormSuccess = ref(null)
-function validateProfileForm() {
-  profileFormSuccess.value = profileForm.value.firstName.trim().length > 2
+// Module 1 Practice 1: Interactive ID Card (Subject + Verb + Complement)
+const GREETINGS = ['hello', 'hi', 'good morning', 'good afternoon', 'good evening']
+const idCardFields = [
+  { key: 'greeting', label: 'Greeting', prefix: '', suffix: ', I am a new nurse.', placeholder: 'Hello', hint: 'Usa un saludo en inglés: Hello, Good morning, Good afternoon...' },
+  { key: 'nameVerb', label: 'Name (Verb "to be")', prefix: 'My name', suffix: 'Laura.', placeholder: 'is', hint: 'Con "My name" (3ra persona) el verbo to be es "is".' },
+  { key: 'profVerb', label: 'Profession (Verb "to be")', prefix: 'I', suffix: 'a nursing student.', placeholder: 'am', hint: 'Con el sujeto "I" el verbo to be es "am".' },
+  { key: 'sentence', label: 'Tu oración (Sujeto + Verbo + Complemento)', prefix: '', suffix: '', placeholder: 'I am Colombian.', hint: 'Escribe una oración completa: Sujeto + verbo to be (am/is) + complemento. Ej: I am Colombian.' },
+]
+const idCard = ref({ greeting: '', nameVerb: '', profVerb: '', sentence: '' })
+const idCardChecks = computed(() => {
+  const c = idCard.value
+  return {
+    greeting: GREETINGS.includes(c.greeting.trim().toLowerCase()),
+    nameVerb: c.nameVerb.trim().toLowerCase() === 'is',
+    profVerb: c.profVerb.trim().toLowerCase() === 'am',
+    // Subject (I / My name) + verb to be (am/is) + complement word
+    sentence: /^\s*(i|my name)\s+(am|is)\s+\S+/i.test(c.sentence.trim()),
+  }
+})
+const idCardComplete = computed(() => Object.values(idCardChecks.value).every(Boolean))
+
+// Module 1 Practice 2: Listen & Spell (name + email), case-sensitive per HU
+const spelling = ref({ name: '', email: '' })
+const spellingSuccess = ref(null)
+const spellingPlaying = ref(false)
+const SPELL_NAME = 'Laura'
+const SPELL_EMAIL = 'laura@mail.com'
+function playSpellingAudio() {
+  if (spellingPlaying.value) {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    spellingPlaying.value = false
+    return
+  }
+  spellingPlaying.value = true
+  const letters = SPELL_NAME.toUpperCase().split('').join(', ')
+  const emailSpoken = 'l, a, u, r, a, at, mail, dot com'
+  speakEnglish(`The name is spelled: ${letters}. The email is: ${emailSpoken}.`, 0.6)
+  setTimeout(() => { spellingPlaying.value = false }, 12000)
+}
+function replaySpellingAudio() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+  spellingPlaying.value = false
+  playSpellingAudio()
+}
+function validateSpelling() {
+  spellingSuccess.value = spelling.value.name === SPELL_NAME && spelling.value.email === SPELL_EMAIL
   checkPhase3Completion()
 }
 
@@ -1838,34 +2008,89 @@ function validateM4CheckAnalysis() {
   checkPhase3Completion()
 }
 
-// Voice Recorder State
+// Voice Recorder State (real MediaRecorder, con fallback simulado)
 const isRecording = ref(false)
 const voiceRecorded = ref(false)
+const voiceSubmitted = ref(false)
 const recordingSeconds = ref(0)
 const voicePreviewPlaying = ref(false)
+const voiceAudioData = ref(null) // dataURL base64 de la grabación
 let recorderInterval = null
+let mediaRecorder = null
+let mediaChunks = []
+let mediaStream = null
+let previewAudio = null
+
+function startRecordTimer() {
+  if (recorderInterval) clearInterval(recorderInterval)
+  recorderInterval = setInterval(() => {
+    recordingSeconds.value++
+    if (recordingSeconds.value >= 60) stopRecording()
+  }, 1000)
+}
 
 async function toggleRecording() {
   if (isRecording.value) {
-    isRecording.value = false
-    if (recorderInterval) clearInterval(recorderInterval)
-    voiceRecorded.value = true
-    checkPhase3Completion()
-  } else {
-    isRecording.value = true
-    voiceRecorded.value = false
-    recordingSeconds.value = 0
-    if (recorderInterval) clearInterval(recorderInterval)
-    recorderInterval = setInterval(() => {
-      recordingSeconds.value++
-      if (recordingSeconds.value >= 60) {
-        clearInterval(recorderInterval)
-        isRecording.value = false
+    stopRecording()
+    return
+  }
+  voiceRecorded.value = false
+  voiceSubmitted.value = false
+  voiceAudioData.value = null
+  recordingSeconds.value = 0
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    mediaChunks = []
+    mediaRecorder = new MediaRecorder(mediaStream)
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) mediaChunks.push(e.data) }
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(mediaChunks, { type: mediaRecorder.mimeType || 'audio/webm' })
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        voiceAudioData.value = reader.result
         voiceRecorded.value = true
+        saveAudio()
         checkPhase3Completion()
       }
-    }, 1000)
+      reader.readAsDataURL(blob)
+      if (mediaStream) mediaStream.getTracks().forEach(t => t.stop())
+    }
+    mediaRecorder.start()
+    isRecording.value = true
+    startRecordTimer()
+  } catch (err) {
+    // ponytail: micrófono denegado/no disponible → grabación simulada para no bloquear el flujo
+    console.warn('Micrófono no disponible, usando grabación simulada:', err)
+    mediaRecorder = null
+    isRecording.value = true
+    startRecordTimer()
   }
+}
+
+function stopRecording() {
+  if (recorderInterval) clearInterval(recorderInterval)
+  isRecording.value = false
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop() // onstop marca voiceRecorded + guarda audio
+  } else {
+    voiceRecorded.value = true // fallback simulado
+    checkPhase3Completion()
+  }
+}
+
+function reRecord() {
+  voiceRecorded.value = false
+  voiceSubmitted.value = false
+  voiceAudioData.value = null
+  recordingSeconds.value = 0
+  removeAudio()
+  toggleRecording()
+}
+
+function submitVoiceChallenge() {
+  if (!voiceRecorded.value) return
+  voiceSubmitted.value = true
+  checkPhase3Completion()
 }
 
 function formatRecordTime(sec) {
@@ -1875,8 +2100,21 @@ function formatRecordTime(sec) {
 }
 
 function playVoicePreview() {
+  if (!voiceAudioData.value) {
+    // fallback simulado (grabación sin micrófono real)
+    voicePreviewPlaying.value = true
+    setTimeout(() => { voicePreviewPlaying.value = false }, 2000)
+    return
+  }
+  if (voicePreviewPlaying.value && previewAudio) {
+    previewAudio.pause()
+    voicePreviewPlaying.value = false
+    return
+  }
+  previewAudio = new Audio(voiceAudioData.value)
   voicePreviewPlaying.value = true
-  setTimeout(() => { voicePreviewPlaying.value = false }, 2000)
+  previewAudio.onended = () => { voicePreviewPlaying.value = false }
+  previewAudio.play().catch(() => { voicePreviewPlaying.value = false })
 }
 
 const isPracticeCompleted = computed(() => phaseProgress.value.practica === 100)
@@ -1889,10 +2127,18 @@ function checkPhase3Completion() {
   } else if (moduleNumber.value === 2) {
     phaseProgress.value.practica = (m2NotesSuccess.value === true && voiceRecorded.value) ? 100 : 0
   } else {
-    phaseProgress.value.practica = (profileFormSuccess.value === true && voiceRecorded.value) ? 100 : 0
+    // Módulo 1: carné + deletreo + presentación grabada y enviada
+    phaseProgress.value.practica = (idCardComplete.value && spellingSuccess.value === true && voiceSubmitted.value) ? 100 : 0
   }
   saveProgress()
 }
+
+// Guardado continuo de las respuestas del Módulo 1 (texto) mientras el aprendiz escribe
+watch(idCardComplete, () => {
+  if (moduleNumber.value === 1) checkPhase3Completion()
+})
+watch(idCard, () => { if (moduleNumber.value === 1) saveLocal() }, { deep: true })
+watch(spelling, () => { if (moduleNumber.value === 1) saveLocal() }, { deep: true })
 
 function validatePracticePhase() {
   phaseProgress.value.practica = 100
@@ -2090,19 +2336,22 @@ const storageKey = computed(() => {
   const apprenticeId = auth.user?.id || 'guest'
   return `nursing_academy_progress_${apprenticeId}_course_${courseId.value}`
 })
+// Audio guardado aparte: es grande y no debe reescribirse en cada tecleo
+const audioKey = computed(() => `${storageKey.value}_audio`)
 
 const apiBaseUrl = getApiBaseUrl()
 
-async function saveProgress() {
-  const state = {
+function buildState() {
+  return {
     currentPhase: currentPhase.value,
     phaseProgress: phaseProgress.value,
     videoCompleted: videoCompleted.value,
     gameSuccess: gameSuccess.value,
     matchedPairs: matchedPairs.value,
     vocabPlayed: activeVocabList.value.map(v => ({ id: v.id, played: v.played })),
-    profileForm: profileForm.value,
-    profileFormSuccess: profileFormSuccess.value,
+    idCard: idCard.value,
+    spelling: spelling.value,
+    spellingSuccess: spellingSuccess.value,
     m2Notes: m2Notes.value,
     m2NotesSuccess: m2NotesSuccess.value,
     m3Checklist: m3Checklist.value,
@@ -2112,11 +2361,35 @@ async function saveProgress() {
     m4CheckAnalysis: m4CheckAnalysis.value,
     m4CheckAnalysisSuccess: m4CheckAnalysisSuccess.value,
     voiceRecorded: voiceRecorded.value,
+    voiceSubmitted: voiceSubmitted.value,
     examPassed: examPassed.value,
     showBadgeAward: showBadgeAward.value,
     examAnswers: examAnswers.value,
   }
-  localStorage.setItem(storageKey.value, JSON.stringify(state))
+}
+
+function saveLocal() {
+  try {
+    localStorage.setItem(storageKey.value, JSON.stringify(buildState()))
+  } catch (e) {
+    console.warn('No se pudo guardar el progreso en localStorage:', e)
+  }
+}
+
+function saveAudio() {
+  try {
+    if (voiceAudioData.value) localStorage.setItem(audioKey.value, voiceAudioData.value)
+  } catch (e) {
+    console.warn('El audio es demasiado grande para guardarse localmente:', e)
+  }
+}
+
+function removeAudio() {
+  try { localStorage.removeItem(audioKey.value) } catch { /* noop */ }
+}
+
+async function saveProgress() {
+  saveLocal()
 
   // Persist to backend database if authenticated
   if (auth.token) {
@@ -2150,6 +2423,11 @@ async function loadProgress() {
       gameSuccess.value = null
       matchedPairs.value = []
       voiceRecorded.value = false
+      voiceSubmitted.value = false
+      voiceAudioData.value = null
+      idCard.value = { greeting: '', nameVerb: '', profVerb: '', sentence: '' }
+      spelling.value = { name: '', email: '' }
+      spellingSuccess.value = null
       examPassed.value = false
       showBadgeAward.value = false
       examAnswers.value = {}
@@ -2166,8 +2444,9 @@ async function loadProgress() {
           if (item) item.played = sp.played
         })
       }
-      if (state.profileForm) profileForm.value = state.profileForm
-      if (state.profileFormSuccess !== undefined) profileFormSuccess.value = state.profileFormSuccess
+      if (state.idCard) idCard.value = state.idCard
+      if (state.spelling) spelling.value = state.spelling
+      if (state.spellingSuccess !== undefined) spellingSuccess.value = state.spellingSuccess
       if (state.m2Notes) m2Notes.value = state.m2Notes
       if (state.m2NotesSuccess !== undefined) m2NotesSuccess.value = state.m2NotesSuccess
       if (state.m3Checklist) m3Checklist.value = state.m3Checklist
@@ -2177,10 +2456,20 @@ async function loadProgress() {
       if (state.m4CheckAnalysis) m4CheckAnalysis.value = state.m4CheckAnalysis
       if (state.m4CheckAnalysisSuccess !== undefined) m4CheckAnalysisSuccess.value = state.m4CheckAnalysisSuccess
       if (state.voiceRecorded !== undefined) voiceRecorded.value = state.voiceRecorded
+      if (state.voiceSubmitted !== undefined) voiceSubmitted.value = state.voiceSubmitted
       if (state.examPassed !== undefined) examPassed.value = state.examPassed
       if (state.showBadgeAward !== undefined) showBadgeAward.value = state.showBadgeAward
       if (state.examAnswers) examAnswers.value = state.examAnswers
     }
+
+    // Restaurar el audio grabado (clave separada)
+    try {
+      const savedAudio = localStorage.getItem(audioKey.value)
+      if (savedAudio) {
+        voiceAudioData.value = savedAudio
+        voiceRecorded.value = true
+      }
+    } catch { /* noop */ }
 
     // Try fetching synced progress from database
     if (auth.token) {
