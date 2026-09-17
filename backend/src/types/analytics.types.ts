@@ -45,4 +45,14 @@ export interface DashboardSummaryDto {
     badgeBg: string
     badgeText: string
   }>
+  pendingReviews?: Array<{
+    id: number
+    activityId: number
+    activityTitle: string
+    studentName: string
+    studentEmail: string
+    passed: boolean
+    points: number
+    submittedAt: string
+  }>
 }

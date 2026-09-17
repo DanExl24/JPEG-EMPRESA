@@ -195,6 +195,82 @@ export class AnalyticsService {
           iconColor: '#f59e0b'
         }
       ]
+    } else if (userRole === 'INSTRUCTOR') {
+      const apprenticesCount = await prisma.user.count({ where: { rol: 'APRENDIZ' } })
+      const pendingSubmissions = await prisma.activitySubmission.count({
+        where: { passed: false }
+      })
+      const globalCompletionRate = totalSubmissions > 0 ? Math.round((passedSubmissions / totalSubmissions) * 100) : 0
+      const vocabularyCount = await prisma.vocabulary.count()
+      const arcadeGamesCount = await prisma.arcadeGame.count()
+      const cohortsCount = await prisma.cohort.count()
+
+      stats = [
+        {
+          label: 'Cursos en Docencia',
+          value: String(coursesCount),
+          change: `${coursesCount} cursos activos`,
+          icon: 'school',
+          bg: 'bg-blue-50',
+          iconColor: '#006688'
+        },
+        {
+          label: 'Aprendices a Cargo',
+          value: apprenticesCount.toLocaleString(),
+          change: 'Estudiantes en formación',
+          icon: 'group',
+          bg: 'bg-purple-50',
+          iconColor: '#8b5cf6'
+        },
+        {
+          label: 'Entregas por Calificar',
+          value: String(pendingSubmissions),
+          change: pendingSubmissions > 0 ? `${pendingSubmissions} pendientes de revisión` : 'Al día',
+          icon: 'rate_review',
+          bg: 'bg-amber-50',
+          iconColor: '#d97706'
+        },
+        {
+          label: 'Tasa de Aprobación',
+          value: `${globalCompletionRate}%`,
+          change: `${passedSubmissions} aprobadas de ${totalSubmissions}`,
+          icon: 'trending_up',
+          bg: 'bg-green-50',
+          iconColor: '#10b981'
+        },
+        {
+          label: 'Banco de Actividades',
+          value: String(activitiesCount),
+          change: 'Módulos pedagógicos',
+          icon: 'task',
+          bg: 'bg-orange-50',
+          iconColor: '#f97316'
+        },
+        {
+          label: 'Fichas / Cohortes',
+          value: String(cohortsCount),
+          change: `${programsCount} programas formativos`,
+          icon: 'domain',
+          bg: 'bg-rose-50',
+          iconColor: '#e11d48'
+        },
+        {
+          label: 'Términos Clínicos',
+          value: String(vocabularyCount),
+          change: 'Vocabulario y conceptos',
+          icon: 'translate',
+          bg: 'bg-teal-50',
+          iconColor: '#0d9488'
+        },
+        {
+          label: 'Arcade y Retos',
+          value: String(arcadeGamesCount),
+          change: 'Minijuegos lúdicos',
+          icon: 'sports_esports',
+          bg: 'bg-indigo-50',
+          iconColor: '#6366f1'
+        }
+      ]
     } else {
       const myPassedCount = userId ? await prisma.activitySubmission.count({
         where: { apprenticeId: userId, passed: true }
@@ -318,9 +394,43 @@ export class AnalyticsService {
       recentActivity = [...recentActivity, ...mappedSubs]
     }
 
+    // Bandeja de revisiones / entregas para docentes y administradores
+    let pendingReviews: any[] = []
+    if (userRole === 'INSTRUCTOR' || userRole === 'ADMIN') {
+      const recentPending = await prisma.activitySubmission.findMany({
+        take: 5,
+        orderBy: { submittedAt: 'desc' },
+        include: {
+          activity: { select: { id: true, title: true, points: true } }
+        }
+      })
+      const studentIds = [...new Set(recentPending.map((s: any) => s.apprenticeId))]
+      const students = await prisma.user.findMany({
+        where: { id: { in: studentIds } },
+        select: { id: true, nombre: true, apellido: true, correo: true }
+      })
+      const studentMap = new Map(students.map((u: any) => [u.id, u]))
+
+      pendingReviews = recentPending.map((s: any) => {
+        const student = studentMap.get(s.apprenticeId)
+        const studentName = student ? `${student.nombre || ''} ${student.apellido || ''}`.trim() : 'Aprendiz'
+        return {
+          id: s.id,
+          activityId: s.activity?.id || s.activityId,
+          activityTitle: s.activity?.title || 'Actividad Clínica',
+          studentName,
+          studentEmail: student?.correo || '',
+          passed: s.passed,
+          points: s.activity?.points || 10,
+          submittedAt: new Date(s.submittedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+        }
+      })
+    }
+
     return {
       stats,
-      recentActivity
+      recentActivity,
+      pendingReviews
     }
   }
 }
