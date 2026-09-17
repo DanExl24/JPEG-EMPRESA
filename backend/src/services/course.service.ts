@@ -3,11 +3,73 @@ import { NotFoundError, BadRequestError } from '../utils/appError.js'
 import type { CreateCourseDto, UpdateCourseDto, SaveCourseProgressDto } from '../types/course.types.js'
 import { GamificationService } from './gamification.service.js'
 
+export const DEFAULT_COURSES = [
+  {
+    slug: 'getting-to-know-other-people',
+    title: 'Getting to Know Other People',
+    description: 'Módulo 1 — Fase Análisis · RAP 1. Aprende a saludar, presentarte, dar información personal y comunicarte con pacientes extranjeros en inglés.',
+    category: 'Básico',
+    duration: '8h',
+    icon: 'medical_services',
+    iconColor: '#006688',
+    bg: 'bg-teal-50'
+  },
+  {
+    slug: 'work-life-interaction',
+    title: 'Work Life Interaction',
+    description: 'Módulo 2 — Fase Planeación · RAP 2 y 3. Caso Mr. Thomas: Pasado simple, adjetivos descriptivos, partes del cuerpo, notas de enfermería y entrega de turno (Handover).',
+    category: 'Intermedio',
+    duration: '12h',
+    icon: 'assignment_ind',
+    iconColor: '#4f46e5',
+    bg: 'bg-indigo-50'
+  },
+  {
+    slug: 'workplace-communication',
+    title: 'Workplace Communication',
+    description: 'Módulo 3 — Fase Ejecución · RAP 4 y 5. Comunicación con médicos, colegas y visitantes: Presente simple vs. continuo, herramientas médicas, checklist clínico y propuestas de mejora.',
+    category: 'Avanzado',
+    duration: '14h',
+    icon: 'groups',
+    iconColor: '#d97706',
+    bg: 'bg-amber-50'
+  },
+  {
+    slug: 'professional-practice',
+    title: 'Professional Practice',
+    description: 'Módulo 4 — Fase Evaluación · RAP 6. ¡Mr. Thomas se va a casa! Instrucciones de alta médica, recomendaciones de cuidado en casa con modales y análisis de listas de verificación.',
+    category: 'Profesional',
+    duration: '10h',
+    icon: 'verified_user',
+    iconColor: '#059669',
+    bg: 'bg-emerald-50'
+  }
+]
+
 export class CourseService {
+  /**
+   * Inicializa los cursos fundamentales en la base de datos si la tabla está vacía
+   */
+  static async ensureCourses(): Promise<void> {
+    try {
+      const count = await prisma.course.count()
+      if (count === 0) {
+        await prisma.course.createMany({
+          data: DEFAULT_COURSES,
+          skipDuplicates: true
+        })
+      }
+    } catch (e) {
+      console.warn('[CourseService] Could not auto-seed courses:', e)
+    }
+  }
+
   /**
    * Obtiene la lista de todos los cursos con el progreso del usuario conectado
    */
   static async listCourses(userId?: number) {
+    await this.ensureCourses()
+
     const courses = await prisma.course.findMany({
       include: {
         _count: {
@@ -17,36 +79,44 @@ export class CourseService {
       orderBy: { id: 'asc' }
     })
 
-    if (!userId) {
-      return courses.map((c: any) => ({
-        ...c,
-        studentsCount: c._count?.progresses || 0,
-        progress: 0
-      }))
+    const activities = await prisma.activity.findMany({
+      select: { course: true }
+    })
+    const activityCountMap = new Map<string, number>()
+    activities.forEach((a: any) => {
+      activityCountMap.set(a.course, (activityCountMap.get(a.course) || 0) + 1)
+    })
+
+    let progressMap = new Map<number, number>()
+    if (userId) {
+      const userProgresses = await prisma.courseProgress.findMany({
+        where: { userId }
+      })
+      userProgresses.forEach((p: any) => {
+        progressMap.set(p.courseId, p.overallPct)
+      })
     }
 
-    const userProgresses = await prisma.courseProgress.findMany({
-      where: { userId }
-    })
+    return courses.map((c: any) => {
+      const studentCount = c._count?.progresses || 0
+      const activitiesCount = activityCountMap.get(c.title) || 0
 
-    const progressMap = new Map<number, number>()
-    userProgresses.forEach((p: any) => {
-      progressMap.set(p.courseId, p.overallPct)
+      return {
+        id: c.id,
+        slug: c.slug,
+        title: c.title,
+        description: c.description,
+        category: c.category,
+        duration: c.duration,
+        icon: c.icon,
+        iconColor: c.iconColor,
+        bg: c.bg,
+        studentsCount: studentCount,
+        students: studentCount,
+        activitiesCount,
+        progress: userId ? (progressMap.get(c.id) || 0) : 0
+      }
     })
-
-    return courses.map((c: any) => ({
-      id: c.id,
-      slug: c.slug,
-      title: c.title,
-      description: c.description,
-      category: c.category,
-      duration: c.duration,
-      icon: c.icon,
-      iconColor: c.iconColor,
-      bg: c.bg,
-      studentsCount: c._count?.progresses || 0,
-      progress: progressMap.get(c.id) || 0
-    }))
   }
 
   /**
@@ -119,6 +189,7 @@ export class CourseService {
    */
   static async deleteCourse(id: number) {
     await this.getCourseById(id)
+    await prisma.courseProgress.deleteMany({ where: { courseId: id } })
     return await prisma.course.delete({ where: { id } })
   }
 

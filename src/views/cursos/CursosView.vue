@@ -48,11 +48,17 @@
               <div class="h-1.5 rounded-full bg-[#006688] transition-all" :style="`width: ${course.progress || 0}%`"></div>
             </div>
           </div>
+          <div v-else class="mb-3 flex items-center justify-between text-xs text-gray-500">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm text-[#006688]">task</span>
+              <span>{{ course.activitiesCount || 0 }} actividades pedagógicas</span>
+            </div>
+          </div>
 
           <div class="flex items-center justify-between border-t border-gray-50 pt-3 mt-2">
             <div class="flex items-center gap-1 text-xs text-gray-400">
               <span class="material-symbols-outlined text-sm">group</span>
-              {{ course.students }} estudiantes
+              {{ course.students || 0 }} estudiantes
             </div>
             
             <router-link
@@ -63,13 +69,24 @@
               Continuar
             </router-link>
             
-            <button
-              v-else
-              @click="openEditCourseModal(course)"
-              class="text-xs font-semibold text-[#006688] hover:underline"
-            >
-              Editar Estructura
-            </button>
+            <div v-else class="flex items-center gap-2">
+              <button
+                @click="openEditCourseModal(course)"
+                class="text-xs font-semibold text-[#006688] hover:underline flex items-center gap-0.5"
+                title="Editar este curso"
+              >
+                <span class="material-symbols-outlined text-sm">edit</span>
+                Editar
+              </button>
+              <button
+                @click="deleteCourse(course)"
+                class="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline flex items-center gap-0.5"
+                title="Eliminar este curso"
+              >
+                <span class="material-symbols-outlined text-sm">delete</span>
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -589,9 +606,24 @@ function getCalculatedInlineOrientationBadge(idx) {
 const apiBaseUrl = getApiBaseUrl()
 const activities = ref([])
 
+function getAuthToken() {
+  const rawToken = auth.token || auth.user?.token
+  const token = typeof rawToken === 'string' ? rawToken : (rawToken && typeof rawToken === 'object' && 'value' in rawToken ? rawToken.value : '')
+  if (token) return token
+  try {
+    const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+    return stored ? JSON.parse(stored)?.token : ''
+  } catch {
+    return ''
+  }
+}
+
 async function fetchActivities() {
   try {
-    const response = await fetch(`${apiBaseUrl}/api/activities`)
+    const token = getAuthToken()
+    const response = await fetch(`${apiBaseUrl}/api/activities`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
     if (response.ok) {
       activities.value = await response.json()
     }
@@ -602,25 +634,29 @@ async function fetchActivities() {
 
 async function fetchCourses() {
   try {
+    const token = getAuthToken()
     const res = await fetch(`${apiBaseUrl}/api/courses`, {
-      headers: auth.token ? { 'Authorization': `Bearer ${auth.token}` } : {}
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
     if (res.ok) {
       const data = await res.json()
       const list = Array.isArray(data) ? data : (data?.data || [])
       if (Array.isArray(list) && list.length > 0) {
-        // Merge with existing course properties to preserve icons and layout colors if needed
         courses.value = list.map((c, i) => {
           const fallback = courses.value[i] || courses.value[0] || {}
+          const studentTotal = c.students !== undefined ? c.students : (c.studentsCount !== undefined ? c.studentsCount : 0)
           return {
             ...fallback,
             ...c,
             id: c.id,
+            slug: c.slug || '',
             title: c.title,
             description: c.description,
             duration: c.duration || fallback.duration || '10h',
             category: c.category || fallback.category || 'Básico',
-            students: c.students !== undefined ? c.students : (fallback.students || 100),
+            students: studentTotal,
+            studentsCount: studentTotal,
+            activitiesCount: c.activitiesCount !== undefined ? c.activitiesCount : 0,
             icon: c.icon || fallback.icon || 'medical_services',
             iconColor: c.iconColor || fallback.iconColor || '#006688',
             bg: c.bg || fallback.bg || 'bg-teal-50',
@@ -962,81 +998,117 @@ function selectIcon(ico) {
 }
 
 async function saveCourse() {
-  if (!form.value.title.trim()) return
+  if (!form.value.title.trim()) {
+    notificationStore.notify({
+      type: 'warning',
+      title: 'Campo Requerido',
+      message: 'Por favor ingresa un título para el curso.'
+    })
+    return
+  }
 
   const coursePayload = {
-    title: form.value.title,
-    description: form.value.description,
+    title: form.value.title.trim(),
+    description: form.value.description.trim(),
     category: form.value.category,
-    duration: form.value.duration,
+    duration: form.value.duration.trim() || '10h',
     icon: form.value.icon,
     iconColor: form.value.iconColor,
     bg: form.value.bg,
-    categoryText: form.value.categoryText,
-    categoryBg: form.value.categoryBg,
-    f1_welcome: form.value.f1_welcome,
-    f1_gameWords: form.value.f1_gameWords,
-    f2_grammar: form.value.f2_grammar,
-    f2_vocabulary: form.value.f2_vocabulary,
-    f3_fillBlank: form.value.f3_fillBlank,
-    f3_voiceTarget: form.value.f3_voiceTarget,
-    f4_q: form.value.f4_q,
-    f4_correct: form.value.f4_correct,
-    f4_incorrect: form.value.f4_incorrect,
+  }
+
+  const token = getAuthToken()
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
   }
 
   try {
-    if (editingCourse.value) {
+    if (editingCourse.value && editingCourse.value.id) {
       // Edit Mode
       const res = await fetch(`${apiBaseUrl}/api/courses/${editingCourse.value.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(coursePayload)
       })
-      if (res.ok) {
-        const updated = await res.json()
-        const idx = courses.value.findIndex(c => c.id === editingCourse.value.id)
-        if (idx >= 0) courses.value[idx] = { ...courses.value[idx], ...updated }
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}))
+        throw new Error(errJson.message || `Error (${res.status}) al actualizar el curso en el servidor.`)
+      }
+      const raw = await res.json()
+      const updated = raw.data || raw
+      const idx = courses.value.findIndex(c => c.id === editingCourse.value.id)
+      if (idx >= 0) {
+        courses.value[idx] = { ...courses.value[idx], ...updated }
       }
     } else {
       // Create Mode
       const res = await fetch(`${apiBaseUrl}/api/courses`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(coursePayload)
       })
-      if (res.ok) {
-        const created = await res.json()
-        courses.value.push(created)
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}))
+        throw new Error(errJson.message || `Error (${res.status}) al crear el curso en el servidor.`)
       }
+      const raw = await res.json()
+      const created = raw.data || raw
+      courses.value.push({
+        ...created,
+        students: 0,
+        studentsCount: 0,
+        activitiesCount: 0,
+        progress: 0
+      })
     }
-  } catch (err) {
-    console.warn('Backend saveCourse failed, persisting to local state:', err)
-  }
 
-  // Ensure local state reflects changes regardless
-  if (editingCourse.value) {
-    const idx = courses.value.findIndex(c => c.id === editingCourse.value.id)
-    if (idx >= 0) {
-      courses.value[idx] = { ...courses.value[idx], ...coursePayload }
-    }
-  } else if (!courses.value.some(c => c.title === form.value.title)) {
-    const newId = courses.value.length ? Math.max(...courses.value.map(c => c.id)) + 1 : 1
-    courses.value.push({
-      id: newId,
-      ...coursePayload,
-      students: 0,
-      progress: 0,
+    notificationStore.notify({
+      type: 'success',
+      title: 'Curso Guardado',
+      message: 'El curso ha sido guardado exitosamente en la base de datos.'
+    })
+    showModal.value = false
+    await fetchCourses()
+  } catch (err) {
+    console.error('Error al guardar curso en backend:', err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al Guardar',
+      message: err.message || 'No se pudo guardar el curso en el servidor.'
     })
   }
+}
 
-  notificationStore.notify({
-    type: 'success',
-    title: 'Curso Guardado',
-    message: 'La estructura pedagógica del curso ha sido actualizada con éxito.'
-  })
+async function deleteCourse(course) {
+  if (!confirm(`¿Estás seguro de que deseas eliminar el curso "${course.title}"? Esta acción no se puede deshacer.`)) {
+    return
+  }
 
-  showModal.value = false
+  const token = getAuthToken()
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/courses/${course.id}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}))
+      throw new Error(errJson.message || `Error (${res.status}) al eliminar el curso.`)
+    }
+    courses.value = courses.value.filter(c => c.id !== course.id)
+    notificationStore.notify({
+      type: 'success',
+      title: 'Curso Eliminado',
+      message: `El curso "${course.title}" fue eliminado exitosamente de la base de datos.`
+    })
+  } catch (err) {
+    console.error('Error al eliminar curso:', err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al Eliminar',
+      message: err.message || 'No se pudo eliminar el curso del servidor.'
+    })
+  }
 }
 
 function sanitizeWordInput(item) {
