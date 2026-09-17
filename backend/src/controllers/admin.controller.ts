@@ -39,6 +39,9 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
   try {
     const id = Number(req.params.id)
     if (isNaN(id)) throw new BadRequestError('ID de usuario inválido.')
+    if (req.user?.id && Number(req.user.id) === id) {
+      throw new BadRequestError('No puedes eliminar tu propia cuenta de administrador.')
+    }
 
     await AdminService.deleteUser(id)
     ApiResponse.success(res, { id }, 'Usuario y registros asociados eliminados exitosamente.')

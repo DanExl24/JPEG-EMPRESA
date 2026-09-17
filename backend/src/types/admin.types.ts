@@ -11,6 +11,7 @@ export interface UpdateUserAdminDto {
   nombre?: string
   apellido?: string
   correo?: string
+  password?: string
   rol?: 'ADMIN' | 'INSTRUCTOR' | 'APRENDIZ'
   active?: boolean
 }
