@@ -248,4 +248,60 @@ export class GamificationService {
 
     return result
   }
+
+  /**
+   * Resumen administrativo de juegos, métricas y partidas de aprendices para el Admin / Instructor
+   */
+  static async getAdminGamesOverview() {
+    const totalPlays = await prisma.gameScore.count()
+
+    const scoreSum = await prisma.gameScore.aggregate({
+      _sum: { score: true }
+    })
+    const totalXpAwarded = scoreSum._sum.score || 0
+
+    const uniquePlayers = await prisma.gameScore.groupBy({
+      by: ['userId']
+    })
+
+    const recentScores = await prisma.gameScore.findMany({
+      take: 25,
+      orderBy: { playedAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            cedula: true,
+            correo: true,
+            xp: true
+          }
+        }
+      }
+    })
+
+    const gameActivities = await prisma.activity.findMany({
+      include: {
+        _count: {
+          select: { submissions: true }
+        }
+      },
+      orderBy: { id: 'asc' }
+    })
+
+    return {
+      stats: {
+        totalPlays,
+        totalXpAwarded,
+        activePlayersCount: uniquePlayers.length,
+        gamifiedActivitiesCount: gameActivities.length
+      },
+      recentScores,
+      gameActivities: gameActivities.map((a: any) => ({
+        ...a,
+        playsCount: a._count?.submissions || 0
+      }))
+    }
+  }
 }

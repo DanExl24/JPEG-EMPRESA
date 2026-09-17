@@ -9,6 +9,9 @@ router.use(authenticate)
 // Insignias y logros (LogrosView.vue)
 router.get('/badges', GamificationController.getBadges)
 
+// Resumen administrativo de juegos y partidas (JuegosView.vue admin)
+router.get('/admin/games-overview', GamificationController.getAdminGamesOverview)
+
 // Registro de partidas de mini-juegos y suma de XP (JuegosView.vue)
 router.post('/games/score', GamificationController.recordGameScore)
 

@@ -49,4 +49,13 @@ export class GamificationController {
       next(error)
     }
   }
+
+  static async getAdminGamesOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const overview = await GamificationService.getAdminGamesOverview()
+      ApiResponse.success(res, overview)
+    } catch (error) {
+      next(error)
+    }
+  }
 }

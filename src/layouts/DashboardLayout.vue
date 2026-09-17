@@ -122,6 +122,7 @@ const menuGroups = computed(() => {
           { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
           { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
           { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
+          { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
         ]
       },
       {
@@ -159,6 +160,7 @@ const menuGroups = computed(() => {
           { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
           { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
           { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
+          { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
         ]
       },
       {
