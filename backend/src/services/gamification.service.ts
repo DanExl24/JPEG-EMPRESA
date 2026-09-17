@@ -12,6 +12,20 @@ export const BADGE_CATALOG = [
   { key: 'experto_clinico',   name: 'Experto Clínico',     description: 'Acumulaste 1000 XP',                 iconEmoji: '🏆', xpRequired: 1000 },
 ]
 
+export function extractSingleEmoji(str?: string): string {
+  if (!str) return '🏆'
+  const trimmed = str.trim()
+  if (!trimmed) return '🏆'
+  try {
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+    const segments = Array.from(segmenter.segment(trimmed))
+    return segments.length > 0 ? segments[0].segment : '🏆'
+  } catch {
+    const arr = Array.from(trimmed)
+    return arr.length > 0 ? arr[0] : '🏆'
+  }
+}
+
 export class GamificationService {
   /**
    * Asegura que el catálogo de insignias exista en la base de datos
@@ -119,7 +133,7 @@ export class GamificationService {
         key: b.key,
         name: b.name,
         description: b.description,
-        iconEmoji: b.iconEmoji,
+        iconEmoji: extractSingleEmoji(b.iconEmoji),
         xpRequired: b.xpRequired,
         unlocked: isUnlocked,
         unlockedAt: awardedAt,
@@ -170,7 +184,7 @@ export class GamificationService {
         key: b.key,
         name: b.name,
         description: b.description,
-        iconEmoji: b.iconEmoji,
+        iconEmoji: extractSingleEmoji(b.iconEmoji),
         xpRequired: b.xpRequired,
         unlockedCount: b._count.userBadges,
         unlockedPct: totalApprentices > 0 ? Math.round((b._count.userBadges / totalApprentices) * 100) : 0
@@ -211,12 +225,14 @@ export class GamificationService {
       key = `${baseKey}_${counter++}`
     }
 
+    const singleEmoji = extractSingleEmoji(iconEmoji)
+
     const newBadge = await prisma.badge.create({
       data: {
         key,
         name: name.trim(),
         description: description.trim(),
-        iconEmoji: iconEmoji?.trim() || '🏆',
+        iconEmoji: singleEmoji,
         xpRequired: Number(xpRequired)
       }
     })
@@ -257,7 +273,7 @@ export class GamificationService {
       data: {
         ...(data.name ? { name: data.name.trim() } : {}),
         ...(data.description ? { description: data.description.trim() } : {}),
-        ...(data.iconEmoji ? { iconEmoji: data.iconEmoji.trim() } : {}),
+        ...(data.iconEmoji ? { iconEmoji: extractSingleEmoji(data.iconEmoji) } : {}),
         ...(data.xpRequired !== undefined ? { xpRequired: Number(data.xpRequired) } : {})
       }
     })

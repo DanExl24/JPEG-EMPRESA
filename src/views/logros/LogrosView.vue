@@ -171,8 +171,8 @@
           <div>
             <div class="flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-center text-3xl shrink-0 shadow-inner group-hover:scale-105 transition-transform">
-                  {{ badge.iconEmoji || '🏆' }}
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-center text-3xl shrink-0 shadow-inner group-hover:scale-105 transition-transform overflow-hidden select-none">
+                  {{ extractSingleEmoji(badge.iconEmoji) }}
                 </div>
                 <div>
                   <h4 class="text-base font-bold text-gray-800 group-hover:text-amber-600 transition-colors">
@@ -264,8 +264,8 @@
             :key="logro.id"
             class="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-50/70 via-orange-50/40 to-white border border-amber-200/80 shadow-sm hover:shadow-md transition-all group"
           >
-            <div class="w-16 h-16 rounded-2xl bg-white border border-amber-200 flex items-center justify-center text-4xl shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-              {{ logro.iconEmoji || logro.emoji || '🏆' }}
+            <div class="w-16 h-16 rounded-2xl bg-white border border-amber-200 flex items-center justify-center text-4xl shrink-0 shadow-sm group-hover:scale-105 transition-transform overflow-hidden select-none">
+              {{ extractSingleEmoji(logro.iconEmoji || logro.emoji) }}
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
@@ -310,8 +310,8 @@
             :key="logro.id"
             class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-200/80 opacity-80 hover:opacity-100 hover:border-gray-300 transition-all"
           >
-            <div class="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-4xl shrink-0 grayscale">
-              {{ logro.iconEmoji || logro.emoji || '🏆' }}
+            <div class="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-4xl shrink-0 grayscale overflow-hidden select-none">
+              {{ extractSingleEmoji(logro.iconEmoji || logro.emoji) }}
             </div>
             <div class="flex-1 min-w-0">
               <h4 class="text-sm font-bold text-gray-700 truncate">{{ logro.name }}</h4>
@@ -446,12 +446,17 @@
 
           <!-- Selector de Emoji / Icono -->
           <div>
-            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
-              Icono / Emoji Distintivo <span class="text-red-500">*</span>
-            </label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">
+                Icono / Emoji Distintivo <span class="text-red-500">*</span>
+              </label>
+              <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                1 solo icono permitido
+              </span>
+            </div>
             <div class="flex items-center gap-3">
-              <div class="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-300 flex items-center justify-center text-3xl shrink-0 shadow-inner">
-                {{ form.iconEmoji || '🏆' }}
+              <div class="w-16 h-16 rounded-2xl bg-amber-50 border-2 border-amber-300 flex items-center justify-center text-3xl shrink-0 shadow-inner select-none overflow-hidden">
+                {{ extractSingleEmoji(form.iconEmoji) }}
               </div>
               <div class="flex-1 space-y-1.5">
                 <!-- Preset Emoji Grid -->
@@ -460,21 +465,29 @@
                     type="button"
                     v-for="emoji in PRESET_EMOJIS"
                     :key="emoji"
-                    @click="form.iconEmoji = emoji"
+                    @click="selectEmoji(emoji)"
                     :class="[
-                      'w-8 h-8 rounded-lg text-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all',
-                      form.iconEmoji === emoji ? 'bg-white shadow-sm ring-2 ring-amber-500' : ''
+                      'w-8 h-8 rounded-lg text-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all select-none',
+                      form.iconEmoji === emoji ? 'bg-white shadow-sm ring-2 ring-amber-500 font-bold scale-105' : ''
                     ]"
+                    :title="`Seleccionar ${emoji}`"
                   >
                     {{ emoji }}
                   </button>
                 </div>
-                <input
-                  v-model="form.iconEmoji"
-                  type="text"
-                  placeholder="O escribe/pega cualquier emoji..."
-                  class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-800 outline-none focus:bg-white focus:border-amber-500"
-                />
+                <div class="relative">
+                  <input
+                    :value="form.iconEmoji"
+                    @input="onEmojiInput"
+                    type="text"
+                    maxlength="8"
+                    placeholder="Escribe o pega 1 solo emoji..."
+                    class="w-full pl-3 pr-10 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-800 outline-none focus:bg-white focus:border-amber-500 font-mono"
+                  />
+                  <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-mono">
+                    {{ form.iconEmoji ? '1/1' : '0/1' }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -613,6 +626,39 @@ const PRESET_EMOJIS = [
   '🏆', '🎯', '🔥', '🧠', '⚡', '👩‍⚕️', '💉', '🩺',
   '💊', '🌟', '🎖️', '🥇', '🥈', '🥉', '🧪', '🚑'
 ]
+
+// Extraer estrictamente 1 solo emoji/grafema
+function extractSingleEmoji(str) {
+  if (!str) return '🏆'
+  const trimmed = String(str).trim()
+  if (!trimmed) return '🏆'
+  try {
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+      const segments = Array.from(segmenter.segment(trimmed))
+      return segments.length > 0 ? segments[0].segment : '🏆'
+    }
+  } catch {
+    // fallback
+  }
+  const arr = Array.from(trimmed)
+  return arr.length > 0 ? arr[0] : '🏆'
+}
+
+function selectEmoji(emoji) {
+  form.iconEmoji = extractSingleEmoji(emoji)
+}
+
+function onEmojiInput(event) {
+  const val = event.target.value
+  if (!val) {
+    form.iconEmoji = ''
+    return
+  }
+  const single = extractSingleEmoji(val)
+  form.iconEmoji = single
+  event.target.value = single
+}
 
 function getToken() {
   const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
@@ -775,7 +821,7 @@ async function handleSubmit() {
         name: form.name.trim(),
         description: form.description.trim(),
         xpRequired: Number(form.xpRequired),
-        iconEmoji: form.iconEmoji?.trim() || '🏆'
+        iconEmoji: extractSingleEmoji(form.iconEmoji)
       })
     })
 
