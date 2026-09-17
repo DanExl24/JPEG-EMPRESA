@@ -58,4 +58,13 @@ export class GamificationController {
       next(error)
     }
   }
+
+  static async getArcadeContent(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const content = await GamificationService.getArcadeContent()
+      ApiResponse.success(res, content)
+    } catch (error) {
+      next(error)
+    }
+  }
 }

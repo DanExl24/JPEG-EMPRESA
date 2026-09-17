@@ -12,6 +12,9 @@ router.get('/badges', GamificationController.getBadges)
 // Resumen administrativo de juegos y partidas (JuegosView.vue admin)
 router.get('/admin/games-overview', GamificationController.getAdminGamesOverview)
 
+// Contenido dinámico para los minijuegos del Arcade (preguntas, vocabulario, pares)
+router.get('/arcade/content', GamificationController.getArcadeContent)
+
 // Registro de partidas de mini-juegos y suma de XP (JuegosView.vue)
 router.post('/games/score', GamificationController.recordGameScore)
 

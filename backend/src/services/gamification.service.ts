@@ -281,27 +281,205 @@ export class GamificationService {
       }
     })
 
-    const gameActivities = await prisma.activity.findMany({
-      include: {
-        _count: {
-          select: { submissions: true }
+    // Desglose de partidas por cada minijuego del Arcade
+    const gamesWithStats = await Promise.all(
+      ARCADE_GAMES.map(async (game) => {
+        const plays = await prisma.gameScore.count({
+          where: { gameKey: game.key }
+        })
+        const xpSum = await prisma.gameScore.aggregate({
+          where: { gameKey: game.key },
+          _sum: { score: true }
+        })
+        return {
+          ...game,
+          playsCount: plays,
+          totalXp: xpSum._sum.score || 0
         }
-      },
-      orderBy: { id: 'asc' }
-    })
+      })
+    )
+
+    // Juego más popular
+    const sortedByPlays = [...gamesWithStats].sort((a, b) => b.playsCount - a.playsCount)
+    const mostPopular = sortedByPlays[0]?.playsCount > 0 ? sortedByPlays[0].name : 'Warm-up Drag Match'
 
     return {
       stats: {
         totalPlays,
         totalXpAwarded,
         activePlayersCount: uniquePlayers.length,
-        gamifiedActivitiesCount: gameActivities.length
+        totalArcadeGames: ARCADE_GAMES.length,
+        mostPopularGame: mostPopular
       },
-      recentScores,
-      gameActivities: gameActivities.map((a: any) => ({
-        ...a,
-        playsCount: a._count?.submissions || 0
-      }))
+      games: gamesWithStats,
+      recentScores
+    }
+  }
+
+  /**
+   * Genera el banco de contenido dinámico para los minijuegos del Arcade
+   * consumiendo vocabulario clínico y glosario desde la base de datos
+   */
+  static async getArcadeContent() {
+    // 1. Obtener vocabulario de la BD
+    const vocabularyList = await prisma.vocabulary.findMany({
+      take: 50,
+      orderBy: { id: 'asc' }
+    })
+
+    // 2. Obtener glosario
+    const glossaryList = await prisma.glossaryTerm.findMany({
+      take: 30,
+      orderBy: { id: 'asc' }
+    })
+
+    // Mezclar aleatoriamente una lista (Fisher-Yates)
+    const shuffle = <T>(array: T[]): T[] => {
+      const arr = [...array]
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        const temp = arr[i]
+        arr[i] = arr[j]
+        arr[j] = temp
+      }
+      return arr
+    }
+
+    const shuffledVocab = shuffle(vocabularyList)
+
+    // ── Trivia Médica: 10 preguntas dinámicas ──
+    const triviaQuestions = shuffledVocab.slice(0, 10).map((item, idx) => {
+      // Tomar 3 distractores del mismo u otro vocabulario
+      const distractors = shuffledVocab
+        .filter(v => v.id !== item.id)
+        .slice(0, 3)
+
+      const isEnglishToSpanish = idx % 2 === 0
+
+      let question = ''
+      let correctAnswer = ''
+      let incorrectAnswers: string[] = []
+
+      if (isEnglishToSpanish) {
+        question = `¿Cuál es el significado clínico en español de "${item.wordEn}"?`
+        correctAnswer = item.wordEs
+        incorrectAnswers = distractors.map(d => d.wordEs)
+      } else {
+        question = `¿Cuál es el término en inglés para "${item.wordEs}"?`
+        correctAnswer = item.wordEn
+        incorrectAnswers = distractors.map(d => d.wordEn)
+      }
+
+      // Si no hay suficientes distractores, usar alternativas por defecto
+      while (incorrectAnswers.length < 3) {
+        incorrectAnswers.push(`Opción médica ${incorrectAnswers.length + 1}`)
+      }
+
+      const options = shuffle([correctAnswer, ...incorrectAnswers.slice(0, 3)])
+
+      return {
+        id: item.id || idx + 1,
+        question,
+        correctAnswer,
+        options,
+        category: item.category,
+        hint: item.definition || item.example || 'Recuerda los términos de enfermería clínica.',
+        example: item.example
+      }
+    })
+
+    // ── Pares Clínicos (Speed Match): 6 u 8 pares para el tablero ──
+    const matchPairs = shuffledVocab.slice(0, 6).map(item => ({
+      id: item.id,
+      wordEn: item.wordEn,
+      wordEs: item.wordEs,
+      category: item.category,
+      definition: item.definition
+    }))
+
+    // ── Desafío de Escucha Fonética: 8 términos ──
+    const listeningTerms = shuffledVocab.slice(0, 8).map(item => {
+      const distractors = shuffledVocab
+        .filter(v => v.id !== item.id)
+        .slice(0, 3)
+        .map(d => d.wordEn)
+
+      const options = shuffle([item.wordEn, ...distractors])
+
+      return {
+        id: item.id,
+        wordEn: item.wordEn,
+        wordEs: item.wordEs,
+        definition: item.definition,
+        example: item.example,
+        options
+      }
+    })
+
+    return {
+      catalog: ARCADE_GAMES,
+      trivia: triviaQuestions,
+      pairs: matchPairs,
+      listening: listeningTerms
     }
   }
 }
+
+export const ARCADE_GAMES = [
+  {
+    key: 'warmup_drag_match',
+    name: 'Warm-up Drag Match',
+    subtitle: 'Calentamiento Clínico Interactivo',
+    desc: 'Asocia iconos clínicos y saludos médicos arrastrándolos a sus expresiones en inglés correspondientes.',
+    icon: 'pan_tool',
+    color: 'text-blue-500',
+    colorHex: '#3b82f6',
+    bg: 'bg-blue-50',
+    difficulty: 'Fácil',
+    pts: 100,
+    duration: '3 min',
+    active: true
+  },
+  {
+    key: 'trivia_medica',
+    name: 'Trivia Médica Contrarreloj',
+    subtitle: 'Desafío Rápido de Vocabulario y Síntomas',
+    desc: 'Preguntas de opción múltiple generadas en vivo desde el vocabulario de enfermería para poner a prueba tu velocidad.',
+    icon: 'quiz',
+    color: 'text-emerald-500',
+    colorHex: '#10b981',
+    bg: 'bg-emerald-50',
+    difficulty: 'Medio',
+    pts: 100,
+    duration: '5 min',
+    active: true
+  },
+  {
+    key: 'drug_match',
+    name: 'Pares Clínicos / Speed Match',
+    subtitle: 'Emparejamiento de Términos y Definiciones',
+    desc: 'Encuentra las parejas correspondientes entre términos en inglés y su traducción clínica antes de que expire el tiempo.',
+    icon: 'medication',
+    color: 'text-orange-500',
+    colorHex: '#f97316',
+    bg: 'bg-orange-50',
+    difficulty: 'Medio',
+    pts: 80,
+    duration: '4 min',
+    active: true
+  },
+  {
+    key: 'listening_challenge',
+    name: 'Desafío de Escucha Fonética',
+    subtitle: 'Audio y Transcripción Clínica',
+    desc: 'Escucha la pronunciación en inglés de términos médicos y selecciona o transcribe la palabra correcta.',
+    icon: 'hearing',
+    color: 'text-purple-500',
+    colorHex: '#8b5cf6',
+    bg: 'bg-purple-50',
+    difficulty: 'Difícil',
+    pts: 80,
+    duration: '4 min',
+    active: true
+  }
+]
