@@ -56,16 +56,24 @@ export async function getProfile(req: Request, res: Response): Promise<void> {
     const badges = await prisma.userBadge.findMany({
       where: { userId },
       include: { badge: true },
-      orderBy: { awardedAt: 'asc' }
+      orderBy: { awardedAt: 'desc' }
     })
 
     const submissions = await prisma.activitySubmission.count({ where: { apprenticeId: userId } })
     const passed = await prisma.activitySubmission.count({ where: { apprenticeId: userId, passed: true } })
 
+    const recentActivity = await prisma.auditLog.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 6
+    })
+
     res.json({
       ...user,
+      name: `${user.nombre} ${user.apellido}`,
       badges: badges.map((ub: { badge: unknown }) => ub.badge),
-      stats: { totalSubmissions: submissions, passedSubmissions: passed }
+      stats: { totalSubmissions: submissions, passedSubmissions: passed },
+      recentActivity
     })
   } catch (err) {
     console.error('Error getProfile:', err)
@@ -93,7 +101,10 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
       data: { nombre: String(nombre).trim(), apellido: String(apellido).trim() },
       select: { id: true, nombre: true, apellido: true, cedula: true, correo: true, rol: true, xp: true }
     })
-    res.json(updated)
+    res.json({
+      ...updated,
+      name: `${updated.nombre} ${updated.apellido}`
+    })
   } catch (err) {
     console.error('Error updateProfile:', err)
     res.status(500).json({ message: 'Error interno del servidor.' })
