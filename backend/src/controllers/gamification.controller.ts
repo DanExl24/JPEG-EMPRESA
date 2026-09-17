@@ -106,4 +106,44 @@ export class GamificationController {
       next(error)
     }
   }
+
+  // --- GESTIÓN ADMINISTRATIVA DE INSIGNIAS Y LOGROS ---
+
+  static async listBadgesAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await GamificationService.listBadgesAdmin()
+      ApiResponse.success(res, result)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async createBadge(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const badge = await GamificationService.createBadge(req.body)
+      ApiResponse.created(res, badge, 'Insignia creada exitosamente.')
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async updateBadge(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Number(req.params.id)
+      const badge = await GamificationService.updateBadge(id, req.body)
+      ApiResponse.success(res, badge, 'Insignia actualizada exitosamente.')
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async deleteBadge(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Number(req.params.id)
+      await GamificationService.deleteBadge(id)
+      ApiResponse.success(res, null, 'Insignia eliminada exitosamente.')
+    } catch (error) {
+      next(error)
+    }
+  }
 }

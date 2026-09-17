@@ -1,13 +1,20 @@
 import { Router } from 'express'
 import { GamificationController } from '../controllers/gamification.controller.js'
 import { authenticate } from '../lib/middleware.js'
+import { requireRole } from '../middlewares/role.middleware.js'
 
 const router = Router()
 
 router.use(authenticate)
 
-// Insignias y logros (LogrosView.vue)
+// Insignias y logros para el usuario actual (LogrosView.vue aprendiz)
 router.get('/badges', GamificationController.getBadges)
+
+// CRUD Administrativo de Insignias y Logros
+router.get('/admin/badges', requireRole('ADMIN', 'INSTRUCTOR'), GamificationController.listBadgesAdmin)
+router.post('/admin/badges', requireRole('ADMIN'), GamificationController.createBadge)
+router.put('/admin/badges/:id', requireRole('ADMIN'), GamificationController.updateBadge)
+router.delete('/admin/badges/:id', requireRole('ADMIN'), GamificationController.deleteBadge)
 
 // Resumen administrativo de juegos y partidas (JuegosView.vue admin)
 router.get('/admin/games-overview', GamificationController.getAdminGamesOverview)

@@ -1,6 +1,7 @@
 import prisma from '../lib/db.js'
 import type { RecordGameScoreDto, LeaderboardEntryDto } from '../types/gamification.types.js'
 import { DEFAULT_ARCADE_GAMES } from '../lib/bootstrapAuth.js'
+import { NotFoundError, BadRequestError } from '../utils/appError.js'
 
 export const BADGE_CATALOG = [
   { key: 'primer_paso',       name: 'Primer Paso',        description: 'Completaste tu primera actividad',    iconEmoji: '🎯', xpRequired: 1   },
@@ -54,13 +55,16 @@ export class GamificationService {
    */
   static async checkAndAwardBadges(userId: number, currentXp: number) {
     await this.ensureBadges()
+    const allBadges = await prisma.badge.findMany({
+      orderBy: { xpRequired: 'asc' }
+    })
     const earned = await prisma.userBadge.findMany({
       where: { userId },
       select: { badgeKey: true }
     })
     const earnedKeys = new Set(earned.map((b: { badgeKey: string }) => b.badgeKey))
 
-    const toAward = BADGE_CATALOG.filter(b => currentXp >= b.xpRequired && !earnedKeys.has(b.key))
+    const toAward = allBadges.filter(b => currentXp >= b.xpRequired && !earnedKeys.has(b.key))
     if (toAward.length > 0) {
       await prisma.userBadge.createMany({
         data: toAward.map(b => ({ userId, badgeKey: b.key })),
@@ -136,6 +140,158 @@ export class GamificationService {
       unlocked,
       locked
     }
+  }
+
+  /**
+   * Lista todas las insignias con métricas para el panel de administración
+   */
+  static async listBadgesAdmin() {
+    await this.ensureBadges()
+    const badges = await prisma.badge.findMany({
+      orderBy: { xpRequired: 'asc' },
+      include: {
+        _count: {
+          select: { userBadges: true }
+        }
+      }
+    })
+
+    const totalApprentices = await prisma.user.count({ where: { rol: 'APRENDIZ' } })
+    const totalAwarded = badges.reduce((acc, b) => acc + b._count.userBadges, 0)
+
+    return {
+      totalBadges: badges.length,
+      totalAwarded,
+      totalApprentices,
+      minXp: badges.length > 0 ? badges[0].xpRequired : 0,
+      maxXp: badges.length > 0 ? badges[badges.length - 1].xpRequired : 0,
+      badges: badges.map(b => ({
+        id: b.id,
+        key: b.key,
+        name: b.name,
+        description: b.description,
+        iconEmoji: b.iconEmoji,
+        xpRequired: b.xpRequired,
+        unlockedCount: b._count.userBadges,
+        unlockedPct: totalApprentices > 0 ? Math.round((b._count.userBadges / totalApprentices) * 100) : 0
+      }))
+    }
+  }
+
+  /**
+   * Crea una nueva insignia en el catálogo
+   */
+  static async createBadge(data: {
+    name: string
+    description: string
+    iconEmoji?: string
+    xpRequired: number
+    key?: string
+  }) {
+    const { name, description, iconEmoji, xpRequired } = data
+    if (!name || !name.trim()) throw new BadRequestError('El nombre de la insignia es obligatorio.')
+    if (!description || !description.trim()) throw new BadRequestError('La descripción pedagógica es obligatoria.')
+    if (xpRequired === undefined || xpRequired === null || Number(xpRequired) < 0) {
+      throw new BadRequestError('El XP requerido debe ser un número mayor o igual a 0.')
+    }
+
+    // Generar slug key único
+    let baseKey = (data.key || name)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+
+    if (!baseKey) baseKey = `badge_${Date.now()}`
+
+    let key = baseKey
+    let counter = 1
+    while (await prisma.badge.findUnique({ where: { key } })) {
+      key = `${baseKey}_${counter++}`
+    }
+
+    const newBadge = await prisma.badge.create({
+      data: {
+        key,
+        name: name.trim(),
+        description: description.trim(),
+        iconEmoji: iconEmoji?.trim() || '🏆',
+        xpRequired: Number(xpRequired)
+      }
+    })
+
+    // Retro-asignar automáticamente la insignia a todos los aprendices que ya superan el XP requerido
+    const eligibleUsers = await prisma.user.findMany({
+      where: {
+        rol: 'APRENDIZ',
+        xp: { gte: Number(xpRequired) }
+      },
+      select: { id: true }
+    })
+
+    if (eligibleUsers.length > 0) {
+      await prisma.userBadge.createMany({
+        data: eligibleUsers.map(u => ({ userId: u.id, badgeKey: key })),
+        skipDuplicates: true
+      })
+    }
+
+    return newBadge
+  }
+
+  /**
+   * Actualiza una insignia existente
+   */
+  static async updateBadge(id: number, data: {
+    name?: string
+    description?: string
+    iconEmoji?: string
+    xpRequired?: number
+  }) {
+    const existing = await prisma.badge.findUnique({ where: { id } })
+    if (!existing) throw new NotFoundError(`Insignia #${id} no encontrada.`)
+
+    const updated = await prisma.badge.update({
+      where: { id },
+      data: {
+        ...(data.name ? { name: data.name.trim() } : {}),
+        ...(data.description ? { description: data.description.trim() } : {}),
+        ...(data.iconEmoji ? { iconEmoji: data.iconEmoji.trim() } : {}),
+        ...(data.xpRequired !== undefined ? { xpRequired: Number(data.xpRequired) } : {})
+      }
+    })
+
+    // Si se redujo el XP requerido, retro-asignar a aprendices que ahora califican
+    if (data.xpRequired !== undefined) {
+      const eligibleUsers = await prisma.user.findMany({
+        where: {
+          rol: 'APRENDIZ',
+          xp: { gte: Number(data.xpRequired) }
+        },
+        select: { id: true }
+      })
+
+      if (eligibleUsers.length > 0) {
+        await prisma.userBadge.createMany({
+          data: eligibleUsers.map(u => ({ userId: u.id, badgeKey: existing.key })),
+          skipDuplicates: true
+        })
+      }
+    }
+
+    return updated
+  }
+
+  /**
+   * Elimina una insignia del catálogo
+   */
+  static async deleteBadge(id: number) {
+    const existing = await prisma.badge.findUnique({ where: { id } })
+    if (!existing) throw new NotFoundError(`Insignia #${id} no encontrada.`)
+
+    await prisma.userBadge.deleteMany({ where: { badgeKey: existing.key } })
+    return await prisma.badge.delete({ where: { id } })
   }
 
   /**
