@@ -336,18 +336,42 @@ export async function ensureDefaultCurriculum(): Promise<void> {
 }
 
 export async function ensureDefaultVocabulary(): Promise<void> {
-  const count = await prisma.vocabulary.count()
-  if (count > 0) return
-
   const DEFAULT_VOCABULARY = [
     { wordEn: 'Blood pressure', wordEs: 'Presión arterial', category: 'Signos Vitales', definition: 'Fuerza ejercida por la sangre contra las paredes de los vasos sanguíneos.', example: 'The patient\'s blood pressure is 120/80 mmHg.' },
     { wordEn: 'Heart rate', wordEs: 'Frecuencia cardíaca', category: 'Signos Vitales', definition: 'Número de latidos del corazón por minuto.', example: 'Normal heart rate ranges from 60 to 100 bpm.' },
+    { wordEn: 'Respiratory rate', wordEs: 'Frecuencia respiratoria', category: 'Signos Vitales', definition: 'Número de respiraciones que realiza una persona por minuto.', example: 'Count the patient\'s respiratory rate for 60 seconds.' },
+    { wordEn: 'Body temperature', wordEs: 'Temperatura corporal', category: 'Signos Vitales', definition: 'Grado de calor del cuerpo humano medido con termómetro.', example: 'Check body temperature every four hours.' },
+    { wordEn: 'Oxygen saturation', wordEs: 'Saturación de oxígeno', category: 'Signos Vitales', definition: 'Medida de la cantidad de oxígeno transportado en la sangre.', example: 'Her oxygen saturation is currently at 98%.' },
     { wordEn: 'Stethoscope', wordEs: 'Estetoscopio', category: 'Equipos', definition: 'Instrumento para auscultar sonidos del corazón y pulmones.', example: 'Use the stethoscope to listen to heart sounds.' },
+    { wordEn: 'Pulse oximeter', wordEs: 'Pulsioxímetro', category: 'Equipos', definition: 'Dispositivo no invasivo que mide la saturación de oxígeno en sangre.', example: 'Place the pulse oximeter on the index finger.' },
+    { wordEn: 'Sphygmomanometer', wordEs: 'Tensiómetro', category: 'Equipos', definition: 'Aparato utilizado para medir la presión sanguínea.', example: 'Inflate the sphygmomanometer cuff slowly.' },
+    { wordEn: 'Syringe', wordEs: 'Jeringa', category: 'Equipos', definition: 'Instrumento para aspirar o inyectar fluidos corporales o medicamentos.', example: 'Use a sterile disposable syringe for the injection.' },
+    { wordEn: 'Wheelchair', wordEs: 'Silla de ruedas', category: 'Equipos', definition: 'Silla con ruedas para transportar pacientes con movilidad reducida.', example: 'Assist the patient into the wheelchair safely.' },
     { wordEn: 'Intravenous line', wordEs: 'Vía intravenosa', category: 'Procedimientos', definition: 'Acceso directo al torrente sanguíneo a través de una vena.', example: 'Insert an IV line before administering medication.' },
+    { wordEn: 'Wound dressing', wordEs: 'Curación de heridas', category: 'Procedimientos', definition: 'Técnica de limpieza y protección de una lesión cutánea.', example: 'Change the wound dressing using sterile technique.' },
+    { wordEn: 'Blood draw', wordEs: 'Toma de muestra de sangre', category: 'Procedimientos', definition: 'Extracción de sangre para análisis de laboratorio clínico.', example: 'Perform the blood draw from the median cubital vein.' },
+    { wordEn: 'Catheterization', wordEs: 'Cateterismo / Sondaje', category: 'Procedimientos', definition: 'Inserción de una sonda tubular en una cavidad corporal.', example: 'Urinary catheterization requires strict aseptic technique.' },
+    { wordEn: 'Medication administration', wordEs: 'Administración de medicamentos', category: 'Procedimientos', definition: 'Entrega de fármacos siguiendo los 5 correctos de enfermería.', example: 'Double-check the dosage before medication administration.' },
+    { wordEn: 'Painkiller', wordEs: 'Analgésico', category: 'Farmacología', definition: 'Medicamento que reduce o alivia el dolor en el paciente.', example: 'Administer the prescribed painkiller every 8 hours.' },
+    { wordEn: 'Antibiotic', wordEs: 'Antibiótico', category: 'Farmacología', definition: 'Sustancia que destruye o inhibe el crecimiento de bacterias.', example: 'Complete the entire cycle of the antibiotic.' },
+    { wordEn: 'Dosage', wordEs: 'Dosis / Posología', category: 'Farmacología', definition: 'Cantidad de medicamento que se administra de una sola vez.', example: 'Verify the correct dosage in the physician order sheet.' },
+    { wordEn: 'Handover', wordEs: 'Entrega de turno', category: 'Comunicación', definition: 'Traspaso estructurado de información clínica entre enfermeros.', example: 'During the handover, mention any changes in vital signs.' },
+    { wordEn: 'Discharge summary', wordEs: 'Resumen de alta médica', category: 'Comunicación', definition: 'Documento con instrucciones y recomendaciones de egreso del paciente.', example: 'Review the discharge summary with the patient and family.' },
+    { wordEn: 'Triage', wordEs: 'Triaje / Clasificación', category: 'Urgencias', definition: 'Proceso de valoración rápida para priorizar la atención médica.', example: 'The nurse performed the initial triage in the emergency room.' },
+    { wordEn: 'Shortness of breath', wordEs: 'Dificultad respiratoria (Disnea)', category: 'Síntomas', definition: 'Sensación subjetiva de falta de aire o respiración laboriosa.', example: 'The patient reports shortness of breath when walking.' },
+    { wordEn: 'Dizziness', wordEs: 'Mareo / Vértigo', category: 'Síntomas', definition: 'Sensación de inestabilidad o movimiento involuntario de la cabeza.', example: 'Sit the patient down if they complain of dizziness.' },
+    { wordEn: 'Swelling', wordEs: 'Hinchazón / Edema', category: 'Síntomas', definition: 'Aumento de volumen por acumulación anormal de líquido en tejidos.', example: 'Observe the lower limbs for any sign of swelling.' }
   ]
 
-  await prisma.vocabulary.createMany({ data: DEFAULT_VOCABULARY })
-  console.log('Vocabulario de prueba sembrado.')
+  for (const item of DEFAULT_VOCABULARY) {
+    const exists = await prisma.vocabulary.findFirst({
+      where: { wordEn: { equals: item.wordEn, mode: 'insensitive' } }
+    })
+    if (!exists) {
+      await prisma.vocabulary.create({ data: item })
+    }
+  }
+  console.log('Vocabulario de prueba sembrado y sincronizado.')
 }
 
 export async function ensureDefaultDialogues(): Promise<void> {

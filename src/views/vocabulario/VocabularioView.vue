@@ -70,8 +70,18 @@
       >
         <div class="space-y-2">
           <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <p class="text-base font-black text-gray-800 group-hover:text-[#006688] transition-colors truncate">{{ term.wordEn }}</p>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <p class="text-base font-black text-gray-800 group-hover:text-[#006688] transition-colors truncate">{{ term.wordEn }}</p>
+                <button 
+                  @click.stop="speakEnglish(term.wordEn)" 
+                  type="button" 
+                  :class="`p-1 rounded-full transition-all cursor-pointer ${speakingWord === term.wordEn ? 'text-[#006688] bg-[#006688]/20 scale-110' : 'text-gray-400 hover:text-[#006688] hover:bg-[#006688]/10'}`"
+                  title="Escuchar pronunciación en inglés"
+                >
+                  <span class="material-symbols-outlined text-base block">volume_up</span>
+                </button>
+              </div>
               <p class="text-xs font-bold text-[#006688] mt-0.5">{{ term.wordEs }}</p>
             </div>
             <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 shrink-0">
@@ -79,8 +89,16 @@
             </span>
           </div>
           <p class="text-xs text-gray-500 leading-relaxed">{{ term.definition }}</p>
-          <div v-if="term.example" class="pt-2 border-t border-gray-50">
-            <p class="text-[10px] text-gray-400 italic">"{{ term.example }}"</p>
+          <div v-if="term.example" class="pt-2 border-t border-gray-50 flex items-center justify-between gap-2">
+            <p class="text-[10px] text-gray-400 italic flex-1">"{{ term.example }}"</p>
+            <button 
+              @click.stop="speakEnglish(term.example)" 
+              type="button" 
+              :class="`p-1 rounded-full transition-all cursor-pointer shrink-0 ${speakingWord === term.example ? 'text-[#006688] bg-[#006688]/20 scale-110' : 'text-gray-350 hover:text-[#006688] hover:bg-[#006688]/10'}`"
+              title="Escuchar ejemplo en inglés"
+            >
+              <span class="material-symbols-outlined text-xs block">volume_up</span>
+            </button>
           </div>
         </div>
 
@@ -119,7 +137,17 @@
           </div>
           <div class="space-y-1">
             <label class="text-gray-500">Categoría</label>
-            <input type="text" v-model="form.category" required class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:border-[#006688] font-medium" placeholder="Ej. Procedimientos, Anatomía..." />
+            <input 
+              type="text" 
+              v-model="form.category" 
+              list="category-suggestions"
+              required 
+              class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:border-[#006688] font-medium" 
+              placeholder="Selecciona o escribe una categoría..." 
+            />
+            <datalist id="category-suggestions">
+              <option v-for="cat in availableCategories" :key="cat" :value="cat" />
+            </datalist>
           </div>
           <div class="space-y-1">
             <label class="text-gray-500">Definición</label>
@@ -167,11 +195,41 @@ const editingTerm = ref(null)
 const form = ref({ wordEn: '', wordEs: '', category: 'Signos Vitales', definition: '', example: '' })
 
 const canManage = computed(() => auth.isAdmin || auth.isInstructor)
+const speakingWord = ref(null)
+
+function speakEnglish(text) {
+  if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return
+  try {
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'en-US'
+    utterance.rate = 0.88 // Slightly paused cadence for accurate medical pronunciation
+    speakingWord.value = text
+    utterance.onend = () => {
+      speakingWord.value = null
+    }
+    utterance.onerror = () => {
+      speakingWord.value = null
+    }
+    window.speechSynthesis.speak(utterance)
+  } catch (err) {
+    console.error('Speech synthesis error:', err)
+    speakingWord.value = null
+  }
+}
 
 const categories = computed(() => {
   const list = Array.isArray(vocabulary.value) ? vocabulary.value : []
   const cats = new Set(list.map(v => v.category).filter(Boolean))
   return ['Todos', ...Array.from(cats)].sort()
+})
+
+const availableCategories = computed(() => {
+  const list = Array.isArray(vocabulary.value) ? vocabulary.value : []
+  const cats = new Set(list.map(v => v.category).filter(Boolean))
+  const defaults = ['Signos Vitales', 'Equipos', 'Procedimientos', 'Farmacología', 'Comunicación', 'Síntomas', 'Urgencias', 'Anatomía']
+  defaults.forEach(d => cats.add(d))
+  return Array.from(cats).sort()
 })
 
 function getToken() {
@@ -227,7 +285,13 @@ function openAddModal() {
 
 function editTerm(term) {
   editingTerm.value = term
-  form.value = { ...term }
+  form.value = {
+    wordEn: term.wordEn,
+    wordEs: term.wordEs,
+    category: term.category,
+    definition: term.definition,
+    example: term.example || ''
+  }
   showModal.value = true
 }
 
@@ -237,6 +301,18 @@ async function saveTerm() {
   const headers = { 
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`
+  }
+
+  const trimmedCat = (form.value.category || '').trim()
+  const existingCat = availableCategories.value.find(c => c.toLowerCase() === trimmedCat.toLowerCase())
+  const finalCategory = existingCat || trimmedCat || 'General'
+
+  const payload = {
+    wordEn: form.value.wordEn?.trim(),
+    wordEs: form.value.wordEs?.trim(),
+    category: finalCategory,
+    definition: form.value.definition?.trim(),
+    example: form.value.example?.trim() || ''
   }
 
   let method = 'POST'
@@ -250,7 +326,7 @@ async function saveTerm() {
     const res = await fetch(url, {
       method,
       headers,
-      body: JSON.stringify(form.value)
+      body: JSON.stringify(payload)
     })
 
     if (!res.ok) {
@@ -258,7 +334,11 @@ async function saveTerm() {
       throw new Error(data.message || 'Error al guardar el término.')
     }
 
-    notificationStore.notify({ type: 'success', title: 'Término guardado', message: 'El término fue actualizado.' })
+    notificationStore.notify({ 
+      type: 'success', 
+      title: 'Término guardado', 
+      message: editingTerm.value ? 'El término fue actualizado correctamente.' : 'El nuevo término fue creado exitosamente.' 
+    })
     showModal.value = false
     await loadVocabulary()
   } catch (err) {
