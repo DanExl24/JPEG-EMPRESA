@@ -72,6 +72,9 @@ export class CourseService {
 
     const courses = await prisma.course.findMany({
       include: {
+        program: {
+          select: { id: true, name: true }
+        },
         _count: {
           select: { progresses: true }
         }
@@ -111,6 +114,8 @@ export class CourseService {
         icon: c.icon,
         iconColor: c.iconColor,
         bg: c.bg,
+        programId: c.programId || null,
+        programName: c.program?.name || null,
         studentsCount: studentCount,
         students: studentCount,
         activitiesCount,
@@ -145,7 +150,11 @@ export class CourseService {
       throw new BadRequestError('Título, categoría y duración son campos obligatorios.')
     }
 
-    const slug = data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    let slug = data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const existingWithSlug = await prisma.course.findUnique({ where: { slug } })
+    if (existingWithSlug) {
+      slug = `${slug}-${Date.now().toString().slice(-4)}`
+    }
 
     return await prisma.course.create({
       data: {
@@ -166,9 +175,9 @@ export class CourseService {
    * Actualiza los datos o estructura de un curso
    */
   static async updateCourse(id: number, data: UpdateCourseDto) {
-    await this.getCourseById(id)
+    const existing = await this.getCourseById(id)
 
-    return await prisma.course.update({
+    const updated = await prisma.course.update({
       where: { id },
       data: {
         ...(data.title ? { title: data.title.trim() } : {}),
@@ -182,6 +191,16 @@ export class CourseService {
         ...(data.programId !== undefined ? { programId: data.programId } : {})
       }
     })
+
+    // Sincronizar título en actividades vinculadas si el título del curso cambió
+    if (data.title && data.title.trim() !== existing.title) {
+      await prisma.activity.updateMany({
+        where: { course: existing.title },
+        data: { course: data.title.trim() }
+      })
+    }
+
+    return updated
   }
 
   /**

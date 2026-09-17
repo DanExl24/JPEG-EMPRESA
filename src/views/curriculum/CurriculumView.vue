@@ -59,7 +59,7 @@
             <div v-for="p in programs" :key="p.id" class="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
               <div class="space-y-0.5">
                 <p class="text-sm font-bold text-gray-800">{{ p.name }}</p>
-                <p class="text-[10px] text-gray-400 font-medium">ID: {{ p.id }} · {{ p.competencies?.length || 0 }} Competencias</p>
+                <p class="text-[10px] text-gray-400 font-medium">ID: {{ p.id }} · {{ p.competencies?.length || 0 }} Competencias · {{ p.courses?.length || 0 }} Cursos asociados</p>
               </div>
               <div class="flex gap-2">
                 <button @click="editProgram(p)" class="p-1.5 border border-gray-200 rounded-lg hover:border-[#006688] hover:text-[#006688] transition-colors" title="Editar"><span class="material-symbols-outlined text-base block">edit</span></button>

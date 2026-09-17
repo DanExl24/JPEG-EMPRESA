@@ -32,9 +32,12 @@
           <span class="material-symbols-outlined text-6xl opacity-60" :style="`color: ${course.iconColor}`">{{ course.icon }}</span>
         </div>
         <div class="p-5">
-          <div class="flex items-center gap-2 mb-2">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
             <span :class="`text-xs font-bold px-2 py-1 rounded-full ${course.categoryBg} ${course.categoryText}`">{{ course.category }}</span>
             <span class="text-xs text-gray-400">{{ course.duration }}</span>
+            <span v-if="course.programName" class="text-[10px] font-bold text-[#006688] bg-[#006688]/10 px-2 py-0.5 rounded-full truncate max-w-[180px]">
+              {{ course.programName }}
+            </span>
           </div>
           <h4 class="font-bold text-gray-800 mb-1">{{ course.title }}</h4>
           <p class="text-xs text-gray-500 mb-3 line-clamp-2">{{ course.description }}</p>
@@ -163,6 +166,13 @@
                 <label class="text-xs font-bold text-gray-500">Descripción Corta</label>
                 <textarea v-model="form.description" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Resumen corto del curso..."></textarea>
               </div>
+              <div class="md:col-span-2 space-y-1">
+                <label class="text-xs font-bold text-gray-500">Programa Curricular Asociado (Nivel)</label>
+                <select v-model="form.programId" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688] cursor-pointer">
+                  <option :value="null">Sin programa formativo asignado</option>
+                  <option v-for="p in trainingPrograms" :key="p.id" :value="p.id">{{ p.name }}</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -275,14 +285,17 @@
                     Actividades de Juego / Pruebas en esta Fase ({{ coursePhaseActivities.length }})
                   </div>
                   <button 
-                    v-if="!showAddActivityForm"
+                    v-if="!showAddActivityForm && editingCourse"
                     @click="showAddActivityForm = true"
                     type="button"
-                    class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                    class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <span class="material-symbols-outlined text-xs">add</span>
                     Asignar Actividad
                   </button>
+                  <span v-else-if="!editingCourse" class="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-bold">
+                    Disponible tras guardar el curso
+                  </span>
                 </div>
 
                 <!-- Activities list -->
@@ -518,6 +531,7 @@ const filters = ['Todos', 'En Progreso', 'Completados', 'Nuevos']
 const showModal = ref(false)
 const editingCourse = ref(null)
 const activeModalPhase = ref('inicio')
+const trainingPrograms = ref([])
 
 const newActivity = ref({
   title: '',
@@ -662,6 +676,8 @@ async function fetchCourses() {
             bg: c.bg || fallback.bg || 'bg-teal-50',
             categoryBg: c.categoryBg || fallback.categoryBg || 'bg-teal-100',
             categoryText: c.categoryText || fallback.categoryText || 'text-teal-700',
+            programId: c.programId || null,
+            programName: c.programName || null,
             progress: c.progress || 0
           }
         })
@@ -672,9 +688,25 @@ async function fetchCourses() {
   }
 }
 
+async function fetchTrainingPrograms() {
+  try {
+    const token = getAuthToken()
+    const res = await fetch(`${apiBaseUrl}/api/admin/curriculum/programs`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (res.ok) {
+      const data = await res.json()
+      trainingPrograms.value = Array.isArray(data) ? data : (data?.data || [])
+    }
+  } catch (err) {
+    console.warn('Backend training programs unavailable:', err)
+  }
+}
+
 onMounted(async () => {
   await fetchCourses()
   await fetchActivities()
+  await fetchTrainingPrograms()
   const apprenticeId = auth.user?.id || 'guest'
   courses.value.forEach(course => {
     try {
@@ -779,6 +811,7 @@ const form = ref({
   bg: 'bg-blue-50',
   categoryBg: 'bg-blue-100',
   categoryText: 'text-blue-700',
+  programId: null,
   f1_welcome: '',
   f1_gameWords: '',
   f2_grammar: '',
@@ -947,6 +980,7 @@ function openNewCourseModal() {
     bg: 'bg-blue-50',
     categoryBg: 'bg-blue-100',
     categoryText: 'text-blue-700',
+    programId: null,
     f1_welcome: 'Welcome to this technical training module.',
     f1_gameWords: 'checks, The nurse, the, patient\'s, blood pressure',
     f2_grammar: 'The nurse checks the patient.',
@@ -975,6 +1009,7 @@ function openEditCourseModal(course) {
     bg: course.bg,
     categoryBg: course.categoryBg,
     categoryText: course.categoryText,
+    programId: course.programId || null,
     f1_welcome: course.f1_welcome || 'Welcome to this technical training module.',
     f1_gameWords: course.f1_gameWords || 'checks, The nurse, the, patient\'s, blood pressure',
     f2_grammar: course.f2_grammar || 'The nurse checks the patient.',
@@ -1015,6 +1050,7 @@ async function saveCourse() {
     icon: form.value.icon,
     iconColor: form.value.iconColor,
     bg: form.value.bg,
+    programId: form.value.programId ? parseInt(form.value.programId) : null,
   }
 
   const token = getAuthToken()
