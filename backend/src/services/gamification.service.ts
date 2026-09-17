@@ -285,13 +285,13 @@ export class GamificationService {
     // Asegurar juegos en BD con fallback resiliente
     let allGames: any[] = DEFAULT_ARCADE_GAMES
     try {
-      const gameCount = await prisma.arcadeGame.count()
+      const gameCount = await (prisma as any).arcadeGame.count()
       if (gameCount === 0) {
         for (const g of DEFAULT_ARCADE_GAMES) {
-          await prisma.arcadeGame.create({ data: g })
+          await (prisma as any).arcadeGame.create({ data: g })
         }
       }
-      allGames = await prisma.arcadeGame.findMany({
+      allGames = await (prisma as any).arcadeGame.findMany({
         orderBy: { id: 'asc' }
       })
     } catch (e) {
@@ -348,7 +348,7 @@ export class GamificationService {
     // Juegos activos desde la BD con fallback seguro
     let activeGames: any[] = DEFAULT_ARCADE_GAMES
     try {
-      const dbGames = await prisma.arcadeGame.findMany({
+      const dbGames = await (prisma as any).arcadeGame.findMany({
         where: { active: true },
         orderBy: { id: 'asc' }
       })
@@ -467,7 +467,7 @@ export class GamificationService {
     const rawKey = (data.name || 'game').toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30)
     const key = `${rawKey}_${Date.now().toString().slice(-4)}`
 
-    return prisma.arcadeGame.create({
+    return (prisma as any).arcadeGame.create({
       data: {
         key,
         name: data.name.trim(),
@@ -486,7 +486,7 @@ export class GamificationService {
   }
 
   static async updateArcadeGame(id: number, data: any) {
-    return prisma.arcadeGame.update({
+    return (prisma as any).arcadeGame.update({
       where: { id },
       data: {
         ...(data.name && { name: data.name.trim() }),
@@ -505,16 +505,16 @@ export class GamificationService {
   }
 
   static async deleteArcadeGame(id: number) {
-    return prisma.arcadeGame.delete({
+    return (prisma as any).arcadeGame.delete({
       where: { id }
     })
   }
 
   static async toggleArcadeGame(id: number) {
-    const existing = await prisma.arcadeGame.findUnique({ where: { id } })
+    const existing = await (prisma as any).arcadeGame.findUnique({ where: { id } })
     if (!existing) throw new Error('Juego no encontrado')
 
-    return prisma.arcadeGame.update({
+    return (prisma as any).arcadeGame.update({
       where: { id },
       data: { active: !existing.active }
     })

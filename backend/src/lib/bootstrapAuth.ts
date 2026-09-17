@@ -493,12 +493,13 @@ export const DEFAULT_ARCADE_GAMES = [
 ]
 
 export async function ensureDefaultArcadeGames(): Promise<void> {
-  const count = await prisma.arcadeGame.count()
+  const count = await (prisma as any).arcadeGame.count()
   if (count > 0) return
 
   for (const game of DEFAULT_ARCADE_GAMES) {
-    await prisma.arcadeGame.create({ data: game })
+    await (prisma as any).arcadeGame.create({ data: game })
   }
   console.log('Juegos del Arcade clínico inicializados en base de datos con éxito.')
 }
+
 
