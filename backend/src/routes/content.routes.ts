@@ -2,6 +2,7 @@ import { Router } from 'express'
 import type { Request, Response, NextFunction } from 'express'
 import {
   getVocabulary, createVocabularyTerm, updateVocabularyTerm, deleteVocabularyTerm,
+  getGlossary, createGlossaryTerm, updateGlossaryTerm, deleteGlossaryTerm,
   getDialogues, getDialogueById, createDialogue, updateDialogue, deleteDialogue
 } from '../controllers/content.controller.js'
 import { authenticate } from '../lib/middleware.js'
@@ -12,7 +13,8 @@ router.use(authenticate)
 
 // Helper middleware to restrict writes to ADMIN/INSTRUCTOR
 const requireAdminOrInstructor = (req: Request, res: Response, next: NextFunction): void => {
-  if (req.user?.role === 'ADMIN' || req.user?.role === 'INSTRUCTOR') {
+  const role = String(req.user?.role || '').toUpperCase()
+  if (role === 'ADMIN' || role === 'INSTRUCTOR') {
     next()
     return
   }
@@ -24,6 +26,12 @@ router.get('/vocabulary', getVocabulary)
 router.post('/vocabulary', requireAdminOrInstructor, createVocabularyTerm)
 router.put('/vocabulary/:id', requireAdminOrInstructor, updateVocabularyTerm)
 router.delete('/vocabulary/:id', requireAdminOrInstructor, deleteVocabularyTerm)
+
+// --- Glossary (GlosarioView.vue) ---
+router.get('/glossary', getGlossary)
+router.post('/glossary', requireAdminOrInstructor, createGlossaryTerm)
+router.put('/glossary/:id', requireAdminOrInstructor, updateGlossaryTerm)
+router.delete('/glossary/:id', requireAdminOrInstructor, deleteGlossaryTerm)
 
 // --- Dialogues ---
 router.get('/dialogues', getDialogues)

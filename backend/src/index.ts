@@ -3,13 +3,8 @@ import express from 'express'
 import type { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import http from 'http'
+import apiRouter from './routes/index.js'
 import testRoutes from './routes/test.routes.js'
-import authRoutes from './routes/auth.routes.js'
-import activityRoutes from './routes/activity.routes.js'
-import adminRoutes from './routes/admin.routes.js'
-import learnerRoutes from './routes/learner.routes.js'
-import curriculumRoutes from './routes/curriculum.routes.js'
-import contentRoutes from './routes/content.routes.js'
 import {
   ensureDefaultApprenticeUser,
   ensureDefaultAuthUser,
@@ -17,8 +12,12 @@ import {
   ensureDefaultActivities,
   ensureDefaultCurriculum,
   ensureDefaultVocabulary,
-  ensureDefaultDialogues
+  ensureDefaultDialogues,
+  ensureDefaultCourses,
+  ensureDefaultGlossary
 } from './lib/bootstrapAuth.js'
+import { GamificationService } from './services/gamification.service.js'
+import { globalErrorHandler } from './middlewares/error.middleware.js'
 import prisma from './lib/db.js'
 
 const app = express()
@@ -28,7 +27,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   .map(origin => origin.trim())
   .filter(Boolean) ?? []
 
-// 1. Logging preliminar antes de cualquier middleware
+// 1. Logging preliminar de peticiones
 app.use((req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString()
   console.log(`\n========================================`)
@@ -52,7 +51,6 @@ app.use(cors({
       return
     }
     console.warn(`[CORS] ⚠️ Origin no permitido por lista blanca: "${origin}". Permitidos:`, allowedOrigins)
-    // En producción/desarrollo permitimos la conexión para evitar bloqueos innecesarios pero registramos la advertencia
     callback(null, true)
   },
   credentials: true
@@ -62,37 +60,19 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// 4. Log del payload procesado
-app.use((req: Request, _res: Response, next: NextFunction) => {
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    console.log(`📦 [Body Parser]:`, JSON.stringify(req.body || {}, null, 2))
-  }
-  next()
-})
-
+// 4. Healthcheck
 app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', time: new Date().toISOString() })
 })
 
-// 5. Rutas API
-app.use('/api/test', testRoutes)
-app.use('/api/auth', authRoutes)
-app.use('/api/activities', activityRoutes)
-app.use('/api/admin/curriculum', curriculumRoutes)
-app.use('/api/admin', adminRoutes)
-app.use('/api/learner', learnerRoutes)
-app.use('/api/content', contentRoutes)
+// 5. Rutas API Modulares (SRP & DRY)
+app.use('/api', apiRouter)
 app.use('/', testRoutes)
 
-// 6. Manejador global de errores
-app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-  console.error(`💥 [Unhandled Error in ${req.method} ${req.url}]:`, err)
-  res.status(500).json({
-    message: 'Error interno en el servidor.',
-    error: process.env.NODE_ENV !== 'production' ? err.message : undefined
-  })
-})
+// 6. Manejador Global de Errores (DRY)
+app.use(globalErrorHandler)
 
+// 7. Inicialización de Base de Datos y Datos Semilla
 console.log('Conectando a la base de datos...')
 try {
   await prisma.$queryRaw`SELECT 1`
@@ -104,6 +84,10 @@ try {
   await ensureDefaultCurriculum()
   await ensureDefaultVocabulary()
   await ensureDefaultDialogues()
+  await ensureDefaultCourses()
+  await ensureDefaultGlossary()
+  await GamificationService.ensureBadges()
+  console.log('Todos los datos iniciales y catálogos fueron inicializados exitosamente.')
 } catch (error) {
   console.error('Error al conectar a la base de datos o inicializar datos:', error)
 }

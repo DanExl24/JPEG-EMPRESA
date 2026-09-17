@@ -31,6 +31,10 @@ model User {
   evaluationsAsApprentice Evaluation[] @relation("ApprenticeEvaluations")
   evaluationsAsInstructor Evaluation[] @relation("InstructorEvaluations")
   userBadges       UserBadge[]
+  courseProgresses CourseProgress[]
+  auditLogs        AuditLog[]
+  preference       UserPreference?
+  gameScores       GameScore[]
 
   @@map("users")
 }
@@ -65,6 +69,7 @@ model TrainingProgram {
   name         String
   cohorts      Cohort[]
   competencies Competency[]
+  courses      Course[]
 
   @@map("training_programs")
 }
@@ -197,5 +202,99 @@ model Dialogue {
 
   @@map("dialogues")
 }
+
+model Course {
+  id           Int              @id @default(autoincrement())
+  slug         String           @unique
+  title        String
+  description  String
+  category     String
+  duration     String
+  icon         String           @default("school")
+  iconColor    String           @default("#006688") @map("icon_color")
+  bg           String           @default("bg-blue-50")
+  programId    Int?             @map("program_id")
+  program      TrainingProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  progresses   CourseProgress[]
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  @@map("courses")
+}
+
+model CourseProgress {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  courseId      Int       @map("course_id")
+  currentPhase  String    @default("inicio") @map("current_phase")
+  phaseProgress String    @default("{\"inicio\":0,\"estudio\":0,\"practica\":0,\"evaluacion\":0}") @map("phase_progress")
+  overallPct    Int       @default(0) @map("overall_pct")
+  completed     Boolean   @default(false)
+  completedAt   DateTime? @map("completed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("course_progresses")
+}
+
+model GlossaryTerm {
+  id         Int      @id @default(autoincrement())
+  term       String   @unique
+  area       String
+  definition String
+  related    String   @default("[]") // JSON string of related terms array
+  example    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("glossary_terms")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  action    String
+  title     String
+  badge     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model UserPreference {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @unique @map("user_id")
+  emailNotifications Boolean  @default(true) @map("email_notifications")
+  activityAlerts     Boolean  @default(true) @map("activity_alerts")
+  rankingAlerts      Boolean  @default(true) @map("ranking_alerts")
+  theme              String   @default("light")
+  language           String   @default("es")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model GameScore {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  gameKey         String   @map("game_key")
+  score           Int      @default(0)
+  roundsCompleted Int      @default(4) @map("rounds_completed")
+  playedAt        DateTime @default(now()) @map("played_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("game_scores")
+}
+
 
 

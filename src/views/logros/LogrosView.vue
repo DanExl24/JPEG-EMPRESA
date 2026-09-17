@@ -51,26 +51,74 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
+const apiBaseUrl = getApiBaseUrl()
+const loading = ref(false)
 
-const unlocked = [
-  { id: 1, name: 'Primer Paso', desc: 'Completaste tu primer curso', emoji: '🎯', bg: 'bg-blue-100', pts: 100 },
-  { id: 2, name: 'Estudiante Activo', desc: '7 días seguidos de estudio', emoji: '🔥', bg: 'bg-orange-100', pts: 150 },
-  { id: 3, name: 'Quiz Master', desc: 'Calificación perfecta en un quiz', emoji: '🧠', bg: 'bg-purple-100', pts: 200 },
-  { id: 4, name: 'Madrugador', desc: 'Estudia antes de las 7am', emoji: '🌅', bg: 'bg-yellow-100', pts: 50 },
-  { id: 5, name: 'Social Learner', desc: 'Completa 3 actividades grupales', emoji: '🤝', bg: 'bg-green-100', pts: 100 },
-  { id: 6, name: 'Velocista', desc: 'Termina un módulo en 1 día', emoji: '⚡', bg: 'bg-cyan-100', pts: 80 },
-  { id: 7, name: 'Enfermero Pro', desc: 'Completa módulo de Fundamentos', emoji: '👩‍⚕️', bg: 'bg-red-100', pts: 300 },
+const DEFAULT_UNLOCKED = [
+  { id: 1, name: 'Primer Paso', desc: 'Completaste tu primera actividad', emoji: '🎯', bg: 'bg-blue-100', pts: 10 },
+  { id: 2, name: 'Estudiante Activo', desc: 'Acumulaste 50 XP', emoji: '🔥', bg: 'bg-orange-100', pts: 50 },
+  { id: 3, name: 'Quiz Master', desc: 'Acumulaste 100 XP', emoji: '🧠', bg: 'bg-purple-100', pts: 100 }
 ]
 
-const locked = [
-  { id: 8, name: 'Experto Clínico', hint: 'Completa 5 cursos avanzados', emoji: '🏆', progress: 40 },
-  { id: 9, name: 'Mentor', hint: 'Ayuda a 10 compañeros', emoji: '🌟', progress: 20 },
-  { id: 10, name: 'Maratón', hint: '30 días seguidos de estudio', emoji: '🏃', progress: 65 },
-  { id: 11, name: 'Perfeccionista', hint: '10 calificaciones perfectas', emoji: '💎', progress: 30 },
-  { id: 12, name: 'Investigador', hint: 'Lee 50 materiales de apoyo', emoji: '📚', progress: 55 },
-  { id: 13, name: 'Top 1', hint: 'Llega al puesto #1 del ranking', emoji: '👑', progress: 10 },
+const DEFAULT_LOCKED = [
+  { id: 4, name: 'Dedicado', hint: 'Acumula 250 XP', emoji: '⚡', progress: 40 },
+  { id: 5, name: 'Enfermero Pro', hint: 'Acumula 500 XP', emoji: '👩‍⚕️', progress: 20 },
+  { id: 6, name: 'Experto Clínico', hint: 'Acumula 1000 XP', emoji: '🏆', progress: 10 }
 ]
+
+const unlocked = ref([...DEFAULT_UNLOCKED])
+const locked = ref([...DEFAULT_LOCKED])
+const totalCount = ref(6)
+
+function getToken() {
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
+async function fetchBadges() {
+  loading.value = true
+  try {
+    const token = getToken()
+    const res = await fetch(`${apiBaseUrl}/api/learner/badges`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    })
+    if (res.ok) {
+      const responseData = await res.json()
+      const data = responseData.data || responseData
+      if (data.unlocked && data.locked) {
+        unlocked.value = data.unlocked.map(b => ({
+          id: b.id,
+          name: b.name,
+          desc: b.description,
+          emoji: b.iconEmoji,
+          bg: 'bg-amber-100',
+          pts: b.xpRequired
+        }))
+        locked.value = data.locked.map(b => ({
+          id: b.id,
+          name: b.name,
+          hint: b.description,
+          emoji: b.iconEmoji,
+          progress: b.progress || 0
+        }))
+        totalCount.value = data.totalBadges || 6
+      }
+    }
+  } catch (error) {
+    console.error('Error cargando insignias desde backend:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchBadges()
+})
 </script>

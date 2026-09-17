@@ -269,6 +269,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
 
@@ -384,12 +385,39 @@ function loadRound() {
   currentRoundTargets.value = [...targets].sort(() => Math.random() - 0.5)
 }
 
+function getToken() {
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
+async function sendGameScore() {
+  try {
+    const token = getToken()
+    const apiBaseUrl = getApiBaseUrl()
+    await fetch(`${apiBaseUrl}/api/learner/games/score`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({
+        gameKey: 'drag_match',
+        score: 100,
+        roundsCompleted: 4
+      })
+    })
+  } catch (error) {
+    console.error('Error enviando puntuación de juego:', error)
+  }
+}
+
 function nextRound() {
   if (currentRoundIndex.value < 3) {
     currentRoundIndex.value++
     loadRound()
   } else {
     gameFinished.value = true
+    sendGameScore()
   }
 }
 

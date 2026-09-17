@@ -83,11 +83,14 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
+const apiBaseUrl = getApiBaseUrl()
 
-const visibleStats = [
+const visibleStats = ref([
   { label: 'Cursos Activos', value: '12', change: '+2 esta semana', icon: 'school', bg: 'bg-blue-50', iconColor: '#3b82f6' },
   { label: 'Usuarios', value: '1,240', change: '+18 nuevos', icon: 'group', bg: 'bg-purple-50', iconColor: '#8b5cf6' },
   { label: 'Mi Progreso', value: '68%', change: '+5% este mes', icon: 'trending_up', bg: 'bg-green-50', iconColor: '#10b981' },
@@ -96,7 +99,7 @@ const visibleStats = [
   { label: 'Ranking', value: '#3', change: 'Subiste 2 posiciones', icon: 'leaderboard', bg: 'bg-red-50', iconColor: '#ef4444' },
   { label: 'Ingresos Cursos', value: '$4,820', change: '+12% mensual', icon: 'payments', bg: 'bg-teal-50', iconColor: '#14b8a6' },
   { label: 'Tiempo Estudio', value: '24h', change: '+3h esta semana', icon: 'schedule', bg: 'bg-indigo-50', iconColor: '#6366f1' },
-]
+])
 
 const quickActions = [
   { label: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
@@ -110,10 +113,29 @@ const quickActions = [
   { label: 'Usuarios', path: '/dashboard/usuarios', icon: 'manage_accounts' },
 ]
 
-const recentActivity = [
+const recentActivity = ref([
   { id: 1, title: 'Completaste "Fundamentos de Enfermería"', time: 'Hace 2 horas', icon: 'school', bg: 'bg-blue-100', iconColor: '#3b82f6', badge: 'Completado', badgeBg: 'bg-green-100', badgeText: 'text-green-700' },
   { id: 2, title: 'Nuevo logro desbloqueado: "Primer Examen"', time: 'Hace 5 horas', icon: 'emoji_events', bg: 'bg-yellow-100', iconColor: '#f59e0b', badge: 'Logro', badgeBg: 'bg-yellow-100', badgeText: 'text-yellow-700' },
   { id: 3, title: 'Actividad "Caso Clínico #7" asignada', time: 'Ayer', icon: 'task', bg: 'bg-orange-100', iconColor: '#f97316', badge: 'Pendiente', badgeBg: 'bg-orange-100', badgeText: 'text-orange-700' },
   { id: 4, title: 'Subiste al puesto #3 en el Ranking', time: 'Hace 2 días', icon: 'leaderboard', bg: 'bg-red-100', iconColor: '#ef4444', badge: 'Ranking', badgeBg: 'bg-red-100', badgeText: 'text-red-700' },
-]
+])
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/dashboard/summary`, {
+      headers: auth.token ? { 'Authorization': `Bearer ${auth.token}` } : {}
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data.stats) && data.stats.length > 0) {
+        visibleStats.value = data.stats
+      }
+      if (Array.isArray(data.recentActivity) && data.recentActivity.length > 0) {
+        recentActivity.value = data.recentActivity
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load dashboard summary from backend, using defaults:', err)
+  }
+})
 </script>

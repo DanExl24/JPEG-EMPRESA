@@ -173,14 +173,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "../../stores/auth";
+import { getApiBaseUrl } from "../../lib/api";
 import RegistoAprendiz from "../../components/RegistoAprendiz.vue";
 
 const auth = useAuthStore();
+const apiBaseUrl = getApiBaseUrl();
 const search = ref("");
 const filterRole = ref("");
 const showRegisterModal = ref(false);
+const loading = ref(false);
 
 const STORAGE_KEY = "nursed.users.list";
 
@@ -229,55 +232,10 @@ const defaultUsers = [
     lastAccess: "Ayer",
     avatarBg: "bg-amber-100",
     avatarColor: "#f59e0b",
-  },
-  {
-    id: 4,
-    name: "Juan Pérez",
-    email: "juan@example.com",
-    initials: "J",
-    role: "aprendiz",
-    roleLabel: "Aprendiz",
-    roleBg: "bg-green-100",
-    roleText: "text-green-700",
-    courses: 4,
-    active: true,
-    lastAccess: "Hace 1h",
-    avatarBg: "bg-green-100",
-    avatarColor: "#10b981",
-  },
-  {
-    id: 5,
-    name: "Luis García",
-    email: "luis@example.com",
-    initials: "L",
-    role: "instructor",
-    roleLabel: "Instructor",
-    roleBg: "bg-blue-100",
-    roleText: "text-blue-700",
-    courses: 4,
-    active: false,
-    lastAccess: "Hace 3 días",
-    avatarBg: "bg-purple-100",
-    avatarColor: "#8b5cf6",
-  },
-  {
-    id: 6,
-    name: "Sofia Ruiz",
-    email: "sofia@example.com",
-    initials: "S",
-    role: "aprendiz",
-    roleLabel: "Aprendiz",
-    roleBg: "bg-green-100",
-    roleText: "text-green-700",
-    courses: 2,
-    active: true,
-    lastAccess: "Hace 6h",
-    avatarBg: "bg-orange-100",
-    avatarColor: "#f97316",
-  },
+  }
 ];
 
-function loadUsers() {
+function loadLocalUsers() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
@@ -289,7 +247,40 @@ function loadUsers() {
   return defaultUsers;
 }
 
-const users = ref(loadUsers());
+const users = ref(loadLocalUsers());
+
+function getToken() {
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user');
+  return stored ? JSON.parse(stored)?.token : null;
+}
+
+async function fetchUsers() {
+  loading.value = true;
+  try {
+    const token = getToken();
+    const res = await fetch(`${apiBaseUrl}/api/admin/users`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    });
+    if (res.ok) {
+      const responseData = await res.json();
+      const list = responseData.data || responseData;
+      if (Array.isArray(list) && list.length > 0) {
+        users.value = list;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      }
+    }
+  } catch (error) {
+    console.error("Error al cargar usuarios desde backend:", error);
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchUsers();
+});
 
 // Computed summary counts
 const summary = computed(() => {
@@ -343,43 +334,28 @@ const filteredUsers = computed(() => {
 });
 
 // Add new apprentice
-function handleApprenticeCreated(apprentice) {
-  const initials = apprentice.name
-    .split(" ")
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const colors = ["#10b981", "#ef4444", "#3b82f6", "#8b5cf6", "#f59e0b", "#ec4899", "#f97316"];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-  const newUser = {
-    id: apprentice.id,
-    name: apprentice.name,
-    email: apprentice.email,
-    initials: initials || "AP",
-    role: "aprendiz",
-    roleLabel: "Aprendiz",
-    roleBg: "bg-green-100",
-    roleText: "text-green-700",
-    courses: 0,
-    active: true,
-    lastAccess: "Nunca",
-    avatarBg: "bg-green-50",
-    avatarColor: randomColor,
-  };
-
-  users.value.unshift(newUser);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users.value));
+async function handleApprenticeCreated() {
+  await fetchUsers();
 }
 
 // Delete user
-function deleteUser(id) {
+async function deleteUser(id) {
   if (confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
-    users.value = users.value.filter((u) => u.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users.value));
+    try {
+      const token = getToken();
+      await fetch(`${apiBaseUrl}/api/admin/users/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      users.value = users.value.filter((u) => u.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users.value));
+    } catch (error) {
+      console.error("Error al eliminar usuario en backend:", error);
+      users.value = users.value.filter((u) => u.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users.value));
+    }
   }
 }
 </script>

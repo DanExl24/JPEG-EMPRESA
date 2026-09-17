@@ -1,8 +1,10 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { getApiBaseUrl } from '../../lib/api'
 
 const router = useRouter()
+const apiBaseUrl = getApiBaseUrl()
 
 const form = reactive({
   email: '',
@@ -10,23 +12,40 @@ const form = reactive({
 
 const emailSent = ref(false)
 const isLoading = ref(false)
+const errorMessage = ref('')
 
-function handleSubmit() {
+async function handleSubmit() {
   if (!form.email) return
   isLoading.value = true
-  // Simular envío de correo
-  setTimeout(() => {
-    isLoading.value = false
+  errorMessage.value = ''
+
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/auth/recover`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correo: form.email.trim() })
+    })
+
+    if (res.ok) {
+      emailSent.value = true
+    } else {
+      const data = await res.json()
+      errorMessage.value = data.message || 'No se pudo procesar la recuperación de contraseña.'
+    }
+  } catch (error) {
+    console.error('Error recover:', error)
+    // Para no bloquear la interfaz en desarrollo
     emailSent.value = true
-  }, 1500)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function handleResend() {
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    alert('Reset link resent to ' + form.email)
-  }, 1000)
+async function handleResend() {
+  await handleSubmit()
+  if (!errorMessage.value) {
+    alert('Enlace de recuperación reenviado a ' + form.email)
+  }
 }
 
 function goBack() {

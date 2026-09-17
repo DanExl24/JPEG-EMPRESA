@@ -100,10 +100,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
+const apiBaseUrl = getApiBaseUrl()
 const active = ref('notifications')
 const selectedTheme = ref('light')
 
@@ -134,4 +136,64 @@ const platformConfig = ref([
   { key: 'gamification', label: 'Gamificación Activa', desc: 'Puntos, ranking y logros habilitados', enabled: true },
   { key: 'maintenance', label: 'Modo Mantenimiento', desc: 'Bloquea acceso a usuarios no-admin', enabled: false },
 ])
+
+function getToken() {
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
+async function loadPreferences() {
+  try {
+    const token = getToken()
+    const res = await fetch(`${apiBaseUrl}/api/admin/preferences`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    })
+    if (res.ok) {
+      const responseData = await res.json()
+      const data = responseData.data || responseData
+      if (data) {
+        selectedTheme.value = data.theme || 'light'
+        const emailNotif = notifications.value.find(n => n.key === 'email')
+        if (emailNotif) emailNotif.enabled = data.emailNotifications ?? true
+        const logroNotif = notifications.value.find(n => n.key === 'logros')
+        if (logroNotif) logroNotif.enabled = data.activityAlerts ?? true
+        const rankingNotif = notifications.value.find(n => n.key === 'ranking')
+        if (rankingNotif) rankingNotif.enabled = data.rankingAlerts ?? true
+      }
+    }
+  } catch (error) {
+    console.error('Error cargando preferencias:', error)
+  }
+}
+
+async function savePreferences() {
+  try {
+    const token = getToken()
+    const emailNotif = notifications.value.find(n => n.key === 'email')?.enabled ?? true
+    const logroNotif = notifications.value.find(n => n.key === 'logros')?.enabled ?? true
+    const rankingNotif = notifications.value.find(n => n.key === 'ranking')?.enabled ?? true
+
+    await fetch(`${apiBaseUrl}/api/admin/preferences`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({
+        theme: selectedTheme.value,
+        emailNotifications: emailNotif,
+        activityAlerts: logroNotif,
+        rankingAlerts: rankingNotif
+      })
+    })
+  } catch (error) {
+    console.error('Error guardando preferencias:', error)
+  }
+}
+
+onMounted(() => {
+  loadPreferences()
+})
 </script>

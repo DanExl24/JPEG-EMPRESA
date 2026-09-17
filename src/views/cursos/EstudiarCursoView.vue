@@ -1384,6 +1384,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -2090,7 +2091,9 @@ const storageKey = computed(() => {
   return `nursing_academy_progress_${apprenticeId}_course_${courseId.value}`
 })
 
-function saveProgress() {
+const apiBaseUrl = getApiBaseUrl()
+
+async function saveProgress() {
   const state = {
     currentPhase: currentPhase.value,
     phaseProgress: phaseProgress.value,
@@ -2114,9 +2117,30 @@ function saveProgress() {
     examAnswers: examAnswers.value,
   }
   localStorage.setItem(storageKey.value, JSON.stringify(state))
+
+  // Persist to backend database if authenticated
+  if (auth.token) {
+    try {
+      await fetch(`${apiBaseUrl}/api/courses/${courseId.value}/progress`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        },
+        body: JSON.stringify({
+          phaseProgress: phaseProgress.value,
+          currentPhase: currentPhase.value,
+          progressPercentage: Math.round(moduleProgress.value),
+          isCompleted: moduleProgress.value === 100
+        })
+      })
+    } catch (err) {
+      console.warn('Backend progress update failed, local storage preserved:', err)
+    }
+  }
 }
 
-function loadProgress() {
+async function loadProgress() {
   try {
     const raw = localStorage.getItem(storageKey.value)
     if (!raw) {
@@ -2129,34 +2153,48 @@ function loadProgress() {
       examPassed.value = false
       showBadgeAward.value = false
       examAnswers.value = {}
-      return
+    } else {
+      const state = JSON.parse(raw)
+      if (state.currentPhase) currentPhase.value = state.currentPhase
+      if (state.phaseProgress) phaseProgress.value = state.phaseProgress
+      if (state.videoCompleted !== undefined) videoCompleted.value = state.videoCompleted
+      if (state.gameSuccess !== undefined) gameSuccess.value = state.gameSuccess
+      if (state.matchedPairs) matchedPairs.value = state.matchedPairs
+      if (state.vocabPlayed) {
+        state.vocabPlayed.forEach(sp => {
+          const item = activeVocabList.value.find(v => v.id === sp.id)
+          if (item) item.played = sp.played
+        })
+      }
+      if (state.profileForm) profileForm.value = state.profileForm
+      if (state.profileFormSuccess !== undefined) profileFormSuccess.value = state.profileFormSuccess
+      if (state.m2Notes) m2Notes.value = state.m2Notes
+      if (state.m2NotesSuccess !== undefined) m2NotesSuccess.value = state.m2NotesSuccess
+      if (state.m3Checklist) m3Checklist.value = state.m3Checklist
+      if (state.m3ChecklistSuccess !== undefined) m3ChecklistSuccess.value = state.m3ChecklistSuccess
+      if (state.m4Summary) m4Summary.value = state.m4Summary
+      if (state.m4SummarySuccess !== undefined) m4SummarySuccess.value = state.m4SummarySuccess
+      if (state.m4CheckAnalysis) m4CheckAnalysis.value = state.m4CheckAnalysis
+      if (state.m4CheckAnalysisSuccess !== undefined) m4CheckAnalysisSuccess.value = state.m4CheckAnalysisSuccess
+      if (state.voiceRecorded !== undefined) voiceRecorded.value = state.voiceRecorded
+      if (state.examPassed !== undefined) examPassed.value = state.examPassed
+      if (state.showBadgeAward !== undefined) showBadgeAward.value = state.showBadgeAward
+      if (state.examAnswers) examAnswers.value = state.examAnswers
     }
-    const state = JSON.parse(raw)
-    if (state.currentPhase) currentPhase.value = state.currentPhase
-    if (state.phaseProgress) phaseProgress.value = state.phaseProgress
-    if (state.videoCompleted !== undefined) videoCompleted.value = state.videoCompleted
-    if (state.gameSuccess !== undefined) gameSuccess.value = state.gameSuccess
-    if (state.matchedPairs) matchedPairs.value = state.matchedPairs
-    if (state.vocabPlayed) {
-      state.vocabPlayed.forEach(sp => {
-        const item = activeVocabList.value.find(v => v.id === sp.id)
-        if (item) item.played = sp.played
+
+    // Try fetching synced progress from database
+    if (auth.token) {
+      const res = await fetch(`${apiBaseUrl}/api/courses/${courseId.value}/progress`, {
+        headers: { 'Authorization': `Bearer ${auth.token}` }
       })
+      if (res.ok) {
+        const dbProgress = await res.json()
+        if (dbProgress && dbProgress.phaseProgress) {
+          phaseProgress.value = { ...phaseProgress.value, ...dbProgress.phaseProgress }
+          if (dbProgress.currentPhase) currentPhase.value = dbProgress.currentPhase
+        }
+      }
     }
-    if (state.profileForm) profileForm.value = state.profileForm
-    if (state.profileFormSuccess !== undefined) profileFormSuccess.value = state.profileFormSuccess
-    if (state.m2Notes) m2Notes.value = state.m2Notes
-    if (state.m2NotesSuccess !== undefined) m2NotesSuccess.value = state.m2NotesSuccess
-    if (state.m3Checklist) m3Checklist.value = state.m3Checklist
-    if (state.m3ChecklistSuccess !== undefined) m3ChecklistSuccess.value = state.m3ChecklistSuccess
-    if (state.m4Summary) m4Summary.value = state.m4Summary
-    if (state.m4SummarySuccess !== undefined) m4SummarySuccess.value = state.m4SummarySuccess
-    if (state.m4CheckAnalysis) m4CheckAnalysis.value = state.m4CheckAnalysis
-    if (state.m4CheckAnalysisSuccess !== undefined) m4CheckAnalysisSuccess.value = state.m4CheckAnalysisSuccess
-    if (state.voiceRecorded !== undefined) voiceRecorded.value = state.voiceRecorded
-    if (state.examPassed !== undefined) examPassed.value = state.examPassed
-    if (state.showBadgeAward !== undefined) showBadgeAward.value = state.showBadgeAward
-    if (state.examAnswers) examAnswers.value = state.examAnswers
   } catch (err) {
     console.error('Error loading progress:', err)
   }

@@ -85,11 +85,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { getApiBaseUrl } from '../../lib/api'
 
+const apiBaseUrl = getApiBaseUrl()
 const searchQuery = ref('')
 const activeLetter = ref(null)
 const expanded = ref(new Set())
+const loading = ref(false)
 
 function toggle(term) {
   if (expanded.value.has(term)) {
@@ -99,7 +102,7 @@ function toggle(term) {
   }
 }
 
-const GLOSSARY = [
+const DEFAULT_GLOSSARY = [
   { term: 'Anamnesis', area: 'Evaluación clínica', definition: 'Historia clínica obtenida a través de la entrevista al paciente o sus familiares. Incluye antecedentes personales, familiares, hábitos y motivo de consulta. Es el primer paso en la evaluación de un paciente.', related: ['Historia clínica', 'Exploración física'], example: 'Una anamnesis completa reveló antecedentes de hipertensión arterial no tratada.' },
   { term: 'Asepsia', area: 'Control de infecciones', definition: 'Ausencia de microorganismos patógenos en un área o material. Se logra mediante técnicas estériles, uso de guantes, mascarillas y desinfección de superficies. Fundamental en procedimientos invasivos.', related: ['Antisepsia', 'Esterilización', 'Desinfección'], example: 'Se mantiene asepsia estricta durante la inserción del catéter venoso central.' },
   { term: 'Bradicardia', area: 'Cardiología', definition: 'Frecuencia cardíaca inferior a 60 latidos por minuto en adultos. Puede ser fisiológica (atletas) o patológica. Los síntomas incluyen mareo, síncope y fatiga.', related: ['Taquicardia', 'Arritmia', 'ECG'], example: 'El paciente presenta bradicardia sinusal con FC de 45 lpm y síncope episódico.' },
@@ -120,13 +123,47 @@ const GLOSSARY = [
   { term: 'Úlcera por presión', area: 'Cuidados', definition: 'Lesión de la piel y tejidos subyacentes causada por presión prolongada sobre prominencias óseas. Se clasifica en 4 estadios según profundidad. La prevención es prioritaria en pacientes inmovilizados.', related: ['Escaras', 'Movilización', 'Apósitos'], example: 'Úlcera por presión estadio II en región sacra. Se inicia protocolo de cambios posturales cada 2 horas.' },
 ]
 
+const glossaryTerms = ref([...DEFAULT_GLOSSARY])
+
+function getToken() {
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
+async function fetchGlossary() {
+  loading.value = true
+  try {
+    const token = getToken()
+    const res = await fetch(`${apiBaseUrl}/api/content/glossary`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    })
+    if (res.ok) {
+      const responseData = await res.json()
+      const list = responseData.data || responseData
+      if (Array.isArray(list) && list.length > 0) {
+        glossaryTerms.value = list
+      }
+    }
+  } catch (error) {
+    console.error('Error al cargar glosario desde backend:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchGlossary()
+})
+
 const alphabet = computed(() => {
-  const letters = [...new Set(GLOSSARY.map(t => t.term[0].toUpperCase()))].sort()
+  const letters = [...new Set(glossaryTerms.value.map(t => t.term[0].toUpperCase()))].sort()
   return letters
 })
 
 const filteredTerms = computed(() => {
-  let terms = [...GLOSSARY].sort((a, b) => a.term.localeCompare(b.term))
+  let terms = [...glossaryTerms.value].sort((a, b) => a.term.localeCompare(b.term))
   if (activeLetter.value) {
     terms = terms.filter(t => t.term[0].toUpperCase() === activeLetter.value)
   }

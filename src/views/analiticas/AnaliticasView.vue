@@ -73,18 +73,21 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { getApiBaseUrl } from '../../lib/api'
 
 const auth = useAuthStore()
+const apiBaseUrl = getApiBaseUrl()
 
-const kpis = [
+const kpis = ref([
   { label: 'Usuarios Activos', value: '1,240', trend: 12 },
   { label: 'Matriculaciones', value: '4,830', trend: 8 },
   { label: 'Tasa Finalización', value: '64%', trend: 3 },
   { label: 'Satisfacción', value: '4.7 ★', trend: 5 },
-]
+])
 
-const monthData = [
+const monthData = ref([
   { month: 'Ene', count: 120 },
   { month: 'Feb', count: 145 },
   { month: 'Mar', count: 180 },
@@ -97,14 +100,36 @@ const monthData = [
   { month: 'Oct', count: 245 },
   { month: 'Nov', count: 190 },
   { month: 'Dic', count: 160 },
-]
+])
 
-const tableData = [
+const tableData = ref([
   { course: 'Fundamentos de Enfermería', enrolled: 340, completed: 272, rate: 80 },
   { course: 'Farmacología Clínica', enrolled: 215, completed: 129, rate: 60 },
   { course: 'Cuidados Críticos UCI', enrolled: 98, completed: 39, rate: 40 },
   { course: 'Salud Mental y Psiquiatría', enrolled: 178, completed: 142, rate: 80 },
   { course: 'Atención Materno-Infantil', enrolled: 262, completed: 236, rate: 90 },
   { course: 'Urgencias y Emergencias', enrolled: 143, completed: 57, rate: 40 },
-]
+])
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/admin/analytics`, {
+      headers: auth.token ? { 'Authorization': `Bearer ${auth.token}` } : {}
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data.kpis) && data.kpis.length > 0) {
+        kpis.value = data.kpis
+      }
+      if (Array.isArray(data.monthData) && data.monthData.length > 0) {
+        monthData.value = data.monthData
+      }
+      if (Array.isArray(data.tableData) && data.tableData.length > 0) {
+        tableData.value = data.tableData
+      }
+    }
+  } catch (err) {
+    console.warn('Could not fetch analytics from backend, using defaults:', err)
+  }
+})
 </script>

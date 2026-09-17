@@ -27,8 +27,6 @@ dist-ssr
 
 backend/prisma/db.sqlite
 
-docs/
-
 .env
 
 # Deprecated SQLite files

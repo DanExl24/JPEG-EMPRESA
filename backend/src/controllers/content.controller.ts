@@ -1,172 +1,142 @@
-import type { Request, Response } from 'express'
-import prisma from '../lib/db.js'
-import type { CreateVocabularyDto, CreateDialogueDto } from '../types/dtos.js'
+import type { Request, Response, NextFunction } from 'express'
+import { ContentService } from '../services/content.service.js'
+import { ApiResponse } from '../utils/apiResponse.js'
+import { BadRequestError } from '../utils/appError.js'
 
 // --- VOCABULARY ---
-export async function getVocabulary(_req: Request, res: Response): Promise<void> {
+export async function getVocabulary(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const list = await prisma.vocabulary.findMany()
-    res.json(list)
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al listar vocabulario.', error: errorObj.message })
+    const category = req.query.category as string | undefined
+    const search = req.query.search as string | undefined
+    const list = await ContentService.getVocabulary(category, search)
+    ApiResponse.success(res, list)
+  } catch (err) {
+    next(err)
   }
 }
 
-export async function createVocabularyTerm(req: Request<unknown, unknown, CreateVocabularyDto>, res: Response): Promise<void> {
+export async function createVocabularyTerm(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { wordEn, wordEs, category, definition, example } = req.body || {}
-    if (!wordEn || !wordEs || !category || !definition) {
-      res.status(400).json({ message: 'Los campos en inglés, español, categoría y definición son obligatorios.' })
-      return
-    }
-
-    const created = await prisma.vocabulary.create({
-      data: { wordEn, wordEs, category, definition, example }
-    })
-    res.status(201).json(created)
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al crear término de vocabulario.', error: errorObj.message })
+    const created = await ContentService.createVocabulary(req.body)
+    ApiResponse.created(res, created, 'Término de vocabulario creado.')
+  } catch (err) {
+    next(err)
   }
 }
 
-export async function updateVocabularyTerm(req: Request<{ id: string }, unknown, Partial<CreateVocabularyDto>>, res: Response): Promise<void> {
+export async function updateVocabularyTerm(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { id } = req.params
-    const { wordEn, wordEs, category, definition, example } = req.body || {}
-    if (!wordEn || !wordEs || !category || !definition) {
-      res.status(400).json({ message: 'Los campos en inglés, español, categoría y definición son obligatorios.' })
-      return
-    }
-
-    const updated = await prisma.vocabulary.update({
-      where: { id: parseInt(id) },
-      data: { wordEn, wordEs, category, definition, example }
-    })
-    res.json(updated)
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al actualizar término de vocabulario.', error: errorObj.message })
+    const id = Number(req.params.id)
+    if (isNaN(id)) throw new BadRequestError('ID inválido.')
+    const updated = await ContentService.updateVocabulary(id, req.body)
+    ApiResponse.success(res, updated, 'Término de vocabulario actualizado.')
+  } catch (err) {
+    next(err)
   }
 }
 
-export async function deleteVocabularyTerm(req: Request<{ id: string }>, res: Response): Promise<void> {
+export async function deleteVocabularyTerm(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { id } = req.params
-    await prisma.vocabulary.delete({
-      where: { id: parseInt(id) }
-    })
-    res.json({ message: 'Término de vocabulario eliminado correctamente.' })
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al eliminar término de vocabulario.', error: errorObj.message })
+    const id = Number(req.params.id)
+    if (isNaN(id)) throw new BadRequestError('ID inválido.')
+    await ContentService.deleteVocabulary(id)
+    ApiResponse.success(res, { id }, 'Término de vocabulario eliminado correctamente.')
+  } catch (err) {
+    next(err)
+  }
+}
+
+// --- GLOSSARY (GlosarioView.vue) ---
+export async function getGlossary(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const letter = req.query.letter as string | undefined
+    const search = req.query.search as string | undefined
+    const list = await ContentService.getGlossary(letter, search)
+    ApiResponse.success(res, list)
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function createGlossaryTerm(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const created = await ContentService.createGlossaryTerm(req.body)
+    ApiResponse.created(res, created, 'Concepto de glosario creado.')
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function updateGlossaryTerm(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = Number(req.params.id)
+    if (isNaN(id)) throw new BadRequestError('ID inválido.')
+    const updated = await ContentService.updateGlossaryTerm(id, req.body)
+    ApiResponse.success(res, updated, 'Concepto de glosario actualizado.')
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function deleteGlossaryTerm(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = Number(req.params.id)
+    if (isNaN(id)) throw new BadRequestError('ID inválido.')
+    await ContentService.deleteGlossaryTerm(id)
+    ApiResponse.success(res, { id }, 'Concepto de glosario eliminado correctamente.')
+  } catch (err) {
+    next(err)
   }
 }
 
 // --- DIALOGUES ---
-export async function getDialogues(_req: Request, res: Response): Promise<void> {
+export async function getDialogues(_req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const list = await prisma.dialogue.findMany({
-      orderBy: { createdAt: 'desc' }
-    })
-    res.json(list)
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al listar diálogos.', error: errorObj.message })
+    const list = await ContentService.getDialogues()
+    ApiResponse.success(res, list)
+  } catch (err) {
+    next(err)
   }
 }
 
-export async function getDialogueById(req: Request<{ id: string }>, res: Response): Promise<void> {
+export async function getDialogueById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { id } = req.params
-    const item = await prisma.dialogue.findUnique({
-      where: { id: parseInt(id) }
-    })
-    if (!item) {
-      res.status(404).json({ message: 'Diálogo no encontrado.' })
-      return
-    }
-    res.json(item)
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al obtener diálogo.', error: errorObj.message })
+    const id = Number(req.params.id)
+    if (isNaN(id)) throw new BadRequestError('ID inválido.')
+    const item = await ContentService.getDialogueById(id)
+    ApiResponse.success(res, item)
+  } catch (err) {
+    next(err)
   }
 }
 
-export async function createDialogue(req: Request<unknown, unknown, CreateDialogueDto>, res: Response): Promise<void> {
+export async function createDialogue(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { title, description, content } = req.body || {}
-    if (!title || !content) {
-      res.status(400).json({ message: 'El título y el contenido son obligatorios.' })
-      return
-    }
-
-    try {
-      const parsed = typeof content === 'string' ? JSON.parse(content) : content
-      if (!Array.isArray(parsed)) throw new Error('El contenido del diálogo debe ser una lista de líneas.')
-    } catch (e: unknown) {
-      const errorObj = e as Error
-      res.status(400).json({ message: 'Contenido de diálogo inválido. Debe ser una lista JSON.', error: errorObj.message })
-      return
-    }
-
-    const created = await prisma.dialogue.create({
-      data: {
-        title,
-        description,
-        content: typeof content === 'string' ? content : JSON.stringify(content)
-      }
-    })
-    res.status(201).json(created)
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al crear diálogo.', error: errorObj.message })
+    const created = await ContentService.createDialogue(req.body)
+    ApiResponse.created(res, created, 'Diálogo creado exitosamente.')
+  } catch (err) {
+    next(err)
   }
 }
 
-export async function updateDialogue(req: Request<{ id: string }, unknown, Partial<CreateDialogueDto>>, res: Response): Promise<void> {
+export async function updateDialogue(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { id } = req.params
-    const { title, description, content } = req.body || {}
-    if (!title || !content) {
-      res.status(400).json({ message: 'El título y el contenido son obligatorios.' })
-      return
-    }
-
-    try {
-      const parsed = typeof content === 'string' ? JSON.parse(content) : content
-      if (!Array.isArray(parsed)) throw new Error('El contenido debe ser una lista de líneas.')
-    } catch (e: unknown) {
-      const errorObj = e as Error
-      res.status(400).json({ message: 'Contenido de diálogo inválido.', error: errorObj.message })
-      return
-    }
-
-    const updated = await prisma.dialogue.update({
-      where: { id: parseInt(id) },
-      data: {
-        title,
-        description,
-        content: typeof content === 'string' ? content : JSON.stringify(content)
-      }
-    })
-    res.json(updated)
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al actualizar diálogo.', error: errorObj.message })
+    const id = Number(req.params.id)
+    if (isNaN(id)) throw new BadRequestError('ID inválido.')
+    const updated = await ContentService.updateDialogue(id, req.body)
+    ApiResponse.success(res, updated, 'Diálogo actualizado exitosamente.')
+  } catch (err) {
+    next(err)
   }
 }
 
-export async function deleteDialogue(req: Request<{ id: string }>, res: Response): Promise<void> {
+export async function deleteDialogue(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { id } = req.params
-    await prisma.dialogue.delete({
-      where: { id: parseInt(id) }
-    })
-    res.json({ message: 'Diálogo eliminado correctamente.' })
-  } catch (err: unknown) {
-    const errorObj = err as Error
-    res.status(500).json({ message: 'Error al eliminar diálogo.', error: errorObj.message })
+    const id = Number(req.params.id)
+    if (isNaN(id)) throw new BadRequestError('ID inválido.')
+    await ContentService.deleteDialogue(id)
+    ApiResponse.success(res, { id }, 'Diálogo eliminado correctamente.')
+  } catch (err) {
+    next(err)
   }
 }

@@ -600,8 +600,42 @@ async function fetchActivities() {
   }
 }
 
-onMounted(() => {
-  fetchActivities()
+async function fetchCourses() {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/courses`)
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0) {
+        // Merge with existing course properties to preserve icons and layout colors if needed
+        courses.value = data.map((c, i) => {
+          const fallback = courses.value[i] || courses.value[0] || {}
+          return {
+            ...fallback,
+            ...c,
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            duration: c.duration || fallback.duration || '10h',
+            category: c.category || fallback.category || 'Básico',
+            students: c.students !== undefined ? c.students : (fallback.students || 100),
+            icon: c.icon || fallback.icon || 'medical_services',
+            iconColor: c.iconColor || fallback.iconColor || '#006688',
+            bg: c.bg || fallback.bg || 'bg-teal-50',
+            categoryBg: c.categoryBg || fallback.categoryBg || 'bg-teal-100',
+            categoryText: c.categoryText || fallback.categoryText || 'text-teal-700',
+            progress: c.progress || 0
+          }
+        })
+      }
+    }
+  } catch (err) {
+    console.warn('Backend courses unavailable, using fallback courses:', err)
+  }
+}
+
+onMounted(async () => {
+  await fetchCourses()
+  await fetchActivities()
   const apprenticeId = auth.user?.id || 'guest'
   courses.value.forEach(course => {
     try {
@@ -924,62 +958,80 @@ function selectIcon(ico) {
   form.value.categoryBg = ico.catBg
 }
 
-function saveCourse() {
+async function saveCourse() {
   if (!form.value.title.trim()) return
 
-  if (editingCourse.value) {
-    // Edit Mode: update in array
-    const idx = courses.value.findIndex(c => c.id === editingCourse.value.id)
-    if (idx >= 0) {
-      courses.value[idx] = {
-        ...courses.value[idx],
-        title: form.value.title,
-        description: form.value.description,
-        category: form.value.category,
-        duration: form.value.duration,
-        icon: form.value.icon,
-        iconColor: form.value.iconColor,
-        bg: form.value.bg,
-        categoryText: form.value.categoryText,
-        categoryBg: form.value.categoryBg,
-        f1_welcome: form.value.f1_welcome,
-        f1_gameWords: form.value.f1_gameWords,
-        f2_grammar: form.value.f2_grammar,
-        f2_vocabulary: form.value.f2_vocabulary,
-        f3_fillBlank: form.value.f3_fillBlank,
-        f3_voiceTarget: form.value.f3_voiceTarget,
-        f4_q: form.value.f4_q,
-        f4_correct: form.value.f4_correct,
-        f4_incorrect: form.value.f4_incorrect,
+  const coursePayload = {
+    title: form.value.title,
+    description: form.value.description,
+    category: form.value.category,
+    duration: form.value.duration,
+    icon: form.value.icon,
+    iconColor: form.value.iconColor,
+    bg: form.value.bg,
+    categoryText: form.value.categoryText,
+    categoryBg: form.value.categoryBg,
+    f1_welcome: form.value.f1_welcome,
+    f1_gameWords: form.value.f1_gameWords,
+    f2_grammar: form.value.f2_grammar,
+    f2_vocabulary: form.value.f2_vocabulary,
+    f3_fillBlank: form.value.f3_fillBlank,
+    f3_voiceTarget: form.value.f3_voiceTarget,
+    f4_q: form.value.f4_q,
+    f4_correct: form.value.f4_correct,
+    f4_incorrect: form.value.f4_incorrect,
+  }
+
+  try {
+    if (editingCourse.value) {
+      // Edit Mode
+      const res = await fetch(`${apiBaseUrl}/api/courses/${editingCourse.value.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(coursePayload)
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        const idx = courses.value.findIndex(c => c.id === editingCourse.value.id)
+        if (idx >= 0) courses.value[idx] = { ...courses.value[idx], ...updated }
+      }
+    } else {
+      // Create Mode
+      const res = await fetch(`${apiBaseUrl}/api/courses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(coursePayload)
+      })
+      if (res.ok) {
+        const created = await res.json()
+        courses.value.push(created)
       }
     }
-  } else {
-    // Add Mode: push to array
+  } catch (err) {
+    console.warn('Backend saveCourse failed, persisting to local state:', err)
+  }
+
+  // Ensure local state reflects changes regardless
+  if (editingCourse.value) {
+    const idx = courses.value.findIndex(c => c.id === editingCourse.value.id)
+    if (idx >= 0) {
+      courses.value[idx] = { ...courses.value[idx], ...coursePayload }
+    }
+  } else if (!courses.value.some(c => c.title === form.value.title)) {
     const newId = courses.value.length ? Math.max(...courses.value.map(c => c.id)) + 1 : 1
     courses.value.push({
       id: newId,
-      title: form.value.title,
-      description: form.value.description,
-      category: form.value.category,
-      duration: form.value.duration,
-      icon: form.value.icon,
-      iconColor: form.value.iconColor,
-      bg: form.value.bg,
-      categoryText: form.value.categoryText,
-      categoryBg: form.value.categoryBg,
+      ...coursePayload,
       students: 0,
       progress: 0,
-      f1_welcome: form.value.f1_welcome,
-      f1_gameWords: form.value.f1_gameWords,
-      f2_grammar: form.value.f2_grammar,
-      f2_vocabulary: form.value.f2_vocabulary,
-      f3_fillBlank: form.value.f3_fillBlank,
-      f3_voiceTarget: form.value.f3_voiceTarget,
-      f4_q: form.value.f4_q,
-      f4_correct: form.value.f4_correct,
-      f4_incorrect: form.value.f4_incorrect,
     })
   }
+
+  notificationStore.notify({
+    type: 'success',
+    title: 'Curso Guardado',
+    message: 'La estructura pedagógica del curso ha sido actualizada con éxito.'
+  })
 
   showModal.value = false
 }
