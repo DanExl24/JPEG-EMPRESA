@@ -310,6 +310,7 @@ model ArcadeGame {
   pts         Int      @default(100)
   duration    String   @default("5 min")
   active      Boolean  @default(true)
+  config      Json?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 

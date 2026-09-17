@@ -799,12 +799,13 @@
 
 
     <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- ── MODAL DE CREACIÓN / EDICIÓN DE MINIJUEGO (ADMIN) ───────────── -->
+    <!-- ── MODAL DE CREACIÓN / EDICIÓN DE MINIJUEGO (ADMIN & INSTRUCTOR) ─ -->
     <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <div v-if="showGameModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
-      <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 space-y-6 my-8">
+    <div v-if="showGameModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in">
+      <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-7 shadow-2xl border border-gray-100 space-y-5 my-6 max-h-[92vh] flex flex-col">
         
-        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3 flex-shrink-0">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl bg-[#006688]/10 text-[#006688] flex items-center justify-center">
               <span class="material-symbols-outlined text-xl">{{ isEditingGame ? 'edit' : 'add_circle' }}</span>
@@ -813,7 +814,7 @@
               <h3 class="font-black text-gray-800 text-lg">
                 {{ isEditingGame ? 'Editar Minijuego' : 'Crear Nuevo Minijuego' }}
               </h3>
-              <p class="text-xs text-gray-400">Configura los parámetros pedagógicos y de gamificación.</p>
+              <p class="text-xs text-gray-400">Personaliza la dinámica pedagógica, preguntas y vocabulario del juego.</p>
             </div>
           </div>
           <button @click="showGameModal = false" class="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
@@ -821,125 +822,598 @@
           </button>
         </div>
 
-        <form @submit.prevent="saveGameForm" class="space-y-4 text-xs">
-          <!-- Nombre del Juego -->
-          <div class="space-y-1">
-            <label class="font-bold text-gray-700">Nombre del Minijuego *</label>
-            <input 
-              v-model="gameForm.name" 
-              type="text" 
-              required
-              placeholder="Ej: Trivia Médica de Farmacología" 
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
-            />
-          </div>
+        <!-- Selector de Pestañas del Modal -->
+        <div class="flex items-center gap-2 border-b border-gray-100 pb-3 flex-shrink-0">
+          <button 
+            type="button"
+            @click="modalTab = 'general'"
+            :class="`px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+              modalTab === 'general' 
+                ? 'bg-[#006688] text-white shadow-sm' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`"
+          >
+            <span class="material-symbols-outlined text-base">tune</span>
+            1. Ajustes Generales
+          </button>
 
-          <!-- Subtítulo -->
-          <div class="space-y-1">
-            <label class="font-bold text-gray-700">Subtítulo / Especialidad</label>
-            <input 
-              v-model="gameForm.subtitle" 
-              type="text" 
-              placeholder="Ej: Desafío de cálculo de dosis y antibióticos" 
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
-            />
-          </div>
+          <button 
+            type="button"
+            @click="modalTab = 'interactive'"
+            :class="`px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+              modalTab === 'interactive' 
+                ? 'bg-[#006688] text-white shadow-sm' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`"
+          >
+            <span class="material-symbols-outlined text-base">extension</span>
+            2. Dinámica & Contenido ({{ getTemplateLabel(gameForm.template) }})
+            <span class="ml-1 px-1.5 py-0.5 text-[10px] rounded-full font-black" :class="modalTab === 'interactive' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'">
+              {{ getContentItemsCount() }}
+            </span>
+          </button>
+        </div>
 
-          <!-- Descripción -->
-          <div class="space-y-1">
-            <label class="font-bold text-gray-700">Descripción Pedagógica *</label>
-            <textarea 
-              v-model="gameForm.description" 
-              rows="2"
-              required
-              placeholder="Explica a los aprendices en qué consiste la dinámica..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
-            ></textarea>
-          </div>
-
-          <!-- Mecánica / Plantilla de Juego -->
-          <div class="space-y-1">
-            <label class="font-bold text-gray-700">Mecánica Interactiva (Plantilla) *</label>
-            <select 
-              v-model="gameForm.template"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
-            >
-              <option value="trivia_medica">Trivia Médica Contrarreloj (Preguntas de opción múltiple)</option>
-              <option value="drug_match">Pares Clínicos / Speed Match (Tablero de emparejar tarjetas)</option>
-              <option value="listening_challenge">Desafío de Escucha Fonética (Audio y reconocimiento)</option>
-              <option value="warmup_drag_match">Warm-up Drag Match (Calentamiento con iconos y términos)</option>
-            </select>
-          </div>
-
-          <!-- Puntos XP y Dificultad -->
-          <div class="grid grid-cols-2 gap-3">
+        <!-- Form Body con Scroll -->
+        <form @submit.prevent="saveGameForm" class="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
+          
+          <!-- PESTAÑA 1: AJUSTES GENERALES -->
+          <div v-show="modalTab === 'general'" class="space-y-4">
+            <!-- Nombre del Juego -->
             <div class="space-y-1">
-              <label class="font-bold text-gray-700">Puntos XP Otorgados *</label>
+              <label class="font-bold text-gray-700">Nombre del Minijuego *</label>
               <input 
-                v-model.number="gameForm.pts" 
-                type="number" 
-                min="10" 
-                max="500" 
-                step="5"
-                required
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
-              />
-            </div>
-
-            <div class="space-y-1">
-              <label class="font-bold text-gray-700">Nivel de Dificultad</label>
-              <select 
-                v-model="gameForm.difficulty"
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
-              >
-                <option value="Fácil">Fácil</option>
-                <option value="Medio">Medio</option>
-                <option value="Difícil">Difícil</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Duración y Estado Activo -->
-          <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="font-bold text-gray-700">Duración Estimada</label>
-              <input 
-                v-model="gameForm.duration" 
+                v-model="gameForm.name" 
                 type="text" 
-                placeholder="Ej: 5 min"
+                required
+                placeholder="Ej: Trivia Médica de Farmacología" 
                 class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
               />
             </div>
 
+            <!-- Subtítulo -->
             <div class="space-y-1">
-              <label class="font-bold text-gray-700">Estado Inicial</label>
+              <label class="font-bold text-gray-700">Subtítulo / Especialidad</label>
+              <input 
+                v-model="gameForm.subtitle" 
+                type="text" 
+                placeholder="Ej: Desafío de cálculo de dosis y antibióticos" 
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+              />
+            </div>
+
+            <!-- Mecánica / Plantilla de Juego -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="font-bold text-gray-700">Mecánica Interactiva (Plantilla) *</label>
+                <span class="text-[11px] text-gray-400">Define el motor interactivo que ejecutará el juego</span>
+              </div>
               <select 
-                v-model="gameForm.active"
+                v-model="gameForm.template"
+                @change="onTemplateChange"
                 class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
               >
-                <option :value="true">Activo (Visible para aprendices)</option>
-                <option :value="false">Pausado (Oculto para aprendices)</option>
+                <option value="trivia_medica">Trivia Médica Contrarreloj (Preguntas de opción múltiple)</option>
+                <option value="drug_match">Pares Clínicos / Speed Match (Tablero de emparejar tarjetas)</option>
+                <option value="listening_challenge">Desafío de Escucha Fonética (Audio y reconocimiento)</option>
+                <option value="warmup_drag_match">Warm-up Drag Match (Calentamiento con iconos y términos)</option>
               </select>
             </div>
+
+            <!-- Descripción -->
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Descripción Pedagógica *</label>
+              <textarea 
+                v-model="gameForm.description" 
+                rows="2"
+                required
+                placeholder="Explica a los aprendices en qué consiste la dinámica..."
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+              ></textarea>
+            </div>
+
+            <!-- Puntos XP y Dificultad -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="font-bold text-gray-700">Puntos XP Otorgados *</label>
+                <input 
+                  v-model.number="gameForm.pts" 
+                  type="number" 
+                  min="10" 
+                  max="500" 
+                  step="5" 
+                  required
+                  class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label class="font-bold text-gray-700">Nivel de Dificultad</label>
+                <select 
+                  v-model="gameForm.difficulty"
+                  class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
+                >
+                  <option value="Fácil">Fácil</option>
+                  <option value="Medio">Medio</option>
+                  <option value="Difícil">Difícil</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Duración y Estado Activo -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="font-bold text-gray-700">Duración Estimada</label>
+                <input 
+                  v-model="gameForm.duration" 
+                  type="text" 
+                  placeholder="Ej: 5 min"
+                  class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label class="font-bold text-gray-700">Estado Inicial</label>
+                <select 
+                  v-model="gameForm.active"
+                  class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
+                >
+                  <option :value="true">Activo (Visible para aprendices)</option>
+                  <option :value="false">Pausado (Oculto para aprendices)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Banner Guía hacia pestaña 2 -->
+            <div class="p-3.5 bg-blue-50/80 border border-blue-100 rounded-2xl flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 text-blue-900">
+                <span class="material-symbols-outlined text-lg text-[#006688]">lightbulb</span>
+                <span class="text-xs font-semibold">
+                  Personaliza las preguntas, tarjetas o audios en la siguiente pestaña.
+                </span>
+              </div>
+              <button 
+                type="button" 
+                @click="modalTab = 'interactive'"
+                class="px-3 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1 cursor-pointer flex-shrink-0"
+              >
+                Personalizar Contenido
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- PESTAÑA 2: DINÁMICA & CONTENIDO INTERACTIVO -->
+          <div v-show="modalTab === 'interactive'" class="space-y-4">
+            
+            <!-- Barra de Herramientas del Editor Interactivo -->
+            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-2xl border border-gray-200 flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-800">Contenido:</span>
+                <span class="px-2.5 py-1 bg-white border border-gray-200 rounded-lg font-bold text-[#006688]">
+                  {{ getTemplateLabel(gameForm.template) }}
+                </span>
+                <span class="text-gray-400">({{ getContentItemsCount() }} elementos)</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button 
+                  type="button"
+                  @click="resetInteractiveConfigToDefault"
+                  class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  title="Cargar plantilla de preguntas o términos sugeridos"
+                >
+                  <span class="material-symbols-outlined text-sm text-[#006688]">restart_alt</span>
+                  Cargar Sugeridos
+                </button>
+              </div>
+            </div>
+
+            <!-- SUB-EDITOR: TRIVIA MÉDICA -->
+            <div v-if="gameForm.template === 'trivia_medica'" class="space-y-3">
+              <div 
+                v-for="(q, qIdx) in gameForm.config.questions" 
+                :key="qIdx"
+                class="p-4 bg-gray-50/70 border border-gray-200 rounded-2xl space-y-3 relative group"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-[#006688] text-xs flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">quiz</span>
+                    Pregunta #{{ qIdx + 1 }}
+                  </span>
+                  <button 
+                    type="button" 
+                    @click="removeTriviaQuestion(qIdx)"
+                    :disabled="gameForm.config.questions.length <= 1"
+                    class="text-gray-400 hover:text-red-500 transition-colors p-1 disabled:opacity-30 cursor-pointer"
+                    title="Eliminar pregunta"
+                  >
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+
+                <!-- Enunciado de la pregunta -->
+                <div class="space-y-1">
+                  <label class="font-bold text-gray-700">Enunciado de la Pregunta *</label>
+                  <input 
+                    v-model="q.question" 
+                    type="text" 
+                    required
+                    placeholder="Ej: ¿Cuál es el significado clínico de 'Blood pressure'?" 
+                    class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold text-gray-800 focus:border-[#006688] focus:outline-none"
+                  />
+                </div>
+
+                <!-- Respuesta Correcta -->
+                <div class="space-y-1">
+                  <label class="font-bold text-emerald-700 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    Respuesta Correcta *
+                  </label>
+                  <input 
+                    v-model="q.correctAnswer" 
+                    type="text" 
+                    required
+                    placeholder="Ej: Presión arterial" 
+                    class="w-full bg-emerald-50/50 border border-emerald-300 rounded-xl px-3 py-2 font-bold text-emerald-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <!-- Opciones Distractoras -->
+                <div class="space-y-1">
+                  <label class="font-bold text-gray-600 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">cancel</span>
+                    3 Opciones Incorrectas (Distractores) *
+                  </label>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input 
+                      v-model="q.options[1]" 
+                      type="text" 
+                      required
+                      placeholder="Distractor 1" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 font-medium text-gray-700 focus:border-[#006688] focus:outline-none"
+                    />
+                    <input 
+                      v-model="q.options[2]" 
+                      type="text" 
+                      required
+                      placeholder="Distractor 2" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 font-medium text-gray-700 focus:border-[#006688] focus:outline-none"
+                    />
+                    <input 
+                      v-model="q.options[3]" 
+                      type="text" 
+                      required
+                      placeholder="Distractor 3" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 font-medium text-gray-700 focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <!-- Pista y Categoría -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div class="space-y-1">
+                    <label class="font-bold text-gray-500">Categoría Pedagógica</label>
+                    <input 
+                      v-model="q.category" 
+                      type="text" 
+                      placeholder="Ej: Signos Vitales, Farmacología" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-gray-700 focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="font-bold text-gray-500">Pista Pedagógica (Opcional)</label>
+                    <input 
+                      v-model="q.hint" 
+                      type="text" 
+                      placeholder="Ej: Fuerza ejercida por la sangre contra las arterias" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-gray-700 focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                @click="addTriviaQuestion"
+                class="w-full py-2.5 border-2 border-dashed border-[#006688]/30 hover:border-[#006688] hover:bg-blue-50/50 text-[#006688] font-bold rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-base">add_circle</span>
+                Agregar Nueva Pregunta a la Trivia
+              </button>
+            </div>
+
+            <!-- SUB-EDITOR: PARES CLÍNICOS (SPEED MATCH) -->
+            <div v-else-if="gameForm.template === 'drug_match'" class="space-y-3">
+              <div class="text-[11px] text-gray-500 bg-orange-50/60 border border-orange-200 p-2.5 rounded-xl flex items-center gap-2">
+                <span class="material-symbols-outlined text-orange-600 text-sm">info</span>
+                <span>Configura al menos 4 a 6 parejas para una experiencia de emparejamiento completa.</span>
+              </div>
+
+              <div class="space-y-2">
+                <div 
+                  v-for="(p, pIdx) in gameForm.config.pairs" 
+                  :key="pIdx"
+                  class="p-3 bg-gray-50 border border-gray-200 rounded-2xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
+                >
+                  <div class="sm:col-span-1 text-center font-black text-gray-400">
+                    #{{ pIdx + 1 }}
+                  </div>
+                  <div class="sm:col-span-4">
+                    <input 
+                      v-model="p.wordEn" 
+                      type="text" 
+                      required
+                      placeholder="Término en Inglés *" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 font-bold text-gray-800 focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                  <div class="sm:col-span-4">
+                    <input 
+                      v-model="p.wordEs" 
+                      type="text" 
+                      required
+                      placeholder="Traducción en Español *" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 font-semibold text-gray-700 focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                  <div class="sm:col-span-2">
+                    <input 
+                      v-model="p.category" 
+                      type="text" 
+                      placeholder="Categoría" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2 py-1.5 text-xs text-gray-600 focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                  <div class="sm:col-span-1 text-right">
+                    <button 
+                      type="button" 
+                      @click="removeMatchPair(pIdx)"
+                      :disabled="gameForm.config.pairs.length <= 2"
+                      class="text-gray-400 hover:text-red-500 p-1 disabled:opacity-30 cursor-pointer"
+                      title="Eliminar pareja"
+                    >
+                      <span class="material-symbols-outlined text-base">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                @click="addMatchPair"
+                class="w-full py-2.5 border-2 border-dashed border-orange-300 hover:border-orange-500 hover:bg-orange-50/50 text-orange-700 font-bold rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-base">add_circle</span>
+                Agregar Nueva Pareja de Términos
+              </button>
+            </div>
+
+            <!-- SUB-EDITOR: DESAFÍO DE ESCUCHA FONÉTICA -->
+            <div v-else-if="gameForm.template === 'listening_challenge'" class="space-y-3">
+              <div 
+                v-for="(item, iIdx) in gameForm.config.items" 
+                :key="iIdx"
+                class="p-4 bg-gray-50/70 border border-gray-200 rounded-2xl space-y-3"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-purple-700 text-xs flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">hearing</span>
+                    Término Auditivo #{{ iIdx + 1 }}
+                  </span>
+                  <button 
+                    type="button" 
+                    @click="removeListeningItem(iIdx)"
+                    :disabled="gameForm.config.items.length <= 1"
+                    class="text-gray-400 hover:text-red-500 p-1 disabled:opacity-30 cursor-pointer"
+                    title="Eliminar término"
+                  >
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="space-y-1">
+                    <label class="font-bold text-gray-700 flex items-center justify-between">
+                      <span>Palabra o Frase en Inglés (Audio) *</span>
+                      <button 
+                        type="button" 
+                        @click="playAudioTerm(item.wordEn)" 
+                        class="text-purple-600 hover:text-purple-800 font-bold flex items-center gap-0.5 cursor-pointer"
+                        title="Escuchar cómo se pronuncia"
+                      >
+                        <span class="material-symbols-outlined text-sm">volume_up</span>
+                        Probar
+                      </button>
+                    </label>
+                    <input 
+                      v-model="item.wordEn" 
+                      type="text" 
+                      required
+                      placeholder="Ej: Stethoscope" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-bold text-purple-900 focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="font-bold text-gray-700">Traducción Clínica en Español *</label>
+                    <input 
+                      v-model="item.wordEs" 
+                      type="text" 
+                      required
+                      placeholder="Ej: Estetoscopio" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold text-gray-800 focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <label class="font-bold text-gray-600">3 Opciones Distractoras *</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input 
+                      v-model="item.options[1]" 
+                      type="text" 
+                      required
+                      placeholder="Distractor 1" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-gray-700 focus:border-purple-500 focus:outline-none"
+                    />
+                    <input 
+                      v-model="item.options[2]" 
+                      type="text" 
+                      required
+                      placeholder="Distractor 2" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-gray-700 focus:border-purple-500 focus:outline-none"
+                    />
+                    <input 
+                      v-model="item.options[3]" 
+                      type="text" 
+                      required
+                      placeholder="Distractor 3" 
+                      class="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-gray-700 focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                @click="addListeningItem"
+                class="w-full py-2.5 border-2 border-dashed border-purple-300 hover:border-purple-500 hover:bg-purple-50/50 text-purple-700 font-bold rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-base">add_circle</span>
+                Agregar Término Auditivo
+              </button>
+            </div>
+
+            <!-- SUB-EDITOR: WARM-UP DRAG MATCH -->
+            <div v-else-if="gameForm.template === 'warmup_drag_match'" class="space-y-4">
+              <div 
+                v-for="(round, rIdx) in gameForm.config.rounds" 
+                :key="rIdx"
+                class="p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-3"
+              >
+                <div class="flex items-center justify-between border-b border-gray-200 pb-2">
+                  <div class="flex items-center gap-2 flex-1 mr-2">
+                    <span class="font-black text-blue-700 text-xs">Ronda #{{ rIdx + 1 }}:</span>
+                    <input 
+                      v-model="round.theme" 
+                      type="text" 
+                      required
+                      placeholder="Título temático de la ronda" 
+                      class="bg-white border border-gray-200 rounded-xl px-2.5 py-1 font-bold text-gray-800 flex-1 text-xs focus:border-[#006688] focus:outline-none"
+                    />
+                  </div>
+                  <button 
+                    type="button" 
+                    @click="removeDragRound(rIdx)"
+                    :disabled="gameForm.config.rounds.length <= 1"
+                    class="text-gray-400 hover:text-red-500 p-1 disabled:opacity-30 cursor-pointer"
+                    title="Eliminar ronda"
+                  >
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="font-bold text-gray-600 block">Elementos Arrastrables y sus Destinos:</label>
+                  <div 
+                    v-for="(it, itIdx) in round.items" 
+                    :key="itIdx"
+                    class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-200"
+                  >
+                    <div class="sm:col-span-4">
+                      <input 
+                        v-model="it.label" 
+                        type="text" 
+                        required
+                        placeholder="Etiqueta / Nombre *" 
+                        class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-semibold text-gray-800 focus:border-[#006688] focus:outline-none"
+                      />
+                    </div>
+                    <div class="sm:col-span-2 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-gray-500 text-sm">{{ it.icon || 'star' }}</span>
+                      <input 
+                        v-model="it.icon" 
+                        type="text" 
+                        placeholder="Icono" 
+                        class="w-full bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-1 text-gray-600 text-[11px] focus:border-[#006688] focus:outline-none"
+                      />
+                    </div>
+                    <div class="sm:col-span-5">
+                      <input 
+                        v-model="it.match" 
+                        type="text" 
+                        required
+                        placeholder="Expresión en inglés objetivo *" 
+                        class="w-full bg-blue-50/50 border border-blue-200 rounded-lg px-2 py-1 font-bold text-blue-900 focus:border-[#006688] focus:outline-none"
+                      />
+                    </div>
+                    <div class="sm:col-span-1 text-right">
+                      <button 
+                        type="button" 
+                        @click="removeDragItemFromRound(round, itIdx)"
+                        :disabled="round.items.length <= 1"
+                        class="text-gray-400 hover:text-red-500 p-1 disabled:opacity-30 cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  type="button" 
+                  @click="addDragItemToRound(round)"
+                  class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#006688] font-bold rounded-xl text-xs transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-sm">add</span>
+                  Agregar Elemento a la Ronda
+                </button>
+              </div>
+
+              <button 
+                type="button" 
+                @click="addDragRound"
+                class="w-full py-2.5 border-2 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50/50 text-[#006688] font-bold rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-base">add_circle</span>
+                Agregar Nueva Ronda de Calentamiento
+              </button>
+            </div>
+
           </div>
 
           <!-- Botones de Acción Modal -->
-          <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-            <button 
-              type="button" 
-              @click="showGameModal = false"
-              class="px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              :disabled="savingGame"
-              class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <span class="material-symbols-outlined text-base">save</span>
-              {{ isEditingGame ? 'Guardar Cambios' : 'Crear Minijuego' }}
-            </button>
+          <div class="flex items-center justify-between gap-3 pt-3 border-t border-gray-100 flex-shrink-0">
+            <div>
+              <button 
+                v-if="modalTab === 'interactive'"
+                type="button"
+                @click="modalTab = 'general'"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                Atrás
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button 
+                type="button" 
+                @click="showGameModal = false"
+                class="px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                :disabled="savingGame"
+                class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <span class="material-symbols-outlined text-base">save</span>
+                {{ isEditingGame ? 'Guardar Cambios' : 'Crear Minijuego' }}
+              </button>
+            </div>
           </div>
         </form>
 
@@ -1061,12 +1535,98 @@ const activeArcadeGamesForApprentice = computed(() => {
 const gameFinished = ref(false)
 
 // ─────────────────────────────────────────────────────────────
-// CRUD MODAL STATE
+// CRUD MODAL STATE & INTERACTIVE CONFIG
 // ─────────────────────────────────────────────────────────────
 const showGameModal = ref(false)
 const isEditingGame = ref(false)
 const editingGameId = ref(null)
 const savingGame = ref(false)
+const modalTab = ref('general') // 'general' | 'interactive'
+
+function getDefaultConfigForTemplate(template) {
+  if (template === 'trivia_medica') {
+    return {
+      questions: [
+        {
+          id: 1,
+          question: '¿Cuál es el significado clínico en español de "Blood pressure"?',
+          correctAnswer: 'Presión arterial',
+          options: ['Presión arterial', 'Frecuencia cardíaca', 'Temperatura corporal', 'Frecuencia respiratoria'],
+          category: 'Signos Vitales',
+          hint: 'Fuerza ejercida por la sangre contra las paredes arteriales.'
+        },
+        {
+          id: 2,
+          question: '¿Cuál es el término en inglés para "Estetoscopio"?',
+          correctAnswer: 'Stethoscope',
+          options: ['Stethoscope', 'Sphygmomanometer', 'Pulse oximeter', 'Syringe'],
+          category: 'Equipos',
+          hint: 'Instrumento para auscultar sonidos cardíacos y pulmonares.'
+        },
+        {
+          id: 3,
+          question: '¿Cuál es el significado en español de "Heart rate"?',
+          correctAnswer: 'Frecuencia cardíaca',
+          options: ['Frecuencia cardíaca', 'Presión venosa', 'Saturación de oxígeno', 'Frecuencia respiratoria'],
+          category: 'Signos Vitales',
+          hint: 'Número de latidos del corazón por minuto.'
+        },
+        {
+          id: 4,
+          question: '¿Cuál es el término en inglés para "Tensiómetro"?',
+          correctAnswer: 'Sphygmomanometer',
+          options: ['Sphygmomanometer', 'Stethoscope', 'Thermometer', 'Wheelchair'],
+          category: 'Equipos',
+          hint: 'Aparato utilizado para medir la presión sanguínea.'
+        }
+      ]
+    }
+  } else if (template === 'drug_match') {
+    return {
+      pairs: [
+        { id: 1, wordEn: 'Blood pressure', wordEs: 'Presión arterial', category: 'Signos' },
+        { id: 2, wordEn: 'Stethoscope', wordEs: 'Estetoscopio', category: 'Equipos' },
+        { id: 3, wordEn: 'Heart rate', wordEs: 'Frecuencia cardíaca', category: 'Signos' },
+        { id: 4, wordEn: 'Syringe', wordEs: 'Jeringa', category: 'Equipos' },
+        { id: 5, wordEn: 'Painkiller', wordEs: 'Analgésico', category: 'Farmacología' },
+        { id: 6, wordEn: 'Wheelchair', wordEs: 'Silla de ruedas', category: 'Movilidad' }
+      ]
+    }
+  } else if (template === 'listening_challenge') {
+    return {
+      items: [
+        { id: 1, wordEn: 'Blood pressure', wordEs: 'Presión arterial', options: ['Blood pressure', 'Heart rate', 'Body temperature', 'Respiratory rate'] },
+        { id: 2, wordEn: 'Stethoscope', wordEs: 'Estetoscopio', options: ['Stethoscope', 'Sphygmomanometer', 'Pulse oximeter', 'Wheelchair'] },
+        { id: 3, wordEn: 'Pulse oximeter', wordEs: 'Pulsioxímetro', options: ['Pulse oximeter', 'Thermometer', 'Stethoscope', 'Syringe'] },
+        { id: 4, wordEn: 'Wheelchair', wordEs: 'Silla de ruedas', options: ['Wheelchair', 'Ambulance', 'Emergency bed', 'Crutches'] }
+      ]
+    }
+  } else if (template === 'warmup_drag_match') {
+    return {
+      rounds: [
+        {
+          id: 1,
+          theme: 'Saludos Diarios y Horas del Día (Daily Greetings)',
+          items: [
+            { id: 'r1-1', label: 'Sol de Mañana', icon: 'wb_sunny', color: 'text-amber-500', match: 'Good morning' },
+            { id: 'r1-2', label: 'Sol de Tarde', icon: 'light_mode', color: 'text-orange-500', match: 'Good afternoon' },
+            { id: 'r1-3', label: 'Luna y Estrellas', icon: 'bedtime', color: 'text-indigo-400', match: 'Good evening' }
+          ]
+        },
+        {
+          id: 2,
+          theme: 'Presentaciones y Recepción en Clínica (Introductions)',
+          items: [
+            { id: 'r2-1', label: 'Tarjeta del Enfermero', icon: 'badge', color: 'text-blue-500', match: 'I am your nurse' },
+            { id: 'r2-2', label: 'Apretón de Manos', icon: 'handshake', color: 'text-teal-500', match: 'Nice to meet you' },
+            { id: 'r2-3', label: 'Signo de Ayuda', icon: 'help', color: 'text-purple-500', match: 'How can I help you?' }
+          ]
+        }
+      ]
+    }
+  }
+  return {}
+}
 
 const gameForm = ref({
   name: '',
@@ -1077,26 +1637,147 @@ const gameForm = ref({
   difficulty: 'Medio',
   duration: '5 min',
   active: true,
-  icon: 'sports_esports',
-  color: 'text-blue-500',
-  bg: 'bg-blue-50'
+  icon: 'quiz',
+  color: 'text-emerald-500',
+  bg: 'bg-emerald-50',
+  config: getDefaultConfigForTemplate('trivia_medica')
 })
+
+function getTemplateLabel(template) {
+  if (template === 'trivia_medica') return 'Trivia Médica'
+  if (template === 'drug_match') return 'Pares Clínicos'
+  if (template === 'listening_challenge') return 'Desafío de Escucha'
+  if (template === 'warmup_drag_match') return 'Warm-up Drag Match'
+  return 'Juego'
+}
+
+function getContentItemsCount() {
+  if (!gameForm.value.config) return 0
+  if (gameForm.value.template === 'trivia_medica') {
+    return gameForm.value.config.questions?.length || 0
+  }
+  if (gameForm.value.template === 'drug_match') {
+    return gameForm.value.config.pairs?.length || 0
+  }
+  if (gameForm.value.template === 'listening_challenge') {
+    return gameForm.value.config.items?.length || 0
+  }
+  if (gameForm.value.template === 'warmup_drag_match') {
+    return gameForm.value.config.rounds?.length || 0
+  }
+  return 0
+}
+
+function onTemplateChange() {
+  gameForm.value.config = getDefaultConfigForTemplate(gameForm.value.template)
+}
+
+function resetInteractiveConfigToDefault() {
+  gameForm.value.config = getDefaultConfigForTemplate(gameForm.value.template)
+  notificationStore.notify({
+    type: 'info',
+    title: 'Plantilla Sugerida Cargada',
+    message: 'Se cargó el contenido sugerido para este minijuego.'
+  })
+}
+
+// Sub-editor Helpers: TRIVIA
+function addTriviaQuestion() {
+  if (!gameForm.value.config.questions) gameForm.value.config.questions = []
+  gameForm.value.config.questions.push({
+    id: Date.now(),
+    question: '',
+    correctAnswer: '',
+    options: ['', '', '', ''],
+    category: 'Clínica General',
+    hint: ''
+  })
+}
+
+function removeTriviaQuestion(index) {
+  gameForm.value.config.questions.splice(index, 1)
+}
+
+// Sub-editor Helpers: PARES CLÍNICOS
+function addMatchPair() {
+  if (!gameForm.value.config.pairs) gameForm.value.config.pairs = []
+  gameForm.value.config.pairs.push({
+    id: Date.now(),
+    wordEn: '',
+    wordEs: '',
+    category: 'Vocabulario'
+  })
+}
+
+function removeMatchPair(index) {
+  gameForm.value.config.pairs.splice(index, 1)
+}
+
+// Sub-editor Helpers: LISTENING
+function addListeningItem() {
+  if (!gameForm.value.config.items) gameForm.value.config.items = []
+  gameForm.value.config.items.push({
+    id: Date.now(),
+    wordEn: '',
+    wordEs: '',
+    options: ['', '', '', '']
+  })
+}
+
+function removeListeningItem(index) {
+  gameForm.value.config.items.splice(index, 1)
+}
+
+// Sub-editor Helpers: DRAG MATCH
+function addDragRound() {
+  if (!gameForm.value.config.rounds) gameForm.value.config.rounds = []
+  gameForm.value.config.rounds.push({
+    id: Date.now(),
+    theme: 'Nueva Ronda Temática',
+    items: [
+      { id: `r-${Date.now()}-1`, label: 'Termómetro', icon: 'thermostat', color: 'text-red-500', match: 'Thermometer' },
+      { id: `r-${Date.now()}-2`, label: 'Estetoscopio', icon: 'stethoscope', color: 'text-[#006688]', match: 'Stethoscope' }
+    ]
+  })
+}
+
+function removeDragRound(index) {
+  gameForm.value.config.rounds.splice(index, 1)
+}
+
+function addDragItemToRound(round) {
+  if (!round.items) round.items = []
+  round.items.push({
+    id: `r-${Date.now()}`,
+    label: '',
+    icon: 'medication',
+    color: 'text-emerald-500',
+    match: ''
+  })
+}
+
+function removeDragItemFromRound(round, itemIndex) {
+  round.items.splice(itemIndex, 1)
+}
 
 function openCreateGameModal() {
   isEditingGame.value = false
   editingGameId.value = null
+  modalTab.value = 'general'
+  const template = 'trivia_medica'
   gameForm.value = {
     name: '',
     subtitle: '',
     description: '',
-    template: 'trivia_medica',
+    template,
     pts: 100,
     difficulty: 'Medio',
     duration: '5 min',
     active: true,
-    icon: 'sports_esports',
-    color: 'text-blue-500',
-    bg: 'bg-blue-50'
+    icon: 'quiz',
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-50',
+    config: getDefaultConfigForTemplate(template)
   }
   showGameModal.value = true
 }
@@ -1104,6 +1785,21 @@ function openCreateGameModal() {
 function openEditGameModal(game) {
   isEditingGame.value = true
   editingGameId.value = game.id
+  modalTab.value = 'general'
+
+  let loadedConfig = null
+  if (game.config) {
+    try {
+      loadedConfig = typeof game.config === 'string' ? JSON.parse(game.config) : JSON.parse(JSON.stringify(game.config))
+    } catch {
+      loadedConfig = null
+    }
+  }
+
+  if (!loadedConfig || Object.keys(loadedConfig).length === 0) {
+    loadedConfig = getDefaultConfigForTemplate(game.template || 'trivia_medica')
+  }
+
   gameForm.value = {
     name: game.name || '',
     subtitle: game.subtitle || '',
@@ -1115,7 +1811,8 @@ function openEditGameModal(game) {
     active: game.active !== false,
     icon: game.icon || 'sports_esports',
     color: game.color || 'text-blue-500',
-    bg: game.bg || 'bg-blue-50'
+    bg: game.bg || 'bg-blue-50',
+    config: loadedConfig
   }
   showGameModal.value = true
 }
@@ -1135,6 +1832,13 @@ async function saveGameForm() {
       gameForm.value.icon = 'quiz'
       gameForm.value.color = 'text-emerald-500'
       gameForm.value.bg = 'bg-emerald-50'
+      // Sincronizar respuesta correcta como opción 0
+      if (gameForm.value.config?.questions) {
+        gameForm.value.config.questions.forEach((q) => {
+          if (!q.options) q.options = []
+          q.options[0] = q.correctAnswer
+        })
+      }
     } else if (gameForm.value.template === 'drug_match') {
       gameForm.value.icon = 'medication'
       gameForm.value.color = 'text-orange-500'
@@ -1143,6 +1847,12 @@ async function saveGameForm() {
       gameForm.value.icon = 'hearing'
       gameForm.value.color = 'text-purple-500'
       gameForm.value.bg = 'bg-purple-50'
+      if (gameForm.value.config?.items) {
+        gameForm.value.config.items.forEach((item) => {
+          if (!item.options) item.options = []
+          item.options[0] = item.wordEn
+        })
+      }
     } else if (gameForm.value.template === 'warmup_drag_match') {
       gameForm.value.icon = 'pan_tool'
       gameForm.value.color = 'text-blue-500'
@@ -1166,7 +1876,7 @@ async function saveGameForm() {
     notificationStore.notify({
       type: 'success',
       title: isEditingGame.value ? 'Juego Actualizado' : 'Juego Creado',
-      message: 'Los cambios fueron guardados exitosamente.'
+      message: 'Los cambios y la dinámica pedagógica fueron guardados con éxito.'
     })
 
     showGameModal.value = false
@@ -1342,14 +2052,18 @@ function launchGame(gameOrKey) {
   activeEngine.value = game?.template || keyOrTemplate
   gameFinished.value = false
 
+  const customConfig = game?.config
+    ? (typeof game.config === 'string' ? JSON.parse(game.config) : game.config)
+    : null
+
   if (activeEngine.value === 'warmup_drag_match') {
-    resetDragGame()
+    resetDragGame(customConfig)
   } else if (activeEngine.value === 'trivia_medica') {
-    resetTriviaGame()
+    resetTriviaGame(customConfig)
   } else if (activeEngine.value === 'drug_match') {
-    resetMatchGame()
+    resetMatchGame(customConfig)
   } else if (activeEngine.value === 'listening_challenge') {
-    resetListeningGame()
+    resetListeningGame(customConfig)
   }
 }
 
@@ -1410,7 +2124,7 @@ async function recordFinalScore(scoreAwarded, roundsCount = 4) {
 // MOTOR 1: WARM-UP DRAG MATCH (LÓGICA)
 // ─────────────────────────────────────────────────────────────
 const currentRoundIndex = ref(0)
-const rounds = [
+const DEFAULT_DRAG_ROUNDS = [
   {
     id: 1,
     theme: 'Saludos Diarios y Horas del Día (Daily Greetings)',
@@ -1449,10 +2163,11 @@ const rounds = [
   }
 ]
 
+const activeRounds = ref([...DEFAULT_DRAG_ROUNDS])
 const currentRoundCards = ref([])
 const currentRoundTargets = ref([])
 
-const currentRound = computed(() => rounds[currentRoundIndex.value] || rounds[0])
+const currentRound = computed(() => activeRounds.value[currentRoundIndex.value] || activeRounds.value[0])
 const isRoundCompleted = computed(() => currentRoundCards.value.length > 0 && currentRoundCards.value.every(c => c.matched))
 
 const activeDragCard = ref(null)
@@ -1463,7 +2178,7 @@ let initialCardY = 0
 
 function initDragRound(index) {
   currentRoundIndex.value = index
-  const round = rounds[index]
+  const round = activeRounds.value[index]
   if (!round) return
 
   currentRoundTargets.value = round.items.map(item => ({
@@ -1477,7 +2192,7 @@ function initDragRound(index) {
     id: item.id,
     label: item.label,
     icon: item.icon,
-    color: item.color,
+    color: item.color || 'text-[#006688]',
     match: item.match,
     matched: false,
     x: 0,
@@ -1487,14 +2202,19 @@ function initDragRound(index) {
 }
 
 function nextDragRound() {
-  if (currentRoundIndex.value < rounds.length - 1) {
+  if (currentRoundIndex.value < activeRounds.value.length - 1) {
     initDragRound(currentRoundIndex.value + 1)
   } else {
-    recordFinalScore(100, 4)
+    recordFinalScore(100, activeRounds.value.length)
   }
 }
 
-function resetDragGame() {
+function resetDragGame(customConfig) {
+  if (customConfig?.rounds && Array.isArray(customConfig.rounds) && customConfig.rounds.length > 0) {
+    activeRounds.value = JSON.parse(JSON.stringify(customConfig.rounds))
+  } else {
+    activeRounds.value = JSON.parse(JSON.stringify(DEFAULT_DRAG_ROUNDS))
+  }
   gameFinished.value = false
   initDragRound(0)
 }
@@ -1608,7 +2328,18 @@ const triviaSelectedOption = ref('')
 
 const currentTriviaQ = computed(() => triviaList.value[triviaCurrentIdx.value])
 
-function resetTriviaGame() {
+function resetTriviaGame(customConfig) {
+  if (customConfig?.questions && Array.isArray(customConfig.questions) && customConfig.questions.length > 0) {
+    triviaList.value = customConfig.questions.map((q, idx) => {
+      const allOpts = [q.correctAnswer, ...(q.options?.slice(1) || [])].filter(Boolean)
+      const shuffledOpts = [...allOpts].sort(() => Math.random() - 0.5)
+      return {
+        ...q,
+        id: q.id || idx + 1,
+        options: shuffledOpts.length > 0 ? shuffledOpts : [q.correctAnswer]
+      }
+    })
+  }
   triviaCurrentIdx.value = 0
   triviaScore.value = 0
   triviaCorrectCount.value = 0
@@ -1647,7 +2378,7 @@ const matchPairsFound = ref(0)
 const totalPairsCount = ref(6)
 
 function setupMatchCardsFromData(vocabPairs) {
-  const selected = (vocabPairs && vocabPairs.length >= 6) ? vocabPairs.slice(0, 6) : [
+  const selected = (vocabPairs && vocabPairs.length >= 2) ? vocabPairs : [
     { id: 1, wordEn: 'Blood pressure', wordEs: 'Presión arterial' },
     { id: 2, wordEn: 'Stethoscope', wordEs: 'Estetoscopio' },
     { id: 3, wordEn: 'Heart rate', wordEs: 'Frecuencia cardíaca' },
@@ -1679,11 +2410,15 @@ function setupMatchCardsFromData(vocabPairs) {
   matchCards.value = cards.sort(() => Math.random() - 0.5)
 }
 
-function resetMatchGame() {
+function resetMatchGame(customConfig) {
   matchPairsFound.value = 0
   selectedMatchCards.value = []
   gameFinished.value = false
-  setupMatchCardsFromData()
+  if (customConfig?.pairs && Array.isArray(customConfig.pairs) && customConfig.pairs.length > 0) {
+    setupMatchCardsFromData(customConfig.pairs)
+  } else {
+    setupMatchCardsFromData()
+  }
 }
 
 function handleMatchCardClick(card) {
@@ -1733,7 +2468,18 @@ const listeningSelectedOption = ref('')
 
 const currentListenItem = computed(() => listeningList.value[listeningCurrentIdx.value])
 
-function resetListeningGame() {
+function resetListeningGame(customConfig) {
+  if (customConfig?.items && Array.isArray(customConfig.items) && customConfig.items.length > 0) {
+    listeningList.value = customConfig.items.map((it, idx) => {
+      const allOpts = [it.wordEn, ...(it.options?.slice(1) || [])].filter(Boolean)
+      const shuffled = [...allOpts].sort(() => Math.random() - 0.5)
+      return {
+        ...it,
+        id: it.id || idx + 1,
+        options: shuffled.length > 0 ? shuffled : [it.wordEn]
+      }
+    })
+  }
   listeningCurrentIdx.value = 0
   listeningCorrectCount.value = 0
   listeningAnswered.value = false

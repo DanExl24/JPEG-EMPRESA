@@ -480,7 +480,8 @@ export class GamificationService {
         difficulty: data.difficulty || 'Medio',
         pts: Number(data.pts) || 100,
         duration: data.duration || '5 min',
-        active: data.active !== undefined ? Boolean(data.active) : true
+        active: data.active !== undefined ? Boolean(data.active) : true,
+        config: data.config ? data.config : null
       }
     })
   }
@@ -499,7 +500,8 @@ export class GamificationService {
         ...(data.difficulty && { difficulty: data.difficulty }),
         ...(data.pts !== undefined && { pts: Number(data.pts) }),
         ...(data.duration && { duration: data.duration }),
-        ...(data.active !== undefined && { active: Boolean(data.active) })
+        ...(data.active !== undefined && { active: Boolean(data.active) }),
+        ...(data.config !== undefined && { config: data.config })
       }
     })
   }

@@ -446,7 +446,47 @@ export const DEFAULT_ARCADE_GAMES = [
     difficulty: 'Fácil',
     pts: 100,
     duration: '3 min',
-    active: true
+    active: true,
+    config: {
+      rounds: [
+        {
+          id: 1,
+          theme: 'Saludos Diarios y Horas del Día (Daily Greetings)',
+          items: [
+            { id: 'r1-1', label: 'Sol de Mañana', icon: 'wb_sunny', color: 'text-amber-500', match: 'Good morning' },
+            { id: 'r1-2', label: 'Sol de Tarde', icon: 'light_mode', color: 'text-orange-500', match: 'Good afternoon' },
+            { id: 'r1-3', label: 'Luna y Estrellas', icon: 'bedtime', color: 'text-indigo-400', match: 'Good evening' }
+          ]
+        },
+        {
+          id: 2,
+          theme: 'Presentaciones y Recepción en Clínica (Introductions)',
+          items: [
+            { id: 'r2-1', label: 'Tarjeta del Enfermero', icon: 'badge', color: 'text-blue-500', match: 'I am your nurse' },
+            { id: 'r2-2', label: 'Apretón de Manos', icon: 'handshake', color: 'text-teal-500', match: 'Nice to meet you' },
+            { id: 'r2-3', label: 'Signo de Ayuda', icon: 'help', color: 'text-purple-500', match: 'How can I help you?' }
+          ]
+        },
+        {
+          id: 3,
+          theme: 'Reporte de Síntomas del Paciente (Symptoms)',
+          items: [
+            { id: 'r3-1', label: 'Termómetro Elevado', icon: 'thermostat', color: 'text-red-500', match: 'High fever' },
+            { id: 'r3-2', label: 'Rayo de Dolor', icon: 'bolt', color: 'text-yellow-500', match: 'Acute pain' },
+            { id: 'r3-3', label: 'Espiral de Mareo', icon: 'cyclone', color: 'text-indigo-500', match: 'Dizziness' }
+          ]
+        },
+        {
+          id: 4,
+          theme: 'Material y Herramientas Clínicas (Clinical Equipment)',
+          items: [
+            { id: 'r4-1', label: 'Estetoscopio', icon: 'stethoscope', color: 'text-[#006688]', match: 'Stethoscope' },
+            { id: 'r4-2', label: 'Jeringa', icon: 'medication', color: 'text-emerald-500', match: 'Syringe' },
+            { id: 'r4-3', label: 'Venda Médica', icon: 'healing', color: 'text-pink-500', match: 'Bandage' }
+          ]
+        }
+      ]
+    }
   },
   {
     key: 'trivia_medica',
@@ -460,7 +500,51 @@ export const DEFAULT_ARCADE_GAMES = [
     difficulty: 'Medio',
     pts: 100,
     duration: '5 min',
-    active: true
+    active: true,
+    config: {
+      questions: [
+        {
+          id: 1,
+          question: '¿Cuál es el significado clínico en español de "Blood pressure"?',
+          correctAnswer: 'Presión arterial',
+          options: ['Presión arterial', 'Frecuencia cardíaca', 'Temperatura corporal', 'Frecuencia respiratoria'],
+          category: 'Signos Vitales',
+          hint: 'Fuerza ejercida por la sangre contra las paredes arteriales.'
+        },
+        {
+          id: 2,
+          question: '¿Cuál es el término en inglés para "Estetoscopio"?',
+          correctAnswer: 'Stethoscope',
+          options: ['Stethoscope', 'Sphygmomanometer', 'Pulse oximeter', 'Syringe'],
+          category: 'Equipos',
+          hint: 'Instrumento para auscultar sonidos cardíacos y pulmonares.'
+        },
+        {
+          id: 3,
+          question: '¿Cuál es el significado en español de "Heart rate"?',
+          correctAnswer: 'Frecuencia cardíaca',
+          options: ['Frecuencia cardíaca', 'Presión venosa', 'Saturación de oxígeno', 'Frecuencia respiratoria'],
+          category: 'Signos Vitales',
+          hint: 'Número de latidos del corazón por minuto.'
+        },
+        {
+          id: 4,
+          question: '¿Cuál es el término en inglés para "Tensiómetro"?',
+          correctAnswer: 'Sphygmomanometer',
+          options: ['Sphygmomanometer', 'Stethoscope', 'Thermometer', 'Wheelchair'],
+          category: 'Equipos',
+          hint: 'Aparato utilizado para medir la presión sanguínea.'
+        },
+        {
+          id: 5,
+          question: '¿Cuál es el significado de "Oxygen saturation"?',
+          correctAnswer: 'Saturación de oxígeno',
+          options: ['Saturación de oxígeno', 'Capacidad pulmonar', 'Tasa respiratoria', 'Monitoreo de pulso'],
+          category: 'Signos Vitales',
+          hint: 'Medida de la cantidad de oxígeno en sangre.'
+        }
+      ]
+    }
   },
   {
     key: 'drug_match',
@@ -474,7 +558,17 @@ export const DEFAULT_ARCADE_GAMES = [
     difficulty: 'Medio',
     pts: 80,
     duration: '4 min',
-    active: true
+    active: true,
+    config: {
+      pairs: [
+        { id: 1, wordEn: 'Blood pressure', wordEs: 'Presión arterial', category: 'Signos' },
+        { id: 2, wordEn: 'Stethoscope', wordEs: 'Estetoscopio', category: 'Equipos' },
+        { id: 3, wordEn: 'Heart rate', wordEs: 'Frecuencia cardíaca', category: 'Signos' },
+        { id: 4, wordEn: 'Syringe', wordEs: 'Jeringa', category: 'Equipos' },
+        { id: 5, wordEn: 'Painkiller', wordEs: 'Analgésico', category: 'Farmacología' },
+        { id: 6, wordEn: 'Wheelchair', wordEs: 'Silla de ruedas', category: 'Movilidad' }
+      ]
+    }
   },
   {
     key: 'listening_challenge',
@@ -488,7 +582,15 @@ export const DEFAULT_ARCADE_GAMES = [
     difficulty: 'Difícil',
     pts: 80,
     duration: '4 min',
-    active: true
+    active: true,
+    config: {
+      items: [
+        { id: 1, wordEn: 'Blood pressure', wordEs: 'Presión arterial', options: ['Blood pressure', 'Heart rate', 'Body temperature', 'Respiratory rate'] },
+        { id: 2, wordEn: 'Stethoscope', wordEs: 'Estetoscopio', options: ['Stethoscope', 'Sphygmomanometer', 'Pulse oximeter', 'Wheelchair'] },
+        { id: 3, wordEn: 'Pulse oximeter', wordEs: 'Pulsioxímetro', options: ['Pulse oximeter', 'Thermometer', 'Stethoscope', 'Syringe'] },
+        { id: 4, wordEn: 'Wheelchair', wordEs: 'Silla de ruedas', options: ['Wheelchair', 'Ambulance', 'Emergency bed', 'Crutches'] }
+      ]
+    }
   }
 ]
 
