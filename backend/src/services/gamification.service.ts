@@ -1,7 +1,7 @@
 import prisma from '../lib/db.js'
 import type { RecordGameScoreDto, LeaderboardEntryDto } from '../types/gamification.types.js'
 import { DEFAULT_ARCADE_GAMES } from '../lib/bootstrapAuth.js'
-import { NotFoundError, BadRequestError } from '../utils/appError.js'
+import { NotFoundError, BadRequestError, ConflictError } from '../utils/appError.js'
 
 export const BADGE_CATALOG = [
   { key: 'primer_paso',       name: 'Primer Paso',        description: 'Completaste tu primera actividad',    iconEmoji: '🎯', xpRequired: 1   },
@@ -209,6 +209,24 @@ export class GamificationService {
       throw new BadRequestError('El XP requerido debe ser un número mayor o igual a 0.')
     }
 
+    const targetXp = Number(xpRequired)
+
+    // Validar que no exista otra insignia con la misma meta de XP
+    const existingWithSameXp = await prisma.badge.findFirst({
+      where: { xpRequired: targetXp }
+    })
+    if (existingWithSameXp) {
+      throw new ConflictError(`Ya existe la insignia "${existingWithSameXp.name}" configurada para la misma meta de ${targetXp} XP. Cada insignia debe tener un hito de XP único.`)
+    }
+
+    // Validar nombre duplicado
+    const existingWithName = await prisma.badge.findFirst({
+      where: { name: { equals: name.trim(), mode: 'insensitive' } }
+    })
+    if (existingWithName) {
+      throw new ConflictError(`Ya existe una insignia registrada con el nombre "${existingWithName.name}".`)
+    }
+
     // Generar slug key único
     let baseKey = (data.key || name)
       .toLowerCase()
@@ -233,7 +251,7 @@ export class GamificationService {
         name: name.trim(),
         description: description.trim(),
         iconEmoji: singleEmoji,
-        xpRequired: Number(xpRequired)
+        xpRequired: targetXp
       }
     })
 
@@ -241,7 +259,7 @@ export class GamificationService {
     const eligibleUsers = await prisma.user.findMany({
       where: {
         rol: 'APRENDIZ',
-        xp: { gte: Number(xpRequired) }
+        xp: { gte: targetXp }
       },
       select: { id: true }
     })
@@ -267,6 +285,33 @@ export class GamificationService {
   }) {
     const existing = await prisma.badge.findUnique({ where: { id } })
     if (!existing) throw new NotFoundError(`Insignia #${id} no encontrada.`)
+
+    // Validar si el nuevo XP ya está ocupado por otra insignia
+    if (data.xpRequired !== undefined) {
+      const targetXp = Number(data.xpRequired)
+      const existingWithSameXp = await prisma.badge.findFirst({
+        where: {
+          xpRequired: targetXp,
+          NOT: { id }
+        }
+      })
+      if (existingWithSameXp) {
+        throw new ConflictError(`Ya existe la insignia "${existingWithSameXp.name}" configurada para la misma meta de ${targetXp} XP. Cada insignia debe tener un hito de XP único.`)
+      }
+    }
+
+    // Validar si el nuevo nombre ya está ocupado por otra insignia
+    if (data.name) {
+      const existingWithName = await prisma.badge.findFirst({
+        where: {
+          name: { equals: data.name.trim(), mode: 'insensitive' },
+          NOT: { id }
+        }
+      })
+      if (existingWithName) {
+        throw new ConflictError(`Ya existe una insignia registrada con el nombre "${existingWithName.name}".`)
+      }
+    }
 
     const updated = await prisma.badge.update({
       where: { id },

@@ -425,6 +425,12 @@
               class="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all font-mono font-bold"
             />
 
+            <!-- Warning si el XP ya está tomado -->
+            <p v-if="duplicateXpBadge" class="text-xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm text-red-500">warning</span>
+              Este hito de XP ya está asignado a "{{ duplicateXpBadge.name }}". Elige un valor único.
+            </p>
+
             <!-- Botones de incremento rápido -->
             <div class="flex items-center gap-1.5 mt-2 overflow-x-auto pb-1">
               <button
@@ -436,8 +442,11 @@
                   'px-2.5 py-1 text-xs rounded-lg font-semibold transition-all shrink-0',
                   form.xpRequired === step
                     ? 'bg-amber-500 text-white shadow-sm'
+                    : isXpTaken(step)
+                    ? 'bg-gray-100 text-gray-400 line-through'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 ]"
+                :title="isXpTaken(step) ? `Ocupado por ${getXpOwner(step)}` : `Asignar ${step} XP`"
               >
                 {{ step }} XP
               </button>
@@ -793,12 +802,36 @@ function closeModal() {
   form.id = null
 }
 
+const duplicateXpBadge = computed(() => {
+  if (form.xpRequired === undefined || form.xpRequired === null) return null
+  const targetXp = Number(form.xpRequired)
+  return adminBadges.value.find((b) => b.xpRequired === targetXp && b.id !== form.id) || null
+})
+
+function isXpTaken(step) {
+  return adminBadges.value.some((b) => b.xpRequired === step && b.id !== form.id)
+}
+
+function getXpOwner(step) {
+  const badge = adminBadges.value.find((b) => b.xpRequired === step && b.id !== form.id)
+  return badge ? badge.name : ''
+}
+
 async function handleSubmit() {
   if (!form.name.trim() || !form.description.trim()) {
     notificationStore.notify({
       type: 'warning',
       title: 'Campos requeridos',
       message: 'Por favor ingresa nombre y descripción para la insignia.'
+    })
+    return
+  }
+
+  if (duplicateXpBadge.value) {
+    notificationStore.notify({
+      type: 'warning',
+      title: 'Hito de XP duplicado',
+      message: `Ya existe la insignia "${duplicateXpBadge.value.name}" con ${form.xpRequired} XP. Cada insignia debe tener una meta de XP única.`
     })
     return
   }
