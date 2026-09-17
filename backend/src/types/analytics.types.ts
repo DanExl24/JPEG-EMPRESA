@@ -21,6 +21,8 @@ export interface AnalyticsSummaryDto {
   kpis: KpiCardDto[]
   monthlyEnrollments: MonthlyMetricDto[]
   completionRates: CourseCompletionMetricDto[]
+  monthData?: MonthlyMetricDto[]
+  tableData?: CourseCompletionMetricDto[]
 }
 
 export interface DashboardSummaryDto {

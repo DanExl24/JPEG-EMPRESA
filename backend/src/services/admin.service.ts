@@ -165,7 +165,7 @@ export class AdminService {
     if (!existing) throw new NotFoundError(`Usuario #${id} no encontrado.`)
 
     await prisma.activitySubmission.deleteMany({ where: { apprenticeId: id } })
-    await prisma.evaluation.deleteMany({ where: { apprenticeId: id } })
+    await prisma.evaluation.deleteMany({ where: { apprentice_id: id } })
     await prisma.userBadge.deleteMany({ where: { userId: id } })
     await prisma.courseProgress.deleteMany({ where: { userId: id } })
     await prisma.gameScore.deleteMany({ where: { userId: id } })

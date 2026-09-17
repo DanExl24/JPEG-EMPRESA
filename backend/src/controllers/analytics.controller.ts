@@ -6,7 +6,7 @@ export class AnalyticsController {
   static async getAnalytics(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await AnalyticsService.getAnalytics()
-      ApiResponse.success(res, data)
+      res.json(data)
     } catch (error) {
       next(error)
     }
@@ -16,7 +16,7 @@ export class AnalyticsController {
     try {
       const userId = req.user?.id ? Number(req.user.id) : undefined
       const data = await AnalyticsService.getDashboardSummary(userId)
-      ApiResponse.success(res, data)
+      res.json(data)
     } catch (error) {
       next(error)
     }

@@ -179,8 +179,11 @@ export const useAuthStore = defineStore('auth', () => {
     return labels[role.value] || 'Usuario'
   })
 
+  const token = computed(() => user.value?.token || '')
+
   return {
     user: safeUser,
+    token,
     role,
     roleLabel,
     isAdmin,

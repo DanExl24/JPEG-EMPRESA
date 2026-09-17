@@ -45,8 +45,18 @@ export interface AuthSuccessResponse {
     id: number
     nombre: string
     apellido: string
+    name?: string
     cedula: string
     correo: string | null
     role: string
+    rol?: string
+    email?: string | null
+    xp?: number
   }
 }
+
+export type LoginRequestBody = LoginDto
+export type RegisterRequestBody = RegisterDto
+export type UserAuthDto = AuthSuccessResponse['user']
+export type UserRoleBackend = 'ADMIN' | 'INSTRUCTOR' | 'APRENDIZ'
+export type JwtPayloadAuth = JwtTokenPayload

@@ -1,6 +1,7 @@
 import prisma from '../lib/db.js'
 import { NotFoundError, BadRequestError } from '../utils/appError.js'
 import type { CreateCourseDto, UpdateCourseDto, SaveCourseProgressDto } from '../types/course.types.js'
+import { GamificationService } from './gamification.service.js'
 
 export class CourseService {
   /**

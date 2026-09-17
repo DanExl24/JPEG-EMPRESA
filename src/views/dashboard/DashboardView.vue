@@ -122,11 +122,22 @@ const recentActivity = ref([
 
 onMounted(async () => {
   try {
-    const res = await fetch(`${apiBaseUrl}/api/dashboard/summary`, {
-      headers: auth.token ? { 'Authorization': `Bearer ${auth.token}` } : {}
-    })
+    const rawToken = auth.token || auth.user?.token
+    const token = typeof rawToken === 'string' ? rawToken : (rawToken && typeof rawToken === 'object' && 'value' in rawToken ? rawToken.value : '')
+    const authToken = token || (() => {
+      try {
+        const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+        return stored ? JSON.parse(stored)?.token : ''
+      } catch {
+        return ''
+      }
+    })()
+
+    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {}
+    const res = await fetch(`${apiBaseUrl}/api/dashboard/summary`, { headers })
     if (res.ok) {
-      const data = await res.json()
+      const json = await res.json()
+      const data = json?.data || json
       if (Array.isArray(data.stats) && data.stats.length > 0) {
         visibleStats.value = data.stats
       }
