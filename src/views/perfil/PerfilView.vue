@@ -51,11 +51,25 @@
               </span>
 
               <span
-                v-if="profile.xp !== undefined || auth.user?.xp !== undefined"
+                v-if="auth.isApprentice && (profile.xp !== undefined || auth.user?.xp !== undefined)"
                 class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-400 text-amber-950 shadow-sm"
               >
                 <span class="material-symbols-outlined text-sm">stars</span>
                 {{ profile.xp ?? auth.user?.xp ?? 0 }} XP
+              </span>
+              <span
+                v-else-if="auth.isAdmin"
+                class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-white/20 text-white backdrop-blur-sm border border-white/25 shadow-sm"
+              >
+                <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+                Superadministrador
+              </span>
+              <span
+                v-else-if="auth.isInstructor"
+                class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-white/20 text-white backdrop-blur-sm border border-white/25 shadow-sm"
+              >
+                <span class="material-symbols-outlined text-sm">school</span>
+                Equipo Docente
               </span>
 
               <span
@@ -275,94 +289,207 @@
 
       <!-- Right Col: Stats & Badges Sidebar -->
       <div class="space-y-6">
-        <!-- Stat Cards -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
-          <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
-            <span class="material-symbols-outlined text-amber-500 text-xl">insights</span>
-            Resumen de Actividad
-          </h3>
-
-          <div class="space-y-3">
-            <!-- Puntos Totales XP -->
-            <div class="flex items-center gap-3.5 p-3 rounded-xl bg-amber-50/70 border border-amber-100">
-              <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <span class="material-symbols-outlined text-xl">military_tech</span>
-              </div>
-              <div>
-                <p class="text-xl font-black text-gray-800 leading-tight">
-                  {{ profile.xp ?? auth.user?.xp ?? 0 }} XP
-                </p>
-                <p class="text-xs text-gray-500">Puntos de experiencia acumulados</p>
-              </div>
-            </div>
-
-            <!-- Actividades Aprobadas -->
-            <div class="flex items-center gap-3.5 p-3 rounded-xl bg-emerald-50/70 border border-emerald-100">
-              <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <span class="material-symbols-outlined text-xl">check_circle</span>
-              </div>
-              <div>
-                <p class="text-xl font-black text-gray-800 leading-tight">
-                  {{ profile.stats?.passedSubmissions ?? 0 }}
-                </p>
-                <p class="text-xs text-gray-500">
-                  {{ auth.isApprentice ? 'Actividades aprobadas' : 'Tareas evaluadas' }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Logros Desbloqueados -->
-            <div class="flex items-center gap-3.5 p-3 rounded-xl bg-purple-50/70 border border-purple-100">
-              <div class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <span class="material-symbols-outlined text-xl">emoji_events</span>
-              </div>
-              <div>
-                <p class="text-xl font-black text-gray-800 leading-tight">
-                  {{ profile.badges?.length ?? 0 }}
-                </p>
-                <p class="text-xs text-gray-500">Insignias conquistadas</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Badges Earned Mini-Grid -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div class="flex items-center justify-between mb-4">
+        <!-- ================= STATS FOR APPRENTICE ================= -->
+        <template v-if="auth.isApprentice">
+          <!-- Stat Cards -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
             <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
-              <span class="material-symbols-outlined text-amber-500 text-xl">military_tech</span>
-              Mis Logros
+              <span class="material-symbols-outlined text-amber-500 text-xl">insights</span>
+              Resumen de Aprendizaje
             </h3>
-            <router-link
-              to="/dashboard/logros"
-              class="text-xs font-bold text-[#006688] hover:underline flex items-center gap-0.5"
-            >
-              Ver todos
-              <span class="material-symbols-outlined text-sm">chevron_right</span>
-            </router-link>
-          </div>
 
-          <div v-if="profile.badges && profile.badges.length > 0" class="grid grid-cols-3 gap-2.5">
-            <div
-              v-for="badge in profile.badges.slice(0, 6)"
-              :key="badge.key"
-              class="flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-gradient-to-b from-amber-50/80 to-white border border-amber-200/60 text-center hover:scale-105 transition-transform shadow-sm"
-              :title="badge.description"
-            >
-              <span class="text-3xl select-none">{{ badge.iconEmoji || '🏆' }}</span>
-              <p class="text-[11px] font-bold text-gray-800 leading-tight line-clamp-1">{{ badge.name }}</p>
-              <span class="text-[9px] font-semibold text-amber-700 bg-amber-100/70 px-1.5 py-0.2 rounded">
-                {{ badge.xpRequired }} XP
-              </span>
+            <div class="space-y-3">
+              <!-- Puntos Totales XP -->
+              <div class="flex items-center gap-3.5 p-3 rounded-xl bg-amber-50/70 border border-amber-100">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-xl">military_tech</span>
+                </div>
+                <div>
+                  <p class="text-xl font-black text-gray-800 leading-tight">
+                    {{ profile.xp ?? auth.user?.xp ?? 0 }} XP
+                  </p>
+                  <p class="text-xs text-gray-500">Puntos de experiencia acumulados</p>
+                </div>
+              </div>
+
+              <!-- Actividades Aprobadas -->
+              <div class="flex items-center gap-3.5 p-3 rounded-xl bg-emerald-50/70 border border-emerald-100">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-xl">check_circle</span>
+                </div>
+                <div>
+                  <p class="text-xl font-black text-gray-800 leading-tight">
+                    {{ profile.stats?.passedSubmissions ?? 0 }}
+                  </p>
+                  <p class="text-xs text-gray-500">Actividades aprobadas</p>
+                </div>
+              </div>
+
+              <!-- Logros Desbloqueados -->
+              <div class="flex items-center gap-3.5 p-3 rounded-xl bg-purple-50/70 border border-purple-100">
+                <div class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-xl">emoji_events</span>
+                </div>
+                <div>
+                  <p class="text-xl font-black text-gray-800 leading-tight">
+                    {{ profile.badges?.length ?? 0 }}
+                  </p>
+                  <p class="text-xs text-gray-500">Insignias conquistadas</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div v-else class="bg-gray-50 rounded-xl p-6 text-center border border-gray-100">
-            <span class="material-symbols-outlined text-gray-400 text-3xl mb-1">lock</span>
-            <p class="text-xs font-semibold text-gray-600">Aún no tienes insignias</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">Suma XP superando retos clínicos para desbloquearlas.</p>
+          <!-- Badges Earned Mini-Grid -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500 text-xl">military_tech</span>
+                Mis Logros
+              </h3>
+              <router-link
+                to="/dashboard/logros"
+                class="text-xs font-bold text-[#006688] hover:underline flex items-center gap-0.5"
+              >
+                Ver todos
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+              </router-link>
+            </div>
+
+            <div v-if="profile.badges && profile.badges.length > 0" class="grid grid-cols-3 gap-2.5">
+              <div
+                v-for="badge in profile.badges.slice(0, 6)"
+                :key="badge.key"
+                class="flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-gradient-to-b from-amber-50/80 to-white border border-amber-200/60 text-center hover:scale-105 transition-transform shadow-sm"
+                :title="badge.description"
+              >
+                <span class="text-3xl select-none">{{ badge.iconEmoji || '🏆' }}</span>
+                <p class="text-[11px] font-bold text-gray-800 leading-tight line-clamp-1">{{ badge.name }}</p>
+                <span class="text-[9px] font-semibold text-amber-700 bg-amber-100/70 px-1.5 py-0.2 rounded">
+                  {{ badge.xpRequired }} XP
+                </span>
+              </div>
+            </div>
+
+            <div v-else class="bg-gray-50 rounded-xl p-6 text-center border border-gray-100">
+              <span class="material-symbols-outlined text-gray-400 text-3xl mb-1">lock</span>
+              <p class="text-xs font-semibold text-gray-600">Aún no tienes insignias</p>
+              <p class="text-[11px] text-gray-400 mt-0.5">Suma XP superando retos clínicos para desbloquearlas.</p>
+            </div>
           </div>
-        </div>
+        </template>
+
+        <!-- ================= STATS FOR ADMIN / INSTRUCTOR ================= -->
+        <template v-else>
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[#006688] text-xl">admin_panel_settings</span>
+              {{ auth.isAdmin ? 'Resumen Administrativo' : 'Resumen Docente' }}
+            </h3>
+
+            <div class="space-y-3">
+              <!-- Privilegios -->
+              <div class="flex items-center gap-3.5 p-3 rounded-xl bg-sky-50/70 border border-sky-100">
+                <div class="w-10 h-10 rounded-xl bg-[#006688] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-xl">verified_user</span>
+                </div>
+                <div>
+                  <p class="text-sm font-black text-gray-800 leading-tight">
+                    {{ auth.isAdmin ? 'Superadministrador' : 'Docente / Tutor' }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ auth.isAdmin ? 'Control y auditoría global' : 'Gestión y evaluación clínica' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Curricular / Usuarios -->
+              <div class="flex items-center gap-3.5 p-3 rounded-xl bg-emerald-50/70 border border-emerald-100">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-xl">school</span>
+                </div>
+                <div>
+                  <p class="text-sm font-black text-gray-800 leading-tight">
+                    {{ auth.isAdmin ? 'Gestión Institucional' : 'Supervisión de Cursos' }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ auth.isAdmin ? 'Módulos, actividades y usuarios' : 'Revisión y retroalimentación' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Gamificación / Logros -->
+              <div class="flex items-center gap-3.5 p-3 rounded-xl bg-purple-50/70 border border-purple-100">
+                <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-xl">military_tech</span>
+                </div>
+                <div>
+                  <p class="text-sm font-black text-gray-800 leading-tight">
+                    Catálogo de Gamificación
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ auth.isAdmin ? 'Administración de insignias y XP' : 'Visualización de logros activos' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Módulos y Accesos Rápidos -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-3">
+            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+              <span class="material-symbols-outlined text-gray-500 text-xl">bolt</span>
+              Accesos Rápidos
+            </h3>
+
+            <div class="flex flex-col gap-2 pt-1">
+              <router-link
+                v-if="auth.isAdmin"
+                to="/dashboard/usuarios"
+                class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-sky-50/80 border border-gray-100 hover:border-[#006688]/30 transition-all text-gray-700 hover:text-[#006688] group"
+              >
+                <span class="flex items-center gap-2.5 text-xs font-bold">
+                  <span class="material-symbols-outlined text-base text-[#006688]">group</span>
+                  Gestión de Usuarios
+                </span>
+                <span class="material-symbols-outlined text-sm text-gray-400 group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+              </router-link>
+
+              <router-link
+                to="/dashboard/curriculum"
+                class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-sky-50/80 border border-gray-100 hover:border-[#006688]/30 transition-all text-gray-700 hover:text-[#006688] group"
+              >
+                <span class="flex items-center gap-2.5 text-xs font-bold">
+                  <span class="material-symbols-outlined text-base text-[#006688]">menu_book</span>
+                  Plan Curricular
+                </span>
+                <span class="material-symbols-outlined text-sm text-gray-400 group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+              </router-link>
+
+              <router-link
+                to="/dashboard/logros"
+                class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-sky-50/80 border border-gray-100 hover:border-[#006688]/30 transition-all text-gray-700 hover:text-[#006688] group"
+              >
+                <span class="flex items-center gap-2.5 text-xs font-bold">
+                  <span class="material-symbols-outlined text-base text-amber-500">military_tech</span>
+                  Catálogo de Logros
+                </span>
+                <span class="material-symbols-outlined text-sm text-gray-400 group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+              </router-link>
+
+              <router-link
+                to="/dashboard/ranking"
+                class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-sky-50/80 border border-gray-100 hover:border-[#006688]/30 transition-all text-gray-700 hover:text-[#006688] group"
+              >
+                <span class="flex items-center gap-2.5 text-xs font-bold">
+                  <span class="material-symbols-outlined text-base text-purple-500">leaderboard</span>
+                  Cuadro de Honor (Ranking)
+                </span>
+                <span class="material-symbols-outlined text-sm text-gray-400 group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+              </router-link>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
 
