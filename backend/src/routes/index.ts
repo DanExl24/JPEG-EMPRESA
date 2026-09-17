@@ -19,6 +19,7 @@ apiRouter.use('/content', contentRoutes)
 apiRouter.use('/admin/curriculum', curriculumRoutes)
 apiRouter.use('/admin', adminRoutes)
 apiRouter.use('/learner', gamificationRoutes)
+apiRouter.use('/gamification', gamificationRoutes)
 apiRouter.use('/', analyticsRoutes)
 apiRouter.use('/test', testRoutes)
 

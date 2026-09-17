@@ -511,11 +511,23 @@ export class GamificationService {
   }
 
   static async toggleArcadeGame(id: number) {
-    const existing = await (prisma as any).arcadeGame.findUnique({ where: { id } })
+    let existing = await (prisma as any).arcadeGame.findUnique({ where: { id } })
+    if (!existing) {
+      // Si la BD aún no tenía ese ID específico, intentar enlazar con catálogo por defecto
+      const fallbackGame = DEFAULT_ARCADE_GAMES[id - 1] || DEFAULT_ARCADE_GAMES.find((g: any) => g.id === id)
+      if (fallbackGame) {
+        const { id: _, ...gameData } = fallbackGame as any
+        existing = await (prisma as any).arcadeGame.upsert({
+          where: { key: fallbackGame.key },
+          update: {},
+          create: gameData
+        })
+      }
+    }
     if (!existing) throw new Error('Juego no encontrado')
 
     return (prisma as any).arcadeGame.update({
-      where: { id },
+      where: { id: existing.id },
       data: { active: !existing.active }
     })
   }
