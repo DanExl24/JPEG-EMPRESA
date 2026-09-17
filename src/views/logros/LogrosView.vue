@@ -147,7 +147,23 @@ async function fetchBadges() {
   }
 }
 
-onMounted(() => {
-  fetchBadges()
+// Insignias de módulo (RAP) ganadas por el aprendiz, guardadas localmente al aprobar el cierre
+function mergeLocalModuleBadges() {
+  try {
+    const userId = auth.user?.id || 'guest'
+    const list = JSON.parse(localStorage.getItem(`nursed.badges.${userId}`) || '[]')
+    list.forEach(b => {
+      if (!unlocked.value.some(u => u.name === b.name)) {
+        unlocked.value.unshift({ id: `local-${b.id}`, name: b.name, desc: b.desc, emoji: b.emoji, bg: 'bg-amber-100', pts: 0 })
+      }
+    })
+  } catch (error) {
+    console.warn('No se pudieron cargar las insignias locales:', error)
+  }
+}
+
+onMounted(async () => {
+  await fetchBadges()
+  mergeLocalModuleBadges()
 })
 </script>

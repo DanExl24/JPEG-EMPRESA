@@ -1285,6 +1285,16 @@
       <!-- FASE 4: EVALUACIÓN (CIERRE) -->
       <!-- ========================================== -->
       <div v-if="currentPhase === 'evaluacion'" class="space-y-8 animate-fade-in">
+        <!-- Confeti de celebración -->
+        <div v-if="showConfetti" class="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
+          <span
+            v-for="p in confettiPieces"
+            :key="p.id"
+            class="confetti-piece"
+            :style="`left:${p.left}%; width:${p.size}px; height:${p.size}px; background:${p.color}; animation-delay:${p.delay}s; animation-duration:${p.duration}s;`"
+          ></span>
+        </div>
+
         <div class="border-b border-gray-100 pb-4">
           <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
             <span class="w-2 h-6 bg-[#006688] rounded-full"></span>
@@ -1417,13 +1427,29 @@
             >
               Re-presentar Examen (Prueba)
             </button>
-            <router-link 
-              to="/dashboard/cursos" 
-              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+            <router-link
+              to="/dashboard/cursos"
+              class="px-4 py-2 bg-white border border-green-600 text-green-700 hover:bg-green-50 text-xs font-bold rounded-xl shadow-sm transition-all"
             >
               Volver a la Lista de Cursos
             </router-link>
+            <router-link
+              v-if="hasNextModule"
+              :to="nextCoursePath"
+              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1"
+            >
+              Siguiente Módulo
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </router-link>
           </div>
+
+          <router-link
+            to="/dashboard/logros"
+            class="inline-flex items-center gap-1 text-xs font-bold text-green-700 hover:underline"
+          >
+            <span class="material-symbols-outlined text-sm">military_tech</span>
+            Ver tu insignia en la galería de Logros
+          </router-link>
         </div>
 
         <!-- Bottom Actions -->
@@ -2155,12 +2181,15 @@ const showBadgeAward = ref(false)
 const examScoreMessage = ref('')
 
 const m1ExamQuestions = [
-  { id: 'q1', question: 'Which greeting is correct for the morning?', options: ['Good night', 'Good morning', 'Goodbye', 'See you'], correct: 'Good morning' },
-  { id: 'q2', question: 'Identify the VERB in: "I am a nurse."', options: ['I', 'am', 'a', 'nurse'], correct: 'am' },
-  { id: 'q3', question: 'How do you ask someone for their name?', options: ['Where are you from?', 'How old are you?', 'What is your name?', 'What is your phone number?'], correct: 'What is your name?' },
-  { id: 'q4', question: 'How do you spell the name JOHN?', options: ['G-O-H-N', 'J-O-H-N', 'J-O-N', 'J-H-O-N'], correct: 'J-O-H-N' },
-  { id: 'q5', question: 'Which sentence is grammatically correct?', options: ['Am Colombian I.', 'Colombian am I.', 'I am Colombian.', 'I Colombian am.'], correct: 'I am Colombian.' },
-  { id: 'q6', question: 'What is the correct farewell used when leaving for the day?', options: ['Good morning', 'Nice to meet you', 'Goodbye', 'Good afternoon'], correct: 'Goodbye' },
+  // Saludos formales/informales según el momento del día
+  { id: 'q1', question: 'Which greeting is formal and correct for the morning?', options: ['Good night', 'Good morning', 'Goodbye', 'See you'], correct: 'Good morning' },
+  { id: 'q2', question: 'Which of these is an INFORMAL greeting?', options: ['Good afternoon', 'Hello', 'Good evening', 'Goodbye'], correct: 'Hello' },
+  // Orden de la oración (Persona + Acción + Detalle) y estructura S+V+C
+  { id: 'q3', question: '¿Cuál es el orden correcto de una oración en inglés?', options: ['Acción + Persona + Detalle', 'Persona + Acción + Detalle', 'Detalle + Acción + Persona', 'Persona + Detalle + Acción'], correct: 'Persona + Acción + Detalle' },
+  { id: 'q4', question: 'Identify the VERB in: "I am a nurse."', options: ['I', 'am', 'a', 'nurse'], correct: 'am' },
+  // Números en inglés
+  { id: 'q5', question: 'How do you write the number 7 in English?', options: ['seven', 'nine', 'six', 'eleven'], correct: 'seven' },
+  { id: 'q6', question: 'What number is "thirteen"?', options: ['30', '3', '13', '12'], correct: '13' },
 ]
 
 const m2ExamQuestions = [
@@ -2197,6 +2226,45 @@ const activeExamQuestions = computed(() => {
   return m1ExamQuestions
 })
 
+// Insignias por módulo (RAP) — se asocian al perfil y se ven en la galería de Logros
+const MODULE_BADGES = {
+  1: { id: 'rap1', name: 'RAP 1 — Getting to Know Other People', desc: 'Módulo 1 completado', emoji: '🎓' },
+  2: { id: 'rap23', name: 'Handover Specialist — RAP 2 y 3', desc: 'Módulo 2 completado', emoji: '🩺' },
+  3: { id: 'rap45', name: 'Clinical Communicator — RAP 4 y 5', desc: 'Módulo 3 completado', emoji: '💬' },
+  4: { id: 'rap6', name: 'Care Evaluator — RAP 6', desc: 'Módulo 4 completado', emoji: '🏆' },
+}
+
+function awardModuleBadge() {
+  const badge = MODULE_BADGES[moduleNumber.value]
+  if (!badge) return
+  try {
+    const userId = auth.user?.id || 'guest'
+    const key = `nursed.badges.${userId}`
+    const list = JSON.parse(localStorage.getItem(key) || '[]')
+    if (!list.some(b => b.id === badge.id)) {
+      list.push({ ...badge, earnedAt: new Date().toISOString() })
+      localStorage.setItem(key, JSON.stringify(list))
+    }
+  } catch (e) {
+    console.warn('No se pudo guardar la insignia:', e)
+  }
+}
+
+// Confeti de celebración (sin librería)
+const CONFETTI_COLORS = ['#006688', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#ec4899', '#3b82f6']
+const confettiPieces = Array.from({ length: 44 }, (_, i) => ({
+  id: i,
+  left: Math.random() * 100,
+  delay: Math.random() * 0.8,
+  duration: 2.5 + Math.random() * 2,
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  size: 6 + Math.random() * 8,
+}))
+const showConfetti = ref(false)
+
+const nextCoursePath = computed(() => `/dashboard/cursos/${Number(courseId.value) + 1}`)
+const hasNextModule = computed(() => moduleNumber.value < 4)
+
 function submitExam() {
   let correctCount = 0
   activeExamQuestions.value.forEach(q => {
@@ -2204,14 +2272,17 @@ function submitExam() {
       correctCount++
     }
   })
-  
+
   const pct = (correctCount / activeExamQuestions.value.length) * 100
-  
+
   if (pct >= 75) {
     examPassed.value = true
     showBadgeAward.value = true
     phaseProgress.value.evaluacion = 100
     examScoreMessage.value = ''
+    awardModuleBadge()
+    showConfetti.value = true
+    setTimeout(() => { showConfetti.value = false }, 4500)
     saveProgress()
   } else {
     examScoreMessage.value = `Calificación: ${Math.round(pct)}%. Necesitas al menos 75% (5 de 6 correctas) para aprobar. Intenta de nuevo.`
@@ -2520,5 +2591,24 @@ onMounted(() => {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  border-radius: 2px;
+  opacity: 0.9;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(105vh) rotate(720deg);
+    opacity: 0.9;
+  }
 }
 </style>
