@@ -433,3 +433,72 @@ export async function ensureDefaultGlossary(): Promise<void> {
   console.log('Glosario clínico sembrado con éxito.')
 }
 
+export const DEFAULT_ARCADE_GAMES = [
+  {
+    key: 'warmup_drag_match',
+    name: 'Warm-up Drag Match',
+    subtitle: 'Calentamiento Clínico Interactivo',
+    description: 'Asocia iconos clínicos y saludos médicos arrastrándolos a sus expresiones en inglés correspondientes.',
+    template: 'warmup_drag_match',
+    icon: 'pan_tool',
+    color: 'text-blue-500',
+    bg: 'bg-blue-50',
+    difficulty: 'Fácil',
+    pts: 100,
+    duration: '3 min',
+    active: true
+  },
+  {
+    key: 'trivia_medica',
+    name: 'Trivia Médica Contrarreloj',
+    subtitle: 'Desafío Rápido de Vocabulario y Síntomas',
+    description: 'Preguntas de opción múltiple generadas en vivo desde el vocabulario de enfermería para poner a prueba tu velocidad.',
+    template: 'trivia_medica',
+    icon: 'quiz',
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-50',
+    difficulty: 'Medio',
+    pts: 100,
+    duration: '5 min',
+    active: true
+  },
+  {
+    key: 'drug_match',
+    name: 'Pares Clínicos / Speed Match',
+    subtitle: 'Emparejamiento de Términos y Definiciones',
+    description: 'Encuentra las parejas correspondientes entre términos en inglés y su traducción clínica antes de que expire el tiempo.',
+    template: 'drug_match',
+    icon: 'medication',
+    color: 'text-orange-500',
+    bg: 'bg-orange-50',
+    difficulty: 'Medio',
+    pts: 80,
+    duration: '4 min',
+    active: true
+  },
+  {
+    key: 'listening_challenge',
+    name: 'Desafío de Escucha Fonética',
+    subtitle: 'Audio y Transcripción Clínica',
+    description: 'Escucha la pronunciación en inglés de términos médicos y selecciona o transcribe la palabra correcta.',
+    template: 'listening_challenge',
+    icon: 'hearing',
+    color: 'text-purple-500',
+    bg: 'bg-purple-50',
+    difficulty: 'Difícil',
+    pts: 80,
+    duration: '4 min',
+    active: true
+  }
+]
+
+export async function ensureDefaultArcadeGames(): Promise<void> {
+  const count = await prisma.arcadeGame.count()
+  if (count > 0) return
+
+  for (const game of DEFAULT_ARCADE_GAMES) {
+    await prisma.arcadeGame.create({ data: game })
+  }
+  console.log('Juegos del Arcade clínico inicializados en base de datos con éxito.')
+}
+

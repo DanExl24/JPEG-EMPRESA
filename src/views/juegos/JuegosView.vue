@@ -18,7 +18,7 @@
           </button>
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="font-black text-gray-800 text-lg">{{ currentGameDef?.name || 'Minijuego Clínico' }}</h3>
+              <h3 class="font-black text-gray-800 text-lg">{{ currentGameInstance?.name || 'Minijuego Clínico' }}</h3>
               <span v-if="isTeacherTestMode" class="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
                 Modo Prueba Docente
               </span>
@@ -26,14 +26,14 @@
                 Partida Oficial
               </span>
             </div>
-            <p class="text-xs text-gray-500">{{ currentGameDef?.subtitle || 'Práctica rápida de inglés médico' }}</p>
+            <p class="text-xs text-gray-500">{{ currentGameInstance?.subtitle || 'Práctica rápida de enfermería' }}</p>
           </div>
         </div>
 
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 text-xs font-black text-[#006688]">
             <span class="material-symbols-outlined text-sm">emoji_events</span>
-            Premio: +{{ currentGameDef?.pts || 100 }} XP
+            Premio: +{{ currentGameInstance?.pts || 100 }} XP
           </div>
           <button 
             @click="quitGame" 
@@ -45,7 +45,7 @@
       </div>
 
       <!-- ── MOTOR 1: WARM-UP DRAG MATCH (CALENTAMIENTO) ── -->
-      <div v-if="activeGame === 'warmup_drag_match'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
+      <div v-if="activeEngine === 'warmup_drag_match'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
         <div v-if="!gameFinished" class="space-y-6">
           <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <div>
@@ -135,7 +135,7 @@
             <p class="text-xs text-gray-600">Completaste las 4 rondas de terminología médica.</p>
             <div class="pt-2">
               <span class="inline-block bg-green-100 text-green-800 font-black text-sm px-3 py-1 rounded-full">
-                +{{ currentGameDef?.pts || 100 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Añadidos' }}
+                +{{ currentGameInstance?.pts || 100 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Añadidos' }}
               </span>
             </div>
           </div>
@@ -151,7 +151,7 @@
       </div>
 
       <!-- ── MOTOR 2: TRIVIA MÉDICA CONTRARRELOJ (BD) ── -->
-      <div v-else-if="activeGame === 'trivia_medica'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
+      <div v-else-if="activeEngine === 'trivia_medica'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
         <div v-if="!gameFinished && currentTriviaQ" class="space-y-6">
           <!-- Trivia Status Bar -->
           <div class="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-2xl p-4 gap-4 flex-wrap">
@@ -254,7 +254,7 @@
       </div>
 
       <!-- ── MOTOR 3: PARES CLÍNICOS / SPEED MATCH (BD) ── -->
-      <div v-else-if="activeGame === 'drug_match'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
+      <div v-else-if="activeEngine === 'drug_match'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
         <div v-if="!gameFinished" class="space-y-6">
           <div class="flex items-center justify-between bg-orange-50 border border-orange-100 rounded-2xl p-4 gap-4 flex-wrap">
             <div>
@@ -300,7 +300,7 @@
             <p class="text-xs text-gray-600">Emparejaste correctamente todos los términos clínicos.</p>
             <div class="pt-2">
               <span class="inline-block bg-orange-100 text-orange-800 font-black text-sm px-3 py-1 rounded-full">
-                +{{ currentGameDef?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+                +{{ currentGameInstance?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
               </span>
             </div>
           </div>
@@ -316,7 +316,7 @@
       </div>
 
       <!-- ── MOTOR 4: DESAFÍO DE ESCUCHA FONÉTICA (BD + Web Speech API) ── -->
-      <div v-else-if="activeGame === 'listening_challenge'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
+      <div v-else-if="activeEngine === 'listening_challenge'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
         <div v-if="!gameFinished && currentListenItem" class="space-y-6">
           <div class="flex items-center justify-between bg-purple-50 border border-purple-100 rounded-2xl p-4 gap-4 flex-wrap">
             <div>
@@ -389,7 +389,7 @@
             </p>
             <div class="pt-2">
               <span class="inline-block bg-purple-100 text-purple-800 font-black text-sm px-3 py-1 rounded-full">
-                +{{ currentGameDef?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+                +{{ currentGameInstance?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
               </span>
             </div>
           </div>
@@ -422,13 +422,20 @@
             </div>
             <h2 class="text-2xl sm:text-3xl font-black">Arcade Lúdico & Gamificación</h2>
             <p class="text-blue-100 text-xs sm:text-sm leading-relaxed">
-              Supervisa la participación de los aprendices en las dinámicas interactivas, audita partidas jugadas en tiempo real y prueba cualquier minijuego en Modo Demostración.
+              Gestiona el catálogo de minijuegos del arcade, activa/pausa mecánicas, supervisa estadísticas reales y audita partidas de los aprendices.
             </p>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <button 
+              @click="openCreateGameModal"
+              class="px-5 py-2.5 bg-white text-[#006688] hover:bg-blue-50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">add_circle</span>
+              Crear Minijuego
+            </button>
             <button 
               @click="startTeacherTest('warmup_drag_match')"
-              class="px-5 py-2.5 bg-white text-[#006688] hover:bg-blue-50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              class="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span class="material-symbols-outlined text-base">sports_esports</span>
               Probar Calentamiento
@@ -496,7 +503,7 @@
             }`"
           >
             <span class="material-symbols-outlined text-base">videogame_asset</span>
-            Minijuegos del Arcade ({{ arcadeGamesList.length }})
+            Gestión de Minijuegos ({{ arcadeGamesList.length }})
           </button>
           <button 
             @click="adminTab = 'history'"
@@ -511,23 +518,47 @@
           </button>
         </div>
 
-        <!-- Tab 1: Minijuegos del Arcade Clínico -->
+        <!-- Tab 1: Minijuegos del Arcade Clínico (CRUD) -->
         <div v-if="adminTab === 'games'" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-gray-500">
+              Los juegos activos estarán disponibles de inmediato en la sección de juegos del aprendiz.
+            </p>
+            <button 
+              @click="openCreateGameModal"
+              class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">add</span>
+              Nuevo Juego
+            </button>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div 
               v-for="game in arcadeGamesList" 
-              :key="game.key"
-              class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between hover:border-blue-100 hover:shadow-md transition-all gap-5"
+              :key="game.id || game.key"
+              :class="`bg-white rounded-3xl p-6 border shadow-sm flex flex-col justify-between transition-all gap-5 ${
+                game.active !== false ? 'border-gray-100 hover:border-blue-100 hover:shadow-md' : 'border-gray-200 bg-gray-50/50 opacity-75'
+              }`"
             >
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
-                    <div :class="`w-12 h-12 rounded-2xl ${game.bg} flex items-center justify-center`">
-                      <span :class="`material-symbols-outlined text-2xl ${game.color}`">{{ game.icon }}</span>
+                    <div :class="`w-12 h-12 rounded-2xl ${game.bg || 'bg-blue-50'} flex items-center justify-center shadow-xs`">
+                      <span :class="`material-symbols-outlined text-2xl ${game.color || 'text-blue-500'}`">{{ game.icon || 'sports_esports' }}</span>
                     </div>
                     <div>
-                      <h4 class="font-black text-gray-800 text-base leading-tight">{{ game.name }}</h4>
-                      <span class="text-[11px] font-semibold text-gray-400">{{ game.subtitle }}</span>
+                      <div class="flex items-center gap-2">
+                        <h4 class="font-black text-gray-800 text-base leading-tight">{{ game.name }}</h4>
+                        <span 
+                          :class="`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            game.active !== false ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
+                          }`"
+                        >
+                          {{ game.active !== false ? 'Activo' : 'Pausado' }}
+                        </span>
+                      </div>
+                      <span class="text-[11px] font-semibold text-gray-400">{{ game.subtitle || 'Minijuego Clínico' }}</span>
                     </div>
                   </div>
                   <span class="bg-blue-50 text-[#006688] text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
@@ -536,7 +567,7 @@
                 </div>
 
                 <p class="text-xs text-gray-600 leading-relaxed">
-                  {{ game.desc }}
+                  {{ game.description || game.desc }}
                 </p>
 
                 <!-- Estadísticas de uso por minijuego -->
@@ -552,20 +583,61 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+              <!-- Acciones de Administración (CRUD + Probar) -->
+              <div class="flex items-center justify-between pt-3 border-t border-gray-100 flex-wrap gap-2">
                 <div class="flex items-center gap-2 text-xs text-gray-400">
                   <span class="material-symbols-outlined text-sm">schedule</span>
-                  <span>{{ game.duration }}</span>
+                  <span>{{ game.duration || '5 min' }}</span>
                   <span>•</span>
-                  <span>Dificultad: <strong>{{ game.difficulty }}</strong></span>
+                  <span><strong>{{ game.difficulty || 'Medio' }}</strong></span>
                 </div>
-                <button 
-                  @click="startTeacherTest(game.key)"
-                  class="px-4 py-2 bg-gray-100 hover:bg-[#006688] hover:text-white text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-                >
-                  <span class="material-symbols-outlined text-sm">visibility</span>
-                  Modo Prueba Docente
-                </button>
+
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <!-- Toggle Activo / Pausado -->
+                  <button 
+                    v-if="game.id"
+                    @click="toggleGameStatus(game)"
+                    :class="`p-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      game.active !== false 
+                        ? 'bg-amber-50 hover:bg-amber-100 text-amber-700' 
+                        : 'bg-green-50 hover:bg-green-100 text-green-700'
+                    }`"
+                    :title="game.active !== false ? 'Pausar juego' : 'Activar juego'"
+                  >
+                    <span class="material-symbols-outlined text-base">
+                      {{ game.active !== false ? 'pause' : 'play_arrow' }}
+                    </span>
+                  </button>
+
+                  <!-- Editar -->
+                  <button 
+                    v-if="game.id"
+                    @click="openEditGameModal(game)"
+                    class="p-2 bg-gray-100 hover:bg-blue-50 hover:text-[#006688] text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    title="Editar juego"
+                  >
+                    <span class="material-symbols-outlined text-base">edit</span>
+                  </button>
+
+                  <!-- Eliminar -->
+                  <button 
+                    v-if="game.id"
+                    @click="deleteGame(game)"
+                    class="p-2 bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    title="Eliminar juego"
+                  >
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+
+                  <!-- Modo Prueba Docente -->
+                  <button 
+                    @click="startTeacherTest(game)"
+                    class="px-3 py-2 bg-gray-100 hover:bg-[#006688] hover:text-white text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <span class="material-symbols-outlined text-sm">visibility</span>
+                    Probar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -675,22 +747,22 @@
           </div>
         </div>
 
-        <!-- Catálogo de Minijuegos del Arcade -->
+        <!-- Catálogo de Minijuegos Activos del Arcade -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div 
-            v-for="game in arcadeGamesList" 
-            :key="game.key"
+            v-for="game in activeArcadeGamesForApprentice" 
+            :key="game.id || game.key"
             class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-lg hover:border-blue-100 transition-all gap-5"
           >
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3.5">
-                  <div :class="`w-14 h-14 rounded-2xl ${game.bg} flex items-center justify-center shadow-sm`">
-                    <span :class="`material-symbols-outlined text-3xl ${game.color}`">{{ game.icon }}</span>
+                  <div :class="`w-14 h-14 rounded-2xl ${game.bg || 'bg-blue-50'} flex items-center justify-center shadow-sm`">
+                    <span :class="`material-symbols-outlined text-3xl ${game.color || 'text-blue-500'}`">{{ game.icon || 'sports_esports' }}</span>
                   </div>
                   <div>
                     <h3 class="font-black text-gray-800 text-lg leading-tight">{{ game.name }}</h3>
-                    <p class="text-xs text-gray-400 font-semibold">{{ game.subtitle }}</p>
+                    <p class="text-xs text-gray-400 font-semibold">{{ game.subtitle || 'Minijuego Clínico' }}</p>
                   </div>
                 </div>
                 <span class="bg-amber-100 text-amber-900 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
@@ -700,19 +772,19 @@
               </div>
 
               <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                {{ game.desc }}
+                {{ game.description || game.desc }}
               </p>
             </div>
 
             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
               <div class="flex items-center gap-2 text-xs text-gray-400 font-semibold">
                 <span class="material-symbols-outlined text-sm">schedule</span>
-                <span>{{ game.duration }}</span>
+                <span>{{ game.duration || '5 min' }}</span>
                 <span>•</span>
-                <span>{{ game.difficulty }}</span>
+                <span>{{ game.difficulty || 'Medio' }}</span>
               </div>
               <button 
-                @click="startApprenticeGame(game.key)"
+                @click="startApprenticeGame(game)"
                 class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <span>Jugar Ahora</span>
@@ -724,6 +796,155 @@
 
       </div>
     </template>
+
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ── MODAL DE CREACIÓN / EDICIÓN DE MINIJUEGO (ADMIN) ───────────── -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div v-if="showGameModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+      <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 space-y-6 my-8">
+        
+        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-[#006688]/10 text-[#006688] flex items-center justify-center">
+              <span class="material-symbols-outlined text-xl">{{ isEditingGame ? 'edit' : 'add_circle' }}</span>
+            </div>
+            <div>
+              <h3 class="font-black text-gray-800 text-lg">
+                {{ isEditingGame ? 'Editar Minijuego' : 'Crear Nuevo Minijuego' }}
+              </h3>
+              <p class="text-xs text-gray-400">Configura los parámetros pedagógicos y de gamificación.</p>
+            </div>
+          </div>
+          <button @click="showGameModal = false" class="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveGameForm" class="space-y-4 text-xs">
+          <!-- Nombre del Juego -->
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Nombre del Minijuego *</label>
+            <input 
+              v-model="gameForm.name" 
+              type="text" 
+              required
+              placeholder="Ej: Trivia Médica de Farmacología" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+            />
+          </div>
+
+          <!-- Subtítulo -->
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Subtítulo / Especialidad</label>
+            <input 
+              v-model="gameForm.subtitle" 
+              type="text" 
+              placeholder="Ej: Desafío de cálculo de dosis y antibióticos" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+            />
+          </div>
+
+          <!-- Descripción -->
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Descripción Pedagógica *</label>
+            <textarea 
+              v-model="gameForm.description" 
+              rows="2"
+              required
+              placeholder="Explica a los aprendices en qué consiste la dinámica..."
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+            ></textarea>
+          </div>
+
+          <!-- Mecánica / Plantilla de Juego -->
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Mecánica Interactiva (Plantilla) *</label>
+            <select 
+              v-model="gameForm.template"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
+            >
+              <option value="trivia_medica">Trivia Médica Contrarreloj (Preguntas de opción múltiple)</option>
+              <option value="drug_match">Pares Clínicos / Speed Match (Tablero de emparejar tarjetas)</option>
+              <option value="listening_challenge">Desafío de Escucha Fonética (Audio y reconocimiento)</option>
+              <option value="warmup_drag_match">Warm-up Drag Match (Calentamiento con iconos y términos)</option>
+            </select>
+          </div>
+
+          <!-- Puntos XP y Dificultad -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Puntos XP Otorgados *</label>
+              <input 
+                v-model.number="gameForm.pts" 
+                type="number" 
+                min="10" 
+                max="500" 
+                step="5"
+                required
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Nivel de Dificultad</label>
+              <select 
+                v-model="gameForm.difficulty"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
+              >
+                <option value="Fácil">Fácil</option>
+                <option value="Medio">Medio</option>
+                <option value="Difícil">Difícil</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Duración y Estado Activo -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Duración Estimada</label>
+              <input 
+                v-model="gameForm.duration" 
+                type="text" 
+                placeholder="Ej: 5 min"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Estado Inicial</label>
+              <select 
+                v-model="gameForm.active"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none cursor-pointer"
+              >
+                <option :value="true">Activo (Visible para aprendices)</option>
+                <option :value="false">Pausado (Oculto para aprendices)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Botones de Acción Modal -->
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+            <button 
+              type="button" 
+              @click="showGameModal = false"
+              class="px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              :disabled="savingGame"
+              class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <span class="material-symbols-outlined text-base">save</span>
+              {{ isEditingGame ? 'Guardar Cambios' : 'Crear Minijuego' }}
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
 
   </div>
 </template>
@@ -741,7 +962,9 @@ const apiBaseUrl = import.meta.env.VITE_API_URL || ''
 // ─────────────────────────────────────────────────────────────
 // STATE & NAVIGATION
 // ─────────────────────────────────────────────────────────────
-const activeGame = ref(null)
+const activeGame = ref(null) // game key or template
+const activeEngine = ref(null) // 'warmup_drag_match' | 'trivia_medica' | 'drug_match' | 'listening_challenge'
+const currentGameInstance = ref(null)
 const isTeacherTestMode = ref(false)
 const adminTab = ref('games') // 'games' | 'history'
 const adminLoading = ref(false)
@@ -755,72 +978,197 @@ const adminStats = ref({
 })
 
 const recentScores = ref([])
-const arcadeGamesList = ref([
-  {
-    key: 'warmup_drag_match',
-    name: 'Warm-up Drag Match',
-    subtitle: 'Calentamiento Clínico Interactivo',
-    desc: 'Asocia iconos clínicos y saludos médicos arrastrándolos a sus expresiones en inglés correspondientes.',
-    icon: 'pan_tool',
-    color: 'text-blue-500',
-    bg: 'bg-blue-50',
-    difficulty: 'Fácil',
-    pts: 100,
-    duration: '3 min',
-    playsCount: 0,
-    totalXp: 0
-  },
-  {
-    key: 'trivia_medica',
-    name: 'Trivia Médica Contrarreloj',
-    subtitle: 'Desafío Rápido de Vocabulario y Síntomas',
-    desc: 'Preguntas de opción múltiple generadas en vivo desde el vocabulario de enfermería para poner a prueba tu velocidad.',
-    icon: 'quiz',
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-50',
-    difficulty: 'Medio',
-    pts: 100,
-    duration: '5 min',
-    playsCount: 0,
-    totalXp: 0
-  },
-  {
-    key: 'drug_match',
-    name: 'Pares Clínicos / Speed Match',
-    subtitle: 'Emparejamiento de Términos y Definiciones',
-    desc: 'Encuentra las parejas correspondientes entre términos en inglés y su traducción clínica antes de que expire el tiempo.',
-    icon: 'medication',
-    color: 'text-orange-500',
-    bg: 'bg-orange-50',
-    difficulty: 'Medio',
-    pts: 80,
-    duration: '4 min',
-    playsCount: 0,
-    totalXp: 0
-  },
-  {
-    key: 'listening_challenge',
-    name: 'Desafío de Escucha Fonética',
-    subtitle: 'Audio y Transcripción Clínica',
-    desc: 'Escucha la pronunciación en inglés de términos médicos y selecciona o transcribe la palabra correcta.',
-    icon: 'hearing',
-    color: 'text-purple-500',
-    bg: 'bg-purple-50',
-    difficulty: 'Difícil',
-    pts: 80,
-    duration: '4 min',
-    playsCount: 0,
-    totalXp: 0
-  }
-])
+const arcadeGamesList = ref([])
 
 const userXp = computed(() => auth.user?.xp || 0)
 
-const currentGameDef = computed(() => {
-  return arcadeGamesList.value.find(g => g.key === activeGame.value)
+const activeArcadeGamesForApprentice = computed(() => {
+  return arcadeGamesList.value.filter(g => g.active !== false)
 })
 
 const gameFinished = ref(false)
+
+// ─────────────────────────────────────────────────────────────
+// CRUD MODAL STATE
+// ─────────────────────────────────────────────────────────────
+const showGameModal = ref(false)
+const isEditingGame = ref(false)
+const editingGameId = ref(null)
+const savingGame = ref(false)
+
+const gameForm = ref({
+  name: '',
+  subtitle: '',
+  description: '',
+  template: 'trivia_medica',
+  pts: 100,
+  difficulty: 'Medio',
+  duration: '5 min',
+  active: true,
+  icon: 'sports_esports',
+  color: 'text-blue-500',
+  bg: 'bg-blue-50'
+})
+
+function openCreateGameModal() {
+  isEditingGame.value = false
+  editingGameId.value = null
+  gameForm.value = {
+    name: '',
+    subtitle: '',
+    description: '',
+    template: 'trivia_medica',
+    pts: 100,
+    difficulty: 'Medio',
+    duration: '5 min',
+    active: true,
+    icon: 'sports_esports',
+    color: 'text-blue-500',
+    bg: 'bg-blue-50'
+  }
+  showGameModal.value = true
+}
+
+function openEditGameModal(game) {
+  isEditingGame.value = true
+  editingGameId.value = game.id
+  gameForm.value = {
+    name: game.name || '',
+    subtitle: game.subtitle || '',
+    description: game.description || game.desc || '',
+    template: game.template || 'trivia_medica',
+    pts: game.pts || 100,
+    difficulty: game.difficulty || 'Medio',
+    duration: game.duration || '5 min',
+    active: game.active !== false,
+    icon: game.icon || 'sports_esports',
+    color: game.color || 'text-blue-500',
+    bg: game.bg || 'bg-blue-50'
+  }
+  showGameModal.value = true
+}
+
+async function saveGameForm() {
+  savingGame.value = true
+  const token = getToken()
+  try {
+    const url = isEditingGame.value 
+      ? `${apiBaseUrl}/api/gamification/admin/games/${editingGameId.value}`
+      : `${apiBaseUrl}/api/gamification/admin/games`
+    
+    const method = isEditingGame.value ? 'PUT' : 'POST'
+
+    // Asignar colores/iconos según la plantilla seleccionada si no tiene
+    if (gameForm.value.template === 'trivia_medica') {
+      gameForm.value.icon = 'quiz'
+      gameForm.value.color = 'text-emerald-500'
+      gameForm.value.bg = 'bg-emerald-50'
+    } else if (gameForm.value.template === 'drug_match') {
+      gameForm.value.icon = 'medication'
+      gameForm.value.color = 'text-orange-500'
+      gameForm.value.bg = 'bg-orange-50'
+    } else if (gameForm.value.template === 'listening_challenge') {
+      gameForm.value.icon = 'hearing'
+      gameForm.value.color = 'text-purple-500'
+      gameForm.value.bg = 'bg-purple-50'
+    } else if (gameForm.value.template === 'warmup_drag_match') {
+      gameForm.value.icon = 'pan_tool'
+      gameForm.value.color = 'text-blue-500'
+      gameForm.value.bg = 'bg-blue-50'
+    }
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(gameForm.value)
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.message || 'Error al guardar el minijuego.')
+    }
+
+    notificationStore.notify({
+      type: 'success',
+      title: isEditingGame.value ? 'Juego Actualizado' : 'Juego Creado',
+      message: 'Los cambios fueron guardados exitosamente.'
+    })
+
+    showGameModal.value = false
+    await loadAdminData()
+    await fetchArcadeContent()
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error',
+      message: err.message || 'No se pudo guardar el juego.'
+    })
+  } finally {
+    savingGame.value = false
+  }
+}
+
+async function deleteGame(game) {
+  if (!confirm(`¿Estás seguro de que deseas eliminar el minijuego "${game.name}"?`)) return
+  const token = getToken()
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games/${game.id}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+
+    if (!res.ok) throw new Error('Error al eliminar el juego.')
+
+    notificationStore.notify({
+      type: 'success',
+      title: 'Juego Eliminado',
+      message: 'El minijuego fue retirado del arcade.'
+    })
+
+    await loadAdminData()
+    await fetchArcadeContent()
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error',
+      message: err.message || 'No se pudo eliminar el juego.'
+    })
+  }
+}
+
+async function toggleGameStatus(game) {
+  const token = getToken()
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games/${game.id}/toggle`, {
+      method: 'PATCH',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+
+    if (!res.ok) throw new Error('Error al cambiar estado.')
+
+    const data = await res.json()
+    const updated = data.data || data
+    game.active = updated.active
+
+    notificationStore.notify({
+      type: 'info',
+      title: updated.active ? 'Juego Activado' : 'Juego Pausado',
+      message: `El juego ahora está ${updated.active ? 'visible' : 'oculto'} para los aprendices.`
+    })
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error',
+      message: 'No se pudo cambiar el estado del juego.'
+    })
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 // TOKEN HELPER
@@ -868,6 +1216,9 @@ async function fetchArcadeContent() {
     if (res.ok) {
       const data = await res.json()
       const payload = data.data || data
+      if (payload.catalog && Array.isArray(payload.catalog) && payload.catalog.length > 0) {
+        arcadeGamesList.value = payload.catalog
+      }
       if (payload.trivia && payload.trivia.length > 0) {
         triviaList.value = payload.trivia
       }
@@ -886,33 +1237,54 @@ async function fetchArcadeContent() {
 // ─────────────────────────────────────────────────────────────
 // GAME LAUNCHERS & SCORE SAVING
 // ─────────────────────────────────────────────────────────────
-function startTeacherTest(gameKey) {
+function startTeacherTest(gameOrKey) {
   isTeacherTestMode.value = true
-  startGame(gameKey)
+  launchGame(gameOrKey)
 }
 
-function startApprenticeGame(gameKey) {
+function startApprenticeGame(gameOrKey) {
   isTeacherTestMode.value = false
-  startGame(gameKey)
+  launchGame(gameOrKey)
 }
 
-function startGame(gameKey) {
-  activeGame.value = gameKey
+function launchGame(gameOrKey) {
+  let game = null
+  let keyOrTemplate = ''
+
+  if (typeof gameOrKey === 'string') {
+    keyOrTemplate = gameOrKey
+    game = arcadeGamesList.value.find(g => g.key === gameOrKey || g.template === gameOrKey)
+  } else if (gameOrKey && typeof gameOrKey === 'object') {
+    game = gameOrKey
+    keyOrTemplate = game.template || game.key
+  }
+
+  currentGameInstance.value = game || {
+    name: 'Minijuego Clínico',
+    subtitle: 'Práctica de enfermería',
+    pts: 100,
+    key: keyOrTemplate
+  }
+
+  activeGame.value = game?.key || keyOrTemplate
+  activeEngine.value = game?.template || keyOrTemplate
   gameFinished.value = false
 
-  if (gameKey === 'warmup_drag_match') {
+  if (activeEngine.value === 'warmup_drag_match') {
     resetDragGame()
-  } else if (gameKey === 'trivia_medica') {
+  } else if (activeEngine.value === 'trivia_medica') {
     resetTriviaGame()
-  } else if (gameKey === 'drug_match') {
+  } else if (activeEngine.value === 'drug_match') {
     resetMatchGame()
-  } else if (gameKey === 'listening_challenge') {
+  } else if (activeEngine.value === 'listening_challenge') {
     resetListeningGame()
   }
 }
 
 function quitGame() {
   activeGame.value = null
+  activeEngine.value = null
+  currentGameInstance.value = null
   isTeacherTestMode.value = false
   gameFinished.value = false
   if (auth.isAdmin || auth.isInstructor) {
@@ -928,6 +1300,8 @@ async function recordFinalScore(scoreAwarded, roundsCount = 4) {
     return
   }
 
+  const finalPts = currentGameInstance.value?.pts || scoreAwarded
+
   try {
     const token = getToken()
     const res = await fetch(`${apiBaseUrl}/api/gamification/games/score`, {
@@ -938,7 +1312,7 @@ async function recordFinalScore(scoreAwarded, roundsCount = 4) {
       },
       body: JSON.stringify({
         gameKey: activeGame.value,
-        score: scoreAwarded,
+        score: finalPts,
         roundsCompleted: roundsCount
       })
     })
@@ -951,7 +1325,7 @@ async function recordFinalScore(scoreAwarded, roundsCount = 4) {
       }
       notificationStore.notify({
         type: 'success',
-        title: `+${scoreAwarded} XP Ganados`,
+        title: `+${finalPts} XP Ganados`,
         message: '¡Excelente desempeño en el arcade clínico!'
       })
     }

@@ -12,6 +12,12 @@ router.get('/badges', GamificationController.getBadges)
 // Resumen administrativo de juegos y partidas (JuegosView.vue admin)
 router.get('/admin/games-overview', GamificationController.getAdminGamesOverview)
 
+// CRUD Administrativo de Juegos del Arcade
+router.post('/admin/games', GamificationController.createArcadeGame)
+router.put('/admin/games/:id', GamificationController.updateArcadeGame)
+router.delete('/admin/games/:id', GamificationController.deleteArcadeGame)
+router.patch('/admin/games/:id/toggle', GamificationController.toggleArcadeGame)
+
 // Contenido dinámico para los minijuegos del Arcade (preguntas, vocabulario, pares)
 router.get('/arcade/content', GamificationController.getArcadeContent)
 

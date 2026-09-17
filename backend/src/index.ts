@@ -14,7 +14,8 @@ import {
   ensureDefaultVocabulary,
   ensureDefaultDialogues,
   ensureDefaultCourses,
-  ensureDefaultGlossary
+  ensureDefaultGlossary,
+  ensureDefaultArcadeGames
 } from './lib/bootstrapAuth.js'
 import { GamificationService } from './services/gamification.service.js'
 import { globalErrorHandler } from './middlewares/error.middleware.js'
@@ -86,6 +87,7 @@ try {
   await ensureDefaultDialogues()
   await ensureDefaultCourses()
   await ensureDefaultGlossary()
+  await ensureDefaultArcadeGames()
   await GamificationService.ensureBadges()
   console.log('Todos los datos iniciales y catálogos fueron inicializados exitosamente.')
 } catch (error) {

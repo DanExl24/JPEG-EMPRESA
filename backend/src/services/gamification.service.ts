@@ -1,5 +1,6 @@
 import prisma from '../lib/db.js'
 import type { RecordGameScoreDto, LeaderboardEntryDto } from '../types/gamification.types.js'
+import { DEFAULT_ARCADE_GAMES } from '../lib/bootstrapAuth.js'
 
 export const BADGE_CATALOG = [
   { key: 'primer_paso',       name: 'Primer Paso',        description: 'Completaste tu primera actividad',    iconEmoji: '🎯', xpRequired: 1   },
@@ -281,9 +282,21 @@ export class GamificationService {
       }
     })
 
+    // Asegurar juegos semilla si la tabla está vacía
+    const gameCount = await prisma.arcadeGame.count()
+    if (gameCount === 0) {
+      for (const g of DEFAULT_ARCADE_GAMES) {
+        await prisma.arcadeGame.create({ data: g })
+      }
+    }
+
+    const allGames = await prisma.arcadeGame.findMany({
+      orderBy: { id: 'asc' }
+    })
+
     // Desglose de partidas por cada minijuego del Arcade
     const gamesWithStats = await Promise.all(
-      ARCADE_GAMES.map(async (game) => {
+      allGames.map(async (game: any) => {
         const plays = await prisma.gameScore.count({
           where: { gameKey: game.key }
         })
@@ -308,7 +321,7 @@ export class GamificationService {
         totalPlays,
         totalXpAwarded,
         activePlayersCount: uniquePlayers.length,
-        totalArcadeGames: ARCADE_GAMES.length,
+        totalArcadeGames: allGames.length,
         mostPopularGame: mostPopular
       },
       games: gamesWithStats,
@@ -321,6 +334,12 @@ export class GamificationService {
    * consumiendo vocabulario clínico y glosario desde la base de datos
    */
   static async getArcadeContent() {
+    // Juegos activos desde la BD
+    const activeGames = await prisma.arcadeGame.findMany({
+      where: { active: true },
+      orderBy: { id: 'asc' }
+    })
+
     // 1. Obtener vocabulario de la BD
     const vocabularyList = await prisma.vocabulary.findMany({
       take: 50,
@@ -349,7 +368,6 @@ export class GamificationService {
 
     // ── Trivia Médica: 10 preguntas dinámicas ──
     const triviaQuestions = shuffledVocab.slice(0, 10).map((item, idx) => {
-      // Tomar 3 distractores del mismo u otro vocabulario
       const distractors = shuffledVocab
         .filter(v => v.id !== item.id)
         .slice(0, 3)
@@ -370,7 +388,6 @@ export class GamificationService {
         incorrectAnswers = distractors.map(d => d.wordEn)
       }
 
-      // Si no hay suficientes distractores, usar alternativas por defecto
       while (incorrectAnswers.length < 3) {
         incorrectAnswers.push(`Opción médica ${incorrectAnswers.length + 1}`)
       }
@@ -417,11 +434,71 @@ export class GamificationService {
     })
 
     return {
-      catalog: ARCADE_GAMES,
+      catalog: activeGames.length > 0 ? activeGames : DEFAULT_ARCADE_GAMES,
       trivia: triviaQuestions,
       pairs: matchPairs,
       listening: listeningTerms
     }
+  }
+
+  /**
+   * Operaciones CRUD sobre los Juegos del Arcade (Admin / Instructor)
+   */
+  static async createArcadeGame(data: any) {
+    const rawKey = (data.name || 'game').toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30)
+    const key = `${rawKey}_${Date.now().toString().slice(-4)}`
+
+    return prisma.arcadeGame.create({
+      data: {
+        key,
+        name: data.name.trim(),
+        subtitle: data.subtitle?.trim() || null,
+        description: data.description?.trim() || 'Práctica lúdica de enfermería clínica.',
+        template: data.template || 'trivia_medica',
+        icon: data.icon || 'sports_esports',
+        color: data.color || 'text-blue-500',
+        bg: data.bg || 'bg-blue-50',
+        difficulty: data.difficulty || 'Medio',
+        pts: Number(data.pts) || 100,
+        duration: data.duration || '5 min',
+        active: data.active !== undefined ? Boolean(data.active) : true
+      }
+    })
+  }
+
+  static async updateArcadeGame(id: number, data: any) {
+    return prisma.arcadeGame.update({
+      where: { id },
+      data: {
+        ...(data.name && { name: data.name.trim() }),
+        ...(data.subtitle !== undefined && { subtitle: data.subtitle?.trim() || null }),
+        ...(data.description && { description: data.description.trim() }),
+        ...(data.template && { template: data.template }),
+        ...(data.icon && { icon: data.icon }),
+        ...(data.color && { color: data.color }),
+        ...(data.bg && { bg: data.bg }),
+        ...(data.difficulty && { difficulty: data.difficulty }),
+        ...(data.pts !== undefined && { pts: Number(data.pts) }),
+        ...(data.duration && { duration: data.duration }),
+        ...(data.active !== undefined && { active: Boolean(data.active) })
+      }
+    })
+  }
+
+  static async deleteArcadeGame(id: number) {
+    return prisma.arcadeGame.delete({
+      where: { id }
+    })
+  }
+
+  static async toggleArcadeGame(id: number) {
+    const existing = await prisma.arcadeGame.findUnique({ where: { id } })
+    if (!existing) throw new Error('Juego no encontrado')
+
+    return prisma.arcadeGame.update({
+      where: { id },
+      data: { active: !existing.active }
+    })
   }
 }
 

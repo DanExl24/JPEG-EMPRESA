@@ -67,4 +67,43 @@ export class GamificationController {
       next(error)
     }
   }
+
+  static async createArcadeGame(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const game = await GamificationService.createArcadeGame(req.body)
+      ApiResponse.created(res, game, 'Juego creado exitosamente.')
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async updateArcadeGame(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Number(req.params.id)
+      const game = await GamificationService.updateArcadeGame(id, req.body)
+      ApiResponse.success(res, game, 'Juego actualizado exitosamente.')
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async deleteArcadeGame(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Number(req.params.id)
+      await GamificationService.deleteArcadeGame(id)
+      ApiResponse.success(res, null, 'Juego eliminado exitosamente.')
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async toggleArcadeGame(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Number(req.params.id)
+      const game = await GamificationService.toggleArcadeGame(id)
+      ApiResponse.success(res, game, `Juego ${game.active ? 'activado' : 'pausado'} exitosamente.`)
+    } catch (error) {
+      next(error)
+    }
+  }
 }
