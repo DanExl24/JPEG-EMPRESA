@@ -49,19 +49,19 @@
                 'bg-blue-100 text-blue-700': auth.role === 'instructor',
                 'bg-teal-100 text-teal-700': auth.role === 'aprendiz',
               }">
-              {{ auth.roleLabel }}
+              {{ t('roles.' + auth.role) }}
             </span>
           </div>
         </div>
 
         <button
           :class="`${sidebarOpen ? 'mt-3 w-full justify-start px-3' : 'mt-3 w-10 h-10 justify-center mx-auto'} flex items-center gap-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-colors`"
-          :title="sidebarOpen ? '' : 'Cerrar sesión'"
+          :title="sidebarOpen ? '' : t('nav.logout')"
           type="button"
           @click="handleLogout"
         >
           <span class="material-symbols-outlined text-xl shrink-0">logout</span>
-          <span v-if="sidebarOpen" class="text-sm font-medium">Cerrar sesión</span>
+          <span v-if="sidebarOpen" class="text-sm font-medium">{{ t('nav.logout') }}</span>
         </button>
       </div>
     </aside>
@@ -98,8 +98,11 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useI18nStore } from '../stores/i18n'
 
 const auth = useAuthStore()
+const i18n = useI18nStore()
+const { t } = i18n
 const route = useRoute()
 const router = useRouter()
 const sidebarOpen = ref(true)
@@ -110,34 +113,34 @@ const menuGroups = computed(() => {
       {
         label: '',
         items: [
-          { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+          { name: t('nav.dashboard'), path: '/dashboard/inicio', icon: 'dashboard' },
         ]
       },
       {
-        label: 'Gestión Académica',
+        label: t('nav.groups.academic'),
         items: [
-          { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-          { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-          { name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' },
-          { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
-          { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
-          { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
-          { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+          { name: t('nav.courses'), path: '/dashboard/cursos', icon: 'school' },
+          { name: t('nav.activities'), path: '/dashboard/actividades', icon: 'task' },
+          { name: t('nav.curriculum'), path: '/dashboard/curriculum', icon: 'schema' },
+          { name: t('nav.vocabulary'), path: '/dashboard/vocabulario', icon: 'translate' },
+          { name: t('nav.glossary'), path: '/dashboard/glosario', icon: 'menu_book' },
+          { name: t('nav.dialogues'), path: '/dashboard/dialogos', icon: 'chat' },
+          { name: t('nav.games'), path: '/dashboard/juegos', icon: 'sports_esports' },
         ]
       },
       {
-        label: 'Gestión Institucional',
+        label: t('nav.groups.institutional'),
         items: [
-          { name: 'Usuarios', path: '/dashboard/usuarios', icon: 'group' },
-          { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
-          { name: 'Catálogo de Logros', path: '/dashboard/logros', icon: 'emoji_events' },
+          { name: t('nav.users'), path: '/dashboard/usuarios', icon: 'group' },
+          { name: t('nav.analytics'), path: '/dashboard/analiticas', icon: 'analytics' },
+          { name: t('nav.badges'), path: '/dashboard/logros', icon: 'emoji_events' },
         ]
       },
       {
-        label: 'Sistema',
+        label: t('nav.groups.system'),
         items: [
-          { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
-          { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
+          { name: t('nav.profile'), path: '/dashboard/perfil', icon: 'person' },
+          { name: t('nav.settings'), path: '/dashboard/settings', icon: 'settings' },
         ]
       },
     ]
@@ -148,32 +151,32 @@ const menuGroups = computed(() => {
       {
         label: '',
         items: [
-          { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+          { name: t('nav.dashboard'), path: '/dashboard/inicio', icon: 'dashboard' },
         ]
       },
       {
-        label: 'Docencia y Cursos',
+        label: t('nav.groups.teaching'),
         items: [
-          { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-          { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-          { name: 'Gestión Curricular', path: '/dashboard/curriculum', icon: 'schema' },
-          { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
-          { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
-          { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
-          { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+          { name: t('nav.courses'), path: '/dashboard/cursos', icon: 'school' },
+          { name: t('nav.activities'), path: '/dashboard/actividades', icon: 'task' },
+          { name: t('nav.curriculum'), path: '/dashboard/curriculum', icon: 'schema' },
+          { name: t('nav.vocabulary'), path: '/dashboard/vocabulario', icon: 'translate' },
+          { name: t('nav.glossary'), path: '/dashboard/glosario', icon: 'menu_book' },
+          { name: t('nav.dialogues'), path: '/dashboard/dialogos', icon: 'chat' },
+          { name: t('nav.games'), path: '/dashboard/juegos', icon: 'sports_esports' },
         ]
       },
       {
-        label: 'Seguimiento',
+        label: t('nav.groups.tracking'),
         items: [
-          { name: 'Analíticas', path: '/dashboard/analiticas', icon: 'analytics' },
+          { name: t('nav.analytics'), path: '/dashboard/analiticas', icon: 'analytics' },
         ]
       },
       {
-        label: 'Cuenta',
+        label: t('nav.groups.account'),
         items: [
-          { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
-          { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
+          { name: t('nav.profile'), path: '/dashboard/perfil', icon: 'person' },
+          { name: t('nav.settings'), path: '/dashboard/settings', icon: 'settings' },
         ]
       },
     ]
@@ -183,73 +186,78 @@ const menuGroups = computed(() => {
     {
       label: '',
       items: [
-        { name: 'Dashboard', path: '/dashboard/inicio', icon: 'dashboard' },
+        { name: t('nav.dashboard'), path: '/dashboard/inicio', icon: 'dashboard' },
       ]
     },
     {
-      label: 'Aprendizaje',
+      label: t('nav.groups.learning'),
       items: [
-        { name: 'Cursos', path: '/dashboard/cursos', icon: 'school' },
-        { name: 'Actividades', path: '/dashboard/actividades', icon: 'task' },
-        { name: 'Mi Progreso', path: '/dashboard/progreso', icon: 'trending_up' },
-        { name: 'Vocabulario', path: '/dashboard/vocabulario', icon: 'translate' },
-        { name: 'Glosario', path: '/dashboard/glosario', icon: 'menu_book' },
-        { name: 'Diálogos', path: '/dashboard/dialogos', icon: 'chat' },
+        { name: t('nav.courses'), path: '/dashboard/cursos', icon: 'school' },
+        { name: t('nav.activities'), path: '/dashboard/actividades', icon: 'task' },
+        { name: t('nav.progress'), path: '/dashboard/progreso', icon: 'trending_up' },
+        { name: t('nav.vocabulary'), path: '/dashboard/vocabulario', icon: 'translate' },
+        { name: t('nav.glossary'), path: '/dashboard/glosario', icon: 'menu_book' },
+        { name: t('nav.dialogues'), path: '/dashboard/dialogos', icon: 'chat' },
       ]
     },
     {
-      label: 'Comunidad',
+      label: t('nav.groups.community'),
       items: [
-        { name: 'Ranking', path: '/dashboard/ranking', icon: 'leaderboard' },
-        { name: 'Mis Logros', path: '/dashboard/logros', icon: 'emoji_events' },
-        { name: 'Juegos', path: '/dashboard/juegos', icon: 'sports_esports' },
+        { name: t('nav.ranking'), path: '/dashboard/ranking', icon: 'leaderboard' },
+        { name: t('nav.badges'), path: '/dashboard/logros', icon: 'emoji_events' },
+        { name: t('nav.games'), path: '/dashboard/juegos', icon: 'sports_esports' },
       ]
     },
     {
-      label: 'Cuenta',
+      label: t('nav.groups.account'),
       items: [
-        { name: 'Perfil', path: '/dashboard/perfil', icon: 'person' },
-        { name: 'Configuración', path: '/dashboard/settings', icon: 'settings' },
+        { name: t('nav.profile'), path: '/dashboard/perfil', icon: 'person' },
+        { name: t('nav.settings'), path: '/dashboard/settings', icon: 'settings' },
       ]
     },
   ]
 })
 
-const pageTitles = {
-  '/dashboard/inicio': 'Dashboard',
-  '/dashboard/cursos': 'Cursos',
-  '/dashboard/actividades': 'Actividades',
-  '/dashboard/progreso': 'Progreso',
-  '/dashboard/vocabulario': 'Vocabulario',
-  '/dashboard/glosario': 'Glosario',
-  '/dashboard/dialogos': 'Diálogos Clínicos',
-  '/dashboard/curriculum': 'Gestión Curricular',
-  '/dashboard/ranking': 'Ranking',
-  '/dashboard/logros': 'Logros',
-  '/dashboard/juegos': 'Juegos',
-  '/dashboard/analiticas': 'Analíticas',
-  '/dashboard/usuarios': 'Usuarios',
-  '/dashboard/perfil': 'Perfil',
-  '/dashboard/settings': 'Configuración',
+const pageTitleKeys = {
+  '/dashboard/inicio': 'nav.dashboard',
+  '/dashboard/cursos': 'nav.courses',
+  '/dashboard/actividades': 'nav.activities',
+  '/dashboard/progreso': 'nav.progress',
+  '/dashboard/vocabulario': 'nav.vocabulary',
+  '/dashboard/glosario': 'nav.glossary',
+  '/dashboard/dialogos': 'nav.dialogues',
+  '/dashboard/curriculum': 'nav.curriculum',
+  '/dashboard/ranking': 'nav.ranking',
+  '/dashboard/logros': 'nav.badges',
+  '/dashboard/juegos': 'nav.games',
+  '/dashboard/analiticas': 'nav.analytics',
+  '/dashboard/usuarios': 'nav.users',
+  '/dashboard/perfil': 'nav.profile',
+  '/dashboard/settings': 'nav.settings',
 }
 
 const currentPageTitle = computed(() => {
-  if (route.path.startsWith('/dashboard/actividades/')) return 'Detalle de Actividad'
-  return pageTitles[route.path] || 'Dashboard'
+  if (route.path.startsWith('/dashboard/actividades/')) return t('nav.activities')
+  const key = pageTitleKeys[route.path]
+  return key ? t(key) : t('nav.dashboard')
 })
 
 const userInitials = computed(() => {
-  return auth.user.name
-    .split(' ')
-    .filter(Boolean)
-    .map((name) => name[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || 'NA'
+  return auth.user?.name
+    ? auth.user.name
+        .split(' ')
+        .filter(Boolean)
+        .map((name) => name[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'NA'
 })
 
 const today = computed(() => {
-  return new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const localeMap = { es: 'es-ES', en: 'en-US', pt: 'pt-BR' }
+  const activeLocale = localeMap[i18n.locale] || 'es-ES'
+  return new Date().toLocaleDateString(activeLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 })
 
 function isActive(path) {

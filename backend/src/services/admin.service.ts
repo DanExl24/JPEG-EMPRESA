@@ -211,15 +211,42 @@ export class AdminService {
   /**
    * Actualiza preferencias de usuario (SettingsView.vue)
    */
-  static async updatePreferences(userId: number, data: Partial<{ emailNotifications: boolean; activityAlerts: boolean; rankingAlerts: boolean; theme: string; language: string }>) {
+  static async updatePreferences(
+    userId: number,
+    data: {
+      emailNotifications?: boolean
+      activityAlerts?: boolean
+      rankingAlerts?: boolean
+      theme?: string
+      language?: string
+    }
+  ) {
+    const updateData: Record<string, unknown> = {}
+
+    if (typeof data.emailNotifications === 'boolean') {
+      updateData.emailNotifications = data.emailNotifications
+    }
+    if (typeof data.activityAlerts === 'boolean') {
+      updateData.activityAlerts = data.activityAlerts
+    }
+    if (typeof data.rankingAlerts === 'boolean') {
+      updateData.rankingAlerts = data.rankingAlerts
+    }
+    if (typeof data.language === 'string') {
+      const normalizedLang = data.language.toLowerCase().trim()
+      if (['es', 'en', 'pt'].includes(normalizedLang)) {
+        updateData.language = normalizedLang
+      }
+    }
+
     return await prisma.userPreference.upsert({
       where: { userId },
       create: {
         userId,
-        ...data
+        ...updateData
       },
       update: {
-        ...data
+        ...updateData
       }
     })
   }
