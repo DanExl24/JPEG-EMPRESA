@@ -978,7 +978,79 @@ const adminStats = ref({
 })
 
 const recentScores = ref([])
-const arcadeGamesList = ref([])
+
+const DEFAULT_PREDETERMINED_GAMES = [
+  {
+    id: 1,
+    key: 'warmup_drag_match',
+    template: 'warmup_drag_match',
+    name: 'Warm-up Drag Match',
+    subtitle: 'Calentamiento Clínico Interactivo',
+    description: 'Asocia iconos clínicos y saludos médicos arrastrándolos a sus expresiones en inglés correspondientes.',
+    icon: 'pan_tool',
+    color: 'text-blue-500',
+    bg: 'bg-blue-50',
+    difficulty: 'Fácil',
+    pts: 100,
+    duration: '3 min',
+    active: true,
+    playsCount: 0,
+    totalXp: 0
+  },
+  {
+    id: 2,
+    key: 'trivia_medica',
+    template: 'trivia_medica',
+    name: 'Trivia Médica Contrarreloj',
+    subtitle: 'Desafío Rápido de Vocabulario y Síntomas',
+    description: 'Preguntas de opción múltiple generadas en vivo desde el vocabulario de enfermería para poner a prueba tu velocidad.',
+    icon: 'quiz',
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-50',
+    difficulty: 'Medio',
+    pts: 100,
+    duration: '5 min',
+    active: true,
+    playsCount: 0,
+    totalXp: 0
+  },
+  {
+    id: 3,
+    key: 'drug_match',
+    template: 'drug_match',
+    name: 'Pares Clínicos / Speed Match',
+    subtitle: 'Emparejamiento de Términos y Definiciones',
+    description: 'Encuentra las parejas correspondientes entre términos en inglés y su traducción clínica antes de que expire el tiempo.',
+    icon: 'medication',
+    color: 'text-orange-500',
+    bg: 'bg-orange-50',
+    difficulty: 'Medio',
+    pts: 80,
+    duration: '4 min',
+    active: true,
+    playsCount: 0,
+    totalXp: 0
+  },
+  {
+    id: 4,
+    key: 'listening_challenge',
+    template: 'listening_challenge',
+    name: 'Desafío de Escucha Fonética',
+    subtitle: 'Audio y Transcripción Clínica',
+    description: 'Escucha la pronunciación en inglés de términos médicos y selecciona o transcribe la palabra correcta.',
+    icon: 'hearing',
+    color: 'text-purple-500',
+    bg: 'bg-purple-50',
+    difficulty: 'Difícil',
+    pts: 80,
+    duration: '4 min',
+    active: true,
+    playsCount: 0,
+    totalXp: 0
+  }
+]
+
+const arcadeGamesList = ref([...DEFAULT_PREDETERMINED_GAMES])
 
 const userXp = computed(() => auth.user?.xp || 0)
 
@@ -1196,7 +1268,7 @@ async function loadAdminData() {
       const payload = data.data || data
       if (payload.stats) adminStats.value = payload.stats
       if (payload.recentScores) recentScores.value = payload.recentScores
-      if (payload.games && Array.isArray(payload.games)) {
+      if (payload.games && Array.isArray(payload.games) && payload.games.length > 0) {
         arcadeGamesList.value = payload.games
       }
     }

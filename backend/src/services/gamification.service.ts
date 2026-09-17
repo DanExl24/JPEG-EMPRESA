@@ -282,32 +282,43 @@ export class GamificationService {
       }
     })
 
-    // Asegurar juegos semilla si la tabla está vacía
-    const gameCount = await prisma.arcadeGame.count()
-    if (gameCount === 0) {
-      for (const g of DEFAULT_ARCADE_GAMES) {
-        await prisma.arcadeGame.create({ data: g })
+    // Asegurar juegos en BD con fallback resiliente
+    let allGames: any[] = DEFAULT_ARCADE_GAMES
+    try {
+      const gameCount = await prisma.arcadeGame.count()
+      if (gameCount === 0) {
+        for (const g of DEFAULT_ARCADE_GAMES) {
+          await prisma.arcadeGame.create({ data: g })
+        }
       }
+      allGames = await prisma.arcadeGame.findMany({
+        orderBy: { id: 'asc' }
+      })
+    } catch (e) {
+      console.warn('Tabla arcade_games no disponible aún, usando catálogo por defecto:', e)
     }
-
-    const allGames = await prisma.arcadeGame.findMany({
-      orderBy: { id: 'asc' }
-    })
 
     // Desglose de partidas por cada minijuego del Arcade
     const gamesWithStats = await Promise.all(
       allGames.map(async (game: any) => {
-        const plays = await prisma.gameScore.count({
-          where: { gameKey: game.key }
-        })
-        const xpSum = await prisma.gameScore.aggregate({
-          where: { gameKey: game.key },
-          _sum: { score: true }
-        })
+        let plays = 0
+        let totalXp = 0
+        try {
+          plays = await prisma.gameScore.count({
+            where: { gameKey: game.key }
+          })
+          const xpSum = await prisma.gameScore.aggregate({
+            where: { gameKey: game.key },
+            _sum: { score: true }
+          })
+          totalXp = xpSum._sum.score || 0
+        } catch {
+          // Ignorar si falla lectura de scores
+        }
         return {
           ...game,
           playsCount: plays,
-          totalXp: xpSum._sum.score || 0
+          totalXp
         }
       })
     )
@@ -334,11 +345,19 @@ export class GamificationService {
    * consumiendo vocabulario clínico y glosario desde la base de datos
    */
   static async getArcadeContent() {
-    // Juegos activos desde la BD
-    const activeGames = await prisma.arcadeGame.findMany({
-      where: { active: true },
-      orderBy: { id: 'asc' }
-    })
+    // Juegos activos desde la BD con fallback seguro
+    let activeGames: any[] = DEFAULT_ARCADE_GAMES
+    try {
+      const dbGames = await prisma.arcadeGame.findMany({
+        where: { active: true },
+        orderBy: { id: 'asc' }
+      })
+      if (dbGames && dbGames.length > 0) {
+        activeGames = dbGames
+      }
+    } catch (e) {
+      console.warn('Tabla arcade_games no disponible aún en getArcadeContent, usando fallback:', e)
+    }
 
     // 1. Obtener vocabulario de la BD
     const vocabularyList = await prisma.vocabulary.findMany({
