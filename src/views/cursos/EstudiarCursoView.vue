@@ -357,10 +357,364 @@
               ? 'Momento 2: Explora el Presente Simple (rutinas) vs. Presente Continuo (acciones ahora), fórmulas de sugerencias de mejora, flashcards de herramientas médicas y el diálogo de atención.'
               : moduleNumber === 2 
               ? 'Momento 2: Explora el Pasado Simple vs. Adjetivos Descriptivos, interactúa con las flashcards de anatomía/hospital y analiza el Storybook de entrega de turno.' 
-              : 'Momento 2: Explora la gramática básica, practica el vocabulario de saludos e información personal, y revisa el Storybook y el contexto de enfermería.' }}
+              : 'Momento 2: Aprende la estructura Persona + Acción + Detalle, practica el alfabeto, los números y tus datos de contacto, y observa una conversación real entre colegas que se conocen por primera vez.' }}
           </p>
         </div>
 
+        <!-- ========================================== -->
+        <!-- MÓDULO 1 — HU17: ABSORCIÓN DE CONOCIMIENTO -->
+        <!-- ========================================== -->
+        <template v-if="moduleNumber === 1">
+          <!-- Stepper secuencial de secciones -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              v-for="(sec, sIdx) in m1StudySections"
+              :key="sec.id"
+              type="button"
+              @click="goToM1Section(sec.id)"
+              :disabled="!isM1SectionUnlocked(sec.id)"
+              :class="`flex items-center gap-3 p-4 rounded-2xl border text-left transition-all ${
+                m1StudySection === sec.id
+                  ? 'bg-[#006688] text-white border-[#006688] shadow-md'
+                  : isM1SectionUnlocked(sec.id)
+                    ? 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]'
+                    : 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+              }`"
+            >
+              <span class="material-symbols-outlined text-xl">
+                {{ isM1SectionUnlocked(sec.id) ? (m1StudyDone[sec.id] ? 'check_circle' : sec.icon) : 'lock' }}
+              </span>
+              <span class="flex-1">
+                <span class="block text-[10px] font-black uppercase tracking-widest opacity-70">Sección {{ sIdx + 1 }}</span>
+                <span class="block text-xs font-bold">{{ sec.name }}</span>
+              </span>
+            </button>
+          </div>
+
+          <!-- 2.1 PÍLDORA DE GRAMÁTICA -->
+          <div v-if="m1StudySection === 'grammar'" class="space-y-6">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">table_chart</span>
+              <h4 class="font-bold text-gray-800 text-sm">2.1 Píldora de Gramática — Persona + Acción + Detalle (Basic Sentence Structure)</h4>
+            </div>
+            <p class="text-xs text-gray-600">
+              Toda oración en inglés se construye con tres bloques: <strong>Persona</strong> (quién), <strong>Acción</strong> (qué hace o cómo está) y <strong>Detalle</strong> (la información que completa la idea). Observa la tabla, los colores y escucha cada ejemplo del entorno laboral.
+            </p>
+
+            <!-- Tabla clara de estructura -->
+            <div class="overflow-x-auto rounded-2xl border border-gray-100">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="bg-[#006688] text-white">
+                    <th class="px-4 py-3 text-left font-black">Persona (Subject)</th>
+                    <th class="px-4 py-3 text-left font-black">Acción (Verb)</th>
+                    <th class="px-4 py-3 text-left font-black">Detalle (Complement)</th>
+                    <th class="px-4 py-3 text-center font-black">Audio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, rIdx) in m1GrammarRows" :key="rIdx" class="border-b border-gray-100 last:border-0 bg-white">
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-blue-100 text-blue-700 font-black">{{ row.subject }}</span></td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-orange-100 text-orange-700 font-black">{{ row.verb }}</span></td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-green-100 text-green-700 font-bold">{{ row.complement }}</span></td>
+                    <td class="px-4 py-3 text-center">
+                      <button @click="speakEnglish(row.full)" class="text-[#006688] hover:bg-[#006688]/10 p-1.5 rounded-lg" title="Escuchar oración">
+                        <span class="material-symbols-outlined text-base">volume_up</span>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Oraciones coloreadas con filtros de leyenda -->
+            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+              <div v-for="(row, rIdx) in m1GrammarRows" :key="rIdx" class="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-semibold text-gray-800">
+                    <span :class="`px-0.5 rounded ${getGrammarHighlightClass('subject')}`">{{ row.subject }} </span>
+                    <span :class="`px-0.5 rounded ${getGrammarHighlightClass('verb')}`">{{ row.verb }} </span>
+                    <span :class="`px-0.5 rounded ${getGrammarHighlightClass('complement')}`">{{ row.complement }}</span>
+                  </p>
+                  <p class="text-[10px] text-gray-500 italic mt-0.5">{{ row.spanish }}</p>
+                </div>
+                <button @click="speakEnglish(row.full)" class="text-[#006688] hover:bg-[#006688]/10 p-1.5 rounded-lg shrink-0" title="Escuchar oración">
+                  <span class="material-symbols-outlined text-base">volume_up</span>
+                </button>
+              </div>
+
+              <div class="flex flex-wrap justify-center gap-2 pt-2 border-t border-gray-200">
+                <button
+                  v-for="leg in m1GrammarLegend"
+                  :key="leg.id"
+                  @click="toggleGrammarLegend(leg.id)"
+                  :class="`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                    activeGrammarFilters.includes(leg.id)
+                      ? `${leg.bg} ${leg.text} ${leg.border}`
+                      : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                  }`"
+                >
+                  <span :class="`w-2 h-2 rounded-full ${leg.dotBg}`"></span>
+                  {{ leg.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Desglose del verbo To Be -->
+            <div class="bg-teal-50/70 border border-teal-200 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center gap-2 border-b border-teal-200 pb-2">
+                <span class="material-symbols-outlined text-teal-700 text-lg">spellcheck</span>
+                <span class="text-xs font-black text-teal-900 uppercase tracking-wide">El Verbo To Be — I am / You are</span>
+              </div>
+              <p class="text-[11px] text-teal-800 font-medium">El verbo <strong>To Be</strong> cambia según la persona. Memoriza estas formas básicas y escucha cada ejemplo:</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div v-for="(tb, tIdx) in m1ToBeTable" :key="tIdx" class="bg-white p-3 rounded-xl border border-teal-100 shadow-xs flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-xs font-bold text-gray-800">
+                      <span class="text-blue-700 font-black">{{ tb.pronoun }}</span>
+                      <span class="text-orange-600 font-black mx-1">{{ tb.form }}</span>
+                      <span class="text-green-700 font-semibold">{{ tb.complement }}</span>
+                    </p>
+                    <p class="text-[10px] text-gray-500 italic mt-0.5">{{ tb.spanish }}</p>
+                  </div>
+                  <button @click="speakEnglish(tb.full)" class="text-teal-700 hover:bg-teal-50 p-1.5 rounded-lg shrink-0" title="Escuchar">
+                    <span class="material-symbols-outlined text-base">volume_up</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                @click="completeM1Section('grammar')"
+                :class="`flex items-center gap-1 px-5 py-3 text-xs font-black rounded-xl shadow transition-all ${
+                  m1StudyDone.grammar ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-[#006688] hover:bg-[#004e69] text-white'
+                }`"
+              >
+                <span class="material-symbols-outlined text-sm">{{ m1StudyDone.grammar ? 'check_circle' : 'arrow_forward' }}</span>
+                {{ m1StudyDone.grammar ? 'Sección 2.1 completada' : 'Entendido, ir al Laboratorio de Vocabulario' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 2.2 LABORATORIO DE VOCABULARIO -->
+          <div v-else-if="m1StudySection === 'vocabulary'" class="space-y-6">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-xl text-[#006688]">style</span>
+                <h4 class="font-bold text-gray-800 text-sm">2.2 Laboratorio de Vocabulario — Alfabeto, Números, Saludos y Contacto</h4>
+              </div>
+              <span class="text-xs bg-[#006688]/5 text-[#006688] font-bold px-3 py-1 rounded-full">
+                Escuchados: {{ m1HeardCount }} / {{ m1AllVocabItems.length }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-600">
+              Pulsa el botón de sonido de cada tarjeta y repite en voz alta. Puedes reproducir cada audio tantas veces como necesites: no hay límite de intentos.
+            </p>
+
+            <!-- Categorías -->
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="cat in m1VocabCategories"
+                :key="cat.id"
+                @click="m1ActiveCategory = cat.id"
+                :class="`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  m1ActiveCategory === cat.id ? 'bg-[#006688] text-white border-[#006688] shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-[#006688]'
+                }`"
+              >
+                <span class="material-symbols-outlined text-base">{{ cat.icon }}</span>
+                {{ cat.label }}
+                <span :class="`text-[10px] px-1.5 py-0.5 rounded-full font-black ${m1ActiveCategory === cat.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`">
+                  {{ cat.items.filter(i => i.played).length }}/{{ cat.items.length }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Tarjetas de audio -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <div
+                v-for="item in m1ActiveVocabItems"
+                :key="item.id"
+                class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:border-[#006688] transition-all flex flex-col justify-between gap-3"
+              >
+                <div class="space-y-1.5">
+                  <div class="flex items-start justify-between gap-1">
+                    <span class="text-sm font-black text-gray-800 break-words">{{ item.word }}</span>
+                    <span v-if="item.played" class="text-green-600 material-symbols-outlined text-sm bg-green-50 rounded-full p-0.5 border border-green-200 shrink-0">check_circle</span>
+                  </div>
+                  <div class="inline-flex items-center gap-1 text-[10px] font-bold text-[#006688] bg-[#006688]/8 px-2 py-0.5 rounded-md">
+                    <span class="text-[9px] text-gray-400 font-bold uppercase">Pron:</span>
+                    <span>{{ item.pronunciation }}</span>
+                  </div>
+                  <p class="text-[11px] text-gray-600 font-medium leading-snug">{{ item.translation }}</p>
+                </div>
+                <button
+                  @click="playM1VocabAudio(item)"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] text-xs font-bold transition-all w-full justify-center"
+                >
+                  <span class="material-symbols-outlined text-base">{{ playingVocabId === item.id ? 'graphic_eq' : 'volume_up' }}</span>
+                  <span>{{ playingVocabId === item.id ? 'Reproduciendo...' : 'Escuchar' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Dictado aplicado al entorno laboral -->
+            <div class="space-y-3 pt-4 border-t border-gray-100">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg text-[#006688]">record_voice_over</span>
+                <h5 class="font-bold text-gray-800 text-xs">Aplicación laboral — Dictar un correo y un teléfono</h5>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div v-for="d in m1DictationExamples" :key="d.id" class="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-2">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base text-[#006688]">{{ d.icon }}</span>
+                    <span class="text-xs font-black text-gray-700">{{ d.title }}</span>
+                  </div>
+                  <p class="text-xs font-semibold text-gray-800">{{ d.phrase }}</p>
+                  <p class="text-[11px] font-mono bg-white border border-gray-100 rounded-lg px-2 py-1 text-[#006688] break-words">{{ d.breakdown }}</p>
+                  <p class="text-[10px] text-gray-500 italic">{{ d.spanish }}</p>
+                  <div class="flex flex-wrap gap-2 pt-1">
+                    <button @click="speakEnglish(d.phrase)" class="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] text-[10px] font-bold">
+                      <span class="material-symbols-outlined text-sm">volume_up</span> Frase completa
+                    </button>
+                    <button @click="speakEnglish(d.spelling, 0.7)" class="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold">
+                      <span class="material-symbols-outlined text-sm">slow_motion_video</span> Deletreo lento
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p v-if="!isM1VocabComplete" class="text-[11px] text-gray-500">
+                Escucha todas las tarjetas para habilitar la conversación ({{ m1HeardCount }} / {{ m1AllVocabItems.length }}).
+              </p>
+              <p v-else class="text-[11px] text-green-600 font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span> ¡Vocabulario completo! Continúa con la conversación.
+              </p>
+              <button
+                @click="completeM1Section('vocabulary')"
+                :disabled="!isM1VocabComplete"
+                :class="`flex items-center gap-1 px-5 py-3 text-xs font-black rounded-xl shadow transition-all ${
+                  isM1VocabComplete ? 'bg-[#006688] hover:bg-[#004e69] text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`"
+              >
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                {{ m1StudyDone.vocabulary ? 'Sección 2.2 completada' : 'Continuar a la Conversación' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 2.3 EXPLICACIÓN DINÁMICA (CHAT) -->
+          <div v-else class="space-y-6">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">forum</span>
+              <h4 class="font-bold text-gray-800 text-sm">2.3 Explicación Dinámica — Conversación Guiada: Sarah &amp; David</h4>
+            </div>
+            <p class="text-xs text-gray-600">
+              Lee la conversación mensaje a mensaje. Sarah y David se conocen por primera vez en el hospital y comparten su nombre, edad, país, correo y teléfono. Usa el botón de audio para escuchar cada mensaje.
+            </p>
+
+            <!-- Chat estilo celular -->
+            <div class="max-w-md mx-auto">
+              <div class="bg-gray-900 rounded-[2rem] p-3 shadow-xl">
+                <div class="bg-slate-50 rounded-[1.4rem] overflow-hidden">
+                  <div class="bg-[#006688] text-white px-4 py-3 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center border border-white/30">
+                      <span class="material-symbols-outlined text-base">groups</span>
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-xs font-black">Clinic Chat</p>
+                      <p class="text-[10px] text-white/70">Sarah &amp; David · En línea</p>
+                    </div>
+                    <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                  </div>
+
+                  <div class="p-4 space-y-3 h-[360px] overflow-y-auto bg-slate-100">
+                    <p v-if="m1ChatVisibleCount === 0" class="text-center text-[11px] text-gray-400 pt-24">
+                      Pulsa "Iniciar conversación" para leer el diálogo.
+                    </p>
+                    <div
+                      v-for="(msg, mIdx) in visibleM1ChatMessages"
+                      :key="mIdx"
+                      :class="`flex gap-2 max-w-[88%] ${msg.alignLeft ? 'mr-auto' : 'ml-auto flex-row-reverse'}`"
+                    >
+                      <div :class="`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white shadow-sm ${msg.avatarBg}`">
+                        <span class="material-symbols-outlined text-sm">{{ msg.avatarIcon }}</span>
+                      </div>
+                      <div :class="`p-3 rounded-2xl text-xs shadow-sm border leading-relaxed ${msg.alignLeft ? 'bg-white text-gray-800 rounded-tl-none border-gray-100' : 'bg-emerald-50/90 text-gray-800 rounded-tr-none border-emerald-100'}`">
+                        <div class="flex items-center justify-between gap-3 mb-1">
+                          <span class="font-bold text-[9px] uppercase tracking-widest text-gray-400">{{ msg.speaker }}</span>
+                          <button @click="speakEnglish(msg.english)" class="text-[#006688] hover:text-[#004e69]" title="Escuchar mensaje">
+                            <span class="material-symbols-outlined text-sm">volume_up</span>
+                          </button>
+                        </div>
+                        <p v-if="msg.parts" class="font-semibold text-gray-900">
+                          <span v-for="(part, pIdx) in msg.parts" :key="pIdx" :class="`px-0.5 rounded ${getGrammarHighlightClass(part.type)}`">{{ part.text }}</span>
+                        </p>
+                        <p v-else class="font-semibold text-gray-900">{{ msg.english }}</p>
+                        <p class="text-gray-500 mt-1 italic text-[10px]">{{ msg.spanish }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="p-3 bg-white border-t border-gray-100 flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-bold text-gray-400">Mensajes: {{ m1ChatVisibleCount }} / {{ m1ChatMessages.length }}</span>
+                    <button
+                      v-if="m1ChatVisibleCount < m1ChatMessages.length"
+                      @click="nextM1ChatMessage"
+                      class="flex items-center gap-1 px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-[11px] font-black rounded-xl shadow-sm"
+                    >
+                      <span class="material-symbols-outlined text-sm">{{ m1ChatVisibleCount === 0 ? 'chat' : 'arrow_forward' }}</span>
+                      {{ m1ChatVisibleCount === 0 ? 'Iniciar conversación' : 'Siguiente mensaje' }}
+                    </button>
+                    <span v-else class="flex items-center gap-1 text-[11px] font-bold text-green-600">
+                      <span class="material-symbols-outlined text-sm">check_circle</span> Conversación completada
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Felicitación y desbloqueo del Momento 3 -->
+            <div v-if="m1StudyDone.chat" class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center space-y-3 animate-fade-in">
+              <span class="material-symbols-outlined text-4xl text-green-600">celebration</span>
+              <h5 class="text-sm font-black text-green-800">¡Felicitaciones! Completaste la Fase de Absorción de Conocimiento</h5>
+              <p class="text-xs text-green-700 max-w-lg mx-auto leading-relaxed">
+                Ya comprendes la estructura básica de las oraciones, reconoces el alfabeto, los números y tus datos de contacto, y sabes cómo presentarte. El <strong>Momento 3: Práctica y Aplicación</strong> está desbloqueado.
+              </p>
+              <button @click="goToPhase('practica')" class="inline-flex items-center gap-1 px-5 py-3 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow">
+                <span class="material-symbols-outlined text-sm">arrow_forward</span> Ir al Momento 3: Práctica
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Action Validation -->
+          <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+            <button
+              @click="goToPhase('inicio')"
+              class="flex items-center gap-1 px-4 py-2.5 text-xs border border-gray-200 hover:bg-gray-50 font-bold rounded-xl transition-all"
+            >
+              <span class="material-symbols-outlined text-sm">arrow_back</span>
+              Volver a Inicio
+            </button>
+
+            <button
+              @click="validateStudyPhase"
+              :disabled="!isStudyCompleted"
+              :class="`flex items-center gap-1 px-5 py-3 text-xs font-black rounded-xl shadow transition-all ${
+                isStudyCompleted
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`"
+            >
+              Siguiente Fase: Práctica
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </template>
+
+        <template v-else>
         <!-- MODULE 4 GRAMMAR PILL: Medical Advice with Modals vs Reporting Results -->
         <div v-if="moduleNumber === 4" class="space-y-6">
           <div class="flex items-center gap-2">
@@ -546,41 +900,6 @@
           </div>
         </div>
 
-        <!-- MODULE 1 GRAMMAR PILL -->
-        <div v-else class="space-y-4">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-[#006688]">palette</span>
-            <h4 class="font-bold text-gray-800 text-sm">1. Grammar Pill — Basic Sentence Structure (Subject + Verb + Complement)</h4>
-          </div>
-          <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-6">
-            <div class="text-base sm:text-lg font-semibold text-gray-800 leading-relaxed text-center px-4">
-              <span 
-                v-for="(part, idx) in grammarSentence" 
-                :key="idx" 
-                :class="`transition-all duration-300 px-1 py-0.5 rounded ${getGrammarHighlightClass(part.type)}`"
-              >
-                {{ part.text }}
-              </span>
-            </div>
-
-            <div class="flex flex-wrap justify-center gap-2 pt-2 border-t border-gray-200">
-              <button 
-                v-for="leg in grammarLegend" 
-                :key="leg.id"
-                @click="toggleGrammarLegend(leg.id)"
-                :class="`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                  activeGrammarFilters.includes(leg.id)
-                    ? `${leg.bg} ${leg.text} ${leg.border}`
-                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
-                }`"
-              >
-                <span :class="`w-2 h-2 rounded-full ${leg.dotBg}`"></span>
-                {{ leg.label }}
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- Vocabulary Laboratory Flashcards Zone -->
         <div class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center justify-between">
@@ -727,6 +1046,7 @@
             <span class="material-symbols-outlined text-sm">arrow_forward</span>
           </button>
         </div>
+        </template>
       </div>
 
 
@@ -1582,21 +1902,234 @@ watch([videoCompleted, gameSuccess], () => {
 // -----------------------------------------------------------------
 const activeGrammarFilters = ref(['subject', 'verb', 'complement'])
 
-// Module 1 Grammar Sentence
-const grammarSentence = [
-  { text: 'I ', type: 'subject' },
-  { text: 'am ', type: 'verb' },
-  { text: 'a nurse. ', type: 'complement' },
-  { text: 'I ', type: 'subject' },
-  { text: 'am ', type: 'verb' },
-  { text: 'Colombian. ', type: 'complement' }
+// -----------------------------------------------------------------
+// MÓDULO 1 — HU17: Absorción de Conocimiento (secciones secuenciales)
+// -----------------------------------------------------------------
+const m1StudySections = [
+  { id: 'grammar', name: 'Gramática', icon: 'palette' },
+  { id: 'vocabulary', name: 'Vocabulario', icon: 'style' },
+  { id: 'chat', name: 'Conversación', icon: 'forum' },
 ]
 
-const grammarLegend = [
-  { id: 'subject', label: 'Sujeto (Subject)', bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', dotBg: 'bg-blue-500' },
-  { id: 'verb', label: 'Verbo To Be (Verb)', bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', dotBg: 'bg-green-500' },
-  { id: 'complement', label: 'Complemento (Complement)', bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', dotBg: 'bg-amber-500' }
+const m1StudySection = ref('grammar')
+const m1StudyDone = ref({ grammar: false, vocabulary: false, chat: false })
+const m1ChatVisibleCount = ref(0)
+
+// 2.1 Gramática — Persona + Acción + Detalle
+const m1GrammarRows = [
+  { subject: 'I', verb: 'am', complement: 'a nurse at this hospital.', spanish: 'Soy enfermero(a) en este hospital.', full: 'I am a nurse at this hospital.' },
+  { subject: 'You', verb: 'are', complement: 'a nursing assistant.', spanish: 'Eres auxiliar de enfermería.', full: 'You are a nursing assistant.' },
+  { subject: 'He', verb: 'is', complement: 'a patient in room 204.', spanish: 'Él es un paciente de la habitación 204.', full: 'He is a patient in room 204.' },
+  { subject: 'She', verb: 'is', complement: 'my work colleague.', spanish: 'Ella es mi compañera de trabajo.', full: 'She is my work colleague.' },
+  { subject: 'We', verb: 'are', complement: 'the night shift team.', spanish: 'Somos el equipo del turno de noche.', full: 'We are the night shift team.' },
+  { subject: 'They', verb: 'are', complement: 'nurses from Canada.', spanish: 'Ellos son enfermeros de Canadá.', full: 'They are nurses from Canada.' },
 ]
+
+const m1GrammarLegend = [
+  { id: 'subject', label: 'Persona (Subject)', bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', dotBg: 'bg-blue-500' },
+  { id: 'verb', label: 'Acción (Verb)', bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300', dotBg: 'bg-orange-500' },
+  { id: 'complement', label: 'Detalle (Complement)', bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', dotBg: 'bg-green-500' },
+]
+
+const m1ToBeTable = [
+  { pronoun: 'I', form: 'am', complement: 'a nurse.', full: 'I am a nurse.', spanish: 'Yo soy enfermero(a).' },
+  { pronoun: 'You', form: 'are', complement: 'a nursing assistant.', full: 'You are a nursing assistant.', spanish: 'Tú eres auxiliar de enfermería.' },
+  { pronoun: 'He', form: 'is', complement: 'a patient.', full: 'He is a patient.', spanish: 'Él es un paciente.' },
+  { pronoun: 'She', form: 'is', complement: 'my colleague.', full: 'She is my colleague.', spanish: 'Ella es mi colega.' },
+  { pronoun: 'We', form: 'are', complement: 'a team.', full: 'We are a team.', spanish: 'Nosotros somos un equipo.' },
+  { pronoun: 'They', form: 'are', complement: 'nurses.', full: 'They are nurses.', spanish: 'Ellos son enfermeros.' },
+]
+
+// 2.2 Vocabulario — Alfabeto, Números, Saludos y Contacto
+const M1_ALPHABET = [
+  ['A', '[éi]'], ['B', '[bi]'], ['C', '[si]'], ['D', '[di]'], ['E', '[i]'], ['F', '[ef]'],
+  ['G', '[yi]'], ['H', '[éich]'], ['I', '[ái]'], ['J', '[dchéi]'], ['K', '[kéi]'], ['L', '[el]'],
+  ['M', '[em]'], ['N', '[en]'], ['O', '[óu]'], ['P', '[pi]'], ['Q', '[kiu]'], ['R', '[ar]'],
+  ['S', '[es]'], ['T', '[ti]'], ['U', '[iú]'], ['V', '[vi]'], ['W', '[dábliu]'], ['X', '[eks]'],
+  ['Y', '[uái]'], ['Z', '[zi]'],
+]
+
+const m1AlphabetItems = ref(M1_ALPHABET.map(([letter, pronunciation]) => ({
+  id: `m1_alpha_${letter}`,
+  word: letter,
+  pronunciation,
+  translation: `Letra "${letter}" del alfabeto`,
+  category: 'Abecedario',
+  icon: 'abc',
+  iconBg: 'bg-cyan-50 text-cyan-600 border-cyan-100',
+  played: false,
+})))
+
+const M1_NUMBERS = [
+  ['Zero', '0', '[zí-rou]'], ['One', '1', '[uán]'], ['Two', '2', '[tú]'], ['Three', '3', '[zrí]'],
+  ['Four', '4', '[for]'], ['Five', '5', '[fáiv]'], ['Six', '6', '[siks]'], ['Seven', '7', '[sé-ven]'],
+  ['Eight', '8', '[éit]'], ['Nine', '9', '[náin]'], ['Ten', '10', '[ten]'], ['Eleven', '11', '[i-lé-ven]'],
+  ['Twelve', '12', '[tuélv]'], ['Thirteen', '13', '[zer-tín]'], ['Fourteen', '14', '[for-tín]'],
+  ['Fifteen', '15', '[fif-tín]'], ['Sixteen', '16', '[siks-tín]'], ['Seventeen', '17', '[se-ven-tín]'],
+  ['Eighteen', '18', '[éi-tín]'], ['Nineteen', '19', '[nain-tín]'], ['Twenty', '20', '[tuén-ti]'],
+  ['Thirty', '30', '[zér-ti]'], ['Forty', '40', '[fór-ti]'], ['Fifty', '50', '[fíf-ti]'],
+  ['Sixty', '60', '[síks-ti]'], ['Seventy', '70', '[sé-ven-ti]'], ['Eighty', '80', '[éi-ti]'],
+  ['Ninety', '90', '[náin-ti]'], ['One hundred', '100', '[uán ján-dred]'],
+]
+
+const m1NumberItems = ref(M1_NUMBERS.map(([word, value, pronunciation]) => ({
+  id: `m1_num_${value}`,
+  word,
+  pronunciation,
+  translation: `Número ${value}`,
+  category: 'Números',
+  icon: 'pin',
+  iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+  played: false,
+})))
+
+const M1_GREETINGS = [
+  ['Hello', '[je-lóu]', 'Hola (saludo general)'],
+  ['Hi', '[jái]', 'Hola (saludo informal entre colegas)'],
+  ['Good morning', '[gud mór-ning]', 'Buenos días (hasta 12:00 m)'],
+  ['Good afternoon', '[gud áf-ter-nun]', 'Buenas tardes (12:00 m – 6:00 pm)'],
+  ['Good evening', '[gud ív-ning]', 'Buenas noches (al llegar)'],
+  ['Nice to meet you', '[náis tu mít iu]', 'Mucho gusto en conocerte'],
+  ['How are you?', '[jáu ar iu]', '¿Cómo estás?'],
+  ['See you later', '[si yu léi-ter]', 'Hasta luego'],
+  ['Goodbye', '[gud-bái]', 'Adiós (despedida formal)'],
+]
+
+const m1GreetingItems = ref(M1_GREETINGS.map(([word, pronunciation, translation], idx) => ({
+  id: `m1_greet_${idx}`,
+  word,
+  pronunciation,
+  translation,
+  category: 'Saludos',
+  icon: 'waving_hand',
+  iconBg: 'bg-amber-50 text-amber-600 border-amber-100',
+  played: false,
+})))
+
+const M1_CONTACT = [
+  ['Name', '[néim]', 'Nombre personal'],
+  ['Last name', '[last néim]', 'Apellido'],
+  ['Age', '[éidch]', 'Edad en años'],
+  ['Nationality', '[na-shon-á-li-ti]', 'Nacionalidad u origen'],
+  ['Phone number', '[fóun nám-ber]', 'Número de teléfono'],
+  ['Email address', '[í-meil a-drés]', 'Dirección de correo electrónico'],
+  ['At sign (@)', '[at sáin]', 'Arroba dentro de un correo'],
+  ['Dot (.)', '[dot]', 'Punto dentro de un correo o página web'],
+  ['Hyphen (-)', '[jái-fen]', 'Guion para separar datos'],
+  ['Spelling', '[spé-ling]', 'Deletreo de letras'],
+]
+
+const m1ContactItems = ref(M1_CONTACT.map(([word, pronunciation, translation], idx) => ({
+  id: `m1_contact_${idx}`,
+  word,
+  pronunciation,
+  translation,
+  category: 'Contacto',
+  icon: 'contact_page',
+  iconBg: 'bg-rose-50 text-rose-600 border-rose-100',
+  played: false,
+})))
+
+const m1VocabCategories = computed(() => [
+  { id: 'alphabet', label: 'Abecedario', icon: 'abc', items: m1AlphabetItems.value },
+  { id: 'numbers', label: 'Números', icon: 'pin', items: m1NumberItems.value },
+  { id: 'greetings', label: 'Saludos y Despedidas', icon: 'waving_hand', items: m1GreetingItems.value },
+  { id: 'contact', label: 'Datos de Contacto', icon: 'contact_page', items: m1ContactItems.value },
+])
+
+const m1ActiveCategory = ref('alphabet')
+const m1ActiveVocabItems = computed(() => m1VocabCategories.value.find(c => c.id === m1ActiveCategory.value)?.items || [])
+const m1AllVocabItems = computed(() => m1VocabCategories.value.flatMap(c => c.items))
+const m1HeardCount = computed(() => m1AllVocabItems.value.filter(i => i.played).length)
+const isM1VocabComplete = computed(() => m1AllVocabItems.value.length > 0 && m1HeardCount.value === m1AllVocabItems.value.length)
+
+// Aplicación laboral: dictado de correo y teléfono
+const m1DictationExamples = [
+  {
+    id: 'email',
+    icon: 'alternate_email',
+    title: 'Dictar un correo electrónico',
+    phrase: 'My email is laura.gomez@clinic.com',
+    breakdown: 'laura . gomez @ clinic . com',
+    spelling: 'L A U R A dot G O M E Z at C L I N I C dot com',
+    spanish: 'Mi correo es laura.gomez@clinic.com',
+  },
+  {
+    id: 'phone',
+    icon: 'call',
+    title: 'Dictar un número de teléfono',
+    phrase: 'My phone number is 555 2048',
+    breakdown: 'five five five - two zero four eight',
+    spelling: 'five, five, five, two, zero, four, eight',
+    spanish: 'Mi número de teléfono es 555 2048',
+  },
+]
+
+// 2.3 Conversación guiada estilo chat (nombre, edad, país, contacto)
+const m1ChatMessages = [
+  {
+    speaker: 'Nurse Sarah', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true,
+    english: 'Hi! Good morning. I am Sarah.',
+    spanish: '¡Hola! Buenos días. Soy Sarah.',
+    parts: [
+      { text: 'Hi! Good morning. ', type: null },
+      { text: 'I ', type: 'subject' }, { text: 'am ', type: 'verb' }, { text: 'Sarah.', type: 'complement' },
+    ],
+  },
+  {
+    speaker: 'Nurse David', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false,
+    english: 'Good morning, Sarah. I am David. Nice to meet you.',
+    spanish: 'Buenos días, Sarah. Soy David. Mucho gusto.',
+    parts: [
+      { text: 'Good morning, Sarah. ', type: null },
+      { text: 'I ', type: 'subject' }, { text: 'am ', type: 'verb' }, { text: 'David.', type: 'complement' },
+      { text: ' Nice to meet you.', type: null },
+    ],
+  },
+  {
+    speaker: 'Nurse Sarah', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true,
+    english: 'Nice to meet you too. Are you a new nurse here?',
+    spanish: 'Mucho gusto también. ¿Eres nuevo aquí como enfermero?',
+  },
+  {
+    speaker: 'Nurse David', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false,
+    english: 'Yes, I am. I am a nurse at this hospital. I am from Canada.',
+    spanish: 'Sí. Soy enfermero en este hospital. Soy de Canadá.',
+    parts: [
+      { text: 'Yes, ', type: null },
+      { text: 'I ', type: 'subject' }, { text: 'am', type: 'verb' }, { text: '. ', type: null },
+      { text: 'I ', type: 'subject' }, { text: 'am ', type: 'verb' }, { text: 'a nurse at this hospital.', type: 'complement' },
+      { text: ' I am from Canada.', type: null },
+    ],
+  },
+  {
+    speaker: 'Nurse Sarah', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true,
+    english: 'Welcome to the team! How old are you?',
+    spanish: '¡Bienvenido al equipo! ¿Cuántos años tienes?',
+  },
+  {
+    speaker: 'Nurse David', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false,
+    english: 'I am twenty-nine years old. And you?',
+    spanish: 'Tengo veintinueve años. ¿Y tú?',
+  },
+  {
+    speaker: 'Nurse Sarah', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true,
+    english: 'I am thirty-two. My email is sarah.jones@clinic.com.',
+    spanish: 'Tengo treinta y dos. Mi correo es sarah.jones@clinic.com.',
+  },
+  {
+    speaker: 'Nurse David', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false,
+    english: 'Great. My phone number is 555 2048. See you later!',
+    spanish: 'Genial. Mi número de teléfono es 555 2048. ¡Hasta luego!',
+  },
+  {
+    speaker: 'Nurse Sarah', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true,
+    english: 'See you later! Goodbye.',
+    spanish: '¡Hasta luego! Adiós.',
+  },
+]
+
+const visibleM1ChatMessages = computed(() => m1ChatMessages.slice(0, m1ChatVisibleCount.value))
 
 // Module 2 Grammar Examples
 const m2PastExamples = [
@@ -1637,21 +2170,6 @@ const m4ResultsExamples = [
 ]
 
 // Vocabulary Lists (Sleek Material Icons & Pronunciation Guides)
-const m1VocabList = ref([
-  { id: 'v1', word: 'Hello', pronunciation: '[je-lóu]', translation: 'Hola (Saludo general)', category: 'Saludo', icon: 'waving_hand', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
-  { id: 'v2', word: 'Good morning', pronunciation: '[gud mór-ning]', translation: 'Buenos días (hasta 12pm)', category: 'Saludo', icon: 'wb_sunny', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
-  { id: 'v3', word: 'Good afternoon', pronunciation: '[gud áf-ter-nun]', translation: 'Buenas tardes (12pm–6pm)', category: 'Saludo', icon: 'light_mode', iconBg: 'bg-orange-50 text-orange-600 border-orange-100', played: false },
-  { id: 'v4', word: 'Good evening', pronunciation: '[gud ív-ning]', translation: 'Buenas noches (al llegar)', category: 'Saludo', icon: 'bedtime', iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-100', played: false },
-  { id: 'v5', word: 'Goodbye', pronunciation: '[gud-bái]', translation: 'Adiós (despedida formal)', category: 'Despedida', icon: 'directions_walk', iconBg: 'bg-rose-50 text-rose-600 border-rose-100', played: false },
-  { id: 'v6', word: 'See you later', pronunciation: '[si yu léi-ter]', translation: 'Hasta luego', category: 'Despedida', icon: 'pan_tool', iconBg: 'bg-teal-50 text-teal-600 border-teal-100', played: false },
-  { id: 'v7', word: 'Name', pronunciation: '[néim]', translation: 'Nombre personal', category: 'Personal', icon: 'badge', iconBg: 'bg-cyan-50 text-cyan-600 border-cyan-100', played: false },
-  { id: 'v8', word: 'Last name', pronunciation: '[last néim]', translation: 'Apellido', category: 'Personal', icon: 'assignment_ind', iconBg: 'bg-purple-50 text-purple-600 border-purple-100', played: false },
-  { id: 'v9', word: 'Age', pronunciation: '[éidch]', translation: 'Edad en años', category: 'Personal', icon: 'cake', iconBg: 'bg-pink-50 text-pink-600 border-pink-100', played: false },
-  { id: 'v10', word: 'Nationality', pronunciation: '[na-shon-á-li-ti]', translation: 'Nacionalidad u origen', category: 'Personal', icon: 'public', iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-100', played: false },
-  { id: 'v11', word: 'Phone number', pronunciation: '[fóun nám-ber]', translation: 'Número de teléfono', category: 'Personal', icon: 'call', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
-  { id: 'v12', word: 'Spelling', pronunciation: '[spé-ling]', translation: 'Deletreo de letras', category: 'Habilidad', icon: 'spellcheck', iconBg: 'bg-amber-50 text-amber-600 border-amber-100', played: false },
-])
-
 const m2VocabList = ref([
   { id: 'm2_v1', word: 'Head', pronunciation: '[jed]', translation: 'Cabeza (Anatomía)', category: 'Anatomía', icon: 'psychology', iconBg: 'bg-purple-50 text-purple-600 border-purple-100', played: false },
   { id: 'm2_v2', word: 'Arm', pronunciation: '[arm]', translation: 'Brazo (Anatomía)', category: 'Anatomía', icon: 'front_hand', iconBg: 'bg-blue-50 text-blue-600 border-blue-100', played: false },
@@ -1701,17 +2219,12 @@ const activeVocabList = computed(() => {
   if (moduleNumber.value === 4) return m4VocabList.value
   if (moduleNumber.value === 3) return m3VocabList.value
   if (moduleNumber.value === 2) return m2VocabList.value
-  return m1VocabList.value
+  return m1AllVocabItems.value
 })
 
 const playingVocabId = ref(null)
 
 // Dialogues
-const m1Dialogue = [
-  { speaker: 'Nurse Sarah', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning. My name is Sarah.', spanish: 'Buenos días. Mi nombre es Sarah.' },
-  { speaker: 'Nurse David', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'Good morning, Sarah. I\'m David.', spanish: 'Buenos días, Sarah. Soy David.' },
-]
-
 const m2Dialogue = [
   { speaker: 'Nurse Andrea', avatarIcon: 'person', avatarBg: 'bg-[#006688]', alignLeft: true, english: 'Good morning, Nurse Carlos. How is Mr. Thomas?', spanish: 'Buenos días, Carlos. ¿Cómo está Mr. Thomas?' },
   { speaker: 'Nurse Carlos', avatarIcon: 'person', avatarBg: 'bg-indigo-600', alignLeft: false, english: 'He fell yesterday. He has a bandage and is resting.', spanish: 'Se cayó ayer. Tiene un vendaje y está descansando.' },
@@ -1735,8 +2248,7 @@ const m4Dialogue = [
 const activeDialogue = computed(() => {
   if (moduleNumber.value === 4) return m4Dialogue
   if (moduleNumber.value === 3) return m3Dialogue
-  if (moduleNumber.value === 2) return m2Dialogue
-  return m1Dialogue
+  return m2Dialogue
 })
 
 const isStudyCompleted = computed(() => phaseProgress.value.estudio === 100)
@@ -1752,6 +2264,11 @@ function playVocabAudio(vocabItem) {
 }
 
 function checkPhase2Completion() {
+  if (moduleNumber.value === 1) {
+    syncM1StudyProgress()
+    saveProgress()
+    return
+  }
   const allPlayed = activeVocabList.value.every(v => v.played)
   if (allPlayed) {
     phaseProgress.value.estudio = 100
@@ -1759,8 +2276,67 @@ function checkPhase2Completion() {
   }
 }
 
+// -----------------------------------------------------------------
+// MÓDULO 1 — HU17: Secciones de absorción (gating, audio y chat)
+// -----------------------------------------------------------------
+function playM1VocabAudio(item) {
+  playingVocabId.value = item.id
+  speakEnglish(item.word)
+  setTimeout(() => {
+    playingVocabId.value = null
+    if (!item.played) {
+      item.played = true
+      persistLocalState()
+    }
+  }, 900)
+}
+
+function isM1SectionUnlocked(sectionId) {
+  if (sectionId === 'grammar') return true
+  if (sectionId === 'vocabulary') return m1StudyDone.value.grammar
+  return m1StudyDone.value.vocabulary
+}
+
+function goToM1Section(sectionId) {
+  if (!isM1SectionUnlocked(sectionId)) return
+  m1StudySection.value = sectionId
+  persistLocalState()
+}
+
+function syncM1StudyProgress() {
+  const done = m1StudyDone.value
+  const completed = (done.grammar ? 1 : 0) + (done.vocabulary ? 1 : 0) + (done.chat ? 1 : 0)
+  phaseProgress.value.estudio = Math.round((completed / m1StudySections.length) * 100)
+}
+
+function completeM1Section(section) {
+  if (section === 'grammar') {
+    m1StudyDone.value.grammar = true
+    if (m1StudySection.value === 'grammar') m1StudySection.value = 'vocabulary'
+  } else if (section === 'vocabulary') {
+    if (!m1StudyDone.value.grammar) return
+    m1StudyDone.value.vocabulary = true
+    if (m1StudySection.value === 'vocabulary') m1StudySection.value = 'chat'
+  } else if (section === 'chat') {
+    if (!m1StudyDone.value.vocabulary) return
+    m1StudyDone.value.chat = true
+  }
+  syncM1StudyProgress()
+  saveProgress()
+}
+
+function nextM1ChatMessage() {
+  if (m1ChatVisibleCount.value >= m1ChatMessages.length) return
+  m1ChatVisibleCount.value += 1
+  if (m1ChatVisibleCount.value >= m1ChatMessages.length && !m1StudyDone.value.chat) {
+    completeM1Section('chat')
+  } else {
+    persistLocalState()
+  }
+}
+
 function validateStudyPhase() {
-  phaseProgress.value.estudio = 100
+  if (!isStudyCompleted.value) return
   saveProgress()
   goToPhase('practica')
 }
@@ -2069,8 +2645,8 @@ function resetVideo() {
 function getGrammarHighlightClass(type) {
   if (!type || !activeGrammarFilters.value.includes(type)) return ''
   if (type === 'subject') return 'bg-blue-100 text-blue-700 border-b border-blue-400 font-bold'
-  if (type === 'verb') return 'bg-green-100 text-green-700 border-b border-green-400 font-bold'
-  if (type === 'complement') return 'bg-amber-100 text-amber-700 border-b border-amber-400 font-bold'
+  if (type === 'verb') return 'bg-orange-100 text-orange-700 border-b border-orange-400 font-bold'
+  if (type === 'complement') return 'bg-green-100 text-green-700 border-b border-green-400 font-bold'
   return ''
 }
 
@@ -2093,14 +2669,21 @@ const storageKey = computed(() => {
 
 const apiBaseUrl = getApiBaseUrl()
 
-async function saveProgress() {
-  const state = {
+function buildProgressState() {
+  return {
     currentPhase: currentPhase.value,
     phaseProgress: phaseProgress.value,
     videoCompleted: videoCompleted.value,
     gameSuccess: gameSuccess.value,
     matchedPairs: matchedPairs.value,
     vocabPlayed: activeVocabList.value.map(v => ({ id: v.id, played: v.played })),
+    m1Study: {
+      section: m1StudySection.value,
+      grammar: m1StudyDone.value.grammar,
+      vocabulary: m1StudyDone.value.vocabulary,
+      chat: m1StudyDone.value.chat,
+      chatRead: m1ChatVisibleCount.value,
+    },
     profileForm: profileForm.value,
     profileFormSuccess: profileFormSuccess.value,
     m2Notes: m2Notes.value,
@@ -2116,7 +2699,14 @@ async function saveProgress() {
     showBadgeAward: showBadgeAward.value,
     examAnswers: examAnswers.value,
   }
-  localStorage.setItem(storageKey.value, JSON.stringify(state))
+}
+
+function persistLocalState() {
+  localStorage.setItem(storageKey.value, JSON.stringify(buildProgressState()))
+}
+
+async function saveProgress() {
+  persistLocalState()
 
   // Persist to backend database if authenticated
   if (auth.token) {
@@ -2153,6 +2743,9 @@ async function loadProgress() {
       examPassed.value = false
       showBadgeAward.value = false
       examAnswers.value = {}
+      m1StudySection.value = 'grammar'
+      m1StudyDone.value = { grammar: false, vocabulary: false, chat: false }
+      m1ChatVisibleCount.value = 0
     } else {
       const state = JSON.parse(raw)
       if (state.currentPhase) currentPhase.value = state.currentPhase
@@ -2180,6 +2773,24 @@ async function loadProgress() {
       if (state.examPassed !== undefined) examPassed.value = state.examPassed
       if (state.showBadgeAward !== undefined) showBadgeAward.value = state.showBadgeAward
       if (state.examAnswers) examAnswers.value = state.examAnswers
+
+      // Módulo 1 (HU17): restaurar secciones exploradas de la absorción
+      if (state.m1Study && typeof state.m1Study === 'object') {
+        if (state.m1Study.section) m1StudySection.value = state.m1Study.section
+        m1StudyDone.value = {
+          grammar: Boolean(state.m1Study.grammar),
+          vocabulary: Boolean(state.m1Study.vocabulary),
+          chat: Boolean(state.m1Study.chat),
+        }
+        m1ChatVisibleCount.value = Number(state.m1Study.chatRead) || 0
+      } else if ((state.phaseProgress?.estudio || 0) >= 100) {
+        // Migración: versiones previas completaban la fase al escuchar todo el vocabulario
+        m1StudyDone.value = { grammar: true, vocabulary: true, chat: true }
+        m1ChatVisibleCount.value = m1ChatMessages.length
+      } else if ((state.phaseProgress?.estudio || 0) > 0) {
+        m1StudyDone.value.grammar = true
+        m1ChatVisibleCount.value = m1ChatMessages.length
+      }
     }
 
     // Try fetching synced progress from database
@@ -2194,6 +2805,12 @@ async function loadProgress() {
           if (dbProgress.currentPhase) currentPhase.value = dbProgress.currentPhase
         }
       }
+    }
+
+    // Módulo 1: recalcular el % de la fase de estudio según las secciones completadas
+    if (moduleNumber.value === 1) {
+      syncM1StudyProgress()
+      persistLocalState()
     }
   } catch (err) {
     console.error('Error loading progress:', err)
