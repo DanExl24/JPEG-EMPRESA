@@ -80,6 +80,7 @@ model Cohort {
   program_id    Int
   program       TrainingProgram @relation(fields: [program_id], references: [id])
   enrollments   Enrollment[]
+  courses       Course[]        @relation("CourseCohorts")
 
   @@map("cohorts")
 }
@@ -226,6 +227,7 @@ model Course {
   programId    Int?             @map("program_id")
   program      TrainingProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
   activities   Activity[]
+  cohorts      Cohort[]         @relation("CourseCohorts")
   raps         String?          @default("[]")
   progresses   CourseProgress[]
   createdAt    DateTime         @default(now()) @map("created_at")

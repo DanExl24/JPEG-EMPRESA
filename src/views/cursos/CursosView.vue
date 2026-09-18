@@ -62,6 +62,9 @@
               <span v-if="course.programName" class="text-[10px] font-bold text-[#006688] bg-[#006688]/10 px-2 py-0.5 rounded-full truncate max-w-[180px]">
                 {{ course.programName }}
               </span>
+              <span v-for="ficha in (course.cohorts || [])" :key="'ficha-' + ficha.id" class="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
+                {{ ficha.cohort_number }}
+              </span>
             </div>
 
             <!-- RAP Badges on Card -->
@@ -348,6 +351,25 @@
                   <option v-for="p in trainingPrograms" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
               </div>
+              <div class="md:col-span-2 space-y-2">
+                <label class="text-xs font-bold text-gray-500">Fichas / Cohortes del Curso</label>
+                <p class="text-[10px] text-gray-400 -mt-1">Selecciona una o varias fichas; se filtran por el programa elegido.</p>
+                <div v-if="cohortOptionsForCourse.length" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2.5 bg-gray-50 rounded-xl border border-gray-200">
+                  <label
+                    v-for="ficha in cohortOptionsForCourse"
+                    :key="ficha.id"
+                    :class="`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                      (form.cohortIds || []).includes(ficha.id)
+                        ? 'bg-teal-50 border-teal-400 text-teal-700 font-bold'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`"
+                  >
+                    <input type="checkbox" :value="ficha.id" v-model="form.cohortIds" class="rounded text-[#006688] cursor-pointer" />
+                    {{ ficha.cohort_number }}
+                  </label>
+                </div>
+                <p v-else class="text-[11px] text-gray-400 italic">No hay fichas registradas{{ form.programId ? ' para este programa' : '' }}. Créalas en Gestión Curricular.</p>
+              </div>
 
               <!-- RAPs Curriculum Linking -->
               <div class="md:col-span-2 space-y-2 pt-2 border-t border-gray-100">
@@ -447,13 +469,13 @@
                     </button>
                     <button
                       v-if="!showItemForm && (editingCourse?.structure || activePhaseItems.length)"
-                      @click="restoreOfficialStructure"
+                      @click="restoreCurrentPhase"
                       type="button"
                       class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
                       title="Elimina la personalización y vuelve al contenido por defecto del módulo"
                     >
                       <span class="material-symbols-outlined text-xs">restart_alt</span>
-                      Restaurar plantilla
+                      Restaurar fase
                     </button>
                   </div>
                 </div>
@@ -476,6 +498,7 @@
                       <button @click="moveItem(idx, -1)" :disabled="idx === 0" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50 disabled:opacity-30" title="Subir"><span class="material-symbols-outlined text-sm">arrow_upward</span></button>
                       <button @click="moveItem(idx, 1)" :disabled="idx === activePhaseItems.length - 1" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50 disabled:opacity-30" title="Bajar"><span class="material-symbols-outlined text-sm">arrow_downward</span></button>
                       <button @click="toggleItemVisible(item)" class="p-1 rounded-lg" :class="item.visible === false ? 'text-amber-500 hover:bg-amber-50' : 'text-gray-400 hover:text-[#006688] hover:bg-gray-50'" :title="item.visible === false ? 'Mostrar' : 'Ocultar'"><span class="material-symbols-outlined text-sm">{{ item.visible === false ? 'visibility_off' : 'visibility' }}</span></button>
+                      <button v-if="item.defaultKey" @click="restoreItemDefault(item)" class="p-1 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50" title="Restaurar ítem por defecto"><span class="material-symbols-outlined text-sm">restart_alt</span></button>
                       <button @click="openEditItem(item)" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50" title="Editar"><span class="material-symbols-outlined text-sm">edit</span></button>
                       <button @click="removeItem(item)" class="p-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50" title="Eliminar"><span class="material-symbols-outlined text-sm">delete</span></button>
                     </div>
@@ -540,6 +563,11 @@
                       <label class="text-[10px] font-bold text-gray-500">Elementos (separados por coma)</label>
                       <input type="text" v-model="itemForm.payload.csv" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" :placeholder="itemForm.type === 'wordorder' ? 'The nurse, checks, the, patient\'s, blood pressure' : 'stethoscope, bandage, vitals'" />
                       <p v-if="itemForm.type === 'wordorder'" class="text-[10px] text-gray-400 italic">El aprendiz deberá ordenarlas; escríbelas en el orden correcto.</p>
+                    </div>
+                    <div v-if="itemForm.type === 'warmup_drag'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Parejas a arrastrar (una por línea, formato "Tarjeta = Destino")</label>
+                      <textarea v-model="itemForm.payload.lines" rows="4" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" placeholder="Morning = Good morning&#10;Afternoon = Good afternoon&#10;Night = Good evening"></textarea>
+                      <p class="text-[10px] text-gray-400 italic">El aprendiz arrastra cada tarjeta hacia su destino correcto.</p>
                     </div>
                     <div v-if="itemForm.type === 'grammar'" class="space-y-1">
                       <label class="text-[10px] font-bold text-gray-500">Oraciones (una por línea, formato "Persona | Verbo | Detalle" o texto libre)</label>
@@ -858,6 +886,7 @@ import { useAuthStore } from '../../stores/auth'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
+import { OFFICIAL_STRUCTURES, getOfficialStructure, findOfficialDefault } from '../../data/officialStructures'
 import GlobalPostTestModal from '../../components/cursos/GlobalPostTestModal.vue'
 
 const auth = useAuthStore()
@@ -880,6 +909,29 @@ const DEFAULT_OFFICIAL_RAPS = [
 ]
 
 const availableRaps = ref([...DEFAULT_OFFICIAL_RAPS])
+const availableCohorts = ref([])
+const trainingPrograms = ref([])
+
+const cohortOptionsForCourse = computed(() => {
+  const programId = form.value.programId ? parseInt(form.value.programId) : null
+  if (!programId) return availableCohorts.value
+  return availableCohorts.value.filter(ficha => Number(ficha.program_id) === Number(programId))
+})
+
+async function fetchCohorts() {
+  try {
+    const token = getAuthToken()
+    const res = await fetch(`${apiBaseUrl}/api/admin/curriculum/cohorts`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (res.ok) {
+      const data = await res.json()
+      availableCohorts.value = Array.isArray(data) ? data : (data?.data || [])
+    }
+  } catch (err) {
+    console.warn('Backend cohorts unavailable:', err)
+  }
+}
 
 const newActivity = ref({
   id: null,
@@ -1046,6 +1098,7 @@ async function fetchCourses() {
             categoryText: catText,
             programId: c.programId || null,
             programName: c.programName || null,
+            cohorts: c.cohorts || [],
             progress: c.progress || 0,
             raps: parsedRaps,
             isLocked: Boolean(c.isLocked),
@@ -1107,6 +1160,7 @@ onMounted(async () => {
   await fetchActivities()
   await fetchTrainingPrograms()
   await fetchCurriculumRaps()
+  await fetchCohorts()
 
   const apprenticeId = auth.user?.id || 'guest'
   courses.value.forEach(course => {
@@ -1149,6 +1203,7 @@ onMounted(async () => {
 const courses = ref([
   {
     id: 1,
+    slug: 'getting-to-know-other-people',
     title: 'Getting to Know Other People',
     description: 'Módulo 1 — Fase Análisis · RAP 1. Aprende a saludar, presentarte, dar información personal y comunicarte con pacientes extranjeros en inglés.',
     category: 'Básico',
@@ -1163,6 +1218,7 @@ const courses = ref([
   },
   {
     id: 2,
+    slug: 'work-life-interaction',
     title: 'Work Life Interaction',
     description: 'Módulo 2 — Fase Planeación · RAP 2 y 3. Caso Mr. Thomas: Pasado simple, adjetivos descriptivos, partes del cuerpo, notas de enfermería y entrega de turno (Handover).',
     category: 'Intermedio',
@@ -1177,6 +1233,7 @@ const courses = ref([
   },
   {
     id: 3,
+    slug: 'workplace-communication',
     title: 'Workplace Communication',
     description: 'Módulo 3 — Fase Ejecución · RAP 4 y 5. Comunicación con médicos, colegas y visitantes: Presente simple vs. continuo, herramientas médicas, checklist clínico y propuestas de mejora.',
     category: 'Avanzado',
@@ -1191,6 +1248,7 @@ const courses = ref([
   },
   {
     id: 4,
+    slug: 'professional-practice',
     title: 'Professional Practice',
     description: 'Módulo 4 — Fase Evaluación · RAP 6. ¡Mr. Thomas se va a casa! Instrucciones de alta médica, recomendaciones de cuidado en casa con modales y análisis de listas de verificación.',
     category: 'Profesional',
@@ -1233,6 +1291,7 @@ const form = ref({
   categoryText: 'text-blue-700',
   programId: null,
   raps: [],
+  cohortIds: [],
   f1_welcome: '',
   f1_gameWords: '',
   f2_grammar: '',
@@ -1257,7 +1316,8 @@ const ITEM_TYPES_BY_PHASE = {
     { value: 'welcome', label: 'Texto de bienvenida' },
     { value: 'video', label: 'Video introductorio' },
     { value: 'objectives', label: 'Metas de aprendizaje' },
-    { value: 'wordorder', label: 'Calentamiento: ordenar palabras' }
+    { value: 'wordorder', label: 'Calentamiento: ordenar palabras' },
+    { value: 'warmup_drag', label: 'Calentamiento: arrastrar y soltar' }
   ],
   estudio: [
     { value: 'grammar', label: 'Explicación gramatical' },
@@ -1440,17 +1500,6 @@ function importCurrentStructure() {
   })
 }
 
-function restoreOfficialStructure() {
-  if (!confirm('Se eliminará la personalización de las 4 fases y se restaurará el contenido por defecto. ¿Continuar?')) return
-  structureItems.value = { inicio: [], estudio: [], practica: [], evaluacion: [] }
-  showItemForm.value = false
-  notificationStore.notify({
-    type: 'success',
-    title: 'Plantilla restaurada',
-    message: 'Al guardar, el curso volverá a su contenido por defecto.'
-  })
-}
-
 function structureItemsToV2() {
   const hasItems = Object.values(structureItems.value).some(list => list.length > 0)
   if (!hasItems) return null
@@ -1504,6 +1553,44 @@ function loadStructureIntoItems(structure) {
 
 function buildStructurePayload() {
   return structureItemsToV2()
+}
+
+function seedOfficialPhases() {
+  if (!editingCourse.value) return
+  const structure = getOfficialStructure(editingCourse.value.slug)
+  if (!structure) return
+  for (const phase of ['inicio', 'estudio', 'practica', 'evaluacion']) {
+    if ((structureItems.value[phase] || []).length > 0) continue
+    structureItems.value[phase] = (structure[phase] || []).map((item, index) => ({
+      ...JSON.parse(JSON.stringify(item)),
+      id: newItemId(),
+      origin: 'official',
+      order: index
+    }))
+  }
+}
+
+function restoreItemDefault(item) {
+  const def = findOfficialDefault(editingCourse.value?.slug, item.defaultKey)
+  if (!def) return
+  Object.assign(item, JSON.parse(JSON.stringify(def)), { id: item.id, origin: 'official', order: item.order })
+  notificationStore.notify({
+    type: 'success',
+    title: 'Ítem restaurado',
+    message: 'El ítem volvió a su contenido por defecto.'
+  })
+}
+
+function restoreCurrentPhase() {
+  if (!confirm('Se restaurará el contenido por defecto de esta fase. ¿Continuar?')) return
+  const phase = activeModalPhase.value
+  structureItems.value[phase] = []
+  showItemForm.value = false
+  notificationStore.notify({
+    type: 'success',
+    title: 'Fase restaurada',
+    message: 'Al guardar, la fase volverá a su contenido por defecto.'
+  })
 }
 
 const coursePhaseActivities = computed(() => {
@@ -1848,6 +1935,7 @@ function openNewCourseModal() {
     categoryText: 'text-blue-700',
     programId: null,
     raps: [],
+    cohortIds: [],
     f1_welcome: 'Welcome to this technical training module.',
     f1_gameWords: 'The nurse, checks, the, patient\'s, blood pressure',
     f2_grammar: 'The nurse checks the patient.',
@@ -1882,6 +1970,7 @@ function openEditCourseModal(course) {
     categoryText: course.categoryText,
     programId: course.programId || null,
     raps: course.raps ? [...course.raps] : [],
+    cohortIds: (course.cohorts || []).map(ficha => ficha.id),
     f1_welcome: structure?.f1?.welcome ?? course.f1_welcome ?? 'Welcome to this technical training module.',
     f1_gameWords: structure ? structureListToCsv(structure.f1?.gameWords) : (course.f1_gameWords || 'The nurse, checks, the, patient\'s, blood pressure'),
     f2_grammar: structure?.f2?.grammar ?? course.f2_grammar ?? 'The nurse checks the patient.',
@@ -1894,6 +1983,7 @@ function openEditCourseModal(course) {
   }
   
   structureItems.value = loadStructureIntoItems(structure)
+  seedOfficialPhases()
   resetItemForm()
   resetNewActivityForm()
   showModal.value = true
@@ -1927,7 +2017,8 @@ async function saveCourse() {
     bg: form.value.bg,
     programId: form.value.programId ? parseInt(form.value.programId) : null,
     structure: buildStructurePayload(),
-    raps: form.value.raps || []
+    raps: form.value.raps || [],
+    cohortIds: form.value.cohortIds || []
   }
 
   const token = getAuthToken()

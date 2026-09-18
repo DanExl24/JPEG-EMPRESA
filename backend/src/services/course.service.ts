@@ -117,6 +117,9 @@ export class CourseService {
         program: {
           select: { id: true, name: true }
         },
+        cohorts: {
+          select: { id: true, cohort_number: true, program_id: true }
+        },
         _count: {
           select: { progresses: true }
         }
@@ -197,6 +200,7 @@ export class CourseService {
         structure: c.structure || null,
         programId: c.programId || null,
         programName: c.program?.name || null,
+        cohorts: c.cohorts || [],
         studentsCount: studentCount,
         students: studentCount,
         activitiesCount,
@@ -216,7 +220,10 @@ export class CourseService {
     const allCourses = await prisma.course.findMany({
       orderBy: { id: 'asc' },
       include: {
-        program: true
+        program: true,
+        cohorts: {
+          select: { id: true, cohort_number: true, program_id: true }
+        }
       }
     })
 
@@ -309,7 +316,10 @@ export class CourseService {
         bg: data.bg || 'bg-blue-50',
         programId: data.programId || null,
         ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
-        raps: rapsValue
+        raps: rapsValue,
+        ...(Array.isArray(data.cohortIds) && data.cohortIds.length > 0
+          ? { cohorts: { connect: data.cohortIds.map(cohortId => ({ id: Number(cohortId) })) } }
+          : {})
       }
     })
   }
@@ -337,7 +347,10 @@ export class CourseService {
         ...(data.bg ? { bg: data.bg } : {}),
         ...(data.programId !== undefined ? { programId: data.programId } : {}),
         ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
-        ...(rapsValue !== undefined ? { raps: rapsValue } : {})
+        ...(rapsValue !== undefined ? { raps: rapsValue } : {}),
+        ...(Array.isArray(data.cohortIds)
+          ? { cohorts: { set: data.cohortIds.map(cohortId => ({ id: Number(cohortId) })) } }
+          : {})
       }
     })
 

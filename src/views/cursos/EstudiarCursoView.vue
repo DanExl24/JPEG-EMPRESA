@@ -215,7 +215,7 @@
         </div>
 
         <!-- Inicio editable (ítems de la estructura del curso) -->
-        <div v-if="usesStructuredContent" class="space-y-6">
+        <div v-if="phaseHasItems('inicio')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('inicio')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -256,6 +256,43 @@
                     type="button"
                     class="px-3 py-1.5 bg-white border border-gray-200 hover:border-[#006688] hover:text-[#006688] rounded-xl text-xs font-bold transition-all"
                   >{{ word }}</button>
+                </div>
+                <p v-if="itemState(entry.item).error" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">{{ itemState(entry.item).error }}</p>
+              </div>
+
+              <div v-if="entry.item.type === 'warmup_drag'" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tarjetas</span>
+                    <div class="flex flex-wrap gap-3 min-h-[90px] p-3 bg-white rounded-2xl border border-gray-100">
+                      <div
+                        v-for="(card, cardIdx) in dragCards(entry.item)"
+                        :key="cardIdx"
+                        v-show="!card.matched"
+                        @pointerdown="startItemDrag($event, entry.item, cardIdx)"
+                        :style="`transform: translate(${card.x}px, ${card.y}px);`"
+                        :class="`select-none cursor-grab active:cursor-grabbing bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-xl text-xs font-bold text-gray-700 touch-none transition-shadow ${card.isResetting ? 'card-reset' : ''}`"
+                      >
+                        {{ card.left }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Destinos</span>
+                    <div class="space-y-2">
+                      <div
+                        v-for="(card, cardIdx) in dragCards(entry.item)"
+                        :key="'slot-' + cardIdx"
+                        :data-item-slot="entry.item.id"
+                        :data-item-slot-right="card.right"
+                        class="border-2 border-dashed rounded-2xl p-3 text-center text-xs font-bold transition-all"
+                        :class="card.matched ? 'border-green-400 bg-green-50/70 text-green-700' : 'border-gray-200 bg-white/70 text-gray-700'"
+                      >
+                        {{ card.right }}
+                        <span v-if="card.matched" class="material-symbols-outlined text-sm align-middle ml-1">check</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <p v-if="itemState(entry.item).error" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">{{ itemState(entry.item).error }}</p>
               </div>
@@ -358,7 +395,7 @@
         </div>
 
         <!-- Welcome Video Section -->
-        <div v-if="showsOfficialContent" class="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div v-if="showsOfficialPhase('inicio')" class="grid grid-cols-1 md:grid-cols-5 gap-6">
           <div class="md:col-span-3 space-y-4">
             <div class="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video shadow-md">
               <video
@@ -471,7 +508,7 @@
         </div>
 
         <!-- Warm-up Game Section -->
-        <div v-if="showsOfficialContent" ref="warmupSectionRef" class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('inicio')" ref="warmupSectionRef" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
             <h4 class="font-bold text-gray-800 text-sm">
@@ -635,7 +672,7 @@
         </div>
 
         <!-- Actividades asignadas a esta fase (módulos oficiales) -->
-        <div v-if="showsOfficialContent && activitiesForPhase('inicio').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('inicio') && activitiesForPhase('inicio').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -718,7 +755,7 @@
         </div>
 
         <!-- Estudio editable (ítems de la estructura del curso) -->
-        <div v-if="usesStructuredContent" class="space-y-6">
+        <div v-if="phaseHasItems('estudio')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('estudio')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -1624,7 +1661,7 @@
         </div>
         </template>
 
-        <div v-if="showsOfficialContent && activitiesForPhase('estudio').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('estudio') && activitiesForPhase('estudio').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -1665,7 +1702,7 @@
         </div>
 
         <!-- Práctica editable (ítems de la estructura del curso) -->
-        <div v-if="usesStructuredContent" class="space-y-6">
+        <div v-if="phaseHasItems('practica')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('practica')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -1861,7 +1898,7 @@
         </div>
 
         <!-- MODULE 4 PRACTICE 1: Discharge Summary Form with Audio -->
-        <div v-if="showsOfficialContent && moduleNumber === 4" class="space-y-4">
+        <div v-if="showsOfficialPhase('practica') && moduleNumber === 4" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">description</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Formato Digital "Discharge Summary"</h4>
@@ -1949,7 +1986,7 @@
         </div>
 
         <!-- MODULE 4 PRACTICE 2: Checklist Analysis with Dropdowns -->
-        <div v-if="showsOfficialContent && moduleNumber === 4" class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('practica') && moduleNumber === 4" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">fact_check</span>
             <h4 class="font-bold text-gray-800 text-sm">2. Práctica Guiada 2 — Lectura y Análisis de Lista de Verificación (Checklist)</h4>
@@ -2035,7 +2072,7 @@
         </div>
 
         <!-- MODULE 3 PRACTICE 1 -->
-        <div v-else-if="showsOfficialContent && moduleNumber === 3" class="space-y-4">
+        <div v-else-if="showsOfficialPhase('practica') && moduleNumber === 3" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">checklist</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Nursing Checklist Digital</h4>
@@ -2102,7 +2139,7 @@
         </div>
 
         <!-- MODULE 2 PRACTICE 1 -->
-        <div v-else-if="showsOfficialContent && moduleNumber === 2" class="space-y-4">
+        <div v-else-if="showsOfficialPhase('practica') && moduleNumber === 2" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">clinical_notes</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Completar Notas de Enfermería</h4>
@@ -2125,7 +2162,7 @@
         </div>
 
         <!-- MODULE 1 PRACTICE 1 & 2 -->
-        <div v-else-if="showsOfficialContent" class="space-y-6">
+        <div v-else-if="showsOfficialPhase('practica')" class="space-y-6">
 
           <!-- 3.1 — Interactive ID Card (Subject + Verb + Complement) -->
           <div class="space-y-4">
@@ -2365,7 +2402,7 @@
           </div>
         </div>
 
-        <div v-if="showsOfficialContent && activitiesForPhase('practica').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('practica') && activitiesForPhase('practica').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -2432,7 +2469,7 @@
         </div>
 
         <!-- Evaluación editable (ítems de la estructura del curso) -->
-        <div v-if="usesStructuredContent" class="space-y-6">
+        <div v-if="phaseHasItems('evaluacion')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('evaluacion')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -2600,7 +2637,7 @@
         </div>
 
         <!-- Badge Success Notification -->
-        <div v-if="showsOfficialContent && examPassed && showBadgeAward" class="bg-yellow-50 border-2 border-yellow-300 rounded-3xl p-6 text-center space-y-4 shadow-md animate-bounce">
+        <div v-if="showsOfficialPhase('evaluacion') && examPassed && showBadgeAward" class="bg-yellow-50 border-2 border-yellow-300 rounded-3xl p-6 text-center space-y-4 shadow-md animate-bounce">
           <div class="flex justify-center">
             <div class="w-20 h-20 rounded-full bg-yellow-400 flex items-center justify-center shadow-lg relative border-4 border-white">
               <span class="material-symbols-outlined text-white text-5xl">emoji_events</span>
@@ -2635,7 +2672,7 @@
         </div>
 
         <!-- Exam Questions Form -->
-        <div v-if="showsOfficialContent && !examPassed" class="space-y-6">
+        <div v-if="showsOfficialPhase('evaluacion') && !examPassed" class="space-y-6">
           <p class="text-xs text-gray-600">
             Deberás responder correctamente al menos <strong>5 de las 6 preguntas</strong> (75%) para aprobar el {{ currentCourseBadge }}.
           </p>
@@ -2688,7 +2725,7 @@
         </div>
 
         <!-- Final Passed Screen -->
-        <div v-if="showsOfficialContent && examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
+        <div v-if="showsOfficialPhase('evaluacion') && examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
           <div class="flex justify-center">
             <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-inner">
               <span class="material-symbols-outlined text-3xl font-bold">celebration</span>
@@ -2757,7 +2794,7 @@
           </router-link>
         </div>
 
-        <div v-if="showsOfficialContent && activitiesForPhase('evaluacion').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('evaluacion') && activitiesForPhase('evaluacion').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -3512,6 +3549,14 @@ const structuredItemCount = computed(() => Object.values(structureItems.value).r
 const usesStructuredContent = computed(() => courseLoaded.value && structuredItemCount.value > 0)
 const showsOfficialContent = computed(() => isOfficialModule.value && !usesStructuredContent.value)
 
+function phaseHasItems(phaseId) {
+  return itemsForPhase(phaseId).length > 0
+}
+
+function showsOfficialPhase(phaseId) {
+  return isOfficialModule.value && !phaseHasItems(phaseId)
+}
+
 function itemsForPhase(phaseId) {
   return [...(structureItems.value[phaseId] || [])]
     .filter(item => item.visible !== false)
@@ -3543,7 +3588,8 @@ function itemState(item) {
       error: null,
       pool: null,
       matchLeft: null,
-      answers: {}
+      answers: {},
+      dragCards: null
     }
   }
   return customItemState.value[item.id]
@@ -3668,7 +3714,7 @@ function parseStructuredGrammar(item) {
     const parts = line.split('|').map(part => part.trim())
     if (parts.length >= 2) return { subject: parts[0] || '', verb: parts[1] || '', complement: parts[2] || '' }
     return null
-  })
+  }).filter(Boolean)
 }
 
 function questionEntries(item) {
@@ -3693,6 +3739,81 @@ function parsedStructuredPairs(item) {
     const [term, meaning] = line.split('=').map(part => part.trim())
     return { term, meaning }
   }).filter(pair => pair.term && pair.meaning)
+}
+
+// Drag & drop genérico para ítems warmup_drag
+const activeItemDrag = ref(null)
+let itemDragPointer = { x: 0, y: 0, cardX: 0, cardY: 0 }
+
+function dragPairs(item) {
+  return itemLines(item).map(line => {
+    const [left, right] = line.split('=').map(part => part.trim())
+    return { left, right }
+  }).filter(pair => pair.left && pair.right)
+}
+
+function dragCards(item) {
+  const state = itemState(item)
+  if (!state.dragCards) {
+    state.dragCards = dragPairs(item).map(pair => ({ ...pair, x: 0, y: 0, matched: false, isResetting: false }))
+  }
+  return state.dragCards
+}
+
+function startItemDrag(event, item, index) {
+  const card = dragCards(item)[index]
+  if (!card || card.matched) return
+  activeItemDrag.value = { itemId: item.id, index }
+  itemDragPointer = { x: event.clientX, y: event.clientY, cardX: card.x, cardY: card.y }
+  window.addEventListener('pointermove', onItemDragMove)
+  window.addEventListener('pointerup', onItemDragEnd)
+}
+
+function onItemDragMove(event) {
+  if (!activeItemDrag.value) return
+  const item = Object.values(structureItems.value).flatMap(list => list).find(entry => entry.id === activeItemDrag.value.itemId)
+  if (!item) return
+  const card = dragCards(item)[activeItemDrag.value.index]
+  if (!card) return
+  card.x = itemDragPointer.cardX + (event.clientX - itemDragPointer.x)
+  card.y = itemDragPointer.cardY + (event.clientY - itemDragPointer.y)
+}
+
+function onItemDragEnd(event) {
+  if (!activeItemDrag.value) return
+  window.removeEventListener('pointermove', onItemDragMove)
+  window.removeEventListener('pointerup', onItemDragEnd)
+  const { itemId, index } = activeItemDrag.value
+  activeItemDrag.value = null
+  const item = Object.values(structureItems.value).flatMap(list => list).find(entry => entry.id === itemId)
+  if (!item) return
+  const card = dragCards(item)[index]
+  if (!card) return
+
+  let droppedRight = null
+  document.querySelectorAll(`[data-item-slot="${item.id}"]`).forEach(el => {
+    const rect = el.getBoundingClientRect()
+    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+      droppedRight = el.getAttribute('data-item-slot-right')
+    }
+  })
+
+  if (droppedRight && droppedRight === card.right) {
+    card.matched = true
+    card.x = 0
+    card.y = 0
+    itemState(item).error = null
+    if (dragCards(item).every(entry => entry.matched)) completeStructuredItem(item)
+  } else {
+    card.isResetting = true
+    card.x = 0
+    card.y = 0
+    window.setTimeout(() => { card.isResetting = false }, 350)
+    if (droppedRight) {
+      itemState(item).error = 'Esa no es la pareja correcta. La tarjeta volvió a su lugar.'
+      window.setTimeout(() => { itemState(item).error = null }, 2500)
+    }
+  }
 }
 
 async function fetchCourseActivities() {

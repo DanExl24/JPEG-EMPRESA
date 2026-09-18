@@ -362,3 +362,86 @@ export async function deleteRap(req: Request<{ id: string }>, res: Response): Pr
     res.status(500).json({ message: 'Error al eliminar RAP.', error: errorObj.message })
   }
 }
+
+// --- FICHAS / COHORTES ---
+export async function getCohorts(_req: Request, res: Response): Promise<void> {
+  try {
+    const list = await prisma.cohort.findMany({
+      include: {
+        program: { select: { id: true, name: true } },
+        courses: { select: { id: true, title: true } }
+      },
+      orderBy: { id: 'asc' }
+    })
+    res.json(list)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al listar fichas.', error: errorObj.message })
+  }
+}
+
+export async function createCohort(req: Request, res: Response): Promise<void> {
+  try {
+    const { cohort_number, program_id } = req.body || {}
+    if (!cohort_number || !program_id) {
+      res.status(400).json({ message: 'El número de ficha y el programa son obligatorios.' })
+      return
+    }
+    const created = await prisma.cohort.create({
+      data: {
+        cohort_number: String(cohort_number).trim(),
+        program_id: parseInt(String(program_id))
+      },
+      include: { program: { select: { id: true, name: true } } }
+    })
+    res.status(201).json(created)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al crear ficha.', error: errorObj.message })
+  }
+}
+
+export async function updateCohort(req: Request<{ id: string }>, res: Response): Promise<void> {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      res.status(400).json({ message: 'ID de ficha inválido.' })
+      return
+    }
+    const { cohort_number, program_id } = req.body || {}
+    if (!cohort_number || !program_id) {
+      res.status(400).json({ message: 'El número de ficha y el programa son obligatorios.' })
+      return
+    }
+    const updated = await prisma.cohort.update({
+      where: { id },
+      data: {
+        cohort_number: String(cohort_number).trim(),
+        program_id: parseInt(String(program_id))
+      },
+      include: { program: { select: { id: true, name: true } } }
+    })
+    res.json(updated)
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al actualizar ficha.', error: errorObj.message })
+  }
+}
+
+export async function deleteCohort(req: Request<{ id: string }>, res: Response): Promise<void> {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      res.status(400).json({ message: 'ID de ficha inválido.' })
+      return
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.enrollment.deleteMany({ where: { cohort_id: id } })
+      await tx.cohort.delete({ where: { id } })
+    })
+    res.json({ message: 'Ficha eliminada correctamente.' })
+  } catch (err: unknown) {
+    const errorObj = err as Error
+    res.status(500).json({ message: 'Error al eliminar ficha.', error: errorObj.message })
+  }
+}

@@ -134,6 +134,33 @@
           </div>
         </div>
 
+        <!-- Tab 4: Fichas / Cohortes -->
+        <div v-if="activeTab === 'cohorts'" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-wrap items-center justify-between gap-3">
+            <span class="text-xs font-black text-gray-700 uppercase tracking-wider">Fichas / Cohortes de Formación</span>
+            <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{{ cohorts.length }} total</span>
+          </div>
+
+          <div v-if="cohorts.length === 0" class="p-8 text-center text-gray-400 text-xs font-semibold">
+            No hay fichas creadas todavía.
+          </div>
+          <div v-else class="divide-y divide-gray-50">
+            <div v-for="ficha in cohorts" :key="ficha.id" class="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-[9px] uppercase tracking-wider font-extrabold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">{{ ficha.cohort_number }}</span>
+                  <p class="text-xs text-gray-400 truncate">Programa: {{ ficha.program?.name }}</p>
+                </div>
+                <p class="text-[10px] text-gray-400 font-medium">{{ ficha.courses?.length || 0 }} cursos asignados</p>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button @click="editCohort(ficha)" class="p-1.5 border border-gray-200 rounded-lg hover:border-[#006688] hover:text-[#006688] transition-colors" title="Editar"><span class="material-symbols-outlined text-base block">edit</span></button>
+                <button @click="deleteCohortItem(ficha.id)" class="p-1.5 border border-red-100 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Eliminar"><span class="material-symbols-outlined text-base block">delete</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Editor Panel (Right 1 col) -->
@@ -192,6 +219,21 @@
               </div>
             </template>
 
+            <!-- Cohort Form Fields -->
+            <template v-if="activeTab === 'cohorts'">
+              <div class="space-y-1">
+                <label class="text-gray-550 block">Programa Asociado</label>
+                <select v-model="cohortForm.programId" required class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none font-medium focus:border-[#006688]">
+                  <option value="">Selecciona programa...</option>
+                  <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
+                </select>
+              </div>
+              <div class="space-y-1">
+                <label class="text-gray-550 block">Número de Ficha</label>
+                <input type="text" v-model="cohortForm.cohort_number" required class="w-full px-3 py-2 border border-gray-200 rounded-xl font-medium outline-none focus:border-[#006688]" placeholder="Ej. FICHA-2026-01" />
+              </div>
+            </template>
+
             <div class="flex gap-2 pt-2">
               <button 
                 type="submit" 
@@ -232,7 +274,8 @@ const apiBaseUrl = getApiBaseUrl()
 const tabs = [
   { id: 'programs', name: '1. Programas / Niveles', icon: 'school' },
   { id: 'competencies', name: '2. Competencias', icon: 'menu_book' },
-  { id: 'raps', name: '3. Resultados (RAPs)', icon: 'fact_check' }
+  { id: 'raps', name: '3. Resultados (RAPs)', icon: 'fact_check' },
+  { id: 'cohorts', name: '4. Fichas / Cohortes', icon: 'groups' }
 ]
 
 const activeTab = ref('programs')
@@ -243,6 +286,7 @@ const error = ref(null)
 const programs = ref([])
 const competencies = ref([])
 const raps = ref([])
+const cohorts = ref([])
 
 // Filters
 const filterProgramId = ref('')
@@ -255,6 +299,7 @@ const editingItem = ref(null)
 const programForm = ref({ name: '' })
 const competencyForm = ref({ code: '', name: '', programId: '' })
 const rapForm = ref({ code: '', name: '', competencyId: '' })
+const cohortForm = ref({ cohort_number: '', programId: '' })
 
 // Filtered lists
 const filteredCompetencies = computed(() => {
@@ -299,6 +344,12 @@ async function loadData() {
     if (!rapsRes.ok) throw new Error('Error al cargar RAPs.')
     const rapsData = await rapsRes.json()
     raps.value = Array.isArray(rapsData) ? rapsData : (rapsData?.data || [])
+
+    // Fetch Fichas / Cohortes
+    const cohortsRes = await fetch(`${apiBaseUrl}/api/admin/curriculum/cohorts`, { headers })
+    if (!cohortsRes.ok) throw new Error('Error al cargar fichas.')
+    const cohortsData = await cohortsRes.json()
+    cohorts.value = Array.isArray(cohortsData) ? cohortsData : (cohortsData?.data || [])
   } catch (err) {
     console.error(err)
     error.value = err.message || 'Error al conectar con el servidor.'
@@ -312,6 +363,7 @@ function clearSelection() {
   programForm.value = { name: '' }
   competencyForm.value = { code: '', name: '', programId: '' }
   rapForm.value = { code: '', name: '', competencyId: '' }
+  cohortForm.value = { cohort_number: '', programId: '' }
 }
 
 // --- EDIT HANDLERS ---
@@ -328,6 +380,11 @@ function editCompetency(c) {
 function editRap(r) {
   editingItem.value = r
   rapForm.value = { code: r.code, name: r.name, competencyId: r.competency_id }
+}
+
+function editCohort(ficha) {
+  editingItem.value = ficha
+  cohortForm.value = { cohort_number: ficha.cohort_number, programId: ficha.program_id }
 }
 
 // --- SAVE ACTION ---
@@ -352,6 +409,12 @@ async function saveItem() {
   } else if (activeTab.value === 'raps') {
     url = `${apiBaseUrl}/api/admin/curriculum/raps`
     body = rapForm.value
+  } else if (activeTab.value === 'cohorts') {
+    url = `${apiBaseUrl}/api/admin/curriculum/cohorts`
+    body = {
+      cohort_number: cohortForm.value.cohort_number,
+      program_id: cohortForm.value.programId
+    }
   }
 
   if (editingItem.value) {
@@ -405,6 +468,11 @@ async function deleteCompetencyItem(id) {
 async function deleteRapItem(id) {
   if (!confirm('¿Estás seguro de que deseas eliminar este Resultado de Aprendizaje (RAP)?')) return
   await performDelete(`${apiBaseUrl}/api/admin/curriculum/raps/${id}`)
+}
+
+async function deleteCohortItem(id) {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta ficha? Se eliminarán sus matrículas asociadas.')) return
+  await performDelete(`${apiBaseUrl}/api/admin/curriculum/cohorts/${id}`)
 }
 
 async function performDelete(url) {

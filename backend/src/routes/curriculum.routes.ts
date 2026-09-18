@@ -3,7 +3,8 @@ import type { Request, Response, NextFunction } from 'express'
 import {
   getPrograms, createProgram, updateProgram, deleteProgram,
   getCompetencies, createCompetency, updateCompetency, deleteCompetency,
-  getRaps, createRap, updateRap, deleteRap
+  getRaps, createRap, updateRap, deleteRap,
+  getCohorts, createCohort, updateCohort, deleteCohort
 } from '../controllers/curriculum.controller.js'
 import { authenticate, optionalAuthenticate } from '../lib/middleware.js'
 import { requireRole } from '../middlewares/role.middleware.js'
@@ -27,5 +28,11 @@ router.get('/raps', optionalAuthenticate, getRaps)
 router.post('/raps', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createRap)
 router.put('/raps/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateRap)
 router.delete('/raps/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteRap)
+
+// Fichas / Cohortes
+router.get('/cohorts', optionalAuthenticate, getCohorts)
+router.post('/cohorts', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createCohort)
+router.put('/cohorts/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateCohort)
+router.delete('/cohorts/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteCohort)
 
 export default router
