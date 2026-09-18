@@ -16,13 +16,12 @@ export async function getInstructorCohorts(req: Request, res: Response, next: Ne
       throw new UnauthorizedError('No autenticado.')
     }
 
-    // Si es ADMIN puede ver todas o filtrar por instructorId; si es INSTRUCTOR solo ve sus fichas
-    const isInstructor = userRole === 'INSTRUCTOR'
-    const where: any = {}
-    if (isInstructor) {
-      where.instructors = { some: { id: userId } }
-    } else if (req.query.instructorId) {
-      where.instructors = { some: { id: Number(req.query.instructorId) } }
+    if (userRole !== 'INSTRUCTOR') {
+      throw new UnauthorizedError('Acceso denegado: solo para instructores.')
+    }
+
+    const where: any = {
+      instructors: { some: { id: userId } }
     }
 
     const cohorts = await prisma.cohort.findMany({

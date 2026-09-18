@@ -144,7 +144,6 @@ const menuGroups = computed(() => {
         label: t('nav.groups.institutional'),
         items: [
           { name: t('nav.users'), path: '/dashboard/usuarios', icon: 'group' },
-          { name: t('nav.myCohorts'), path: '/dashboard/fichas', icon: 'groups' },
           { name: t('nav.analytics'), path: '/dashboard/analiticas', icon: 'analytics' },
           { name: t('nav.badges'), path: '/dashboard/logros', icon: 'emoji_events' },
         ]

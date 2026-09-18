@@ -52,7 +52,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'glosario', component: GlosarioView },
       { path: 'curriculum', component: CurriculumView, meta: { requiresAdmin: true } },
       { path: 'dialogos', component: DialogosView },
-      { path: 'fichas', component: MisFichasView, meta: { requiresInstructorOrAdmin: true } },
+      { path: 'fichas', component: MisFichasView, meta: { requiresInstructor: true } },
     ],
   },
 ]
@@ -85,7 +85,7 @@ router.beforeEach(async (to) => {
     return '/dashboard/inicio'
   }
 
-  if (to.meta['requiresInstructorOrAdmin'] && !auth.isAdmin && !auth.isInstructor) {
+  if (to.meta['requiresInstructor'] && !auth.isInstructor) {
     return '/dashboard/inicio'
   }
 

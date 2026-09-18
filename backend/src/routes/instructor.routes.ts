@@ -5,7 +5,7 @@ import { requireRole } from '../middlewares/role.middleware.js'
 
 const router = Router()
 
-// Fichas a cargo del instructor (y auditoría para admin)
-router.get('/cohorts', authenticate, requireRole('INSTRUCTOR', 'ADMIN'), getInstructorCohorts)
+// Fichas a cargo del instructor
+router.get('/cohorts', authenticate, requireRole('INSTRUCTOR'), getInstructorCohorts)
 
 export default router
