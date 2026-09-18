@@ -20,6 +20,7 @@ import {
 import { GamificationService } from './services/gamification.service.js'
 import { CourseService } from './services/course.service.js'
 import { globalErrorHandler } from './middlewares/error.middleware.js'
+import { seedVolume } from './lib/seedVolume.js'
 import prisma from './lib/db.js'
 
 const app = express()
@@ -92,6 +93,11 @@ try {
   await ensureDefaultGlossary()
   await ensureDefaultArcadeGames()
   await GamificationService.ensureBadges()
+  // Datos de demo opcionales (aprendices, envíos, progreso...). Solo con SEED_DEMO=true.
+  if (process.env.SEED_DEMO === 'true') {
+    console.log('SEED_DEMO=true → sembrando datos de demostración...')
+    await seedVolume()
+  }
   console.log('Todos los datos iniciales y catálogos fueron inicializados exitosamente.')
 } catch (error) {
   console.error('Error al conectar a la base de datos o inicializar datos:', error)
