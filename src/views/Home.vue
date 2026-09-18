@@ -9,6 +9,8 @@ const auth = useAuthStore()
 const apiBaseUrl = getApiBaseUrl()
 
 const nurseImg = '/nurse.png'
+// Imágenes decorativas para las tarjetas de curso (se asignan por posición)
+const courseImages = ['/cardiologia.png', '/farmacologia.png', '/comunicacion.png']
 
 function goLogin() {
   router.push('/login')
@@ -475,10 +477,10 @@ onMounted(() => {
       <p class="text-gray-500 text-sm mb-8">Continúa donde lo dejaste y domina nuevas especialidades.</p>
 
       <div v-if="courses.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="course in courses" :key="course.id" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="h-40 relative flex items-center justify-center" :style="`background: linear-gradient(135deg, ${course.iconColor || '#7c3aed'}, ${course.iconColor || '#7c3aed'}bb)`">
-            <span class="absolute top-3 left-3 bg-black/40 text-white text-xs font-bold px-2 py-1 rounded-lg uppercase">{{ course.category }}</span>
-            <span class="material-symbols-outlined text-white text-6xl opacity-90">{{ course.icon || 'school' }}</span>
+        <div v-for="(course, i) in courses" :key="course.id" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          <div class="h-40 relative overflow-hidden">
+            <img :src="courseImages[i % courseImages.length]" :alt="course.title" class="w-full h-full object-cover" />
+            <span class="absolute top-3 left-3 bg-black/50 text-white text-xs font-bold px-2 py-1 rounded-lg uppercase">{{ course.category }}</span>
           </div>
           <div class="p-5">
             <h4 class="font-bold text-gray-900 mb-3 leading-snug">{{ course.title }}</h4>
