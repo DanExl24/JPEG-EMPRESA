@@ -51,7 +51,7 @@
           </span>
         </div>
 
-        <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+        <div class="flex items-center gap-2 overflow-x-auto pb-2.5 custom-green-scrollbar">
           <button
             @click="selectedArea = 'all'"
             :class="`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
@@ -800,5 +800,37 @@ onMounted(() => {
 }
 .backdrop-blur-xs {
   backdrop-filter: blur(2px);
+}
+
+/* Scrollbar Verde Armónico para Chips de Especialidad */
+.custom-green-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #10b981 #f0fdf4;
+}
+
+.custom-green-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-green-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.custom-green-scrollbar::-webkit-scrollbar-track {
+  background: #f0fdf4; /* emerald-50 suave */
+  border-radius: 9999px;
+}
+
+.custom-green-scrollbar::-webkit-scrollbar-thumb {
+  background: #10b981; /* emerald-500 */
+  border-radius: 9999px;
+  border: 1px solid #d1fae5;
+  transition: background-color 0.2s ease;
+}
+
+.custom-green-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #059669; /* emerald-600 */
 }
 </style>
