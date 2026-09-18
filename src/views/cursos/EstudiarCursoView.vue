@@ -629,8 +629,11 @@
               </div>
               <p class="text-[11px] text-teal-800 font-medium">El verbo <strong>To Be</strong> cambia según la persona. Memoriza estas formas básicas y escucha cada ejemplo:</p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div v-for="(tb, tIdx) in m1ToBeTable" :key="tIdx" class="bg-white p-3 rounded-xl border border-teal-100 shadow-xs flex items-center justify-between gap-2">
+                <div v-for="(tb, tIdx) in m1ToBeTable" :key="tIdx" :class="`bg-white p-3 rounded-xl border shadow-xs flex items-center justify-between gap-2 ${tb.pronoun === 'I' || tb.pronoun === 'You' ? 'border-teal-300 ring-2 ring-teal-500/20' : 'border-teal-100'}`">
                   <div>
+                    <div class="flex items-center gap-1.5 mb-0.5">
+                      <span v-if="tb.pronoun === 'I' || tb.pronoun === 'You'" class="text-[9px] bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.2 rounded uppercase tracking-wider">📌 Forma Principal</span>
+                    </div>
                     <p class="text-xs font-bold text-gray-800">
                       <span class="text-blue-700 font-black">{{ tb.pronoun }}</span>
                       <span class="text-orange-600 font-black mx-1">{{ tb.form }}</span>
@@ -747,8 +750,11 @@
             </div>
 
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <p v-if="!isM1VocabComplete" class="text-[11px] text-gray-500">
-                Escucha todas las tarjetas para habilitar la conversación ({{ m1HeardCount }} / {{ m1AllVocabItems.length }}).
+              <p v-if="!isM1VocabComplete" class="text-[11px] text-gray-500 flex items-center gap-2 flex-wrap">
+                <span>Escucha tarjetas de vocabulario para avanzar ({{ m1HeardCount }} / {{ m1AllVocabItems.length }} escuchados).</span>
+                <button type="button" @click="markAllVocabHeard" class="text-[#006688] font-bold hover:underline flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-xs">done_all</span> Marcar todo repasado
+                </button>
               </p>
               <p v-else class="text-[11px] text-green-600 font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">check_circle</span> ¡Vocabulario completo! Continúa con la conversación.
@@ -2336,9 +2342,12 @@ const m1VocabCategories = computed(() => [
 
 const m1ActiveCategory = ref('alphabet')
 const m1ActiveVocabItems = computed(() => m1VocabCategories.value.find(c => c.id === m1ActiveCategory.value)?.items || [])
-const m1AllVocabItems = computed(() => m1VocabCategories.value.flatMap(c => c.items))
-const m1HeardCount = computed(() => m1AllVocabItems.value.filter(i => i.played).length)
-const isM1VocabComplete = computed(() => m1AllVocabItems.value.length > 0 && m1HeardCount.value === m1AllVocabItems.value.length)
+const isM1VocabComplete = computed(() => m1StudyDone.value.vocabulary || m1HeardCount.value >= 3 || (m1AllVocabItems.value.length > 0 && m1HeardCount.value === m1AllVocabItems.value.length))
+
+function markAllVocabHeard() {
+  m1AllVocabItems.value.forEach(i => { i.played = true })
+  persistLocalState()
+}
 
 // Aplicación laboral: dictado de correo y teléfono
 const m1DictationExamples = [
