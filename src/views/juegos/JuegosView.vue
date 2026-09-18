@@ -22,6 +22,10 @@
               <span v-if="isTeacherTestMode" class="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
                 Modo Prueba Docente
               </span>
+              <span v-else-if="isCurrentGameReview" class="bg-amber-100 text-amber-900 border border-amber-200 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">replay</span>
+                Modo Repaso
+              </span>
               <span v-else class="bg-blue-100 text-[#006688] text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
                 Partida Oficial
               </span>
@@ -31,9 +35,13 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <div class="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 text-xs font-black text-[#006688]">
+          <div v-if="!isCurrentGameReview" class="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 text-xs font-black text-[#006688]">
             <span class="material-symbols-outlined text-sm">emoji_events</span>
             Premio: +{{ currentGameInstance?.pts || 100 }} XP
+          </div>
+          <div v-else class="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 text-xs font-black text-amber-800">
+            <span class="material-symbols-outlined text-sm">replay</span>
+            Repaso (XP ya obtenido)
           </div>
           <button 
             @click="quitGame" 
@@ -41,6 +49,19 @@
           >
             Salir al Panel
           </button>
+        </div>
+      </div>
+
+      <!-- Banner Informativo de Modo Repaso -->
+      <div v-if="isCurrentGameReview && !gameFinished" class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3.5 text-amber-950 shadow-xs animate-fade-in">
+        <div class="w-9 h-9 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 shadow-xs">
+          <span class="material-symbols-outlined text-xl">replay</span>
+        </div>
+        <div class="space-y-0.5 text-left">
+          <p class="text-xs font-black">Modo Repaso Activo</p>
+          <p class="text-[11px] text-amber-800 leading-snug">
+            Ya completaste este minijuego. Puedes practicar cuantas veces quieras para afianzar tus conocimientos y terminología clínica. Los puntos de XP se acreditan una sola vez en la primera victoria.
+          </p>
         </div>
       </div>
 
@@ -134,8 +155,12 @@
             <h3 class="text-xl font-black text-gray-800">¡Calentamiento Superado!</h3>
             <p class="text-xs text-gray-600">Completaste las 4 rondas de terminología médica.</p>
             <div class="pt-2">
-              <span class="inline-block bg-green-100 text-green-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-green-100 text-green-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ currentGameInstance?.pts || 100 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Añadidos' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -237,8 +262,12 @@
               Acertaste <strong class="text-gray-900 font-black">{{ triviaCorrectCount }}</strong> de <strong class="text-gray-900 font-black">{{ triviaList.length }}</strong> preguntas.
             </p>
             <div class="pt-2">
-              <span class="inline-block bg-emerald-100 text-emerald-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-emerald-100 text-emerald-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ triviaScore }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -299,8 +328,12 @@
             <h3 class="text-xl font-black text-gray-800">¡Tablero Completado!</h3>
             <p class="text-xs text-gray-600">Emparejaste correctamente todos los términos clínicos.</p>
             <div class="pt-2">
-              <span class="inline-block bg-orange-100 text-orange-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-orange-100 text-orange-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ currentGameInstance?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -388,8 +421,12 @@
               Reconociste correctamente <strong class="text-gray-900 font-black">{{ listeningCorrectCount }}</strong> de <strong class="text-gray-900 font-black">{{ listeningList.length }}</strong> términos clínicos.
             </p>
             <div class="pt-2">
-              <span class="inline-block bg-purple-100 text-purple-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-purple-100 text-purple-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ currentGameInstance?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -782,15 +819,41 @@
                     <p class="text-xs text-gray-400 font-semibold">{{ game.subtitle || 'Minijuego Clínico' }}</p>
                   </div>
                 </div>
-                <span class="bg-amber-100 text-amber-900 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm text-amber-600">emoji_events</span>
-                  +{{ game.pts }} XP
-                </span>
+                <div class="flex items-center gap-2">
+                  <span 
+                    v-if="isGameCompleted(game)"
+                    class="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs"
+                  >
+                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                    Completado
+                  </span>
+                  <span 
+                    v-else
+                    class="bg-sky-50 text-sky-700 border border-sky-100 text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-xs">schedule</span>
+                    Pendiente
+                  </span>
+                  <span class="bg-amber-100 text-amber-900 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-amber-600">emoji_events</span>
+                    +{{ game.pts }} XP
+                  </span>
+                </div>
               </div>
 
               <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
                 {{ game.description || game.desc }}
               </p>
+
+              <div v-if="isGameCompleted(game)" class="bg-emerald-50/80 border border-emerald-100 rounded-2xl p-3 flex items-center justify-between gap-3 text-[11px] text-emerald-900">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base text-emerald-600">verified</span>
+                  <span>¡Minijuego superado! Ya aseguraste tus puntos de experiencia.</span>
+                </div>
+                <span class="bg-emerald-200/70 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">
+                  Modo Repaso
+                </span>
+              </div>
             </div>
 
             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -802,10 +865,14 @@
               </div>
               <button 
                 @click="startApprenticeGame(game)"
-                class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                :class="`px-6 py-2.5 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isGameCompleted(game)
+                    ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-200'
+                    : 'bg-[#006688] hover:bg-[#004e69] text-white shadow-blue-200'
+                }`"
               >
-                <span>Jugar Ahora</span>
-                <span class="material-symbols-outlined text-sm">play_arrow</span>
+                <span>{{ isGameCompleted(game) ? 'Repasar Juego' : 'Jugar Ahora' }}</span>
+                <span class="material-symbols-outlined text-sm">{{ isGameCompleted(game) ? 'replay' : 'play_arrow' }}</span>
               </button>
             </div>
           </div>
@@ -1445,6 +1512,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
+import { getApiBaseUrl } from '../../lib/api'
+import { apiFetch } from '../../lib/apiClient'
 
 const route = useRoute()
 const router = useRouter()
@@ -1452,7 +1521,36 @@ const router = useRouter()
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || ''
+const apiBaseUrl = getApiBaseUrl()
+
+// Historial y estado de juegos del aprendiz
+const myCompletedScores = ref([])
+const isCurrentGameReview = ref(false)
+
+function isGameCompleted(game) {
+  if (!game) return false
+  const keys = [game.key, game.template, String(game.id)].filter(Boolean)
+  return myCompletedScores.value.some(s => keys.includes(s.gameKey))
+}
+
+function getGameScore(game) {
+  if (!game) return null
+  const keys = [game.key, game.template, String(game.id)].filter(Boolean)
+  return myCompletedScores.value.find(s => keys.includes(s.gameKey))
+}
+
+async function fetchMyGameHistory() {
+  if (!auth.isAuthenticated) return
+  try {
+    const res = await apiFetch('/api/gamification/my-games')
+    const list = res?.data || res
+    if (Array.isArray(list)) {
+      myCompletedScores.value = list
+    }
+  } catch (err) {
+    console.error('Error al cargar historial de minijuegos del aprendiz:', err)
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 // STATE & NAVIGATION
@@ -2073,6 +2171,7 @@ function launchGame(gameOrKey) {
 
   activeGame.value = selectedKey
   activeEngine.value = game?.template || keyOrTemplate || 'warmup_drag_match'
+  isCurrentGameReview.value = isGameCompleted(currentGameInstance.value || { key: selectedKey, template: activeEngine.value })
   gameFinished.value = false
 
   // Sincronizar ruta en la URL si difiere
@@ -2105,6 +2204,7 @@ function quitGame() {
   activeEngine.value = null
   currentGameInstance.value = null
   isTeacherTestMode.value = false
+  isCurrentGameReview.value = false
   gameFinished.value = false
   if (route.params.gameId) {
     router.push('/dashboard/juegos')
@@ -2123,36 +2223,53 @@ async function recordFinalScore(scoreAwarded, roundsCount = 4) {
   }
 
   const finalPts = currentGameInstance.value?.pts || scoreAwarded
+  const currentKey = activeGame.value || currentGameInstance.value?.key || currentGameInstance.value?.template
 
   try {
-    const token = getToken()
-    const res = await fetch(`${apiBaseUrl}/api/gamification/games/score`, {
+    const res = await apiFetch('/api/gamification/games/score', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
       body: JSON.stringify({
-        gameKey: activeGame.value,
+        gameKey: currentKey,
         score: finalPts,
         roundsCompleted: roundsCount
       })
     })
 
-    if (res.ok) {
-      const data = await res.json()
-      const payload = data.data || data
-      if (payload.currentTotalXp && auth.user) {
-        auth.user.xp = payload.currentTotalXp
-      }
+    const payload = res?.data || res
+
+    // Registrar en el historial local del aprendiz para marcar como completado
+    if (payload?.gameScoreId || payload?.success) {
+      myCompletedScores.value.push({
+        id: payload.gameScoreId,
+        gameKey: currentKey,
+        score: finalPts,
+        playedAt: new Date().toISOString()
+      })
+    }
+
+    // Actualizar usuario reactivo en store y persistir en storage
+    await auth.checkAuth()
+
+    if (payload?.isReview) {
+      notificationStore.notify({
+        type: 'info',
+        title: 'Repaso Completado',
+        message: '¡Excelente práctica de repaso! Reforzaste tus conocimientos clínicos.'
+      })
+    } else {
       notificationStore.notify({
         type: 'success',
-        title: `+${finalPts} XP Ganados`,
+        title: `+${payload?.scoreAwarded ?? finalPts} XP Ganados`,
         message: '¡Excelente desempeño en el arcade clínico!'
       })
     }
   } catch (err) {
     console.error('Error al registrar XP de partida:', err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al registrar puntaje',
+      message: 'No se pudo guardar el progreso de la partida.'
+    })
   }
 }
 
@@ -2625,6 +2742,7 @@ onMounted(async () => {
     await loadAdminData()
   }
   await fetchArcadeContent()
+  await fetchMyGameHistory()
   checkRouteGame()
 })
 </script>

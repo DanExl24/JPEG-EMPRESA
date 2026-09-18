@@ -359,26 +359,59 @@ export class GamificationService {
    * Registra los resultados de una partida de mini-juego (JuegosView) y otorga XP
    */
   static async recordGameScore(userId: number, data: RecordGameScoreDto) {
-    const score = data.score || 100
+    const score = Number(data.score) || 100
+    const gameKey = String(data.gameKey || 'arcade_game')
+
+    // Verificar si el usuario ya completó este juego anteriormente
+    const existing = await prisma.gameScore.findFirst({
+      where: {
+        userId,
+        gameKey
+      }
+    })
+
+    const isFirstTime = !existing
 
     const record = await prisma.gameScore.create({
       data: {
         userId,
-        gameKey: data.gameKey,
+        gameKey,
         score,
         roundsCompleted: data.roundsCompleted || 4
       }
     })
 
-    // Sumar XP real al usuario
-    const newXp = await this.awardXp(userId, score, `Partida superada en "${data.gameKey}"`)
+    let newXp: number
+    if (isFirstTime) {
+      // Sumar XP real al usuario sólo la primera vez que supera el juego
+      newXp = await this.awardXp(userId, score, `Partida superada en "${gameKey}"`)
+    } else {
+      // Modo repaso: se registra la jugada pero no se acumulan puntos indefinidamente
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { xp: true }
+      })
+      newXp = currentUser?.xp || 0
+    }
 
     return {
       success: true,
       gameScoreId: record.id,
-      scoreAwarded: score,
-      currentTotalXp: newXp
+      scoreAwarded: isFirstTime ? score : 0,
+      currentTotalXp: newXp,
+      isFirstTime,
+      isReview: !isFirstTime
     }
+  }
+
+  /**
+   * Obtiene las partidas y juegos completados por el usuario autenticado
+   */
+  static async getMyGameScores(userId: number) {
+    return await prisma.gameScore.findMany({
+      where: { userId },
+      orderBy: { playedAt: 'desc' }
+    })
   }
 
   /**
