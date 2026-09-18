@@ -686,10 +686,134 @@ export class AnalyticsService {
       })
     }
 
+    // Datos especializados para el Aprendiz
+    let levelInfo = undefined
+    let activeCourse = undefined
+    let recommendedActivities: any[] = []
+    let myRecentSubmissions: any[] = []
+    let myBadges: any[] = []
+
+    if (userRole === 'APRENDIZ' || (!['ADMIN', 'INSTRUCTOR'].includes(userRole) && userId)) {
+      const level = Math.floor(userXp / 100) + 1
+      const levelTitles = [
+        'Aprendiz Novato',
+        'Asistente Clínico',
+        'Cuidador Especializado',
+        'Líder de Enfermería',
+        'Maestro Clínico'
+      ]
+      const levelTitle = levelTitles[Math.min(level - 1, levelTitles.length - 1)]
+      const currentXp = userXp % 100
+      const nextLevelXp = 100
+      const progressPct = Math.min(100, Math.round((currentXp / nextLevelXp) * 100))
+      levelInfo = {
+        level,
+        levelTitle,
+        currentXp,
+        nextLevelXp,
+        progressPct,
+        rank: userRank
+      }
+
+      // Curso activo del aprendiz
+      if (userId) {
+        const inProgress = await prisma.courseProgress.findFirst({
+          where: { userId, completed: false },
+          orderBy: { updatedAt: 'desc' },
+          include: { course: true }
+        })
+        if (inProgress?.course) {
+          activeCourse = {
+            id: inProgress.course.id,
+            slug: inProgress.course.slug,
+            title: inProgress.course.title,
+            category: inProgress.course.category,
+            currentPhase: inProgress.currentPhase || 'inicio',
+            overallPct: inProgress.overallPct || 0,
+            icon: inProgress.course.icon || 'school',
+            iconColor: inProgress.course.iconColor || '#006688'
+          }
+        } else {
+          const firstCourse = await prisma.course.findFirst({
+            orderBy: { id: 'asc' }
+          })
+          if (firstCourse) {
+            activeCourse = {
+              id: firstCourse.id,
+              slug: firstCourse.slug,
+              title: firstCourse.title,
+              category: firstCourse.category,
+              currentPhase: 'inicio',
+              overallPct: 0,
+              icon: firstCourse.icon || 'school',
+              iconColor: firstCourse.iconColor || '#006688'
+            }
+          }
+        }
+
+        // Retos recomendados
+        const passedSubs = await prisma.activitySubmission.findMany({
+          where: { apprenticeId: userId, passed: true },
+          select: { activityId: true }
+        })
+        const passedIds = passedSubs.map((s: any) => s.activityId)
+        const activities = await prisma.activity.findMany({
+          where: passedIds.length > 0 ? { id: { notIn: passedIds } } : {},
+          take: 3,
+          orderBy: { id: 'asc' }
+        })
+        recommendedActivities = activities.map((act: any) => ({
+          id: act.id,
+          title: act.title,
+          course: act.course,
+          phase: act.phase,
+          template: act.template,
+          points: act.points
+        }))
+
+        // Insignias del aprendiz
+        const uBadges = await prisma.userBadge.findMany({
+          where: { userId },
+          orderBy: { awardedAt: 'desc' },
+          take: 4,
+          include: { badge: true }
+        })
+        myBadges = uBadges.map((ub: any) => ({
+          key: ub.badgeKey,
+          name: ub.badge?.name || 'Insignia',
+          iconEmoji: ub.badge?.iconEmoji || '🏆',
+          awardedAt: new Date(ub.awardedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+        }))
+
+        // Entregas recientes del aprendiz
+        const mySubs = await prisma.activitySubmission.findMany({
+          where: { apprenticeId: userId },
+          orderBy: { submittedAt: 'desc' },
+          take: 4,
+          include: {
+            activity: { select: { id: true, title: true, points: true } }
+          }
+        })
+        myRecentSubmissions = mySubs.map((s: any) => ({
+          id: s.id,
+          activityId: s.activity?.id || s.activityId,
+          title: s.activity?.title || 'Actividad Pedagógica',
+          passed: s.passed,
+          points: s.activity?.points || 10,
+          submittedAt: new Date(s.submittedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+        }))
+      }
+    }
+
     return {
       stats,
       recentActivity,
-      pendingReviews
+      pendingReviews,
+      levelInfo,
+      activeCourse,
+      recommendedActivities,
+      myRecentSubmissions,
+      myBadges
     }
   }
 }

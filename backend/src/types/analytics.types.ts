@@ -77,4 +77,44 @@ export interface DashboardSummaryDto {
     points: number
     submittedAt: string
   }>
+  levelInfo?: {
+    level: number
+    levelTitle: string
+    currentXp: number
+    nextLevelXp: number
+    progressPct: number
+    rank: number
+  }
+  activeCourse?: {
+    id: number
+    slug: string
+    title: string
+    category: string
+    currentPhase: string
+    overallPct: number
+    icon?: string
+    iconColor?: string
+  }
+  recommendedActivities?: Array<{
+    id: number
+    title: string
+    course: string
+    phase: string
+    template: string
+    points: number
+  }>
+  myRecentSubmissions?: Array<{
+    id: number
+    activityId: number
+    title: string
+    passed: boolean
+    points: number
+    submittedAt: string
+  }>
+  myBadges?: Array<{
+    key: string
+    name: string
+    iconEmoji: string
+    awardedAt: string
+  }>
 }
