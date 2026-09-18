@@ -27,55 +27,119 @@
 
     <!-- Courses Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div v-for="course in filteredCourses" :key="course.id" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
-        <div :class="`h-36 flex items-center justify-center ${course.bg}`">
-          <span class="material-symbols-outlined text-6xl opacity-60" :style="`color: ${course.iconColor}`">{{ course.icon }}</span>
+      <div 
+        v-for="course in filteredCourses" 
+        :key="course.id" 
+        :class="`rounded-2xl overflow-hidden shadow-sm border transition-all group flex flex-col justify-between relative ${
+          course.isLocked && !auth.isAdmin && !auth.isInstructor
+            ? 'bg-gray-50/90 border-dashed border-gray-300 opacity-80'
+            : 'bg-white border-gray-100 hover:shadow-md'
+        }`"
+      >
+        <!-- Locked Badge Indicator for Learner -->
+        <div 
+          v-if="course.isLocked && !auth.isAdmin && !auth.isInstructor" 
+          class="absolute top-3 right-3 z-10 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 backdrop-blur-xs"
+        >
+          <span class="material-symbols-outlined text-xs">lock</span>
+          BLOQUEADO
         </div>
-        <div class="p-5">
-          <div class="flex items-center gap-2 mb-2 flex-wrap">
-            <span :class="`text-xs font-bold px-2 py-1 rounded-full ${course.categoryBg} ${course.categoryText}`">{{ course.category }}</span>
-            <span class="text-xs text-gray-400">{{ course.duration }}</span>
-            <span v-if="course.programName" class="text-[10px] font-bold text-[#006688] bg-[#006688]/10 px-2 py-0.5 rounded-full truncate max-w-[180px]">
-              {{ course.programName }}
+
+        <div>
+          <div :class="`h-36 flex items-center justify-center relative ${course.bg}`">
+            <span 
+              class="material-symbols-outlined text-6xl opacity-60 transition-transform group-hover:scale-105" 
+              :style="`color: ${course.iconColor}`"
+            >
+              {{ course.icon }}
             </span>
           </div>
-          <h4 class="font-bold text-gray-800 mb-1">{{ course.title }}</h4>
-          <p class="text-xs text-gray-500 mb-3 line-clamp-2">{{ course.description }}</p>
-          
-          <div v-if="!auth.isAdmin && !auth.isInstructor" class="mb-3">
-            <div class="flex justify-between text-xs text-gray-500 mb-1">
-              <span>Progreso</span>
-              <span>{{ course.progress || 0 }}%</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-1.5">
-              <div class="h-1.5 rounded-full bg-[#006688] transition-all" :style="`width: ${course.progress || 0}%`"></div>
-            </div>
-          </div>
-          <div v-else class="mb-3 flex items-center justify-between text-xs text-gray-500">
-            <div class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm text-[#006688]">task</span>
-              <span>{{ course.activitiesCount || 0 }} actividades pedagógicas</span>
-            </div>
-          </div>
 
-          <div class="flex items-center justify-between border-t border-gray-50 pt-3 mt-2">
+          <div class="p-5 pb-3">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <span :class="`text-xs font-bold px-2 py-1 rounded-full ${course.categoryBg} ${course.categoryText}`">{{ course.category }}</span>
+              <span class="text-xs text-gray-400">{{ course.duration }}</span>
+              <span v-if="course.programName" class="text-[10px] font-bold text-[#006688] bg-[#006688]/10 px-2 py-0.5 rounded-full truncate max-w-[180px]">
+                {{ course.programName }}
+              </span>
+            </div>
+
+            <!-- RAP Badges on Card -->
+            <div v-if="course.raps && course.raps.length > 0" class="flex flex-wrap gap-1 mb-2.5">
+              <span 
+                v-for="rap in course.raps" 
+                :key="rap" 
+                class="text-[10px] font-extrabold bg-blue-50 text-[#006688] border border-blue-200/70 px-2 py-0.5 rounded-md flex items-center gap-1"
+                :title="`Resultado de Aprendizaje: ${rap}`"
+              >
+                <span class="material-symbols-outlined text-[11px]">verified</span>
+                {{ rap }}
+              </span>
+            </div>
+
+            <h4 class="font-bold text-gray-800 mb-1 leading-snug">{{ course.title }}</h4>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed">{{ course.description }}</p>
+            
+            <!-- Progress or Lock Notice for Learner -->
+            <div v-if="!auth.isAdmin && !auth.isInstructor" class="mb-3">
+              <div v-if="course.isLocked" class="p-2.5 bg-amber-50 border border-amber-200/70 rounded-xl flex items-start gap-2 text-xs text-amber-900">
+                <span class="material-symbols-outlined text-base text-amber-600 shrink-0 mt-0.5">lock_clock</span>
+                <div class="text-[11px] leading-tight">
+                  <span class="font-bold">Prerrequisito pendiente:</span>
+                  <p class="text-amber-800 mt-0.5">Completa al 100% el módulo <strong>"{{ course.prerequisiteTitle || 'anterior' }}"</strong> para desbloquear este nivel.</p>
+                </div>
+              </div>
+              <div v-else>
+                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Progreso</span>
+                  <span class="font-bold text-[#006688]">{{ course.progress || 0 }}%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                  <div class="h-1.5 rounded-full bg-[#006688] transition-all" :style="`width: ${course.progress || 0}%`"></div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="mb-3 flex items-center justify-between text-xs text-gray-500">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-[#006688]">task</span>
+                <span>{{ course.activitiesCount || 0 }} actividades pedagógicas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-5 pt-0">
+          <div class="flex items-center justify-between border-t border-gray-100 pt-3">
             <div class="flex items-center gap-1 text-xs text-gray-400">
               <span class="material-symbols-outlined text-sm">group</span>
               {{ course.students || 0 }} estudiantes
             </div>
             
-            <router-link
-              v-if="!auth.isAdmin && !auth.isInstructor"
-              :to="`/dashboard/cursos/${course.id}`"
-              class="text-xs font-semibold text-[#006688] hover:underline"
-            >
-              Continuar
-            </router-link>
+            <template v-if="!auth.isAdmin && !auth.isInstructor">
+              <button
+                v-if="course.isLocked"
+                disabled
+                class="px-3 py-1.5 bg-gray-200/70 text-gray-400 rounded-lg text-xs font-bold flex items-center gap-1 cursor-not-allowed"
+                title="Debes completar el módulo anterior al 100%"
+              >
+                <span class="material-symbols-outlined text-xs">lock</span>
+                Bloqueado
+              </button>
+              <router-link
+                v-else
+                :to="`/dashboard/cursos/${course.id}`"
+                class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white rounded-lg text-xs font-bold transition-colors shadow-xs flex items-center gap-1"
+              >
+                <span>{{ (course.progress || 0) > 0 ? 'Continuar' : 'Iniciar' }}</span>
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+              </router-link>
+            </template>
             
             <div v-else class="flex items-center gap-2">
               <button
                 @click="openEditCourseModal(course)"
-                class="text-xs font-semibold text-[#006688] hover:underline flex items-center gap-0.5"
+                class="text-xs font-semibold text-[#006688] hover:underline flex items-center gap-0.5 cursor-pointer"
                 title="Editar este curso"
               >
                 <span class="material-symbols-outlined text-sm">edit</span>
@@ -83,7 +147,7 @@
               </button>
               <button
                 @click="deleteCourse(course)"
-                class="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline flex items-center gap-0.5"
+                class="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline flex items-center gap-0.5 cursor-pointer"
                 title="Eliminar este curso"
               >
                 <span class="material-symbols-outlined text-sm">delete</span>
@@ -172,6 +236,46 @@
                   <option :value="null">Sin programa formativo asignado</option>
                   <option v-for="p in trainingPrograms" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
+              </div>
+
+              <!-- RAPs Curriculum Linking -->
+              <div class="md:col-span-2 space-y-2 pt-2 border-t border-gray-100">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm text-[#006688]">verified</span>
+                    Resultados de Aprendizaje (RAPs) del Curso / Módulo
+                  </label>
+                  <span class="text-[10px] text-gray-400 font-medium">Selecciona los RAPs que desarrolla este módulo</span>
+                </div>
+
+                <div v-if="availableRaps.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2.5 bg-gray-50/80 rounded-xl border border-gray-200">
+                  <label
+                    v-for="rap in availableRaps"
+                    :key="rap.id || rap.code"
+                    :class="`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                      (form.raps || []).includes(rap.code)
+                        ? 'bg-blue-50/90 border-[#006688] text-[#006688] font-bold shadow-xs'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="rap.code"
+                      v-model="form.raps"
+                      class="mt-0.5 rounded text-[#006688] focus:ring-[#006688] cursor-pointer"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-black text-[11px] bg-[#006688] text-white px-1.5 py-0.5 rounded">{{ rap.code }}</span>
+                        <span v-if="rap.competency?.code" class="text-[9px] text-gray-400 font-semibold truncate">{{ rap.competency.code }}</span>
+                      </div>
+                      <p class="text-[11px] text-gray-600 mt-1 leading-snug font-normal line-clamp-2">{{ rap.description }}</p>
+                    </div>
+                  </label>
+                </div>
+                <div v-else class="text-xs text-gray-400 italic p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  No hay RAPs registrados en Gestión Curricular.
+                </div>
               </div>
             </div>
           </div>
@@ -532,6 +636,7 @@ const showModal = ref(false)
 const editingCourse = ref(null)
 const activeModalPhase = ref('inicio')
 const trainingPrograms = ref([])
+const availableRaps = ref([])
 
 const newActivity = ref({
   title: '',
@@ -662,6 +767,16 @@ async function fetchCourses() {
           const cat = c.category || fallback.category || 'Básico'
           const catBg = cat === 'Profesional' ? 'bg-emerald-100' : cat === 'Avanzado' ? 'bg-amber-100' : cat === 'Intermedio' ? 'bg-indigo-100' : 'bg-teal-100'
           const catText = cat === 'Profesional' ? 'text-emerald-700' : cat === 'Avanzado' ? 'text-amber-700' : cat === 'Intermedio' ? 'text-indigo-700' : 'text-teal-700'
+          
+          let parsedRaps = []
+          if (c.raps) {
+            try {
+              parsedRaps = Array.isArray(c.raps) ? c.raps : JSON.parse(c.raps)
+            } catch {
+              parsedRaps = []
+            }
+          }
+
           return {
             ...fallback,
             ...c,
@@ -681,13 +796,32 @@ async function fetchCourses() {
             categoryText: catText,
             programId: c.programId || null,
             programName: c.programName || null,
-            progress: c.progress || 0
+            progress: c.progress || 0,
+            raps: parsedRaps,
+            isLocked: Boolean(c.isLocked),
+            prerequisiteTitle: c.prerequisiteTitle || null,
+            prerequisiteId: c.prerequisiteId || null
           }
         })
       }
     }
   } catch (err) {
     console.warn('Backend courses unavailable, using fallback courses:', err)
+  }
+}
+
+async function fetchCurriculumRaps() {
+  try {
+    const token = getAuthToken()
+    const res = await fetch(`${apiBaseUrl}/api/curriculum/raps`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (res.ok) {
+      const data = await res.json()
+      availableRaps.value = Array.isArray(data) ? data : (data?.data || [])
+    }
+  } catch (err) {
+    console.warn('Backend curriculum raps unavailable:', err)
   }
 }
 
@@ -710,6 +844,8 @@ onMounted(async () => {
   await fetchCourses()
   await fetchActivities()
   await fetchTrainingPrograms()
+  await fetchCurriculumRaps()
+
   const apprenticeId = auth.user?.id || 'guest'
   courses.value.forEach(course => {
     try {
@@ -719,13 +855,32 @@ onMounted(async () => {
         const data = JSON.parse(raw)
         if (data.phaseProgress) {
           const sum = Object.values(data.phaseProgress).reduce((a, b) => a + b, 0)
-          course.progress = Math.round(sum / Object.keys(data.phaseProgress).length)
+          course.progress = Math.max(course.progress || 0, Math.round(sum / Object.keys(data.phaseProgress).length))
         }
       }
     } catch (e) {
       console.error(e)
     }
   })
+
+  // Sincronizar bloqueo secuencial local si el aprendiz completó módulos en su sesión
+  if (!auth.isAdmin && !auth.isInstructor) {
+    let prevProg = 100
+    let prevTitle = null
+    let prevId = null
+    courses.value.forEach((course, idx) => {
+      if (idx > 0) {
+        course.isLocked = prevProg < 100
+        course.prerequisiteTitle = prevProg < 100 ? prevTitle : null
+        course.prerequisiteId = prevProg < 100 ? prevId : null
+      } else {
+        course.isLocked = false
+      }
+      prevProg = course.progress || 0
+      prevTitle = course.title
+      prevId = course.id
+    })
+  }
 })
 
 // Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2/3, RAP 4/5 y RAP 6
@@ -815,6 +970,7 @@ const form = ref({
   categoryBg: 'bg-blue-100',
   categoryText: 'text-blue-700',
   programId: null,
+  raps: [],
   f1_welcome: '',
   f1_gameWords: '',
   f2_grammar: '',
@@ -984,6 +1140,7 @@ function openNewCourseModal() {
     categoryBg: 'bg-blue-100',
     categoryText: 'text-blue-700',
     programId: null,
+    raps: [],
     f1_welcome: 'Welcome to this technical training module.',
     f1_gameWords: 'checks, The nurse, the, patient\'s, blood pressure',
     f2_grammar: 'The nurse checks the patient.',
@@ -1013,6 +1170,7 @@ function openEditCourseModal(course) {
     categoryBg: course.categoryBg,
     categoryText: course.categoryText,
     programId: course.programId || null,
+    raps: course.raps ? [...course.raps] : [],
     f1_welcome: course.f1_welcome || 'Welcome to this technical training module.',
     f1_gameWords: course.f1_gameWords || 'checks, The nurse, the, patient\'s, blood pressure',
     f2_grammar: course.f2_grammar || 'The nurse checks the patient.',
@@ -1054,6 +1212,7 @@ async function saveCourse() {
     iconColor: form.value.iconColor,
     bg: form.value.bg,
     programId: form.value.programId ? parseInt(form.value.programId) : null,
+    raps: form.value.raps || []
   }
 
   const token = getAuthToken()

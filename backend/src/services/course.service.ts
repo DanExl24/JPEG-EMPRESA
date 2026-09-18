@@ -12,7 +12,8 @@ export const DEFAULT_COURSES = [
     duration: '8h',
     icon: 'medical_services',
     iconColor: '#006688',
-    bg: 'bg-teal-50'
+    bg: 'bg-teal-50',
+    raps: JSON.stringify(['RAP-01'])
   },
   {
     slug: 'work-life-interaction',
@@ -22,7 +23,8 @@ export const DEFAULT_COURSES = [
     duration: '12h',
     icon: 'assignment_ind',
     iconColor: '#4f46e5',
-    bg: 'bg-indigo-50'
+    bg: 'bg-indigo-50',
+    raps: JSON.stringify(['RAP-02', 'RAP-03'])
   },
   {
     slug: 'workplace-communication',
@@ -32,7 +34,8 @@ export const DEFAULT_COURSES = [
     duration: '14h',
     icon: 'groups',
     iconColor: '#d97706',
-    bg: 'bg-amber-50'
+    bg: 'bg-amber-50',
+    raps: JSON.stringify(['RAP-04', 'RAP-05'])
   },
   {
     slug: 'professional-practice',
@@ -42,7 +45,8 @@ export const DEFAULT_COURSES = [
     duration: '10h',
     icon: 'verified_user',
     iconColor: '#059669',
-    bg: 'bg-emerald-50'
+    bg: 'bg-emerald-50',
+    raps: JSON.stringify(['RAP-06'])
   }
 ]
 
@@ -94,15 +98,26 @@ export class CourseService {
           } catch {}
         }
       }
+
+      // Asegurar que los 4 cursos oficiales tengan sus RAPs asignados si están vacíos
+      for (const def of DEFAULT_COURSES) {
+        const found = await prisma.course.findUnique({ where: { slug: def.slug } })
+        if (found && (!found.raps || found.raps === '[]')) {
+          await prisma.course.update({
+            where: { id: found.id },
+            data: { raps: def.raps }
+          })
+        }
+      }
     } catch (e) {
       console.warn('[CourseService] Could not auto-seed courses:', e)
     }
   }
 
   /**
-   * Obtiene la lista de todos los cursos con el progreso del usuario conectado
+   * Obtiene la lista de todos los cursos con el progreso del usuario conectado y estado de bloqueo secuencial
    */
-  static async listCourses(userId?: number) {
+  static async listCourses(userId?: number, userRole?: string) {
     await this.ensureCourses()
 
     const courses = await prisma.course.findMany({
@@ -135,9 +150,39 @@ export class CourseService {
       })
     }
 
-    return courses.map((c: any) => {
+    const isPrivileged = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+    let previousCourse: any = null
+    let previousProgress = 100
+
+    return courses.map((c: any, index: number) => {
       const studentCount = c._count?.progresses || 0
       const activitiesCount = activityCountMap.get(c.title) || 0
+      const currentProgress = userId ? (progressMap.get(c.id) || 0) : 0
+
+      let isLocked = false
+      let prerequisiteTitle: string | null = null
+      let prerequisiteId: number | null = null
+
+      // Bloqueo secuencial: Para aprendices, el módulo N requiere que el módulo N-1 esté al 100%
+      if (!isPrivileged && index > 0) {
+        if (previousProgress < 100) {
+          isLocked = true
+          prerequisiteTitle = previousCourse ? previousCourse.title : null
+          prerequisiteId = previousCourse ? previousCourse.id : null
+        }
+      }
+
+      previousCourse = c
+      previousProgress = currentProgress
+
+      let rapsList: string[] = []
+      if (c.raps) {
+        try {
+          rapsList = Array.isArray(c.raps) ? c.raps : JSON.parse(c.raps)
+        } catch {
+          rapsList = []
+        }
+      }
 
       return {
         id: c.id,
@@ -154,27 +199,76 @@ export class CourseService {
         studentsCount: studentCount,
         students: studentCount,
         activitiesCount,
-        progress: userId ? (progressMap.get(c.id) || 0) : 0
+        progress: currentProgress,
+        raps: rapsList,
+        isLocked,
+        prerequisiteTitle,
+        prerequisiteId
       }
     })
   }
 
   /**
-   * Obtiene el detalle de un curso por ID o por slug
+   * Obtiene el detalle de un curso por ID con estado de prerrequisito y RAPs
    */
-  static async getCourseById(id: number) {
-    const course = await prisma.course.findUnique({
-      where: { id },
+  static async getCourseById(id: number, userId?: number, userRole?: string) {
+    const allCourses = await prisma.course.findMany({
+      orderBy: { id: 'asc' },
       include: {
         program: true
       }
     })
 
-    if (!course) {
+    const courseIndex = allCourses.findIndex(c => c.id === id)
+    if (courseIndex === -1) {
       throw new NotFoundError(`Curso con ID ${id} no encontrado.`)
     }
 
-    return course
+    const course = allCourses[courseIndex]
+    const isPrivileged = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+
+    let isLocked = false
+    let prerequisiteTitle: string | null = null
+    let prerequisiteId: number | null = null
+
+    if (!isPrivileged && courseIndex > 0) {
+      const prevCourse = allCourses[courseIndex - 1]
+      let prevProgress = 0
+      if (userId) {
+        const p = await prisma.courseProgress.findUnique({
+          where: {
+            userId_courseId: {
+              userId,
+              courseId: prevCourse.id
+            }
+          }
+        })
+        prevProgress = p ? p.overallPct : 0
+      }
+
+      if (prevProgress < 100) {
+        isLocked = true
+        prerequisiteTitle = prevCourse.title
+        prerequisiteId = prevCourse.id
+      }
+    }
+
+    let rapsList: string[] = []
+    if (course.raps) {
+      try {
+        rapsList = Array.isArray(course.raps) ? course.raps : JSON.parse(course.raps)
+      } catch {
+        rapsList = []
+      }
+    }
+
+    return {
+      ...course,
+      raps: rapsList,
+      isLocked,
+      prerequisiteTitle,
+      prerequisiteId
+    }
   }
 
   /**
@@ -191,6 +285,10 @@ export class CourseService {
       slug = `${slug}-${Date.now().toString().slice(-4)}`
     }
 
+    const rapsValue = data.raps
+      ? (typeof data.raps === 'string' ? data.raps : JSON.stringify(data.raps))
+      : '[]'
+
     return await prisma.course.create({
       data: {
         title: data.title.trim(),
@@ -201,7 +299,8 @@ export class CourseService {
         icon: data.icon || 'school',
         iconColor: data.iconColor || '#006688',
         bg: data.bg || 'bg-blue-50',
-        programId: data.programId || null
+        programId: data.programId || null,
+        raps: rapsValue
       }
     })
   }
@@ -211,6 +310,10 @@ export class CourseService {
    */
   static async updateCourse(id: number, data: UpdateCourseDto) {
     const existing = await this.getCourseById(id)
+
+    const rapsValue = data.raps !== undefined
+      ? (typeof data.raps === 'string' ? data.raps : JSON.stringify(data.raps))
+      : undefined
 
     const updated = await prisma.course.update({
       where: { id },
@@ -223,7 +326,8 @@ export class CourseService {
         ...(data.icon ? { icon: data.icon } : {}),
         ...(data.iconColor ? { iconColor: data.iconColor } : {}),
         ...(data.bg ? { bg: data.bg } : {}),
-        ...(data.programId !== undefined ? { programId: data.programId } : {})
+        ...(data.programId !== undefined ? { programId: data.programId } : {}),
+        ...(rapsValue !== undefined ? { raps: rapsValue } : {})
       }
     })
 

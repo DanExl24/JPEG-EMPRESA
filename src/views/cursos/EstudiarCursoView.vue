@@ -22,6 +22,19 @@
           </span>
         </div>
         <p class="text-xs text-gray-500">{{ currentCourseSubtitle }}</p>
+        
+        <!-- RAP Badges in Header -->
+        <div v-if="courseRaps && courseRaps.length > 0" class="flex flex-wrap gap-1.5 pt-1">
+          <span 
+            v-for="rap in courseRaps" 
+            :key="rap" 
+            class="text-[10px] font-extrabold bg-blue-50 text-[#006688] border border-blue-200/80 px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs"
+            :title="`Resultado de Aprendizaje: ${rap}`"
+          >
+            <span class="material-symbols-outlined text-[13px]">verified</span>
+            {{ rap }}
+          </span>
+        </div>
       </div>
 
       <!-- Main Progress Tracking -->
@@ -36,6 +49,51 @@
       </div>
     </div>
 
+    <!-- Prerequisite Sequential Lock Screen for Apprentice -->
+    <div v-if="isCourseLocked && !auth.isAdmin && !auth.isInstructor" class="bg-white rounded-3xl border border-amber-200 shadow-md p-8 sm:p-12 text-center space-y-6 animate-fade-in max-w-2xl mx-auto my-6">
+      <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+        <span class="material-symbols-outlined text-4xl">lock</span>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs font-black tracking-wider uppercase bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+          Módulo Bloqueado por Prerrequisito
+        </span>
+        <h2 class="text-2xl font-black text-gray-800 pt-2">
+          {{ currentCourseTitle }}
+        </h2>
+        <p class="text-sm text-gray-600 max-w-lg mx-auto leading-relaxed">
+          Para garantizar la continuidad pedagógica y el cumplimiento de los RAPs, debes completar al <strong>100%</strong> el módulo previo antes de ingresar a este nivel.
+        </p>
+      </div>
+
+      <div class="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center justify-center gap-3 text-left">
+        <span class="material-symbols-outlined text-amber-600 text-2xl shrink-0">school</span>
+        <div>
+          <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wide">Prerrequisito Obligatorio Pendiente:</span>
+          <p class="text-sm font-black text-amber-900">{{ prerequisiteCourseTitle || 'Módulo Anterior' }}</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+        <router-link 
+          :to="`/dashboard/cursos/${prerequisiteCourseId || 1}`"
+          class="w-full sm:w-auto px-6 py-3 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+        >
+          <span class="material-symbols-outlined text-base">arrow_back</span>
+          Ir al Módulo Prerrequisito
+        </router-link>
+        <router-link 
+          to="/dashboard/cursos"
+          class="w-full sm:w-auto px-6 py-3 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-sm rounded-xl transition-all flex items-center justify-center"
+        >
+          Ver Todos los Cursos
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Active Course Content (Rendered only if course is unlocked) -->
+    <template v-else>
     <!-- Media Check Settings Banner (Simulation) -->
     <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
       <div class="flex items-center gap-2">
@@ -2072,6 +2130,8 @@
       </div>
     </div>
 
+    </template>
+
   </div>
 </template>
 
@@ -2086,6 +2146,75 @@ const auth = useAuthStore()
 
 // Course Route State
 const courseId = computed(() => route.params.courseId || '1')
+
+// Course Details, Lock Status and RAPs
+const courseDetails = ref(null)
+const isCourseLocked = ref(false)
+const prerequisiteCourseTitle = ref('')
+const prerequisiteCourseId = ref(null)
+
+const courseRaps = computed(() => {
+  if (courseDetails.value?.raps && courseDetails.value.raps.length > 0) {
+    return courseDetails.value.raps
+  }
+  if (moduleNumber.value === 1) return ['RAP-01']
+  if (moduleNumber.value === 2) return ['RAP-02', 'RAP-03']
+  if (moduleNumber.value === 3) return ['RAP-04', 'RAP-05']
+  if (moduleNumber.value === 4) return ['RAP-06']
+  return []
+})
+
+async function checkCourseLockAndDetails() {
+  if (auth.isAdmin || auth.isInstructor) {
+    isCourseLocked.value = false
+    return
+  }
+
+  try {
+    const token = auth.token || ''
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+    const res = await fetch(`${apiBaseUrl}/api/courses/${courseId.value}`, { headers })
+    if (res.ok) {
+      const payload = await res.json()
+      const course = payload?.data || payload
+      courseDetails.value = course
+      if (course.isLocked) {
+        isCourseLocked.value = true
+        prerequisiteCourseTitle.value = course.prerequisiteTitle || 'el módulo previo'
+        prerequisiteCourseId.value = course.prerequisiteId || (Number(courseId.value) - 1)
+        return
+      }
+    }
+  } catch (err) {
+    console.warn('Could not check course lock from backend:', err)
+  }
+
+  // Comprobación de seguridad local en caso de desconexión o progreso en cliente
+  if (moduleNumber.value > 1) {
+    const prevModuleId = moduleNumber.value - 1
+    const apprenticeId = auth.user?.id || 'guest'
+    const prevKey = `nursing_academy_progress_${apprenticeId}_course_${prevModuleId}`
+    try {
+      const raw = localStorage.getItem(prevKey)
+      let prevProg = 0
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed.phaseProgress) {
+          const sum = Object.values(parsed.phaseProgress).reduce((a, b) => a + b, 0)
+          prevProg = Math.round(sum / Object.keys(parsed.phaseProgress).length)
+        }
+      }
+      if (prevProg < 100 && (courseDetails.value?.isLocked ?? true)) {
+        isCourseLocked.value = true
+        prerequisiteCourseTitle.value = courseDetails.value?.prerequisiteTitle || `Módulo ${prevModuleId}`
+        prerequisiteCourseId.value = courseDetails.value?.prerequisiteId || prevModuleId
+        return
+      }
+    } catch {}
+  }
+
+  isCourseLocked.value = false
+}
 
 const moduleNumber = computed(() => {
   const id = String(courseId.value)
@@ -3423,6 +3552,8 @@ async function saveProgress() {
 
 async function loadProgress() {
   try {
+    await checkCourseLockAndDetails()
+
     const raw = localStorage.getItem(storageKey.value)
     const hadLocal = Boolean(raw)
     if (!raw) {
@@ -3531,8 +3662,9 @@ watch(courseId, () => {
   loadProgress()
 })
 
-onMounted(() => {
+onMounted(async () => {
   checkVideoAsset()
+  await checkCourseLockAndDetails()
   loadProgress()
 })
 </script>

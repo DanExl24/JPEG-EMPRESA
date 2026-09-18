@@ -7,7 +7,8 @@ export class CourseController {
   static async listCourses(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user?.id ? Number(req.user.id) : undefined
-      const courses = await CourseService.listCourses(userId)
+      const userRole = req.user?.role
+      const courses = await CourseService.listCourses(userId, userRole)
       res.json(courses)
     } catch (error) {
       next(error)
@@ -19,7 +20,9 @@ export class CourseController {
       const courseId = Number(req.params.id)
       if (isNaN(courseId)) throw new BadRequestError('ID de curso inválido.')
 
-      const course = await CourseService.getCourseById(courseId)
+      const userId = req.user?.id ? Number(req.user.id) : undefined
+      const userRole = req.user?.role
+      const course = await CourseService.getCourseById(courseId, userId, userRole)
       ApiResponse.success(res, course)
     } catch (error) {
       next(error)

@@ -215,6 +215,7 @@ model Course {
   bg           String           @default("bg-blue-50")
   programId    Int?             @map("program_id")
   program      TrainingProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  raps         String?          @default("[]")
   progresses   CourseProgress[]
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
