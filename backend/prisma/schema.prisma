@@ -142,6 +142,13 @@ model Activity {
   attemptsLimit         String   @default("Ilimitados") @map("attempts_limit")
   successMessage        String   @default("¡Excelente trabajo! Has acertado.") @map("success_message")
   hintMessage           String   @default("") @map("hint_message")
+  description           String?
+  icon                  String?
+  color                 String?
+  order                 Int      @default(0)
+  visible               Boolean  @default(true)
+  required              Boolean  @default(true)
+  orderItems            String?  @map("order_items")
   sopaWords             String?  @map("sopa_words")
   crossword1Clue        String?  @map("crossword1_clue")
   crossword1Word        String?  @map("crossword1_word")

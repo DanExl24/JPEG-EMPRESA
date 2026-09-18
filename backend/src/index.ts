@@ -10,6 +10,7 @@ import {
   ensureDefaultAuthUser,
   ensureDefaultInstructorUser,
   ensureDefaultActivities,
+  cleanupLegacySeedActivities,
   ensureDefaultCurriculum,
   ensureDefaultVocabulary,
   ensureDefaultDialogues,
@@ -85,6 +86,7 @@ try {
   await ensureDefaultInstructorUser()
   await ensureDefaultApprenticeUser()
   await ensureDefaultActivities()
+  await cleanupLegacySeedActivities()
   await ensureDefaultCurriculum()
   await ensureDefaultVocabulary()
   await ensureDefaultDialogues()

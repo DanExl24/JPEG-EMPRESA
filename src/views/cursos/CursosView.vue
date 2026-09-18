@@ -418,76 +418,168 @@
             <!-- Modal Phase Content Panels -->
             <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
               
-              <!-- F1: Inicio -->
-              <div v-if="activeModalPhase === 'inicio'" class="space-y-4 animate-fade-in">
-                <div class="flex justify-between items-center">
-                  <span class="text-xs font-black text-gray-700">Fase 1: Preparación (Warm-up)</span>
-                  <span class="text-[9px] font-black uppercase bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Obligatorio</span>
-                </div>
-                <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Mensaje/Texto de Bienvenida</label>
-                  <input type="text" v-model="form.f1_welcome" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Bienvenido al módulo de enfermería básica." />
-                </div>
-                <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Palabras del Calentamiento en orden correcto (separadas por comas)</label>
-                  <input type="text" v-model="form.f1_gameWords" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. The nurse, checks, the, patient's, blood pressure" />
-                  <p class="text-[10px] text-gray-400 italic">El estudiante deberá ordenarlas para avanzar a la fase de estudio.</p>
-                </div>
-              </div>
-
-              <!-- F2: Estudio -->
-              <div v-if="activeModalPhase === 'estudio'" class="space-y-4 animate-fade-in">
-                <div class="flex justify-between items-center">
-                  <span class="text-xs font-black text-gray-700">Fase 2: Absorción (Teoría y Vocabulario)</span>
-                  <span class="text-[9px] font-black uppercase bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Obligatorio</span>
-                </div>
-                <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Explicación Gramatical (Color-coded)</label>
-                  <textarea v-model="form.f2_grammar" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Oración de ejemplo para colorear..."></textarea>
-                </div>
-                <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Vocabulario Técnico de Escucha (separado por comas)</label>
-                  <input type="text" v-model="form.f2_vocabulary" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Stethoscope, Intravenous, Suture" />
-                </div>
-              </div>
-
-              <!-- F3: Práctica -->
-              <div v-if="activeModalPhase === 'practica'" class="space-y-4 animate-fade-in">
-                <div class="flex justify-between items-center">
-                  <span class="text-xs font-black text-gray-700">Fase 3: Práctica Activa (Ejercicios y Voz)</span>
-                  <span class="text-[9px] font-black uppercase bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Obligatorio</span>
-                </div>
-                <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Texto para Rellenar Blanco (Fill-in-the-blank)</label>
-                  <input type="text" v-model="form.f3_fillBlank" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Respuesta correcta obligatoria" />
-                </div>
-                <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Oración de Grabación de Voz (Límite 1 min)</label>
-                  <input type="text" v-model="form.f3_voiceTarget" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Oración a pronunciar" />
-                </div>
-              </div>
-
-              <!-- F4: Cierre -->
-              <div v-if="activeModalPhase === 'evaluacion'" class="space-y-4 animate-fade-in">
-                <div class="flex justify-between items-center">
-                  <span class="text-xs font-black text-gray-700">Fase 4: Evaluación Final (Examen)</span>
-                  <span class="text-[9px] font-black uppercase bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Obligatorio</span>
-                </div>
-                <div class="p-3 bg-white rounded-xl border border-gray-100 space-y-3">
-                  <span class="text-[10px] font-bold text-gray-400">PREGUNTA DE EVALUACIÓN</span>
-                  <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-gray-500">Enunciado de la Pregunta</label>
-                    <input type="text" v-model="form.f4_q" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none" />
+              <!-- Editor de ítems de la fase (CRUD) -->
+              <div class="space-y-4 animate-fade-in">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-black text-gray-700">Contenido de la fase ({{ activePhaseItems.length }} ítems)</span>
+                    <span class="text-[9px] font-black uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{{ activePhaseLabel }}</span>
                   </div>
-                  <div class="grid grid-cols-2 gap-2">
+                  <div class="flex items-center gap-2">
+                    <button
+                      v-if="!showItemForm"
+                      @click="importCurrentStructure"
+                      type="button"
+                      class="px-2.5 py-1 bg-white border border-gray-200 hover:border-[#006688] text-gray-600 font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                      title="Convierte los datos actuales de la fase en ítems editables"
+                    >
+                      <span class="material-symbols-outlined text-xs">move_down</span>
+                      Importar plantilla
+                    </button>
+                    <button
+                      v-if="!showItemForm"
+                      @click="openAddItem"
+                      type="button"
+                      class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                    >
+                      <span class="material-symbols-outlined text-xs">add</span>
+                      Agregar ítem
+                    </button>
+                    <button
+                      v-if="!showItemForm && (editingCourse?.structure || activePhaseItems.length)"
+                      @click="restoreOfficialStructure"
+                      type="button"
+                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold text-[10px] rounded-lg transition-all flex items-center gap-1"
+                      title="Elimina la personalización y vuelve al contenido por defecto del módulo"
+                    >
+                      <span class="material-symbols-outlined text-xs">restart_alt</span>
+                      Restaurar plantilla
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Lista de ítems con orden, visibilidad y CRUD -->
+                <div v-if="activePhaseItems.length" class="space-y-2">
+                  <div v-for="(item, idx) in activePhaseItems" :key="item.id" class="bg-white border border-gray-100 rounded-xl p-3 flex items-center justify-between gap-3">
+                    <div class="min-w-0 flex items-center gap-2">
+                      <span class="material-symbols-outlined text-base text-[#006688]">{{ item.icon || 'widgets' }}</span>
+                      <div class="min-w-0">
+                        <p class="text-xs font-bold text-gray-800 truncate">
+                          {{ item.title || itemTypeLabel(item.type) }}
+                          <span v-if="item.required === false" class="ml-1 text-[9px] font-bold text-gray-400">(opcional)</span>
+                          <span v-if="item.visible === false" class="ml-1 text-[9px] font-bold text-amber-600">(oculto)</span>
+                        </p>
+                        <p class="text-[10px] text-gray-400">{{ itemTypeLabel(item.type) }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-0.5 shrink-0">
+                      <button @click="moveItem(idx, -1)" :disabled="idx === 0" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50 disabled:opacity-30" title="Subir"><span class="material-symbols-outlined text-sm">arrow_upward</span></button>
+                      <button @click="moveItem(idx, 1)" :disabled="idx === activePhaseItems.length - 1" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50 disabled:opacity-30" title="Bajar"><span class="material-symbols-outlined text-sm">arrow_downward</span></button>
+                      <button @click="toggleItemVisible(item)" class="p-1 rounded-lg" :class="item.visible === false ? 'text-amber-500 hover:bg-amber-50' : 'text-gray-400 hover:text-[#006688] hover:bg-gray-50'" :title="item.visible === false ? 'Mostrar' : 'Ocultar'"><span class="material-symbols-outlined text-sm">{{ item.visible === false ? 'visibility_off' : 'visibility' }}</span></button>
+                      <button @click="openEditItem(item)" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50" title="Editar"><span class="material-symbols-outlined text-sm">edit</span></button>
+                      <button @click="removeItem(item)" class="p-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50" title="Eliminar"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    </div>
+                  </div>
+                </div>
+                <p v-else class="text-center py-4 text-[11px] text-gray-400 italic bg-white/60 rounded-xl border border-dashed border-gray-200">
+                  Esta fase no tiene ítems editables. Los módulos oficiales muestran su contenido por defecto hasta que importes o agregues ítems.
+                </p>
+
+                <!-- Formulario de ítem (crear/editar) -->
+                <div v-if="showItemForm" class="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 animate-slide-up">
+                  <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                    <span class="text-xs font-bold text-gray-700">{{ itemForm.id ? 'Editar ítem' : 'Nuevo ítem' }} — {{ activePhaseLabel }}</span>
+                    <button @click="resetItemForm" type="button" class="text-gray-400 hover:text-gray-600"><span class="material-symbols-outlined text-xs">close</span></button>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Opción Correcta</label>
-                      <input type="text" v-model="form.f4_correct" class="w-full px-2 py-1.5 border border-green-200 bg-green-50/50 rounded-lg text-xs font-semibold focus:outline-none" />
+                      <label class="text-[10px] font-bold text-gray-500">Tipo de ítem</label>
+                      <select v-model="itemForm.type" @change="onItemTypeChange" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold">
+                        <option v-for="opt in activePhaseItemTypes" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                      </select>
                     </div>
                     <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Opción Incorrecta</label>
-                      <input type="text" v-model="form.f4_incorrect" class="w-full px-2 py-1.5 border border-red-200 bg-red-50/50 rounded-lg text-xs font-semibold focus:outline-none" />
+                      <label class="text-[10px] font-bold text-gray-500">Título visible (opcional)</label>
+                      <input type="text" v-model="itemForm.title" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" />
                     </div>
+                    <div class="space-y-1 sm:col-span-2">
+                      <label class="text-[10px] font-bold text-gray-500">Instrucción / descripción (opcional)</label>
+                      <input type="text" v-model="itemForm.description" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Icono (Material Symbols)</label>
+                      <input type="text" v-model="itemForm.icon" placeholder="ej. menu_book" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Color</label>
+                      <select v-model="itemForm.color" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold">
+                        <option value="">Por defecto</option>
+                        <option value="#006688">Azul institucional</option>
+                        <option value="#059669">Verde</option>
+                        <option value="#d97706">Ámbar</option>
+                        <option value="#4f46e5">Índigo</option>
+                        <option value="#dc2626">Rojo</option>
+                      </select>
+                    </div>
+                    <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="itemForm.visible" class="rounded" /> Visible para el aprendiz</label>
+                    <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="itemForm.required" class="rounded" /> Obligatorio para avanzar</label>
+                  </div>
+
+                  <!-- Campos según tipo de ítem -->
+                  <div class="pt-3 border-t border-gray-100 space-y-3">
+                    <div v-if="itemForm.type === 'welcome' || itemForm.type === 'video'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Texto / descripción del recurso</label>
+                      <textarea v-model="itemForm.payload.text" rows="3" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" :placeholder="itemForm.type === 'video' ? 'Describe el video de bienvenida (el archivo se agrega después)' : 'Texto de bienvenida para el aprendiz'"></textarea>
+                    </div>
+                    <div v-if="itemForm.type === 'objectives'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Metas de aprendizaje (una por línea)</label>
+                      <textarea v-model="itemForm.payload.lines" rows="4" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" placeholder="Presentarse&#10;Saludar formal e informalmente&#10;Solicitar datos básicos"></textarea>
+                    </div>
+                    <div v-if="itemForm.type === 'wordorder' || itemForm.type === 'vocabulary' || itemForm.type === 'listening' || itemForm.type === 'spelling'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Elementos (separados por coma)</label>
+                      <input type="text" v-model="itemForm.payload.csv" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" :placeholder="itemForm.type === 'wordorder' ? 'The nurse, checks, the, patient\'s, blood pressure' : 'stethoscope, bandage, vitals'" />
+                      <p v-if="itemForm.type === 'wordorder'" class="text-[10px] text-gray-400 italic">El aprendiz deberá ordenarlas; escríbelas en el orden correcto.</p>
+                    </div>
+                    <div v-if="itemForm.type === 'grammar'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Oraciones (una por línea, formato "Persona | Verbo | Detalle" o texto libre)</label>
+                      <textarea v-model="itemForm.payload.lines" rows="4" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" placeholder="I | am | a nurse&#10;She | works | at the hospital"></textarea>
+                    </div>
+                    <div v-if="itemForm.type === 'chat'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Mensajes (uno por línea, formato "Nombre: English = Español")</label>
+                      <textarea v-model="itemForm.payload.lines" rows="5" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" placeholder="Sarah: Hi! Good morning. = ¡Hola! Buenos días.&#10;David: Good morning, Sarah. = Buenos días, Sarah."></textarea>
+                    </div>
+                    <div v-if="itemForm.type === 'fillblank'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Respuesta correcta</label>
+                      <input type="text" v-model="itemForm.payload.answer" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" placeholder="Ej. prescription" />
+                    </div>
+                    <div v-if="itemForm.type === 'voice' || itemForm.type === 'profile'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Frase objetivo</label>
+                      <input type="text" v-model="itemForm.payload.target" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" placeholder="The patient is stable." />
+                    </div>
+                    <div v-if="itemForm.type === 'quiz'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div class="space-y-1 sm:col-span-2">
+                        <label class="text-[10px] font-bold text-gray-500">Pregunta</label>
+                        <input type="text" v-model="itemForm.payload.question" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Opción correcta</label>
+                        <input type="text" v-model="itemForm.payload.correct" class="w-full px-2.5 py-1.5 border border-green-200 bg-green-50/50 rounded-lg text-xs font-semibold" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Opción incorrecta</label>
+                        <input type="text" v-model="itemForm.payload.incorrect" class="w-full px-2.5 py-1.5 border border-red-200 bg-red-50/50 rounded-lg text-xs font-semibold" />
+                      </div>
+                    </div>
+                    <div v-if="itemForm.type === 'match'" class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Parejas (una por línea, formato "Término = Significado")</label>
+                      <textarea v-model="itemForm.payload.lines" rows="4" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold" placeholder="Good morning = Buenos días&#10;Good night = Buenas noches"></textarea>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end gap-2 pt-1">
+                    <button @click="resetItemForm" type="button" class="px-3 py-1.5 text-[11px] font-bold text-gray-500 hover:text-gray-700">Cancelar</button>
+                    <button @click="saveItem" type="button" class="px-4 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white text-[11px] font-bold rounded-lg">Guardar ítem</button>
                   </div>
                 </div>
               </div>
@@ -516,22 +608,28 @@
                 <!-- Activities list -->
                 <div v-if="coursePhaseActivities.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div 
-                    v-for="act in coursePhaseActivities" 
+                    v-for="(act, actIdx) in coursePhaseActivities" 
                     :key="act.id"
                     class="bg-white border border-gray-100 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs hover:border-gray-200 transition-all"
                   >
-                    <div class="min-w-0">
-                      <p class="text-xs font-bold text-gray-800 truncate">{{ act.title }}</p>
-                      <p class="text-[10px] text-gray-400 font-medium">Plantilla: <span class="capitalize">{{ act.template }}</span> · Puntos: {{ act.points }}</p>
+                    <div class="min-w-0 flex items-center gap-2">
+                      <span class="material-symbols-outlined text-base" :style="act.color ? `color:${act.color}` : 'color:#006688'">{{ act.icon || 'extension' }}</span>
+                      <div class="min-w-0">
+                        <p class="text-xs font-bold text-gray-800 truncate">
+                          {{ act.title }}
+                          <span v-if="act.required === false" class="ml-1 text-[9px] font-bold text-gray-400">(opcional)</span>
+                          <span v-if="act.visible === false" class="ml-1 text-[9px] font-bold text-amber-600">(oculta)</span>
+                        </p>
+                        <p class="text-[10px] text-gray-400 font-medium truncate">{{ act.description || ('Plantilla: ' + act.template) }} · {{ act.points }} pts</p>
+                      </div>
                     </div>
-                    <button 
-                      @click="deleteInlineActivity(act.id)"
-                      type="button"
-                      class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-all shrink-0"
-                      title="Eliminar actividad"
-                    >
-                      <span class="material-symbols-outlined text-sm">delete</span>
-                    </button>
+                    <div class="flex items-center gap-0.5 shrink-0">
+                      <button @click="moveActivity(actIdx, -1)" :disabled="actIdx === 0" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50 disabled:opacity-30" title="Subir"><span class="material-symbols-outlined text-sm">arrow_upward</span></button>
+                      <button @click="moveActivity(actIdx, 1)" :disabled="actIdx === coursePhaseActivities.length - 1" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50 disabled:opacity-30" title="Bajar"><span class="material-symbols-outlined text-sm">arrow_downward</span></button>
+                      <button @click="toggleActivityVisible(act)" class="p-1 rounded-lg" :class="act.visible === false ? 'text-amber-500 hover:bg-amber-50' : 'text-gray-400 hover:text-[#006688] hover:bg-gray-50'" :title="act.visible === false ? 'Mostrar' : 'Ocultar'"><span class="material-symbols-outlined text-sm">{{ act.visible === false ? 'visibility_off' : 'visibility' }}</span></button>
+                      <button @click="openEditActivityForm(act)" class="p-1 rounded-lg text-gray-400 hover:text-[#006688] hover:bg-gray-50" title="Editar actividad"><span class="material-symbols-outlined text-sm">edit</span></button>
+                      <button @click="deleteInlineActivity(act.id)" type="button" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded-lg transition-all shrink-0" title="Eliminar actividad"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    </div>
                   </div>
                 </div>
                 <div v-else class="text-center py-4 text-[11px] text-gray-400 italic bg-white/50 rounded-xl border border-dashed border-gray-200">
@@ -541,7 +639,7 @@
                 <!-- Add Activity Inline Form -->
                 <div v-if="showAddActivityForm" class="bg-white border border-gray-200 rounded-2xl p-4 space-y-4 animate-slide-up">
                   <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                    <span class="text-xs font-bold text-gray-700">Nueva Actividad para esta Fase</span>
+                    <span class="text-xs font-bold text-gray-700">{{ newActivity.id ? 'Editar Actividad de esta Fase' : 'Nueva Actividad para esta Fase' }}</span>
                     <button @click="resetNewActivityForm" type="button" class="text-gray-400 hover:text-gray-600">
                       <span class="material-symbols-outlined text-xs">close</span>
                     </button>
@@ -564,6 +662,30 @@
                       <label class="text-[10px] font-bold text-gray-500">Puntos Otorgados</label>
                       <input type="number" v-model="newActivity.points" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
                     </div>
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Descripción / instrucción (opcional)</label>
+                      <input type="text" v-model="newActivity.description" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Practica el vocabulario visto en clase" />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Icono (Material Symbols)</label>
+                      <input type="text" v-model="newActivity.icon" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="ej. extension" />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-bold text-gray-500">Color</label>
+                      <select v-model="newActivity.color" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]">
+                        <option value="">Por defecto</option>
+                        <option value="#006688">Azul institucional</option>
+                        <option value="#059669">Verde</option>
+                        <option value="#d97706">Ámbar</option>
+                        <option value="#4f46e5">Índigo</option>
+                        <option value="#dc2626">Rojo</option>
+                      </select>
+                    </div>
+                    <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="newActivity.visible" class="rounded" /> Visible para el aprendiz</label>
+                    <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="newActivity.required" class="rounded" /> Obligatoria para avanzar</label>
+                    <p v-if="newActivity.hasStudentSubmissions" class="sm:col-span-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                      Esta actividad ya tiene entregas: solo se puede cambiar la presentación, el orden y la visibilidad.
+                    </p>
                     
                     <!-- Dynamic Fields in course inline creator -->
                     <div v-if="newActivity.template === 'sopa'" class="sm:col-span-2 space-y-1">
@@ -760,9 +882,16 @@ const DEFAULT_OFFICIAL_RAPS = [
 const availableRaps = ref([...DEFAULT_OFFICIAL_RAPS])
 
 const newActivity = ref({
+  id: null,
   title: '',
   template: 'quiz',
   points: 10,
+  description: '',
+  icon: '',
+  color: '',
+  visible: true,
+  required: true,
+  hasStudentSubmissions: false,
   sopaWords: 'heart, pulse, blood',
   quizQuestion: '',
   quizCorrect: '',
@@ -1120,27 +1249,261 @@ function structureListToCsv(value) {
   return value || ''
 }
 
-function buildStructurePayload() {
-  const splitList = value => String(value || '').split(',').map(item => item.trim()).filter(Boolean)
+// -----------------------------------------------------------------
+// Editor de ítems de fase (structure v2)
+// -----------------------------------------------------------------
+const ITEM_TYPES_BY_PHASE = {
+  inicio: [
+    { value: 'welcome', label: 'Texto de bienvenida' },
+    { value: 'video', label: 'Video introductorio' },
+    { value: 'objectives', label: 'Metas de aprendizaje' },
+    { value: 'wordorder', label: 'Calentamiento: ordenar palabras' }
+  ],
+  estudio: [
+    { value: 'grammar', label: 'Explicación gramatical' },
+    { value: 'vocabulary', label: 'Vocabulario (flashcards)' },
+    { value: 'chat', label: 'Conversación / chat' },
+    { value: 'listening', label: 'Escucha guiada' }
+  ],
+  practica: [
+    { value: 'fillblank', label: 'Completar respuesta' },
+    { value: 'voice', label: 'Práctica de voz' },
+    { value: 'profile', label: 'Perfil / presentación' },
+    { value: 'match', label: 'Conectar significado' },
+    { value: 'spelling', label: 'Deletreo' },
+    { value: 'quiz', label: 'Opción múltiple' }
+  ],
+  evaluacion: [
+    { value: 'quiz', label: 'Pregunta de evaluación' },
+    { value: 'preguntas', label: 'Cuestionario' }
+  ]
+}
+
+const PHASE_LABELS = {
+  inicio: 'Fase 1: Preparación',
+  estudio: 'Fase 2: Absorción',
+  practica: 'Fase 3: Práctica',
+  evaluacion: 'Fase 4: Evaluación'
+}
+
+const structureItems = ref({ inicio: [], estudio: [], practica: [], evaluacion: [] })
+const showItemForm = ref(false)
+let itemIdCounter = 0
+
+function newItemId() {
+  itemIdCounter += 1
+  return `item-${Date.now()}-${itemIdCounter}`
+}
+
+function emptyItemPayload() {
+  return { text: '', lines: '', csv: '', answer: '', target: '', question: '', correct: '', incorrect: '' }
+}
+
+function createItemForm(phase) {
+  const allowed = ITEM_TYPES_BY_PHASE[phase] || []
   return {
-    f1: {
-      welcome: form.value.f1_welcome.trim(),
-      gameWords: splitList(form.value.f1_gameWords)
-    },
-    f2: {
-      grammar: form.value.f2_grammar.trim(),
-      vocabulary: splitList(form.value.f2_vocabulary)
-    },
-    f3: {
-      fillBlank: form.value.f3_fillBlank.trim(),
-      voiceTarget: form.value.f3_voiceTarget.trim()
-    },
-    f4: {
-      question: form.value.f4_q.trim(),
-      correct: form.value.f4_correct.trim(),
-      incorrect: form.value.f4_incorrect.trim()
+    id: null,
+    type: allowed[0]?.value || 'welcome',
+    title: '',
+    description: '',
+    icon: '',
+    color: '',
+    visible: true,
+    required: true,
+    payload: emptyItemPayload()
+  }
+}
+
+const itemForm = ref(createItemForm('inicio'))
+const activePhaseItems = computed(() => structureItems.value[activeModalPhase.value] || [])
+const activePhaseItemTypes = computed(() => ITEM_TYPES_BY_PHASE[activeModalPhase.value] || [])
+const activePhaseLabel = computed(() => PHASE_LABELS[activeModalPhase.value] || '')
+
+function itemTypeLabel(type) {
+  for (const options of Object.values(ITEM_TYPES_BY_PHASE)) {
+    const found = options.find(option => option.value === type)
+    if (found) return found.label
+  }
+  return type
+}
+
+function onItemTypeChange() {
+  itemForm.value.payload = emptyItemPayload()
+}
+
+function openAddItem() {
+  itemForm.value = createItemForm(activeModalPhase.value)
+  showItemForm.value = true
+}
+
+function openEditItem(item) {
+  itemForm.value = JSON.parse(JSON.stringify(item))
+  if (!itemForm.value.payload) itemForm.value.payload = emptyItemPayload()
+  showItemForm.value = true
+}
+
+function resetItemForm() {
+  showItemForm.value = false
+  itemForm.value = createItemForm(activeModalPhase.value)
+}
+
+function saveItem() {
+  const item = JSON.parse(JSON.stringify(itemForm.value))
+  if (!item.id) item.id = newItemId()
+  const list = structureItems.value[activeModalPhase.value] || []
+  const index = list.findIndex(existing => existing.id === item.id)
+  if (index >= 0) {
+    list[index] = item
+  } else {
+    list.push(item)
+  }
+  structureItems.value[activeModalPhase.value] = list
+  resetItemForm()
+}
+
+function removeItem(item) {
+  if (!confirm(`¿Eliminar el ítem "${item.title || itemTypeLabel(item.type)}" de esta fase?`)) return
+  structureItems.value[activeModalPhase.value] = activePhaseItems.value.filter(existing => existing.id !== item.id)
+}
+
+function moveItem(index, direction) {
+  const list = [...activePhaseItems.value]
+  const target = index + direction
+  if (target < 0 || target >= list.length) return
+  const temp = list[index]
+  list[index] = list[target]
+  list[target] = temp
+  structureItems.value[activeModalPhase.value] = list
+}
+
+function toggleItemVisible(item) {
+  item.visible = item.visible === false
+}
+
+function parseCsv(value) {
+  return String(value || '').split(',').map(entry => entry.trim()).filter(Boolean)
+}
+
+function toCsvList(value) {
+  if (Array.isArray(value)) return value.map(entry => String(entry).trim()).filter(Boolean)
+  return parseCsv(value)
+}
+
+function makeItem(type, title, options = {}) {
+  return {
+    id: newItemId(),
+    type,
+    title,
+    description: options.description || '',
+    icon: options.icon || '',
+    color: options.color || '',
+    visible: options.visible !== false,
+    required: options.required !== false,
+    payload: { ...emptyItemPayload(), ...(options.payload || {}) }
+  }
+}
+
+function buildItemsFromCurrentForm() {
+  const items = { inicio: [], estudio: [], practica: [], evaluacion: [] }
+  if (form.value.f1_welcome?.trim()) {
+    items.inicio.push(makeItem('welcome', 'Bienvenida', { icon: 'waving_hand', required: false, payload: { text: form.value.f1_welcome.trim() } }))
+  }
+  const words = parseCsv(form.value.f1_gameWords)
+  if (words.length > 1) {
+    items.inicio.push(makeItem('wordorder', 'Calentamiento', { description: 'Ordena las palabras para avanzar', icon: 'sports_esports', payload: { csv: words.join(', ') } }))
+  }
+  if (form.value.f2_grammar?.trim()) {
+    items.estudio.push(makeItem('grammar', 'Explicación', { icon: 'menu_book', payload: { lines: form.value.f2_grammar.trim() } }))
+  }
+  const vocabulary = parseCsv(form.value.f2_vocabulary)
+  if (vocabulary.length) {
+    items.estudio.push(makeItem('vocabulary', 'Vocabulario', { description: 'Escucha y repite cada palabra', icon: 'style', payload: { csv: vocabulary.join(', ') } }))
+  }
+  if (form.value.f3_fillBlank?.trim()) {
+    items.practica.push(makeItem('fillblank', 'Completar la respuesta', { icon: 'edit_note', payload: { answer: form.value.f3_fillBlank.trim() } }))
+  }
+  if (form.value.f3_voiceTarget?.trim()) {
+    items.practica.push(makeItem('voice', 'Práctica de voz', { icon: 'mic', payload: { target: form.value.f3_voiceTarget.trim() } }))
+  }
+  if (form.value.f4_q?.trim()) {
+    items.evaluacion.push(makeItem('quiz', 'Evaluación final', { icon: 'quiz', payload: { question: form.value.f4_q.trim(), correct: form.value.f4_correct?.trim() || '', incorrect: form.value.f4_incorrect?.trim() || '' } }))
+  }
+  return items
+}
+
+function importCurrentStructure() {
+  structureItems.value = buildItemsFromCurrentForm()
+  notificationStore.notify({
+    type: 'success',
+    title: 'Plantilla importada',
+    message: 'Los datos actuales ahora son ítems editables. Ajusta, agrega o elimina y guarda el curso.'
+  })
+}
+
+function restoreOfficialStructure() {
+  if (!confirm('Se eliminará la personalización de las 4 fases y se restaurará el contenido por defecto. ¿Continuar?')) return
+  structureItems.value = { inicio: [], estudio: [], practica: [], evaluacion: [] }
+  showItemForm.value = false
+  notificationStore.notify({
+    type: 'success',
+    title: 'Plantilla restaurada',
+    message: 'Al guardar, el curso volverá a su contenido por defecto.'
+  })
+}
+
+function structureItemsToV2() {
+  const hasItems = Object.values(structureItems.value).some(list => list.length > 0)
+  if (!hasItems) return null
+  const phaseKeys = { inicio: 'f1', estudio: 'f2', practica: 'f3', evaluacion: 'f4' }
+  const payload = { version: 2 }
+  for (const phase of ['inicio', 'estudio', 'practica', 'evaluacion']) {
+    payload[phaseKeys[phase]] = {
+      items: (structureItems.value[phase] || []).map((item, index) => ({ ...item, order: index }))
     }
   }
+  return payload
+}
+
+function loadStructureIntoItems(structure) {
+  const empty = { inicio: [], estudio: [], practica: [], evaluacion: [] }
+  if (!structure) return empty
+  if (structure.version === 2 || (structure.f1 && Array.isArray(structure.f1.items))) {
+    return {
+      inicio: structure.f1?.items || [],
+      estudio: structure.f2?.items || [],
+      practica: structure.f3?.items || [],
+      evaluacion: structure.f4?.items || []
+    }
+  }
+  const items = { inicio: [], estudio: [], practica: [], evaluacion: [] }
+  if (structure.f1?.welcome) {
+    items.inicio.push(makeItem('welcome', 'Bienvenida', { icon: 'waving_hand', required: false, payload: { text: structure.f1.welcome } }))
+  }
+  const words = toCsvList(structure.f1?.gameWords)
+  if (words.length > 1) {
+    items.inicio.push(makeItem('wordorder', 'Calentamiento', { description: 'Ordena las palabras para avanzar', icon: 'sports_esports', payload: { csv: words.join(', ') } }))
+  }
+  if (structure.f2?.grammar) {
+    items.estudio.push(makeItem('grammar', 'Explicación', { icon: 'menu_book', payload: { lines: structure.f2.grammar } }))
+  }
+  const vocabulary = toCsvList(structure.f2?.vocabulary)
+  if (vocabulary.length) {
+    items.estudio.push(makeItem('vocabulary', 'Vocabulario', { description: 'Escucha y repite cada palabra', icon: 'style', payload: { csv: vocabulary.join(', ') } }))
+  }
+  if (structure.f3?.fillBlank) {
+    items.practica.push(makeItem('fillblank', 'Completar la respuesta', { icon: 'edit_note', payload: { answer: structure.f3.fillBlank } }))
+  }
+  if (structure.f3?.voiceTarget) {
+    items.practica.push(makeItem('voice', 'Práctica de voz', { icon: 'mic', payload: { target: structure.f3.voiceTarget } }))
+  }
+  if (structure.f4?.question) {
+    items.evaluacion.push(makeItem('quiz', 'Evaluación final', { icon: 'quiz', payload: { question: structure.f4.question, correct: structure.f4.correct || '', incorrect: structure.f4.incorrect || '' } }))
+  }
+  return items
+}
+
+function buildStructurePayload() {
+  return structureItemsToV2()
 }
 
 const coursePhaseActivities = computed(() => {
@@ -1152,21 +1515,30 @@ const coursePhaseActivities = computed(() => {
     evaluacion: 'Cierre'
   }
   const targetPhase = phaseMapping[activeModalPhase.value]
-  return activities.value.filter(a => {
-    const belongsToCourse = a.courseId
-      ? Number(a.courseId) === Number(editingCourse.value.id)
-      : a.course === editingCourse.value.title
-    return belongsToCourse && a.phase === targetPhase
-  })
+  return activities.value
+    .filter(a => {
+      const belongsToCourse = a.courseId
+        ? Number(a.courseId) === Number(editingCourse.value.id)
+        : a.course === editingCourse.value.title
+      return belongsToCourse && a.phase === targetPhase
+    })
+    .sort((a, b) => (a.order || 0) - (b.order || 0) || a.id - b.id)
 })
 
 const showAddActivityForm = ref(false)
 
-function resetNewActivityForm() {
-  newActivity.value = {
+function createEmptyActivity() {
+  return {
+    id: null,
     title: '',
     template: 'quiz',
     points: 10,
+    description: '',
+    icon: '',
+    color: '',
+    visible: true,
+    required: true,
+    hasStudentSubmissions: false,
     sopaWords: 'heart, pulse, blood',
     quizQuestion: '',
     quizCorrect: '',
@@ -1178,7 +1550,50 @@ function resetNewActivityForm() {
     crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
     layoutMode: 'automatic'
   }
+}
+
+function resetNewActivityForm() {
+  newActivity.value = createEmptyActivity()
   showAddActivityForm.value = false
+}
+
+function openEditActivityForm(act) {
+  const empty = createEmptyActivity()
+  let crosswordWords = empty.crosswordWords
+  let layoutMode = 'automatic'
+  if (act.crossword1Clue) {
+    try {
+      const parsed = JSON.parse(act.crossword1Clue)
+      layoutMode = parsed.layoutMode || 'automatic'
+      if (Array.isArray(parsed.words) && parsed.words.length) {
+        crosswordWords = parsed.words.map(word => ({ word: word.word, clue: word.clue, orientation: word.orientation || 'horizontal' }))
+      }
+    } catch {}
+  }
+  newActivity.value = {
+    ...empty,
+    id: act.id,
+    title: act.title || '',
+    template: act.template || 'quiz',
+    points: act.points || 10,
+    description: act.description || '',
+    icon: act.icon || '',
+    color: act.color || '',
+    visible: act.visible !== false,
+    required: act.required !== false,
+    hasStudentSubmissions: Boolean(act.hasStudentSubmissions),
+    sopaWords: act.sopaWords || '',
+    quizQuestion: act.quizQuestion || '',
+    quizCorrect: act.quizCorrect || '',
+    quizIncorrect: act.quizIncorrect || '',
+    matchTerm: act.matchTerm || '',
+    matchMeaning: act.matchMeaning || '',
+    listeningPhrase: act.listeningPhrase || '',
+    pronouncePhrase: act.pronouncePhrase || '',
+    crosswordWords,
+    layoutMode
+  }
+  showAddActivityForm.value = true
 }
 
 async function saveNewActivity() {
@@ -1225,6 +1640,11 @@ async function saveNewActivity() {
     phase: targetPhase,
     template: newActivity.value.template,
     points: parseInt(newActivity.value.points) || 10,
+    description: newActivity.value.description || null,
+    icon: newActivity.value.icon || null,
+    color: newActivity.value.color || null,
+    visible: newActivity.value.visible !== false,
+    required: newActivity.value.required !== false,
     attemptsLimit: 'Ilimitados',
     successMessage: '¡Excelente trabajo! Has acertado.',
     hintMessage: '',
@@ -1242,8 +1662,12 @@ async function saveNewActivity() {
 
   try {
     const token = getAuthToken()
-    const response = await fetch(`${apiBaseUrl}/api/activities`, {
-      method: 'POST',
+    const isEdit = Boolean(newActivity.value.id)
+    const url = isEdit
+      ? `${apiBaseUrl}/api/activities/${newActivity.value.id}`
+      : `${apiBaseUrl}/api/activities`
+    const response = await fetch(url, {
+      method: isEdit ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -1260,8 +1684,61 @@ async function saveNewActivity() {
     console.error(err)
     notificationStore.notify({
       type: 'error',
-      title: 'Error al Crear',
-      message: err.message || 'No se pudo crear la actividad.'
+      title: newActivity.value.id ? 'Error al Actualizar' : 'Error al Crear',
+      message: err.message || 'No se pudo guardar la actividad.'
+    })
+  }
+}
+
+async function toggleActivityVisible(act) {
+  try {
+    const token = getAuthToken()
+    const response = await fetch(`${apiBaseUrl}/api/activities/${act.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ visible: act.visible === false })
+    })
+    if (!response.ok) throw new Error('No se pudo cambiar la visibilidad de la actividad.')
+    await fetchActivities()
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al Actualizar',
+      message: err.message || 'No se pudo cambiar la visibilidad.'
+    })
+  }
+}
+
+async function moveActivity(index, direction) {
+  const list = [...coursePhaseActivities.value]
+  const target = index + direction
+  if (target < 0 || target >= list.length) return
+  const temp = list[index]
+  list[index] = list[target]
+  list[target] = temp
+  const items = list.map((act, idx) => ({ id: act.id, order: idx }))
+  try {
+    const token = getAuthToken()
+    const response = await fetch(`${apiBaseUrl}/api/activities/reorder`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ items })
+    })
+    if (!response.ok) throw new Error('No se pudo reordenar las actividades.')
+    await fetchActivities()
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al Reordenar',
+      message: err.message || 'No se pudo reordenar las actividades.'
     })
   }
 }
@@ -1381,6 +1858,9 @@ function openNewCourseModal() {
     f4_correct: 'Frecuencia respiratoria',
     f4_incorrect: 'Presión arterial',
   }
+  structureItems.value = buildItemsFromCurrentForm()
+  resetItemForm()
+  resetNewActivityForm()
   showModal.value = true
 }
 
@@ -1413,6 +1893,9 @@ function openEditCourseModal(course) {
     f4_incorrect: structure?.f4?.incorrect ?? course.f4_incorrect ?? 'Presión arterial',
   }
   
+  structureItems.value = loadStructureIntoItems(structure)
+  resetItemForm()
+  resetNewActivityForm()
   showModal.value = true
 }
 

@@ -1200,6 +1200,7 @@ const defaultCourses = [
   'Urgencias y Emergencias',
 ]
 const courseOptions = ref([...defaultCourses])
+const courseCatalog = ref([])
 
 async function fetchCourses() {
   try {
@@ -1209,8 +1210,10 @@ async function fetchCourses() {
     })
     if (response.ok) {
       const data = await response.json()
-      if (Array.isArray(data) && data.length > 0) {
-        courseOptions.value = data.map(c => c.title || c.name).filter(Boolean)
+      const list = Array.isArray(data) ? data : (data?.data || [])
+      if (Array.isArray(list) && list.length > 0) {
+        courseCatalog.value = list.map(c => ({ id: c.id, title: c.title || c.name })).filter(c => c.title)
+        courseOptions.value = courseCatalog.value.map(c => c.title)
       }
     }
   } catch (err) {
@@ -1220,8 +1223,8 @@ async function fetchCourses() {
 
 function mapActivity(act, submissionsMap = new Map(), isApprenticeMode = false) {
   const tpl = templateOptions.find(t => t.id === act.template) || { label: 'Actividad', icon: 'task' }
-  const courseIdx = courseOptions.value ? courseOptions.value.indexOf(act.course) : -1
-  const courseId = courseIdx >= 0 ? courseIdx + 1 : 1
+  const matchedCourse = courseCatalog.value.find(c => c.title === act.course)
+  const courseId = act.courseId ? Number(act.courseId) : (matchedCourse ? matchedCourse.id : null)
   
   // Color mapping based on template type
   let iconBg = 'bg-blue-50'
@@ -2249,6 +2252,7 @@ async function saveActivity() {
   const payload = {
     title: form.value.title,
     course: form.value.course,
+    courseId: courseCatalog.value.find(c => c.title === form.value.course)?.id ?? null,
     phase: form.value.phase,
     template: form.value.template,
     points: parseInt(form.value.points) || 10,
