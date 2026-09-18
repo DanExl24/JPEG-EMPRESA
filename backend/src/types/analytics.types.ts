@@ -155,6 +155,8 @@ export interface AdminChartDataDto {
     weeklyGrowth: number
     avgPassRate: number
     peakDay: string
+    peakDetail?: string
+    diagnostic?: string
     activeLearnersCount: number
   }
   weeklyActivity: AdminChartItemWeeklyDto[]

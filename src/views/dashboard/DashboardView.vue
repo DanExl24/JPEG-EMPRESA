@@ -502,11 +502,11 @@
             <div class="min-w-0">
               <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Volumen Semanal') }}</p>
               <p class="text-lg font-black text-gray-800 leading-tight">
-                {{ adminChart?.summary?.weeklySubmissions || 438 }}
+                {{ adminChart?.summary?.weeklySubmissions ?? 0 }}
               </p>
               <span class="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
                 <span class="material-symbols-outlined text-xs">trending_up</span>
-                +{{ adminChart?.summary?.weeklyGrowth || 14.8 }}% vs previa
+                {{ (adminChart?.summary?.weeklyGrowth ?? 0) >= 0 ? '+' : '' }}{{ adminChart?.summary?.weeklyGrowth ?? 0 }}% vs previa
               </span>
             </div>
           </div>
@@ -518,10 +518,10 @@
             <div class="min-w-0">
               <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Aprobación Global') }}</p>
               <p class="text-lg font-black text-emerald-700 leading-tight">
-                {{ adminChart?.summary?.avgPassRate || 91.6 }}%
+                {{ adminChart?.summary?.avgPassRate ?? 0 }}%
               </p>
               <span class="text-[10px] font-bold text-gray-400 truncate block">
-                {{ i18n.t('Meta SENA > 85% superada') }}
+                {{ (adminChart?.summary?.avgPassRate ?? 0) >= 85 ? i18n.t('Meta SENA > 85% superada') : i18n.t('Meta institucional SENA: 85%') }}
               </span>
             </div>
           </div>
@@ -533,10 +533,10 @@
             <div class="min-w-0">
               <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Día de Mayor Flujo') }}</p>
               <p class="text-lg font-black text-amber-900 leading-tight truncate">
-                {{ adminChart?.summary?.peakDay || 'Jueves' }}
+                {{ adminChart?.summary?.peakDay || i18n.t('Sin actividad') }}
               </p>
               <span class="text-[10px] font-bold text-amber-700 truncate block">
-                {{ i18n.t('Pico horario 16:00 - 18:00') }}
+                {{ adminChart?.summary?.peakDetail || i18n.t('Esperando entregas') }}
               </span>
             </div>
           </div>
@@ -548,7 +548,7 @@
             <div class="min-w-0">
               <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Aprendices Activos') }}</p>
               <p class="text-lg font-black text-purple-900 leading-tight">
-                {{ adminChart?.summary?.activeLearnersCount || 164 }}
+                {{ adminChart?.summary?.activeLearnersCount ?? 0 }}
               </p>
               <span class="text-[10px] font-bold text-purple-700 truncate block">
                 {{ i18n.t('En formación continua') }}
@@ -666,9 +666,7 @@
             <div class="text-xs space-y-0.5">
               <p class="font-bold text-teal-900">{{ i18n.t('Diagnóstico Pedagógico y Tendencia') }}</p>
               <p class="text-teal-700 leading-relaxed">
-                {{ i18n.t('El mayor volumen de retroalimentación se concentra los jueves y viernes con una efectividad del') }}
-                <span class="font-bold">{{ adminChart?.summary?.avgPassRate || 91.6 }}%</span>.
-                {{ i18n.t('Los aprendices muestran alta constancia en la resolución de talleres y simulaciones de enfermería.') }}
+                {{ adminChart?.summary?.diagnostic || i18n.t('Supervisión en tiempo real de entregas, evaluaciones y suficiencia curricular.') }}
               </p>
             </div>
           </div>
@@ -723,10 +721,14 @@
               <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                 <div
                   class="h-full bg-gradient-to-r from-[#006688] via-[#0284c7] to-[#10b981] rounded-full transition-all duration-700 shadow-xs"
-                  :style="`width: ${Math.max(5, mod.rate)}%`"
+                  :style="`width: ${mod.rate}%`"
                 ></div>
               </div>
             </div>
+          </div>
+
+          <div v-if="(adminChart?.moduleProgress || []).length === 0" class="p-8 text-center text-xs text-gray-400 bg-gray-50/50 rounded-2xl border border-gray-100">
+            {{ i18n.t('No hay información de módulos registrada en el sistema.') }}
           </div>
         </div>
 
@@ -785,13 +787,17 @@
                       rap.masteryPct >= 80 ? 'bg-gradient-to-r from-[#006688] to-cyan-400' :
                       'bg-gradient-to-r from-amber-500 to-orange-400'
                     ]"
-                    :style="`width: ${Math.max(5, rap.masteryPct)}%`"
+                    :style="`width: ${rap.masteryPct}%`"
                   ></div>
                 </div>
                 <!-- Benchmark marker at 80% -->
                 <div class="absolute top-0 bottom-0 left-[80%] -ml-px w-0.5 bg-gray-400/60 pointer-events-none" title="Umbral SENA (80%)"></div>
               </div>
             </div>
+          </div>
+
+          <div v-if="(adminChart?.rapMastery || []).length === 0" class="p-8 text-center text-xs text-gray-400 bg-gray-50/50 rounded-2xl border border-gray-100">
+            {{ i18n.t('No hay información de Resultados de Aprendizaje registrada en el sistema.') }}
           </div>
         </div>
 
@@ -1025,35 +1031,17 @@ const apprenticeStats = computed(() => {
 // Admin Statistics & Chart Visualization State
 const defaultAdminChartData = {
   summary: {
-    weeklySubmissions: 438,
-    weeklyGrowth: 14.8,
-    avgPassRate: 91.6,
-    peakDay: 'Jueves',
-    activeLearnersCount: 164
+    weeklySubmissions: 0,
+    weeklyGrowth: 0,
+    avgPassRate: 0,
+    peakDay: 'Sin actividad',
+    peakDetail: 'Esperando entregas',
+    diagnostic: 'Cargando diagnóstico institucional en tiempo real...',
+    activeLearnersCount: 0
   },
-  weeklyActivity: [
-    { day: 'Lunes', shortDay: 'Lun', date: '15 Sep', submissions: 38, passed: 35, rate: 92, isPeak: false },
-    { day: 'Martes', shortDay: 'Mar', date: '16 Sep', submissions: 54, passed: 49, rate: 90, isPeak: false },
-    { day: 'Miércoles', shortDay: 'Mié', date: '17 Sep', submissions: 62, passed: 57, rate: 92, isPeak: false },
-    { day: 'Jueves', shortDay: 'Jue', date: '18 Sep', submissions: 78, passed: 72, rate: 92, isPeak: true },
-    { day: 'Viernes', shortDay: 'Vie', date: '19 Sep', submissions: 65, passed: 60, rate: 92, isPeak: false },
-    { day: 'Sábado', shortDay: 'Sáb', date: '20 Sep', submissions: 42, passed: 39, rate: 93, isPeak: false },
-    { day: 'Domingo', shortDay: 'Dom', date: '21 Sep', submissions: 32, passed: 30, rate: 94, isPeak: false }
-  ],
-  moduleProgress: [
-    { id: 1, title: 'Módulo 1: Fundamentos y Vocabulario Clínico', category: 'Fundamentos', enrolled: 148, completed: 142, rate: 96, avgScore: 4.8, status: 'Óptimo' },
-    { id: 2, title: 'Módulo 2: Valoración de Signos Vitales y Triage', category: 'Semiología', enrolled: 135, completed: 123, rate: 91, avgScore: 4.6, status: 'Óptimo' },
-    { id: 3, title: 'Módulo 3: Farmacología y Vías de Administración', category: 'Terapéutica', enrolled: 122, completed: 106, rate: 87, avgScore: 4.5, status: 'Satisfactorio' },
-    { id: 4, title: 'Módulo 4: Cuidados Críticos y Soporte Vital Básico', category: 'Urgencias', enrolled: 110, completed: 92, rate: 84, avgScore: 4.3, status: 'Satisfactorio' },
-    { id: 5, title: 'Módulo 5: Protocolos de Asepsia y Bioseguridad', category: 'Seguridad', enrolled: 140, completed: 133, rate: 95, avgScore: 4.9, status: 'Óptimo' }
-  ],
-  rapMastery: [
-    { code: 'RAP 01', title: 'Identificar y aplicar terminología técnica de enfermería', masteryPct: 95, evaluatedCount: 168, status: 'Sobresaliente' },
-    { code: 'RAP 02', title: 'Interpretar y registrar parámetros de signos vitales', masteryPct: 92, evaluatedCount: 154, status: 'Sobresaliente' },
-    { code: 'RAP 03', title: 'Ejecutar técnicas asépticas en procedimientos clínicos', masteryPct: 89, evaluatedCount: 142, status: 'Competente' },
-    { code: 'RAP 04', title: 'Calcular dosis y vías de administración de medicamentos', masteryPct: 84, evaluatedCount: 130, status: 'Competente' },
-    { code: 'RAP 05', title: 'Clasificar pacientes en triage clínico según protocolo', masteryPct: 79, evaluatedCount: 118, status: 'En Refuerzo' }
-  ]
+  weeklyActivity: [],
+  moduleProgress: [],
+  rapMastery: []
 }
 
 const adminChart = ref(defaultAdminChartData)
@@ -1062,14 +1050,15 @@ const hoveredDay = ref(null)
 
 const maxWeeklySubmissions = computed(() => {
   const list = adminChart.value?.weeklyActivity || []
-  if (list.length === 0) return 80
+  if (list.length === 0) return 10
   const max = Math.max(...list.map(d => d.submissions || 0))
-  return Math.max(max, 60)
+  return max > 0 ? max : 10
 })
 
 function getBarHeightPct(val) {
+  if (!val || val <= 0) return 0
   const max = maxWeeklySubmissions.value
-  return Math.min(100, Math.max(6, Math.round(((val || 0) / max) * 100)))
+  return Math.min(100, Math.max(6, Math.round((val / max) * 100)))
 }
 
 const pendingReviews = ref([])

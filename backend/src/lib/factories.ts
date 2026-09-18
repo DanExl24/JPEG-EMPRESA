@@ -142,14 +142,21 @@ export interface ActivitySubmissionData {
   passed: boolean
   answers: string
   reviewStatus: string
+  submittedAt?: Date
 }
 
 export function buildActivitySubmission(overrides: Overrides<ActivitySubmissionData> = {}): ActivitySubmissionData {
   const passed = chance(0.75)
+  const daysAgo = randInt(0, 6)
+  const subDate = new Date()
+  subDate.setDate(subDate.getDate() - daysAgo)
+  subDate.setHours(randInt(8, 20), randInt(0, 59), randInt(0, 59), 0)
+
   return {
     passed,
     answers: JSON.stringify([{ attempt: 1, correct: passed }]),
     reviewStatus: passed ? 'graded' : 'pending',
+    submittedAt: subDate,
     ...overrides,
   }
 }

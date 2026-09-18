@@ -815,110 +815,174 @@ export class AnalyticsService {
         })
       }
 
-      if (totalWeeklySubmissions < 10) {
-        const mockPatterns = [
-          { sub: 38, pass: 35 },
-          { sub: 54, pass: 49 },
-          { sub: 62, pass: 57 },
-          { sub: 78, pass: 72 },
-          { sub: 65, pass: 60 },
-          { sub: 42, pass: 39 },
-          { sub: 32, pass: 30 }
-        ]
-        weeklyActivity.forEach((item, idx) => {
-          const pat = mockPatterns[idx % mockPatterns.length]
-          item.submissions = Math.max(item.submissions, pat.sub)
-          item.passed = Math.max(item.passed, pat.pass)
-          item.rate = Math.round((item.passed / item.submissions) * 100)
-        })
-      }
-
-      let maxSub = -1
-      let peakIdx = 0
+      // Marcar el día pico real (únicamente si hubo entregas reales mayores a 0)
+      let maxSub = 0
+      let peakIdx = -1
       weeklyActivity.forEach((item, idx) => {
         if (item.submissions > maxSub) {
           maxSub = item.submissions
           peakIdx = idx
         }
       })
-      if (weeklyActivity[peakIdx]) {
+      if (peakIdx !== -1 && maxSub > 0) {
         weeklyActivity[peakIdx].isPeak = true
       }
 
-      const calcWeeklySubmissions = weeklyActivity.reduce((acc, curr) => acc + curr.submissions, 0)
-      const calcWeeklyPassed = weeklyActivity.reduce((acc, curr) => acc + curr.passed, 0)
-      const avgPassRate = calcWeeklySubmissions > 0 ? Math.round((calcWeeklyPassed / calcWeeklySubmissions) * 100) : 92
+      // Comparar contra el período de 7 días inmediatamente anterior (semana previa)
+      const fourteenDaysAgo = new Date(sevenDaysAgo)
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 7)
 
-      const dbCourses = await prisma.course.findMany({
-        take: 5,
-        include: {
-          progresses: true
+      const priorSubsCount = await prisma.activitySubmission.count({
+        where: {
+          submittedAt: {
+            gte: fourteenDaysAgo,
+            lt: sevenDaysAgo
+          }
         }
       })
 
-      const defaultModuleStats = [
-        { id: 1, title: 'Módulo 1: Fundamentos y Vocabulario Clínico', category: 'Fundamentos', enrolled: 148, completed: 142, rate: 96, avgScore: 4.8, status: 'Óptimo' as const },
-        { id: 2, title: 'Módulo 2: Valoración de Signos Vitales y Triage', category: 'Semiología', enrolled: 135, completed: 123, rate: 91, avgScore: 4.6, status: 'Óptimo' as const },
-        { id: 3, title: 'Módulo 3: Farmacología y Vías de Administración', category: 'Terapéutica', enrolled: 122, completed: 106, rate: 87, avgScore: 4.5, status: 'Satisfactorio' as const },
-        { id: 4, title: 'Módulo 4: Cuidados Críticos y Soporte Vital Básico', category: 'Urgencias', enrolled: 110, completed: 92, rate: 84, avgScore: 4.3, status: 'Satisfactorio' as const },
-        { id: 5, title: 'Módulo 5: Protocolos de Asepsia y Bioseguridad', category: 'Seguridad del Paciente', enrolled: 140, completed: 133, rate: 95, avgScore: 4.9, status: 'Óptimo' as const }
-      ]
-
-      let moduleProgress = defaultModuleStats
-      if (dbCourses.length > 0) {
-        moduleProgress = dbCourses.map((c: any, index: number) => {
-          const enrolled = c.progresses?.length || (120 - index * 10)
-          const completed = c.progresses?.filter((p: any) => p.completed || (p.overallPct || 0) >= 80).length || Math.round(enrolled * 0.88)
-          const rate = enrolled > 0 ? Math.round((completed / enrolled) * 100) : 85
-          const status = rate >= 90 ? 'Óptimo' : rate >= 80 ? 'Satisfactorio' : 'En Seguimiento'
-          const avgScore = Number((4.2 + (rate / 100) * 0.7).toFixed(1))
-          return {
-            id: c.id,
-            title: c.title,
-            category: c.category || 'Clínico',
-            enrolled,
-            completed,
-            rate,
-            avgScore,
-            status: status as any
-          }
-        })
+      let weeklyGrowth = 0
+      if (priorSubsCount > 0) {
+        weeklyGrowth = Number((((totalWeeklySubmissions - priorSubsCount) / priorSubsCount) * 100).toFixed(1))
+      } else if (totalWeeklySubmissions > 0) {
+        weeklyGrowth = 100
+      } else {
+        weeklyGrowth = 0
       }
 
-      const dbRaps = await prisma.learningOutcome.findMany({ take: 5, orderBy: { code: 'asc' } })
-      const defaultRaps = [
-        { code: 'RAP 01', title: 'Identificar y aplicar terminología técnica de enfermería', masteryPct: 95, evaluatedCount: 168, status: 'Sobresaliente' as const },
-        { code: 'RAP 02', title: 'Interpretar y registrar parámetros de signos vitales', masteryPct: 92, evaluatedCount: 154, status: 'Sobresaliente' as const },
-        { code: 'RAP 03', title: 'Ejecutar técnicas asépticas en procedimientos clínicos', masteryPct: 89, evaluatedCount: 142, status: 'Competente' as const },
-        { code: 'RAP 04', title: 'Calcular dosis y vías de administración de medicamentos', masteryPct: 84, evaluatedCount: 130, status: 'Competente' as const },
-        { code: 'RAP 05', title: 'Clasificar pacientes en triage clínico según protocolo', masteryPct: 79, evaluatedCount: 118, status: 'En Refuerzo' as const }
-      ]
-
-      let rapMastery = defaultRaps
-      if (dbRaps.length > 0) {
-        rapMastery = dbRaps.map((r: any, idx: number) => {
-          const fallback = defaultRaps[idx % defaultRaps.length]
-          const masteryPct = fallback ? fallback.masteryPct : (85 + (idx % 3) * 4)
-          const status = masteryPct >= 90 ? 'Sobresaliente' : masteryPct >= 80 ? 'Competente' : 'En Refuerzo'
-          return {
-            code: r.code || `RAP 0${idx + 1}`,
-            title: r.name || r.code || 'Resultado de Aprendizaje',
-            masteryPct,
-            evaluatedCount: 120 + idx * 8,
-            status: status as any
-          }
-        })
+      let avgPassRate = 0
+      if (totalWeeklySubmissions > 0) {
+        avgPassRate = Math.round((totalWeeklyPassed / totalWeeklySubmissions) * 100)
+      } else {
+        // Si en la última semana no hubo entregas, consultar histórico global en DB
+        const allSubs = await prisma.activitySubmission.findMany({ select: { passed: true } })
+        if (allSubs.length > 0) {
+          const allPassed = allSubs.filter((s: any) => s.passed).length
+          avgPassRate = Math.round((allPassed / allSubs.length) * 100)
+        } else {
+          avgPassRate = 0
+        }
       }
 
+      const peakDay = peakIdx !== -1 && maxSub > 0 ? weeklyActivity[peakIdx].day : 'Sin actividad'
+      const peakDetail = peakIdx !== -1 && maxSub > 0 ? `${maxSub} entregas registradas` : 'Esperando entregas'
       const activeLearnersCount = await prisma.user.count({ where: { rol: 'APRENDIZ' } })
+
+      let diagnostic = ''
+      if (totalWeeklySubmissions > 0) {
+        diagnostic = `En los últimos 7 días se registraron ${totalWeeklySubmissions} entregas con un índice de aprobación global del ${avgPassRate}%. El día de mayor flujo formativo fue el ${peakDay} con ${maxSub} entregas registradas.`
+      } else {
+        diagnostic = `No se registran entregas en los últimos 7 días. El monitor se encuentra en escucha activa para registrar la actividad de los aprendices en tiempo real.`
+      }
+
+      const dbCourses = await prisma.course.findMany({
+        orderBy: { id: 'asc' },
+        include: {
+          progresses: true,
+          activities: {
+            select: {
+              id: true,
+              submissions: {
+                select: { id: true, passed: true }
+              }
+            }
+          }
+        }
+      })
+
+      const moduleProgress = dbCourses.map((c: any) => {
+        // Inscritos: aprendices con progreso en el módulo o el total de aprendices activos de la institución
+        const enrolled = Math.max(c.progresses?.length || 0, activeLearnersCount)
+        const completed = (c.progresses || []).filter((p: any) => p.completed || (p.overallPct || 0) >= 100).length
+        const rate = enrolled > 0 ? Math.round((completed / enrolled) * 100) : 0
+
+        // Calificación promedio calculada de las entregas de actividades de este curso
+        const courseSubmissions = (c.activities || []).flatMap((a: any) => a.submissions || [])
+        let avgScore = 0
+        if (courseSubmissions.length > 0) {
+          const passedCount = courseSubmissions.filter((s: any) => s.passed).length
+          const ratio = passedCount / courseSubmissions.length
+          // Escala académica 1.0 a 5.0
+          avgScore = Number((1.0 + ratio * 4.0).toFixed(1))
+        } else {
+          const progressesWithPct = (c.progresses || []).filter((p: any) => (p.overallPct || 0) > 0)
+          if (progressesWithPct.length > 0) {
+            const avgPct = progressesWithPct.reduce((acc: number, p: any) => acc + p.overallPct, 0) / progressesWithPct.length
+            avgScore = Number((1.0 + (avgPct / 100) * 4.0).toFixed(1))
+          } else {
+            avgScore = 0
+          }
+        }
+
+        const status: 'Óptimo' | 'Satisfactorio' | 'En Seguimiento' =
+          rate >= 85 ? 'Óptimo' : rate >= 50 ? 'Satisfactorio' : 'En Seguimiento'
+
+        return {
+          id: c.id,
+          title: c.title,
+          category: c.category || 'Clínico',
+          enrolled,
+          completed,
+          rate,
+          avgScore,
+          status
+        }
+      })
+
+      const dbRaps = await prisma.learningOutcome.findMany({
+        orderBy: { code: 'asc' },
+        include: {
+          activities: {
+            select: {
+              id: true,
+              submissions: {
+                select: { id: true, passed: true }
+              }
+            }
+          },
+          evaluations: {
+            select: {
+              id: true,
+              assessment_judgment: true
+            }
+          }
+        }
+      })
+
+      const rapMastery = dbRaps.map((r: any) => {
+        const rapSubs = (r.activities || []).flatMap((a: any) => a.submissions || [])
+        const rapEvals = r.evaluations || []
+        const evaluatedCount = rapSubs.length + rapEvals.length
+
+        let passedCount = 0
+        passedCount += rapSubs.filter((s: any) => s.passed).length
+        passedCount += rapEvals.filter((e: any) => {
+          const j = (e.assessment_judgment || '').toLowerCase()
+          return j === 'approved' || j === 'aprobado' || j === 'competente'
+        }).length
+
+        const masteryPct = evaluatedCount > 0 ? Math.round((passedCount / evaluatedCount) * 100) : 0
+        const status: 'Sobresaliente' | 'Competente' | 'En Refuerzo' =
+          masteryPct >= 85 ? 'Sobresaliente' : masteryPct >= 70 ? 'Competente' : 'En Refuerzo'
+
+        return {
+          code: r.code,
+          title: r.name || r.code,
+          masteryPct,
+          evaluatedCount,
+          status
+        }
+      })
 
       adminChartData = {
         summary: {
-          weeklySubmissions: calcWeeklySubmissions,
-          weeklyGrowth: 14.8,
+          weeklySubmissions: totalWeeklySubmissions,
+          weeklyGrowth,
           avgPassRate,
-          peakDay: weeklyActivity[peakIdx]?.day || 'Jueves',
-          activeLearnersCount: activeLearnersCount || 164
+          peakDay,
+          peakDetail,
+          diagnostic,
+          activeLearnersCount
         },
         weeklyActivity,
         moduleProgress,
