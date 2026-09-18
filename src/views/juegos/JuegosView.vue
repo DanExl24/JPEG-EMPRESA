@@ -939,7 +939,7 @@
         </div>
 
         <!-- Form Body con Scroll -->
-        <form @submit.prevent="saveGameForm" class="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
+        <form @submit.prevent="saveGameForm" novalidate class="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
           
           <!-- PESTAÑA 1: AJUSTES GENERALES -->
           <div v-show="modalTab === 'general'" class="space-y-4">
@@ -1536,8 +1536,9 @@
                 :disabled="savingGame"
                 class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                <span class="material-symbols-outlined text-base">save</span>
-                {{ isEditingGame ? 'Guardar Cambios' : 'Crear Minijuego' }}
+                <span v-if="savingGame" class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                <span v-else class="material-symbols-outlined text-base">save</span>
+                {{ savingGame ? 'Guardando...' : (isEditingGame ? 'Guardar Cambios' : 'Crear Minijuego') }}
               </button>
             </div>
           </div>
@@ -2019,59 +2020,219 @@ function openEditGameModal(game) {
 }
 
 async function saveGameForm() {
+  // 1. Validar Pestaña 1 (Ajustes Generales)
+  if (!gameForm.value.name?.trim()) {
+    modalTab.value = 'general'
+    notificationStore.notify({
+      type: 'error',
+      title: 'Nombre Requerido',
+      message: 'Por favor ingresa un nombre para el minijuego.'
+    })
+    return
+  }
+
+  if (!gameForm.value.description?.trim()) {
+    modalTab.value = 'general'
+    notificationStore.notify({
+      type: 'error',
+      title: 'Descripción Requerida',
+      message: 'Por favor ingresa la descripción pedagógica del minijuego.'
+    })
+    return
+  }
+
+  if (!gameForm.value.pts || Number(gameForm.value.pts) <= 0) {
+    modalTab.value = 'general'
+    notificationStore.notify({
+      type: 'error',
+      title: 'Puntos Inválidos',
+      message: 'Los puntos XP deben ser un número mayor a 0.'
+    })
+    return
+  }
+
+  // 2. Validar Pestaña 2 (Dinámica & Contenido según plantilla)
+  if (gameForm.value.template === 'trivia_medica') {
+    const questions = gameForm.value.config?.questions || []
+    if (questions.length === 0) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Preguntas Requeridas',
+        message: 'La trivia debe contener al menos una pregunta.'
+      })
+      return
+    }
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i]
+      if (!q.question?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Pregunta Incompleta',
+          message: `Ingresa el enunciado de la Pregunta #${i + 1}.`
+        })
+        return
+      }
+      if (!q.correctAnswer?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Respuesta Incompleta',
+          message: `Ingresa la respuesta correcta de la Pregunta #${i + 1}.`
+        })
+        return
+      }
+      if (!q.options) q.options = []
+      q.options[0] = q.correctAnswer
+    }
+  } else if (gameForm.value.template === 'warmup_drag_match') {
+    const rounds = gameForm.value.config?.rounds || []
+    if (rounds.length === 0) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Rondas Requeridas',
+        message: 'Debes configurar al menos una ronda para Warm-up Drag Match.'
+      })
+      return
+    }
+    for (let r = 0; r < rounds.length; r++) {
+      const round = rounds[r]
+      if (!round.theme?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Título de Ronda Incompleto',
+          message: `Ingresa el título temático de la Ronda #${r + 1}.`
+        })
+        return
+      }
+      const items = round.items || []
+      if (items.length === 0) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Elementos Requeridos',
+          message: `La Ronda #${r + 1} debe contener al menos un elemento arrastrable.`
+        })
+        return
+      }
+      for (let it = 0; it < items.length; it++) {
+        const item = items[it]
+        if (!item.label?.trim()) {
+          modalTab.value = 'interactive'
+          notificationStore.notify({
+            type: 'error',
+            title: 'Nombre de Elemento Incompleto',
+            message: `Ingresa el nombre del elemento #${it + 1} en la Ronda #${r + 1}.`
+          })
+          return
+        }
+        if (!item.match?.trim()) {
+          modalTab.value = 'interactive'
+          notificationStore.notify({
+            type: 'error',
+            title: 'Expresión Requerida',
+            message: `Ingresa la expresión en inglés para "${item.label}" en la Ronda #${r + 1}.`
+          })
+          return
+        }
+      }
+    }
+  } else if (gameForm.value.template === 'drug_match') {
+    const pairs = gameForm.value.config?.pairs || []
+    if (pairs.length < 2) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Parejas Requeridas',
+        message: 'Configura al menos 2 parejas de términos para el juego de emparejamiento.'
+      })
+      return
+    }
+    for (let p = 0; p < pairs.length; p++) {
+      const pair = pairs[p]
+      if (!pair.wordEn?.trim() || !pair.wordEs?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Pareja Incompleta',
+          message: `Completa el término en inglés y la traducción en español de la Pareja #${p + 1}.`
+        })
+        return
+      }
+    }
+  } else if (gameForm.value.template === 'listening_challenge') {
+    const items = gameForm.value.config?.items || []
+    if (items.length === 0) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Términos Requeridos',
+        message: 'Debes configurar al menos un término para el desafío auditivo.'
+      })
+      return
+    }
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (!item.wordEn?.trim() || !item.wordEs?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Término Incompleto',
+          message: `Completa la palabra en inglés y su traducción para el término #${i + 1}.`
+        })
+        return
+      }
+      if (!item.options) item.options = []
+      item.options[0] = item.wordEn
+    }
+  }
+
   savingGame.value = true
-  const token = getToken()
   try {
-    const url = isEditingGame.value 
-      ? `${apiBaseUrl}/api/gamification/admin/games/${editingGameId.value}`
-      : `${apiBaseUrl}/api/gamification/admin/games`
+    const endpoint = isEditingGame.value 
+      ? `/api/gamification/admin/games/${editingGameId.value}`
+      : `/api/gamification/admin/games`
     
     const method = isEditingGame.value ? 'PUT' : 'POST'
 
-    // Asignar colores/iconos según la plantilla seleccionada si no tiene
+    // Iconos y estilos por defecto si el usuario no los personalizó
     if (gameForm.value.template === 'trivia_medica') {
-      gameForm.value.icon = 'quiz'
-      gameForm.value.color = 'text-emerald-500'
-      gameForm.value.bg = 'bg-emerald-50'
-      // Sincronizar respuesta correcta como opción 0
-      if (gameForm.value.config?.questions) {
-        gameForm.value.config.questions.forEach((q) => {
-          if (!q.options) q.options = []
-          q.options[0] = q.correctAnswer
-        })
-      }
+      gameForm.value.icon = gameForm.value.icon || 'quiz'
+      gameForm.value.color = gameForm.value.color || 'text-emerald-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-emerald-50'
     } else if (gameForm.value.template === 'drug_match') {
-      gameForm.value.icon = 'medication'
-      gameForm.value.color = 'text-orange-500'
-      gameForm.value.bg = 'bg-orange-50'
+      gameForm.value.icon = gameForm.value.icon || 'medication'
+      gameForm.value.color = gameForm.value.color || 'text-orange-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-orange-50'
     } else if (gameForm.value.template === 'listening_challenge') {
-      gameForm.value.icon = 'hearing'
-      gameForm.value.color = 'text-purple-500'
-      gameForm.value.bg = 'bg-purple-50'
-      if (gameForm.value.config?.items) {
-        gameForm.value.config.items.forEach((item) => {
-          if (!item.options) item.options = []
-          item.options[0] = item.wordEn
-        })
-      }
+      gameForm.value.icon = gameForm.value.icon || 'hearing'
+      gameForm.value.color = gameForm.value.color || 'text-purple-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-purple-50'
     } else if (gameForm.value.template === 'warmup_drag_match') {
-      gameForm.value.icon = 'pan_tool'
-      gameForm.value.color = 'text-blue-500'
-      gameForm.value.bg = 'bg-blue-50'
+      gameForm.value.icon = gameForm.value.icon || 'pan_tool'
+      gameForm.value.color = gameForm.value.color || 'text-blue-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-blue-50'
     }
 
-    const res = await fetch(url, {
+    const resData = await apiFetch(endpoint, {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
       body: JSON.stringify(gameForm.value)
     })
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.message || 'Error al guardar el minijuego.')
+    const savedGame = resData?.data || resData
+
+    if (savedGame) {
+      if (isEditingGame.value) {
+        const idx = arcadeGamesList.value.findIndex(g => g.id === savedGame.id)
+        if (idx !== -1) {
+          arcadeGamesList.value[idx] = { ...arcadeGamesList.value[idx], ...savedGame }
+        }
+      } else {
+        arcadeGamesList.value.unshift(savedGame)
+      }
     }
 
     notificationStore.notify({
@@ -2084,11 +2245,11 @@ async function saveGameForm() {
     await loadAdminData()
     await fetchArcadeContent()
   } catch (err) {
-    console.error(err)
+    console.error('[saveGameForm error]:', err)
     notificationStore.notify({
       type: 'error',
-      title: 'Error',
-      message: err.message || 'No se pudo guardar el juego.'
+      title: 'Error al Guardar',
+      message: err.message || 'No se pudo guardar el minijuego. Inténtalo de nuevo.'
     })
   } finally {
     savingGame.value = false
@@ -2097,14 +2258,10 @@ async function saveGameForm() {
 
 async function deleteGame(game) {
   if (!confirm(`¿Estás seguro de que deseas eliminar el minijuego "${game.name}"?`)) return
-  const token = getToken()
   try {
-    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games/${game.id}`, {
-      method: 'DELETE',
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    await apiFetch(`/api/gamification/admin/games/${game.id}`, {
+      method: 'DELETE'
     })
-
-    if (!res.ok) throw new Error('Error al eliminar el juego.')
 
     notificationStore.notify({
       type: 'success',
@@ -2112,6 +2269,7 @@ async function deleteGame(game) {
       message: 'El minijuego fue retirado del arcade.'
     })
 
+    arcadeGamesList.value = arcadeGamesList.value.filter(g => g.id !== game.id)
     await loadAdminData()
     await fetchArcadeContent()
   } catch (err) {
@@ -2125,23 +2283,18 @@ async function deleteGame(game) {
 }
 
 async function toggleGameStatus(game) {
-  const token = getToken()
   try {
-    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games/${game.id}/toggle`, {
-      method: 'PATCH',
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    const res = await apiFetch(`/api/gamification/admin/games/${game.id}/toggle`, {
+      method: 'PATCH'
     })
 
-    if (!res.ok) throw new Error('Error al cambiar estado.')
-
-    const data = await res.json()
-    const updated = data.data || data
-    game.active = updated.active
+    const updated = res?.data || res
+    game.active = updated?.active ?? !game.active
 
     notificationStore.notify({
       type: 'info',
-      title: updated.active ? 'Juego Activado' : 'Juego Pausado',
-      message: `El juego ahora está ${updated.active ? 'visible' : 'oculto'} para los aprendices.`
+      title: game.active ? 'Juego Activado' : 'Juego Pausado',
+      message: `El juego ahora está ${game.active ? 'visible' : 'oculto'} para los aprendices.`
     })
   } catch (err) {
     console.error(err)
@@ -2154,34 +2307,18 @@ async function toggleGameStatus(game) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// TOKEN HELPER
-// ─────────────────────────────────────────────────────────────
-function getToken() {
-  if (auth.token) return auth.token
-  if (auth.user?.token) return auth.user.token
-  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
-  return stored ? JSON.parse(stored)?.token : null
-}
-
-// ─────────────────────────────────────────────────────────────
 // DATA FETCHING
 // ─────────────────────────────────────────────────────────────
 async function loadAdminData() {
   if (!auth.isAdmin && !auth.isInstructor) return
   adminLoading.value = true
   try {
-    const token = getToken()
-    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games-overview`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    })
-    if (res.ok) {
-      const data = await res.json()
-      const payload = data.data || data
-      if (payload.stats) adminStats.value = payload.stats
-      if (payload.recentScores) recentScores.value = payload.recentScores
-      if (payload.games && Array.isArray(payload.games) && payload.games.length > 0) {
-        arcadeGamesList.value = payload.games
-      }
+    const res = await apiFetch('/api/gamification/admin/games-overview')
+    const payload = res?.data || res
+    if (payload?.stats) adminStats.value = payload.stats
+    if (payload?.recentScores) recentScores.value = payload.recentScores
+    if (payload?.games && Array.isArray(payload.games) && payload.games.length > 0) {
+      arcadeGamesList.value = payload.games
     }
   } catch (err) {
     console.error('Error al cargar datos de gamificación:', err)
@@ -2192,25 +2329,19 @@ async function loadAdminData() {
 
 async function fetchArcadeContent() {
   try {
-    const token = getToken()
-    const res = await fetch(`${apiBaseUrl}/api/gamification/arcade/content`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    })
-    if (res.ok) {
-      const data = await res.json()
-      const payload = data.data || data
-      if (payload.catalog && Array.isArray(payload.catalog) && payload.catalog.length > 0) {
-        arcadeGamesList.value = payload.catalog
-      }
-      if (payload.trivia && payload.trivia.length > 0) {
-        triviaList.value = payload.trivia
-      }
-      if (payload.pairs && payload.pairs.length > 0) {
-        setupMatchCardsFromData(payload.pairs)
-      }
-      if (payload.listening && payload.listening.length > 0) {
-        listeningList.value = payload.listening
-      }
+    const res = await apiFetch('/api/gamification/arcade/content')
+    const payload = res?.data || res
+    if (payload?.catalog && Array.isArray(payload.catalog) && payload.catalog.length > 0) {
+      arcadeGamesList.value = payload.catalog
+    }
+    if (payload?.trivia && payload.trivia.length > 0) {
+      triviaList.value = payload.trivia
+    }
+    if (payload?.pairs && payload.pairs.length > 0) {
+      setupMatchCardsFromData(payload.pairs)
+    }
+    if (payload?.listening && payload.listening.length > 0) {
+      listeningList.value = payload.listening
     }
   } catch (err) {
     console.error('Error al cargar contenido de arcade:', err)
