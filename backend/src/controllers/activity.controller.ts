@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express'
 import prisma from '../lib/db.js'
 import { awardXp } from './learner.controller.js'
+import { GamificationService } from '../services/gamification.service.js'
+import { CourseService } from '../services/course.service.js'
 import type { CreateActivityDto, SubmitActivityDto, ReviewSubmissionDto } from '../types/dtos.js'
 
 // GET /api/activities
@@ -38,8 +40,9 @@ export async function getActivities(_req: Request, res: Response): Promise<void>
 // GET /api/activities/my-submissions?apprenticeId=:id
 export async function getMySubmissions(req: Request, res: Response): Promise<void> {
   try {
-    const apprenticeId = parseInt(req.query.apprenticeId as string)
-    if (isNaN(apprenticeId)) {
+    const rawApprenticeId = req.query.apprenticeId || (req as any).user?.id
+    const apprenticeId = parseInt(String(rawApprenticeId))
+    if (!apprenticeId || isNaN(apprenticeId)) {
       res.status(400).json({ message: 'apprenticeId es requerido.' })
       return
     }
@@ -85,8 +88,9 @@ export async function submitActivity(req: Request<{ id: string }, unknown, Submi
       return
     }
 
-    const { apprenticeId, passed, answers } = req.body
-    if (!apprenticeId) {
+    const rawApprenticeId = req.body.apprenticeId || (req as any).user?.id
+    const apprenticeId = parseInt(String(rawApprenticeId))
+    if (!apprenticeId || isNaN(apprenticeId)) {
       res.status(400).json({ message: 'apprenticeId es requerido.' })
       return
     }
@@ -97,15 +101,21 @@ export async function submitActivity(req: Request<{ id: string }, unknown, Submi
       return
     }
 
-    const hasOpenQuestion = Array.isArray(answers) && answers.some((a: any) => a?.type === 'open')
+    const hasOpenQuestion = Array.isArray(req.body.answers) && req.body.answers.some((a: any) => a?.type === 'open')
     const reviewStatus = hasOpenQuestion ? 'pending' : 'graded'
-    const finalPassed = hasOpenQuestion ? false : Boolean(passed)
-    const answersJson = Array.isArray(answers) ? JSON.stringify(answers) : '[]'
+    const finalPassed = hasOpenQuestion ? false : Boolean(req.body.passed)
+    const answersJson = Array.isArray(req.body.answers) ? JSON.stringify(req.body.answers) : '[]'
+
+    // Verificar si el aprendiz ya había aprobado esta actividad previamente
+    const existingSubmission = await prisma.activitySubmission.findUnique({
+      where: { activityId_apprenticeId: { activityId: id, apprenticeId } }
+    })
+    const wasAlreadyPassed = existingSubmission?.passed === true
 
     const submission = await prisma.activitySubmission.upsert({
-      where: { activityId_apprenticeId: { activityId: id, apprenticeId: parseInt(String(apprenticeId)) } },
+      where: { activityId_apprenticeId: { activityId: id, apprenticeId } },
       update: { passed: finalPassed, answers: answersJson, reviewStatus, submittedAt: new Date() },
-      create: { activityId: id, apprenticeId: parseInt(String(apprenticeId)), passed: finalPassed, answers: answersJson, reviewStatus }
+      create: { activityId: id, apprenticeId, passed: finalPassed, answers: answersJson, reviewStatus }
     })
 
     if (!activity.hasStudentSubmissions) {
@@ -115,11 +125,75 @@ export async function submitActivity(req: Request<{ id: string }, unknown, Submi
       })
     }
 
-    if (finalPassed && !hasOpenQuestion) {
-      try { await awardXp(parseInt(String(apprenticeId)), activity.points) } catch (e) { console.error('XP award error:', e) }
+    let xpAwarded = 0
+    let newXpTotal = 0
+
+    if (finalPassed && !hasOpenQuestion && !wasAlreadyPassed) {
+      try {
+        const points = activity.points || 10
+        newXpTotal = await GamificationService.awardXp(
+          apprenticeId,
+          points,
+          `Reto "${activity.title}" completado`
+        )
+        xpAwarded = points
+      } catch (e) {
+        console.error('XP award error:', e)
+      }
+    } else if (finalPassed && wasAlreadyPassed) {
+      const u = await prisma.user.findUnique({ where: { id: apprenticeId }, select: { xp: true } })
+      newXpTotal = u?.xp || 0
     }
 
-    res.json(submission)
+    // Auto-actualizar progreso del curso si la actividad pertenece a uno
+    if (activity.course && finalPassed) {
+      try {
+        const course = await prisma.course.findFirst({
+          where: {
+            OR: [
+              { title: { equals: activity.course, mode: 'insensitive' } },
+              { slug: { equals: activity.course.toLowerCase().replace(/\s+/g, '-'), mode: 'insensitive' } }
+            ]
+          }
+        })
+        if (course) {
+          const phaseNorm = (activity.phase || 'practica').toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          const validPhases = ['inicio', 'estudio', 'practica', 'evaluacion']
+          const targetPhase = validPhases.includes(phaseNorm) ? phaseNorm : 'practica'
+
+          const courseActivities = await prisma.activity.findMany({
+            where: { course: activity.course }
+          })
+          const phaseActivities = courseActivities.filter(a =>
+            (a.phase || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === targetPhase
+          )
+          const passedInPhase = await prisma.activitySubmission.count({
+            where: {
+              apprenticeId,
+              passed: true,
+              activityId: { in: phaseActivities.map(a => a.id) }
+            }
+          })
+          const phasePct = phaseActivities.length > 0
+            ? Math.min(100, Math.round((passedInPhase / phaseActivities.length) * 100))
+            : 100
+
+          await CourseService.saveCourseProgress(course.id, apprenticeId, {
+            phase: targetPhase as any,
+            phasePercentage: Math.max(phasePct, 25)
+          })
+        }
+      } catch (err) {
+        console.warn('Could not auto-update course progress from activity:', err)
+      }
+    }
+
+    res.json({
+      ...submission,
+      xpAwarded,
+      newXpTotal
+    })
   } catch (error) {
     console.error('Error submitting activity:', error)
     res.status(500).json({ message: 'Error interno del servidor al registrar la entrega.' })
@@ -186,9 +260,17 @@ export async function reviewSubmission(req: Request<{ id: string; apprenticeId: 
     })
 
     if (approved) {
-      const act = await prisma.activity.findUnique({ where: { id }, select: { points: true } })
+      const act = await prisma.activity.findUnique({ where: { id }, select: { title: true, points: true } })
       if (act) {
-        try { await awardXp(apprenticeId, act.points) } catch (e) { console.error('XP award error:', e) }
+        try {
+          await GamificationService.awardXp(
+            apprenticeId,
+            act.points,
+            `Entrega de reto "${act.title}" evaluada y aprobada`
+          )
+        } catch (e) {
+          console.error('XP award error on review:', e)
+        }
       }
     }
 

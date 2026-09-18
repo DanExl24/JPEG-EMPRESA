@@ -503,6 +503,13 @@ const auth = useAuthStore()
 
 const apiBaseUrl = getApiBaseUrl()
 
+function getToken() {
+  const rawToken = auth.token || (auth.user && auth.user.token)
+  if (rawToken) return typeof rawToken === 'string' ? rawToken : rawToken.value || null
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
 // ── State ──────────────────────────────────────
 const loading = ref(true)
 const error = ref(null)
@@ -524,7 +531,10 @@ async function fetchActivity() {
     // Check if this apprentice already submitted
     const userId = auth.user?.id
     if (userId) {
-      const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${userId}`)
+      const token = getToken()
+      const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       if (subRes.ok) {
         const subs = await subRes.json()
         const existing = subs.find(s => s.activityId === data.id)
@@ -1001,6 +1011,38 @@ async function submitActivity() {
   submitted.value      = pending ? true : ok
   feedbackResult.value = pending ? null : ok
 
+  // Persist to backend and award XP
+  const userId = auth.user?.id
+  let xpAwarded = 0
+  if (userId) {
+    try {
+      const token = getToken()
+      const res = await fetch(`${apiBaseUrl}/api/activities/${activity.value.id}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ apprenticeId: userId, passed: ok, answers: quizAnswers })
+      })
+      if (res.ok) {
+        const json = await res.json()
+        xpAwarded = json.xpAwarded || 0
+        if (json.newXpTotal && auth.user) {
+          auth.user.xp = json.newXpTotal
+        }
+        if (typeof auth.checkAuth === 'function') {
+          await auth.checkAuth()
+        }
+      } else {
+        const errText = await res.text().catch(() => '')
+        console.error('Error submitting activity:', res.status, errText)
+      }
+    } catch (err) {
+      console.error('Error saving submission:', err)
+    }
+  }
+
   if (pending) {
     notificationStore.notify({
       type: 'info',
@@ -1008,10 +1050,13 @@ async function submitActivity() {
       message: 'Tu respuesta con preguntas abiertas quedó pendiente de revisión del instructor.'
     })
   } else if (ok) {
+    const xpNotice = xpAwarded > 0 
+      ? ` ¡Ganaste +${xpAwarded} XP agregados a tu perfil!` 
+      : (activity.value.points ? ` Reto superado con éxito (+${activity.value.points} XP).` : '')
     notificationStore.notify({
       type: 'success',
       title: '¡Felicidades!',
-      message: `${activity.value.successMessage || '¡Respuesta correcta!'} Ganaste ${activity.value.points} puntos, se agregaron a tu progreso.`
+      message: `${activity.value.successMessage || '¡Respuesta correcta!'}${xpNotice}`
     })
   } else {
     notificationStore.notify({
@@ -1019,20 +1064,6 @@ async function submitActivity() {
       title: 'Respuesta incorrecta',
       message: `${activity.value.hintMessage || 'Sigue intentando.'} Usa "Reiniciar" para volver a intentarlo.`
     })
-  }
-
-  // Persist to backend
-  const userId = auth.user?.id
-  if (userId) {
-    try {
-      await fetch(`${apiBaseUrl}/api/activities/${activity.value.id}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apprenticeId: userId, passed: ok, answers: quizAnswers })
-      })
-    } catch (err) {
-      console.error('Error saving submission:', err)
-    }
   }
 }
 

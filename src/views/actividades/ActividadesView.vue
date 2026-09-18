@@ -1236,12 +1236,15 @@ function mapActivity(act, submissionsMap = new Map(), isApprenticeMode = false) 
 
   if (isApprenticeMode) {
     const mySubmission = submissionsMap.get(act.id)
-    const isDone = Boolean(mySubmission)
-    const isGrading = isDone && mySubmission?.reviewStatus === 'pending'
-    state = isGrading ? 'grading' : isDone ? 'done' : 'pending'
-    status = isGrading ? 'Calificando' : isDone ? 'Completada' : 'Pendiente'
-    statusBg = isGrading ? 'bg-amber-100' : isDone ? 'bg-green-100' : 'bg-orange-100'
-    statusText = isGrading ? 'text-amber-700' : isDone ? 'text-green-700' : 'text-orange-700'
+    const hasSub = Boolean(mySubmission)
+    const isGrading = hasSub && mySubmission?.reviewStatus === 'pending'
+    const isPassed = hasSub && mySubmission?.passed === true
+    const isFailed = hasSub && !isPassed && !isGrading
+
+    state = isGrading ? 'grading' : isPassed ? 'done' : isFailed ? 'failed' : 'pending'
+    status = isGrading ? 'Calificando' : isPassed ? 'Completada' : isFailed ? 'No Aprobada' : 'Pendiente'
+    statusBg = isGrading ? 'bg-amber-100' : isPassed ? 'bg-green-100' : isFailed ? 'bg-red-100' : 'bg-orange-100'
+    statusText = isGrading ? 'text-amber-700' : isPassed ? 'text-green-700' : isFailed ? 'text-red-700' : 'text-orange-700'
   } else {
     // Admin / Instructor view
     if (act.hasStudentSubmissions) {
@@ -1281,7 +1284,7 @@ async function fetchActivities() {
     if (!response.ok) throw new Error('Error al obtener actividades.')
     const data = await response.json()
 
-    const isApprenticeMode = !auth.isAdmin && !auth.isInstructor && Boolean(auth.user?.id)
+    const isApprenticeMode = (auth.isApprentice || (!auth.isAdmin && !auth.isInstructor)) && Boolean(auth.user?.id)
     let submissionsMap = new Map()
     if (isApprenticeMode) {
       try {
