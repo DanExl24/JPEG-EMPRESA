@@ -84,4 +84,28 @@ export class CourseController {
       next(error)
     }
   }
+
+  static async submitPostTest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = Number(req.user?.id)
+      if (!userId || isNaN(userId)) throw new BadRequestError('Usuario no autenticado.')
+
+      const result = await CourseService.savePostTestResult(userId, req.body)
+      ApiResponse.success(res, result, 'POS-TEST GLOBAL completado con éxito.')
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async getPostTestResult(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = Number(req.user?.id)
+      if (!userId || isNaN(userId)) throw new BadRequestError('Usuario no autenticado.')
+
+      const result = await CourseService.getPostTestResult(userId)
+      ApiResponse.success(res, result)
+    } catch (error) {
+      next(error)
+    }
+  }
 }

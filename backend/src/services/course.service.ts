@@ -357,4 +357,167 @@ export class CourseService {
       completed: saved.completed
     }
   }
+
+  /**
+   * Guarda la entrega del POS-TEST GLOBAL, otorgando XP e insignia de graduación
+   */
+  static async savePostTestResult(userId: number, data: {
+    finalScore: number
+    preTestBaseline?: number
+    answers?: Record<string, any>
+    moduleBreakdown?: {
+      m1: number
+      m2: number
+      m3: number
+      m4: number
+    }
+  }) {
+    if (!userId) throw new BadRequestError('Usuario no autenticado.')
+
+    const finalScore = Math.max(0, Math.min(100, Math.round(data.finalScore || 0)))
+    const preTestBaseline = Math.max(0, Math.min(100, Math.round(data.preTestBaseline !== undefined ? data.preTestBaseline : 35)))
+    const delta = Math.max(0, finalScore - preTestBaseline)
+
+    // Buscar curso 4 o curso de evaluación
+    const m4Course = await prisma.course.findFirst({
+      where: {
+        OR: [
+          { slug: 'professional-practice' },
+          { id: 4 }
+        ]
+      }
+    })
+
+    const courseId = m4Course?.id || 4
+
+    // Actualizar progreso en curso 4 con datos del post-test
+    const existing = await prisma.courseProgress.findUnique({
+      where: { userId_courseId: { userId, courseId } }
+    })
+
+    let phaseMap: any = { inicio: 100, estudio: 100, practica: 100, evaluacion: 100 }
+    if (existing?.phaseProgress) {
+      try {
+        phaseMap = JSON.parse(existing.phaseProgress)
+      } catch {}
+    }
+
+    phaseMap.postTest = {
+      score: finalScore,
+      preTestBaseline,
+      delta,
+      moduleBreakdown: data.moduleBreakdown || { m1: 100, m2: 100, m3: 100, m4: 100 },
+      completedAt: new Date().toISOString()
+    }
+
+    await prisma.courseProgress.upsert({
+      where: { userId_courseId: { userId, courseId } },
+      create: {
+        userId,
+        courseId,
+        currentPhase: 'evaluacion',
+        phaseProgress: JSON.stringify(phaseMap),
+        overallPct: 100,
+        completed: true,
+        completedAt: new Date()
+      },
+      update: {
+        phaseProgress: JSON.stringify(phaseMap),
+        overallPct: 100,
+        completed: true,
+        completedAt: new Date()
+      }
+    })
+
+    // Otorgar 150 XP de culminación de ruta formativa
+    await GamificationService.awardXp(userId, 150, 'Culminación exitosa del POS-TEST GLOBAL de enfermería')
+
+    // Otorgar insignia oficial post_test_master ("Graduado Bilingüe")
+    await GamificationService.awardBadgeExplicit(userId, 'post_test_master')
+
+    // Obtener datos del usuario para el certificado
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, nombre: true, apellido: true, cedula: true, correo: true }
+    })
+
+    const certificateData = {
+      studentName: `${user?.nombre || ''} ${user?.apellido || ''}`.trim() || 'Aprendiz SENA',
+      documentId: user?.cedula || 'N/A',
+      programTitle: 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria',
+      totalHours: '44 Horas Académicas',
+      modulesCount: 4,
+      rapsCompleted: 'RAP 1 al RAP 6',
+      preTestBaseline,
+      finalScore,
+      growthDelta: `+${delta}%`,
+      awardedBadge: 'Graduado Bilingüe',
+      completionDate: new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }),
+      certificateCode: `SENA-NURS-${userId}-${Date.now().toString(36).toUpperCase()}`
+    }
+
+    return {
+      success: true,
+      finalScore,
+      preTestBaseline,
+      delta,
+      certificateData
+    }
+  }
+
+  /**
+   * Consulta el resultado previo del POS-TEST GLOBAL
+   */
+  static async getPostTestResult(userId: number) {
+    if (!userId) throw new BadRequestError('Usuario no autenticado.')
+
+    const m4Course = await prisma.course.findFirst({
+      where: {
+        OR: [
+          { slug: 'professional-practice' },
+          { id: 4 }
+        ]
+      }
+    })
+
+    const courseId = m4Course?.id || 4
+    const progress = await prisma.courseProgress.findUnique({
+      where: { userId_courseId: { userId, courseId } }
+    })
+
+    if (!progress?.phaseProgress) return null
+
+    try {
+      const parsed = JSON.parse(progress.phaseProgress)
+      if (parsed.postTest) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { nombre: true, apellido: true, cedula: true }
+        })
+        return {
+          ...parsed.postTest,
+          certificateData: {
+            studentName: `${user?.nombre || ''} ${user?.apellido || ''}`.trim() || 'Aprendiz SENA',
+            documentId: user?.cedula || 'N/A',
+            programTitle: 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria',
+            totalHours: '44 Horas Académicas',
+            modulesCount: 4,
+            rapsCompleted: 'RAP 1 al RAP 6',
+            preTestBaseline: parsed.postTest.preTestBaseline || 35,
+            finalScore: parsed.postTest.score || 90,
+            growthDelta: `+${parsed.postTest.delta || 55}%`,
+            awardedBadge: 'Graduado Bilingüe',
+            completionDate: parsed.postTest.completedAt 
+              ? new Date(parsed.postTest.completedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+              : new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }),
+            certificateCode: `SENA-NURS-${userId}-VERIFIED`
+          }
+        }
+      }
+    } catch {
+      return null
+    }
+
+    return null
+  }
 }

@@ -9,6 +9,10 @@ const router = Router()
 router.get('/', optionalAuthenticate, CourseController.listCourses)
 router.get('/:id', optionalAuthenticate, CourseController.getCourseById)
 
+// POS-TEST GLOBAL Integrador de toda la ruta formativa
+router.post('/post-test/submit', authenticate, CourseController.submitPostTest)
+router.get('/post-test/result', authenticate, CourseController.getPostTestResult)
+
 // Progreso por fases de un curso para el aprendiz conectado
 router.get('/:id/progress', authenticate, CourseController.getCourseProgress)
 router.post('/:id/progress', authenticate, CourseController.saveCourseProgress)

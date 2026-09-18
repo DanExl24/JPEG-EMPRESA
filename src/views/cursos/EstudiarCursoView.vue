@@ -1632,68 +1632,363 @@
     </div>
 
     <!-- POST-TEST GLOBAL MODAL -->
-    <div v-if="showGlobalPostTestModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-2xl text-yellow-500">workspace_premium</span>
+    <div v-if="showGlobalPostTestModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in print:p-0 print:bg-white print:static">
+      <div class="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 max-h-[92vh] overflow-y-auto space-y-6 shadow-2xl border border-gray-100 print:shadow-none print:border-none print:max-w-none print:p-0">
+        
+        <!-- Modal Top Bar -->
+        <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-xs">
+              <span class="material-symbols-outlined text-2xl">workspace_premium</span>
+            </div>
             <div>
-              <h3 class="text-base font-black text-gray-800">POST-TEST GLOBAL DE EVALUACIÓN</h3>
-              <p class="text-xs text-gray-500">Evaluación integradora de toda la ruta formativa (RAP 1 a RAP 6)</p>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-black text-gray-800">POST-TEST GLOBAL DE EVALUACIÓN</h3>
+                <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                  Cierre de Ruta
+                </span>
+              </div>
+              <p class="text-xs text-gray-500">Evaluación integradora de toda la ruta formativa de enfermería (RAP 1 a RAP 6)</p>
             </div>
           </div>
-          <button @click="showGlobalPostTestModal = false" class="text-gray-400 hover:text-gray-600">
+          <button @click="showGlobalPostTestModal = false" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <div v-if="!globalPostTestSubmitted" class="space-y-4">
-          <p class="text-xs text-gray-600">
-            Responde las siguientes preguntas representativas de cada uno de los 4 módulos para obtener tu calificación final global.
-          </p>
-
-          <div v-for="(q, idx) in globalQuestions" :key="q.id" class="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
-            <span class="text-[10px] font-bold text-[#006688] uppercase tracking-wider">{{ q.moduleTag }}</span>
-            <p class="text-xs font-bold text-gray-800">{{ idx + 1 }}. {{ q.question }}</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-              <button 
-                v-for="opt in q.options" 
-                :key="opt"
-                @click="globalAnswers[q.id] = opt"
-                :class="`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all ${
-                  globalAnswers[q.id] === opt ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                }`"
-              >
-                {{ opt }}
-              </button>
+        <!-- ASSESSMENT QUESTIONNAIRE (Active State) -->
+        <div v-if="!globalPostTestSubmitted" class="space-y-6">
+          
+          <!-- Instructions & Progress Indicator -->
+          <div class="bg-gradient-to-r from-teal-50 to-blue-50 p-4 rounded-2xl border border-teal-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-teal-700 text-lg">info</span>
+              <span class="text-gray-700 font-medium leading-relaxed">
+                Responde las 10 preguntas representativas de los 4 módulos clínicos. Algunas incluyen audio para evaluar comprensión oral.
+              </span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 font-bold bg-white px-3 py-1.5 rounded-xl border border-teal-100 shadow-xs">
+              <span class="text-gray-500">Progreso:</span>
+              <span class="text-[#006688] font-black">{{ Object.keys(globalAnswers).length }} / {{ globalQuestions.length }}</span>
             </div>
           </div>
 
-          <div class="flex justify-end gap-2 pt-2">
-            <button @click="showGlobalPostTestModal = false" class="px-4 py-2 border border-gray-200 text-xs font-bold rounded-xl text-gray-600">Cancelar</button>
+          <!-- Questions List -->
+          <div class="space-y-4">
+            <div 
+              v-for="(q, idx) in globalQuestions" 
+              :key="q.id" 
+              class="p-5 bg-gray-50/80 hover:bg-gray-50 rounded-2xl border border-gray-200/80 space-y-3 transition-all"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-black text-[#006688] bg-[#006688]/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    {{ q.moduleTag }}
+                  </span>
+                  <span class="text-xs font-bold text-gray-500">· {{ q.title }}</span>
+                </div>
+                <span v-if="globalAnswers[q.id]" class="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-xs">check</span> Respondida
+                </span>
+              </div>
+
+              <!-- Question Text -->
+              <p class="text-sm font-bold text-gray-800 leading-snug">
+                {{ idx + 1 }}. {{ q.question }}
+              </p>
+
+              <!-- Optional Audio Clip for Listening Questions -->
+              <div v-if="q.hasAudio" class="p-3 bg-white rounded-xl border border-blue-100 flex items-center justify-between gap-3 shadow-xs">
+                <div class="flex items-center gap-2 text-xs font-bold text-blue-700">
+                  <span class="material-symbols-outlined text-base text-blue-600">hearing</span>
+                  <span>Audio Clínico Simulado:</span>
+                  <span class="italic text-gray-600 font-medium">"{{ q.audioText }}"</span>
+                </div>
+                <button 
+                  @click="speakEnglish(q.audioText, 0.85)"
+                  class="px-3 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all shrink-0"
+                >
+                  <span class="material-symbols-outlined text-sm">volume_up</span>
+                  Escuchar Audio
+                </button>
+              </div>
+
+              <!-- Options Grid -->
+              <div class="grid grid-cols-1 gap-2 pt-1">
+                <button 
+                  v-for="opt in q.options" 
+                  :key="opt"
+                  @click="globalAnswers[q.id] = opt"
+                  :class="`p-3 rounded-xl border text-xs font-semibold text-left transition-all flex items-start gap-2.5 ${
+                    globalAnswers[q.id] === opt 
+                      ? 'bg-[#006688] text-white border-[#006688] shadow-sm' 
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                  }`"
+                >
+                  <span :class="`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold ${
+                    globalAnswers[q.id] === opt ? 'border-white bg-white text-[#006688]' : 'border-gray-300 text-gray-400'
+                  }`">
+                    {{ globalAnswers[q.id] === opt ? '✓' : '' }}
+                  </span>
+                  <span class="leading-relaxed">{{ opt }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-100">
+            <button 
+              @click="showGlobalPostTestModal = false" 
+              class="w-full sm:w-auto px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-xs font-bold rounded-xl text-gray-600 transition-all"
+            >
+              Cerrar por ahora
+            </button>
             <button 
               @click="submitGlobalPostTest" 
-              :disabled="Object.keys(globalAnswers).length < globalQuestions.length"
-              class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow disabled:bg-gray-200 disabled:text-gray-400"
+              :disabled="Object.keys(globalAnswers).length < globalQuestions.length || isSubmittingPostTest"
+              class="w-full sm:w-auto px-7 py-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-black rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
             >
-              Calificar Post-Test Global
+              <span v-if="isSubmittingPostTest" class="material-symbols-outlined text-sm animate-spin">sync</span>
+              <span v-else class="material-symbols-outlined text-sm">verified</span>
+              {{ isSubmittingPostTest ? 'Calificando y certificando...' : 'Calificar y Certificar Post-Test Global' }}
             </button>
           </div>
         </div>
 
-        <div v-else class="text-center py-6 space-y-4">
-          <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <span class="material-symbols-outlined text-3xl">emoji_events</span>
+        <!-- POST-TEST RESULTS & PRE/POST CONTRAST DASHBOARD -->
+        <div v-else class="space-y-6 animate-fade-in">
+          
+          <!-- Top Celebratory Badge -->
+          <div class="bg-gradient-to-br from-emerald-700 via-teal-800 to-teal-950 text-white rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-lg relative overflow-hidden">
+            <div class="w-20 h-20 bg-amber-400/20 text-amber-300 rounded-full flex items-center justify-center mx-auto shadow-inner border border-amber-300/30">
+              <span class="material-symbols-outlined text-4xl">emoji_events</span>
+            </div>
+            <div class="space-y-1">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-full text-xs font-black tracking-widest uppercase">
+                🎓 Certificación de Ruta Formativa
+              </div>
+              <h4 class="text-2xl font-black text-white">¡Felicitaciones! Has Superado el POS-TEST GLOBAL</h4>
+              <p class="text-xs text-teal-100 max-w-xl mx-auto leading-relaxed">
+                Has demostrado competencia técnica comunicativa en inglés clínico desde la admisión y triaje hasta la entrega de turno y las órdenes de alta médica.
+              </p>
+            </div>
+
+            <!-- Pre-Test vs Post-Test Comparative Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 max-w-2xl mx-auto">
+              <div class="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/15 text-center">
+                <span class="text-[10px] uppercase font-bold text-teal-200 block">Diagnóstico Inicial (PRE-TEST)</span>
+                <span class="text-2xl font-black text-gray-200 mt-1 block">{{ preTestBaseline }}%</span>
+                <span class="text-[10px] text-teal-200">Línea base de entrada</span>
+              </div>
+              <div class="bg-white/10 backdrop-blur-xs p-4 rounded-2xl border border-white/15 text-center">
+                <span class="text-[10px] uppercase font-bold text-amber-300 block">Evaluación Final (POST-TEST)</span>
+                <span class="text-2xl font-black text-yellow-300 mt-1 block">{{ globalScore }}%</span>
+                <span class="text-[10px] text-teal-100">Resultado final certificado</span>
+              </div>
+              <div class="bg-emerald-500/20 backdrop-blur-xs p-4 rounded-2xl border border-emerald-400/40 text-center">
+                <span class="text-[10px] uppercase font-black text-emerald-300 block">Crecimiento Pedagógico</span>
+                <span class="text-2xl font-black text-emerald-300 mt-1 block">+{{ growthDelta }}%</span>
+                <span class="text-[10px] text-emerald-200 font-bold">Ganancia de competencia</span>
+              </div>
+            </div>
           </div>
-          <div class="space-y-1">
-            <h4 class="text-lg font-black text-gray-800">¡Post-Test Global Completado!</h4>
-            <p class="text-sm font-bold text-green-600">Tu calificación final: {{ globalScore }}%</p>
-            <p class="text-xs text-gray-500 max-w-md mx-auto">
-              Has demostrado tu progreso en inglés técnico de enfermería desde el análisis inicial hasta el egreso hospitalario. ¡Felicitaciones por culminar toda la ruta académica!
+
+          <!-- Module-by-Module Competency Breakdown (RAP 1 to RAP 6) -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+            <h5 class="text-sm font-black text-gray-800 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[#006688] text-base">analytics</span>
+              Desglose de Dominio por Resultados de Aprendizaje (RAP)
+            </h5>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- M1 -->
+              <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200/70 space-y-1.5">
+                <div class="flex justify-between text-xs font-bold">
+                  <span class="text-gray-700">Módulo 1 · RAP 1 (Saludos & Admisión)</span>
+                  <span class="text-[#006688]">{{ moduleBreakdown.m1 }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-[#006688] h-2 rounded-full transition-all" :style="`width: ${moduleBreakdown.m1}%`"></div>
+                </div>
+              </div>
+              <!-- M2 -->
+              <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200/70 space-y-1.5">
+                <div class="flex justify-between text-xs font-bold">
+                  <span class="text-gray-700">Módulo 2 · RAP 2 y 3 (Mr. Thomas & Handover)</span>
+                  <span class="text-indigo-600">{{ moduleBreakdown.m2 }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-indigo-600 h-2 rounded-full transition-all" :style="`width: ${moduleBreakdown.m2}%`"></div>
+                </div>
+              </div>
+              <!-- M3 -->
+              <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200/70 space-y-1.5">
+                <div class="flex justify-between text-xs font-bold">
+                  <span class="text-gray-700">Módulo 3 · RAP 4 y 5 (Rutinas & Instrumental)</span>
+                  <span class="text-amber-600">{{ moduleBreakdown.m3 }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-amber-500 h-2 rounded-full transition-all" :style="`width: ${moduleBreakdown.m3}%`"></div>
+                </div>
+              </div>
+              <!-- M4 -->
+              <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200/70 space-y-1.5">
+                <div class="flex justify-between text-xs font-bold">
+                  <span class="text-gray-700">Módulo 4 · RAP 6 (Alta Médica & Checklists)</span>
+                  <span class="text-emerald-600">{{ moduleBreakdown.m4 }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-emerald-600 h-2 rounded-full transition-all" :style="`width: ${moduleBreakdown.m4}%`"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gamification Bonus Banner -->
+            <div class="p-4 bg-amber-50/80 rounded-2xl border border-amber-200 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="text-3xl">🎓</span>
+                <div>
+                  <p class="text-xs font-black text-amber-900">Insignia Desbloqueada: "Graduado Bilingüe"</p>
+                  <p class="text-[11px] text-amber-700">+150 XP acreditados a tu cuenta académica por culminación de ruta.</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-amber-500 text-2xl">verified</span>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <button 
+              @click="showGlobalPostTestModal = false" 
+              class="w-full sm:w-auto px-6 py-2.5 border border-gray-200 hover:bg-gray-50 text-xs font-bold rounded-xl text-gray-600 transition-all"
+            >
+              Cerrar Resumen
+            </button>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <button 
+                @click="showCertificateModal = true" 
+                class="flex-1 sm:flex-none px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-2 transition-transform hover:scale-105"
+              >
+                <span class="material-symbols-outlined text-sm">workspace_premium</span>
+                Ver Mi Diploma Oficial
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CERTIFICATE / DIPLOMA MODAL (Imprimible y Descargable) -->
+    <div v-if="showCertificateModal" class="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in print:p-0 print:bg-white print:static">
+      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-10 shadow-2xl space-y-6 relative border border-amber-200 print:shadow-none print:border-none print:p-0">
+        
+        <!-- Close button (Hidden during print) -->
+        <div class="flex justify-between items-center print:hidden">
+          <span class="text-xs font-bold text-gray-400">Constancia de Culminación de Ruta</span>
+          <button @click="showCertificateModal = false" class="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-xl transition-all">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <!-- CERTIFICATE BODY (PRINTABLE AREA) -->
+        <div id="printableCertificate" class="p-8 sm:p-10 rounded-2xl border-4 border-double border-amber-300 bg-gradient-to-b from-amber-50/40 via-white to-amber-50/30 text-center space-y-6 relative overflow-hidden shadow-sm">
+          
+          <!-- Watermark -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+            <span class="material-symbols-outlined text-[260px]">local_hospital</span>
+          </div>
+
+          <!-- Header Logos & Branding -->
+          <div class="flex items-center justify-between border-b border-amber-200/80 pb-4 relative z-10">
+            <div class="text-left">
+              <span class="text-sm font-black tracking-widest text-[#006688] uppercase block">SENA · ADSO</span>
+              <span class="text-[10px] text-gray-500 font-semibold">Servicio Nacional de Aprendizaje</span>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center border border-amber-300 shadow-xs">
+              <span class="material-symbols-outlined text-2xl">verified</span>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-black tracking-widest text-emerald-700 uppercase block">NURSING ACADEMY</span>
+              <span class="text-[10px] text-gray-500 font-semibold">Formación Bilingüe Hospitalaria</span>
+            </div>
+          </div>
+
+          <!-- Main Title -->
+          <div class="space-y-2 relative z-10">
+            <p class="text-xs font-black uppercase tracking-widest text-amber-800">Constancia de Competencia Académica</p>
+            <h3 class="text-2xl sm:text-3xl font-serif font-black text-gray-900 tracking-wide">
+              CERTIFICADO DE FINALIZACIÓN
+            </h3>
+            <p class="text-xs text-gray-600 max-w-lg mx-auto leading-relaxed pt-1">
+              Se certifica que el aprendiz ha culminado con éxito todos los requerimientos académicos, formativos y de evaluación de la:
+            </p>
+            <p class="text-sm sm:text-base font-black text-[#006688] uppercase tracking-wide">
+              {{ certificateData?.programTitle || 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria' }}
             </p>
           </div>
-          <button @click="showGlobalPostTestModal = false" class="px-6 py-2.5 bg-[#006688] text-white font-bold text-xs rounded-xl shadow">Cerrar</button>
+
+          <!-- Student Name -->
+          <div class="py-2 relative z-10 border-y border-amber-200/60 max-w-lg mx-auto space-y-1">
+            <span class="text-[11px] uppercase tracking-wider text-gray-500 font-bold block">Otorgado a:</span>
+            <h4 class="text-xl sm:text-2xl font-black text-gray-900 capitalize">
+              {{ certificateData?.studentName || (auth.user?.nombre + ' ' + auth.user?.apellido) }}
+            </h4>
+            <p class="text-xs text-gray-500 font-medium">Documento de Identidad: {{ certificateData?.documentId || auth.user?.cedula || 'N/A' }}</p>
+          </div>
+
+          <!-- Metrics summary -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs relative z-10 max-w-xl mx-auto pt-1">
+            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+              <span class="text-[9px] uppercase font-bold text-gray-400 block">Intensidad</span>
+              <span class="font-black text-gray-800">{{ certificateData?.totalHours || '44 Horas' }}</span>
+            </div>
+            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+              <span class="text-[9px] uppercase font-bold text-gray-400 block">Alcance</span>
+              <span class="font-black text-gray-800">{{ certificateData?.rapsCompleted || 'RAP 1 al RAP 6' }}</span>
+            </div>
+            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+              <span class="text-[9px] uppercase font-bold text-gray-400 block">Calificación Final</span>
+              <span class="font-black text-emerald-700">{{ certificateData?.finalScore || globalScore }}%</span>
+            </div>
+            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+              <span class="text-[9px] uppercase font-bold text-gray-400 block">Crecimiento Net</span>
+              <span class="font-black text-emerald-600">{{ certificateData?.growthDelta || ('+' + growthDelta + '%') }}</span>
+            </div>
+          </div>
+
+          <!-- Signatures & Validation -->
+          <div class="pt-6 flex items-end justify-between text-left text-xs border-t border-amber-200/80 relative z-10">
+            <div class="space-y-1">
+              <div class="w-32 border-b border-gray-400"></div>
+              <p class="font-bold text-gray-800 text-[11px]">Instructor Responsable</p>
+              <p class="text-[10px] text-gray-400">Comité Académico SENA</p>
+            </div>
+            <div class="text-right space-y-0.5">
+              <p class="text-[10px] font-bold text-gray-500">Fecha de Emisión: {{ certificateData?.completionDate || '17 de Septiembre, 2026' }}</p>
+              <p class="text-[9px] font-mono text-gray-400">Cód. Verificación: {{ certificateData?.certificateCode || 'SENA-NURS-VERIFIED' }}</p>
+            </div>
+          </div>
         </div>
+
+        <!-- Actions (Print & Close) -->
+        <div class="flex items-center justify-between pt-2 print:hidden">
+          <button 
+            @click="showCertificateModal = false" 
+            class="px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-xs font-bold rounded-xl text-gray-600 transition-all"
+          >
+            Volver
+          </button>
+          <button 
+            @click="printCertificate" 
+            class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-black rounded-xl shadow-md flex items-center gap-2 transition-transform hover:scale-105"
+          >
+            <span class="material-symbols-outlined text-sm">print</span>
+            Imprimir / Guardar Diploma (PDF)
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -2558,37 +2853,254 @@ function resetExamForReview() {
 }
 
 // -----------------------------------------------------------------
-// POST-TEST GLOBAL INTEGRATOR MODAL (All 4 Modules)
+// POST-TEST GLOBAL INTEGRATOR (All 4 Modules + Pre/Post Contrast)
 // -----------------------------------------------------------------
 const showGlobalPostTestModal = ref(false)
+const showCertificateModal = ref(false)
 const globalPostTestSubmitted = ref(false)
+const isSubmittingPostTest = ref(false)
 const globalAnswers = ref({})
 const globalScore = ref(0)
+const preTestBaseline = ref(35)
+const growthDelta = ref(0)
+const moduleBreakdown = ref({ m1: 0, m2: 0, m3: 0, m4: 0 })
+const certificateData = ref(null)
 
 const globalQuestions = [
-  { id: 'gq1', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'Which greeting is used in the morning?', options: ['Good morning', 'Good night', 'Goodbye'], correct: 'Good morning' },
-  { id: 'gq2', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'What is the correct structure of a basic sentence?', options: ['Subject + Verb + Complement', 'Verb + Subject + Complement', 'Complement + Verb'], correct: 'Subject + Verb + Complement' },
-  { id: 'gq3', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'How do you describe a past accident in hospital history?', options: ['He fell yesterday and had a fracture.', 'He is falling tomorrow.', 'He fall down now.'], correct: 'He fell yesterday and had a fracture.' },
-  { id: 'gq4', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'Which adjective describes a swollen limb?', options: ['Swollen', 'Fast', 'Tall'], correct: 'Swollen' },
-  { id: 'gq5', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you describe an action happening right now to a visitor?', options: ['We are checking his blood pressure right now.', 'We checked him yesterday.', 'We check him next year.'], correct: 'We are checking his blood pressure right now.' },
-  { id: 'gq6', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you politely suggest an improvement to your colleague?', options: ['I think we should update the digital checklist.', 'You must leave now.', 'Do not speak.'], correct: 'I think we should update the digital checklist.' },
-  { id: 'gq7', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'Which modal expresses a direct medical obligation?', options: ['You must take this painkiller every 8 hours.', 'You might take tea.', 'You would run.'], correct: 'You must take this painkiller every 8 hours.' },
-  { id: 'gq8', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'What is the final confirmation when evaluating the checklist?', options: ['The vital signs are stable and the checklist is complete.', 'The patient is not ready.', 'The doctor is lost.'], correct: 'The vital signs are stable and the checklist is complete.' },
+  {
+    id: 'gq1',
+    moduleKey: 'm1',
+    moduleTag: 'MÓDULO 1 · RAP 1',
+    title: 'Presentación y Saludos Clínicos',
+    question: 'A British patient arrives at the hospital emergency room at 08:30 AM. Which formal greeting should the nurse use?',
+    options: ['Good morning, sir. Welcome to our hospital.', 'Good evening, sir. See you later.', 'Good night, mister.'],
+    correct: 'Good morning, sir. Welcome to our hospital.',
+    explanation: 'Para la atención matutina en triaje u hospitalización se emplea "Good morning".'
+  },
+  {
+    id: 'gq2',
+    moduleKey: 'm1',
+    moduleTag: 'MÓDULO 1 · RAP 1',
+    title: 'Estructura Básica Oracional (Grammar Pill)',
+    question: 'Listen to the clinical sentence and identify the correct syntactic structure (Subject + Verb + Complement):',
+    audioText: 'The nurse prepares the daily medication.',
+    hasAudio: true,
+    options: ['The nurse (S) + prepares (V) + the daily medication (C)', 'Prepares (V) + the nurse (S) + medication (C)', 'The medication (C) + prepares (V) + nurse (S)'],
+    correct: 'The nurse (S) + prepares (V) + the daily medication (C)',
+    explanation: 'El orden estándar en inglés técnico es Sujeto (The nurse) + Verbo (prepares) + Complemento (the daily medication).'
+  },
+  {
+    id: 'gq3',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Antecedentes y Pasado Simple (Mr. Thomas)',
+    question: 'How do you correctly report Mr. Thomas\'s admission event using Past Simple verbs?',
+    options: ['Yesterday, Mr. Thomas fell at the hotel and had an arm injury.', 'Yesterday, Mr. Thomas falls and is having injury.', 'Yesterday, Mr. Thomas will fall at the hotel.'],
+    correct: 'Yesterday, Mr. Thomas fell at the hotel and had an arm injury.',
+    explanation: 'Para hechos ocurridos en el pasado se usan las formas irregulares "fell" (caer) y "had" (tener).'
+  },
+  {
+    id: 'gq4',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Adjetivos Descriptivos y Signos Actuales',
+    question: 'Which sentence accurately describes the patient\'s current state in Room 204?',
+    options: ['He is pale, feels dizzy, and his right arm is swollen.', 'He is run quickly and happily.', 'He was surgery next week.'],
+    correct: 'He is pale, feels dizzy, and his right arm is swollen.',
+    explanation: '"Pale" (pálido), "dizzy" (mareado) y "swollen" (hinchado) son adjetivos descriptivos del estado actual.'
+  },
+  {
+    id: 'gq5',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Comprensión de Entrega de Turno (Handover Report)',
+    question: 'Listen to the handover audio snippet and select the correct report summary:',
+    audioText: 'Handover report: Mr. Thomas in room 204 has vital signs stable and resting in bed.',
+    hasAudio: true,
+    options: ['Mr. Thomas in room 204 has stable vital signs and is resting.', 'Mr. Thomas was discharged this morning.', 'Mr. Thomas has acute emergency in room 101.'],
+    correct: 'Mr. Thomas in room 204 has stable vital signs and is resting.',
+    explanation: 'El reporte de entrega confirma signos estables y reposo en la habitación 204.'
+  },
+  {
+    id: 'gq6',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Acciones en Progreso Clínico (Present Continuous)',
+    question: 'Mr. Thomas\'s daughter asks what the nurse is doing right now. How should the nurse answer in Present Continuous?',
+    options: ['"We are checking his blood pressure and monitoring his heart rate right now."', '"We checked his pressure yesterday morning."', '"We check him next Monday."'],
+    correct: '"We are checking his blood pressure and monitoring his heart rate right now."',
+    explanation: 'El Presente Continuo (am/is/are + -ing) comunica lo que se está ejecutando en el momento presente.'
+  },
+  {
+    id: 'gq7',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Propuesta de Mejora al Supervisor (Polite Suggestions)',
+    question: 'How do you politely suggest an improvement to the Nurse Manager regarding the vital signs checklist?',
+    options: ['"I think we should digitize the nursing checklist to reduce charting time."', '"You must change the paper immediately."', '"Stop using checklists right now."'],
+    correct: '"I think we should digitize the nursing checklist to reduce charting time."',
+    explanation: 'La fórmula de cortesía colaborativa es "I think we should..." (Creo que deberíamos...).'
+  },
+  {
+    id: 'gq8',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Instrumental y Herramientas Hospitalarias',
+    question: 'Which instrument is primarily used to listen to pulmonary and cardiovascular heart sounds?',
+    options: ['Stethoscope', 'Thermometer', 'Wheelchair'],
+    correct: 'Stethoscope',
+    explanation: 'El estetoscopio (Stethoscope) es el instrumento utilizado para la auscultación cardíaca y pulmonar.'
+  },
+  {
+    id: 'gq9',
+    moduleKey: 'm4',
+    moduleTag: 'MÓDULO 4 · RAP 6',
+    title: 'Órdenes de Alta y Modales Médicos (Discharge Advice)',
+    question: 'When giving discharge instructions to Mr. Thomas, which modal verb expresses a mandatory clinical necessity?',
+    options: ['"You must take this antibiotic every 8 hours with meals."', '"You might take water."', '"You could dance tomorrow."'],
+    correct: '"You must take this antibiotic every 8 hours with meals."',
+    explanation: '"Must" expresa prescripción médica obligatoria e imperativa.'
+  },
+  {
+    id: 'gq10',
+    moduleKey: 'm4',
+    moduleTag: 'MÓDULO 4 · RAP 6',
+    title: 'Cierre y Verificación del Checklist de Egreso',
+    question: 'What is the standard professional statement to confirm that all discharge criteria have been met?',
+    options: ['"The pain level is low, vital signs are stable, and the discharge checklist is complete."', '"The patient wants to go but no checklist is done."', '"The doctor forgot the signature."'],
+    correct: '"The pain level is low, vital signs are stable, and the discharge checklist is complete."',
+    explanation: 'Confirma la resolución del dolor, estabilidad de constantes vitales y cierre de la lista de verificación.'
+  }
 ]
 
-function openGlobalPostTest() {
+async function openGlobalPostTest() {
   globalAnswers.value = {}
+  isSubmittingPostTest.value = false
+
+  // Consultar si el estudiante ya cuenta con un resultado previo registrado en backend
+  if (auth.token) {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/courses/post-test/result`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const data = json?.data || json
+        if (data && data.score !== undefined) {
+          globalScore.value = data.score
+          preTestBaseline.value = data.preTestBaseline || 35
+          growthDelta.value = data.delta || (data.score - preTestBaseline.value)
+          moduleBreakdown.value = data.moduleBreakdown || { m1: 100, m2: 100, m3: 100, m4: 100 }
+          certificateData.value = data.certificateData || null
+          globalPostTestSubmitted.value = true
+          showGlobalPostTestModal.value = true
+          return
+        }
+      }
+    } catch {
+      // Continuar con la presentación regular
+    }
+  }
+
   globalPostTestSubmitted.value = false
   showGlobalPostTestModal.value = true
 }
 
-function submitGlobalPostTest() {
-  let count = 0
+async function submitGlobalPostTest() {
+  isSubmittingPostTest.value = true
+
+  let correctCount = 0
+  const breakdownCount = { m1: { total: 0, correct: 0 }, m2: { total: 0, correct: 0 }, m3: { total: 0, correct: 0 }, m4: { total: 0, correct: 0 } }
+
   globalQuestions.forEach(q => {
-    if (globalAnswers.value[q.id] === q.correct) count++
+    const key = q.moduleKey || 'm1'
+    if (breakdownCount[key]) breakdownCount[key].total++
+    if (globalAnswers.value[q.id] === q.correct) {
+      correctCount++
+      if (breakdownCount[key]) breakdownCount[key].correct++
+    }
   })
-  globalScore.value = Math.round((count / globalQuestions.length) * 100)
+
+  globalScore.value = Math.round((correctCount / globalQuestions.length) * 100)
+  preTestBaseline.value = 35 // Línea base diagnóstica inicial del PRE-TEST
+  growthDelta.value = Math.max(0, globalScore.value - preTestBaseline.value)
+
+  moduleBreakdown.value = {
+    m1: Math.round((breakdownCount.m1.correct / (breakdownCount.m1.total || 1)) * 100),
+    m2: Math.round((breakdownCount.m2.correct / (breakdownCount.m2.total || 1)) * 100),
+    m3: Math.round((breakdownCount.m3.correct / (breakdownCount.m3.total || 1)) * 100),
+    m4: Math.round((breakdownCount.m4.correct / (breakdownCount.m4.total || 1)) * 100),
+  }
+
+  // Generar datos locales para certificado de respaldo
+  const studentName = `${auth.user?.nombre || ''} ${auth.user?.apellido || ''}`.trim() || 'Aprendiz SENA'
+  certificateData.value = {
+    studentName,
+    documentId: auth.user?.cedula || 'N/A',
+    programTitle: 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria',
+    totalHours: '44 Horas Académicas',
+    modulesCount: 4,
+    rapsCompleted: 'RAP 1 al RAP 6',
+    preTestBaseline: preTestBaseline.value,
+    finalScore: globalScore.value,
+    growthDelta: `+${growthDelta.value}%`,
+    awardedBadge: 'Graduado Bilingüe',
+    completionDate: new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }),
+    certificateCode: `SENA-NURS-${auth.user?.id || 1}-${Date.now().toString(36).toUpperCase()}`
+  }
+
+  // Sincronizar y persistir con backend si hay sesión
+  if (auth.token) {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/courses/post-test/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        },
+        body: JSON.stringify({
+          finalScore: globalScore.value,
+          preTestBaseline: preTestBaseline.value,
+          answers: globalAnswers.value,
+          moduleBreakdown: moduleBreakdown.value
+        })
+      })
+
+      if (res.ok) {
+        const json = await res.json()
+        const data = json?.data || json
+        if (data.certificateData) {
+          certificateData.value = data.certificateData
+        }
+        // Incrementar XP en el store local si aplica
+        if (auth.user) {
+          auth.user.xp = (auth.user.xp || 0) + 150
+        }
+      }
+    } catch (err) {
+      console.warn('Persistencia de Post-Test en backend completada con respaldo local:', err)
+    }
+  }
+
+  // Guardar en almacenamiento local
+  try {
+    const key = `nursing_academy_post_test_${auth.user?.id || 'guest'}`
+    localStorage.setItem(key, JSON.stringify({
+      score: globalScore.value,
+      preTestBaseline: preTestBaseline.value,
+      delta: growthDelta.value,
+      moduleBreakdown: moduleBreakdown.value,
+      certificateData: certificateData.value,
+      completedAt: new Date().toISOString()
+    }))
+  } catch {}
+
   globalPostTestSubmitted.value = true
+  isSubmittingPostTest.value = false
+}
+
+function printCertificate() {
+  window.print()
 }
 
 // -----------------------------------------------------------------
@@ -2848,5 +3360,28 @@ onMounted(() => {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableCertificate,
+  #printableCertificate * {
+    visibility: visible;
+  }
+  #printableCertificate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 24px;
+    border: 3px double #d97706;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 </style>
