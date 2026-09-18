@@ -205,7 +205,7 @@
                 </div>
 
                 <!-- Phase Steps -->
-                <div class="grid grid-cols-4 gap-2 mt-4 text-center">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 text-center">
                   <div 
                     v-for="phase in coursePhases" 
                     :key="phase.key"

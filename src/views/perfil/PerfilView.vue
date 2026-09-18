@@ -356,7 +356,7 @@
               </router-link>
             </div>
 
-            <div v-if="profile.badges && profile.badges.length > 0" class="grid grid-cols-3 gap-2.5">
+            <div v-if="profile.badges && profile.badges.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               <div
                 v-for="badge in profile.badges.slice(0, 6)"
                 :key="badge.key"

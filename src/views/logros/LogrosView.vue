@@ -469,7 +469,7 @@
               </div>
               <div class="flex-1 space-y-1.5">
                 <!-- Preset Emoji Grid -->
-                <div class="grid grid-cols-8 gap-1 p-2 bg-gray-50 rounded-xl border border-gray-200">
+                <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 p-2 bg-gray-50 rounded-xl border border-gray-200">
                   <button
                     type="button"
                     v-for="emoji in PRESET_EMOJIS"
