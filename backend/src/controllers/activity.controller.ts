@@ -102,15 +102,19 @@ export async function submitActivity(req: Request<{ id: string }, unknown, Submi
     }
 
     const hasOpenQuestion = Array.isArray(req.body.answers) && req.body.answers.some((a: any) => a?.type === 'open')
-    const reviewStatus = hasOpenQuestion ? 'pending' : 'graded'
-    const finalPassed = hasOpenQuestion ? false : Boolean(req.body.passed)
-    const answersJson = Array.isArray(req.body.answers) ? JSON.stringify(req.body.answers) : '[]'
 
     // Verificar si el aprendiz ya había aprobado esta actividad previamente
     const existingSubmission = await prisma.activitySubmission.findUnique({
       where: { activityId_apprenticeId: { activityId: id, apprenticeId } }
     })
     const wasAlreadyPassed = existingSubmission?.passed === true
+
+    // Si ya estaba aprobada previamente, preservamos el estado aprobado para que una práctica no degrade el historial
+    const finalPassed = wasAlreadyPassed ? true : (hasOpenQuestion ? false : Boolean(req.body.passed))
+    const reviewStatus = wasAlreadyPassed 
+      ? (existingSubmission?.reviewStatus || 'graded') 
+      : (hasOpenQuestion ? 'pending' : 'graded')
+    const answersJson = Array.isArray(req.body.answers) ? JSON.stringify(req.body.answers) : (existingSubmission?.answers || '[]')
 
     const submission = await prisma.activitySubmission.upsert({
       where: { activityId_apprenticeId: { activityId: id, apprenticeId } },
@@ -140,9 +144,10 @@ export async function submitActivity(req: Request<{ id: string }, unknown, Submi
       } catch (e) {
         console.error('XP award error:', e)
       }
-    } else if (finalPassed && wasAlreadyPassed) {
+    } else {
       const u = await prisma.user.findUnique({ where: { id: apprenticeId }, select: { xp: true } })
       newXpTotal = u?.xp || 0
+      xpAwarded = 0
     }
 
     // Auto-actualizar progreso del curso si la actividad pertenece a uno
@@ -192,7 +197,8 @@ export async function submitActivity(req: Request<{ id: string }, unknown, Submi
     res.json({
       ...submission,
       xpAwarded,
-      newXpTotal
+      newXpTotal,
+      wasAlreadyPassed
     })
   } catch (error) {
     console.error('Error submitting activity:', error)

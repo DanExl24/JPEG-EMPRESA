@@ -118,11 +118,11 @@
                 <span class="text-[9px] uppercase tracking-wider font-extrabold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
                   {{ act.templateLabel }}
                 </span>
-                <span v-if="act.hasStudentSubmissions" class="text-[9px] uppercase tracking-wider font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <span v-if="(auth.isAdmin || auth.isInstructor) && act.hasStudentSubmissions" class="text-[9px] uppercase tracking-wider font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                   <span class="material-symbols-outlined text-[10px]">done_all</span>
                   Resuelta ({{ act.submissionCount || 0 }} {{ act.submissionCount === 1 ? 'entrega' : 'entregas' }})
                 </span>
-                <span v-if="act.pendingReviewsCount" class="text-[9px] uppercase tracking-wider font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <span v-if="(auth.isAdmin || auth.isInstructor) && act.pendingReviewsCount" class="text-[9px] uppercase tracking-wider font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                   <span class="material-symbols-outlined text-[10px]">pending_actions</span>
                   {{ act.pendingReviewsCount }} por calificar
                 </span>
@@ -140,10 +140,20 @@
             <router-link
               v-if="!auth.isAdmin && !auth.isInstructor"
               :to="`/dashboard/actividades/${act.id}`"
-              class="flex items-center gap-1.5 px-3 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+              :class="`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                act.state === 'done' 
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
+                  : act.state === 'failed'
+                    ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                    : act.state === 'grading'
+                      ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                      : 'bg-[#006688] hover:bg-[#004e69] text-white'
+              }`"
             >
-              <span class="material-symbols-outlined text-sm">play_arrow</span>
-              Iniciar
+              <span class="material-symbols-outlined text-sm">
+                {{ act.state === 'done' ? 'visibility' : act.state === 'failed' ? 'replay' : act.state === 'grading' ? 'hourglass_top' : 'play_arrow' }}
+              </span>
+              {{ act.state === 'done' ? 'Ver / Practicar' : act.state === 'failed' ? 'Reintentar' : act.state === 'grading' ? 'Ver Entrega' : 'Iniciar' }}
             </router-link>
 
             <!-- Instructor Actions -->
@@ -1168,6 +1178,7 @@ const filters = computed(() => {
     { label: 'Todas', value: 'all' },
     { label: 'Pendientes', value: 'pending' },
     { label: 'Completadas', value: 'done' },
+    { label: 'No Aprobadas', value: 'failed' },
     { label: 'En Calificación', value: 'grading' },
   ]
 })
@@ -2004,14 +2015,21 @@ const summary = computed(() => {
   }
 
   const pendingCount = activities.value.filter(a => a.state === 'pending').length
+  const failedCount = activities.value.filter(a => a.state === 'failed').length
   const completedCount = activities.value.filter(a => a.state === 'done').length
   const gradingCount = activities.value.filter(a => a.state === 'grading').length
 
-  return [
+  const list = [
     { label: 'Pendientes', count: pendingCount, icon: 'pending', bg: 'bg-orange-100', text: 'text-orange-700' },
     { label: 'Completadas', count: completedCount, icon: 'check_circle', bg: 'bg-green-100', text: 'text-green-700' },
-    { label: 'En Calificación', count: gradingCount, icon: 'hourglass_top', bg: 'bg-amber-100', text: 'text-amber-700' },
   ]
+  if (failedCount > 0) {
+    list.push({ label: 'No Aprobadas', count: failedCount, icon: 'cancel', bg: 'bg-red-100', text: 'text-red-700' })
+  }
+  if (gradingCount > 0) {
+    list.push({ label: 'En Calificación', count: gradingCount, icon: 'hourglass_top', bg: 'bg-amber-100', text: 'text-amber-700' })
+  }
+  return list
 })
 
 // Handlers

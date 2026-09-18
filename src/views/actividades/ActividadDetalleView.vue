@@ -62,11 +62,19 @@
             </div>
             <div class="flex items-center gap-1.5 text-xs font-semibold text-white/80">
               <span class="material-symbols-outlined text-sm">emoji_events</span>
-              {{ activity.points }} puntos al completar
+              {{ isAlreadyPassed ? 'Puntos ya obtenidos' : `${activity.points} puntos al completar` }}
             </div>
-            <div v-if="submitted" class="flex items-center gap-1.5 text-xs font-bold text-green-300">
-              <span class="material-symbols-outlined text-sm">check_circle</span>
-              Entregada
+            <div v-if="isAlreadyPassed" class="flex items-center gap-1.5 text-xs font-bold text-emerald-300">
+              <span class="material-symbols-outlined text-sm">verified</span>
+              Aprobada ({{ activity.points }} XP)
+            </div>
+            <div v-else-if="submitted && feedbackResult === false" class="flex items-center gap-1.5 text-xs font-bold text-rose-300">
+              <span class="material-symbols-outlined text-sm">cancel</span>
+              No Aprobada
+            </div>
+            <div v-else-if="submitted && reviewStatus === 'pending'" class="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+              <span class="material-symbols-outlined text-sm">hourglass_top</span>
+              En Calificación
             </div>
           </div>
         </div>
@@ -74,6 +82,67 @@
 
       <!-- Activity Panel -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
+
+        <!-- Status Banner: Solved / Practice / Failed -->
+        <div v-if="isAlreadyPassed" class="p-4 rounded-2xl border flex items-center justify-between gap-4 flex-wrap" :class="practiceMode ? 'bg-indigo-50/90 border-indigo-200' : 'bg-emerald-50/90 border-emerald-200'">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="practiceMode ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'">
+              <span class="material-symbols-outlined text-xl">{{ practiceMode ? 'fitness_center' : 'verified' }}</span>
+            </div>
+            <div>
+              <p class="font-bold text-sm" :class="practiceMode ? 'text-indigo-950' : 'text-emerald-950'">
+                {{ practiceMode ? 'Modo Práctica Activo' : 'Actividad Aprobada · Visualizando Respuestas' }}
+              </p>
+              <p class="text-xs" :class="practiceMode ? 'text-indigo-700' : 'text-emerald-700'">
+                {{ practiceMode 
+                  ? 'Estás repasando esta actividad libremente. No se sumarán puntos adicionales (XP ya acreditado previamente).' 
+                  : 'Ya superaste este reto con éxito y tus puntos fueron otorgados. Puedes revisar lo resuelto o activar el modo práctica para repasar.' 
+                }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="!practiceMode"
+              @click="startPracticeMode"
+              type="button"
+              class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-sm">fitness_center</span>
+              Repasar en Modo Práctica
+            </button>
+            <button
+              v-else
+              @click="restoreSolvedView"
+              type="button"
+              class="px-3.5 py-1.5 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-800 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-sm">visibility</span>
+              Ver Respuestas Aprobadas
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner for Failed Activity -->
+        <div v-else-if="submitted && feedbackResult === false" class="p-4 rounded-2xl border bg-rose-50 border-rose-200 flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-xl">cancel</span>
+            </div>
+            <div>
+              <p class="font-bold text-sm text-rose-950">Actividad No Aprobada</p>
+              <p class="text-xs text-rose-700">Aún no has superado este reto. Puedes revisar tus respuestas anteriores o reintentarlo para ganar tus {{ activity.points }} puntos XP.</p>
+            </div>
+          </div>
+          <button
+            @click="retryFailedActivity"
+            type="button"
+            class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-sm">replay</span>
+            Reintentar Ahora
+          </button>
+        </div>
 
         <!-- Feedback Banner -->
         <transition name="fade">
@@ -85,7 +154,7 @@
             <span>Tu entrega tiene preguntas abiertas. Queda pendiente de revisión por el instructor.</span>
           </div>
           <div
-            v-else-if="feedbackResult !== null"
+            v-else-if="feedbackResult !== null && !isAlreadyPassed"
             :class="`flex items-center gap-3 p-4 rounded-2xl text-sm font-bold animate-slide-up ${
               feedbackResult ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-amber-50 border border-amber-200 text-amber-700'
             }`"
@@ -185,7 +254,8 @@
                       @input="onGridInput($event, x-1, y-1)"
                       @keydown="onGridKeyDown($event, x-1, y-1)"
                       @focus="onCellFocus(x-1, y-1)"
-                      class="w-full h-full text-center border-none bg-transparent focus:outline-none font-black uppercase text-sm text-gray-800"
+                      :disabled="submitted"
+                      class="w-full h-full text-center border-none bg-transparent focus:outline-none font-black uppercase text-sm text-gray-800 disabled:cursor-default"
                       :id="`cw-cell-${x-1}-${y-1}`"
                     />
                   </div>
@@ -566,33 +636,107 @@
 
         <!-- Action Bar -->
         <div class="flex items-center gap-3 pt-6 border-t border-gray-100 flex-wrap">
-          <button
-            v-if="!submitted"
-            @click="submitActivity"
-            :disabled="!canSubmit"
-            :class="`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black shadow transition-all ${
-              canSubmit
-                ? 'bg-[#006688] hover:bg-[#004e69] text-white hover:shadow-lg'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`"
-          >
-            <span class="material-symbols-outlined text-base">send</span>
-            Entregar Actividad
-          </button>
-          <button
-            @click="resetActivity"
-            :disabled="reviewStatus === 'pending'"
-            :title="reviewStatus === 'pending' ? 'Espera a que el instructor revise tu entrega antes de reiniciar' : ''"
-            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span class="material-symbols-outlined text-base">restart_alt</span>
-            Reiniciar
-          </button>
+          <!-- 1. Activity already passed and in consultation mode -->
+          <template v-if="isAlreadyPassed && !practiceMode">
+            <button
+              @click="startPracticeMode"
+              type="button"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#006688] hover:bg-[#004e69] text-white transition-all shadow-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">fitness_center</span>
+              Repasar en Modo Práctica
+            </button>
+            <div class="flex items-center gap-2 ml-auto text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-2 rounded-xl border border-emerald-200">
+              <span class="material-symbols-outlined text-sm">verified</span>
+              Actividad Aprobada (XP ya acreditado)
+            </div>
+          </template>
 
-          <div v-if="submitted" class="flex items-center gap-2 ml-auto text-xs font-bold text-green-600 bg-green-50 px-3 py-2 rounded-xl border border-green-200">
-            <span class="material-symbols-outlined text-sm">verified</span>
-            Actividad entregada exitosamente
-          </div>
+          <!-- 2. Active solving / practice mode (not yet submitted) -->
+          <template v-else-if="!submitted">
+            <button
+              @click="submitActivity"
+              :disabled="!canSubmit"
+              :class="`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black shadow transition-all ${
+                canSubmit
+                  ? 'bg-[#006688] hover:bg-[#004e69] text-white hover:shadow-lg cursor-pointer'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`"
+            >
+              <span class="material-symbols-outlined text-base">send</span>
+              {{ isAlreadyPassed ? 'Comprobar Práctica' : 'Entregar Actividad' }}
+              <span v-if="isAlreadyPassed" class="text-[11px] font-semibold opacity-80">(+0 XP)</span>
+            </button>
+
+            <button
+              v-if="isAlreadyPassed"
+              @click="restoreSolvedView"
+              type="button"
+              class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">visibility</span>
+              Ver Respuestas Aprobadas
+            </button>
+
+            <button
+              v-else
+              @click="resetActivity"
+              :disabled="reviewStatus === 'pending'"
+              :title="reviewStatus === 'pending' ? 'Espera a que el instructor revise tu entrega antes de reiniciar' : ''"
+              class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">restart_alt</span>
+              Reiniciar
+            </button>
+          </template>
+
+          <!-- 3. Submitted and failed -->
+          <template v-else-if="submitted && feedbackResult === false">
+            <button
+              @click="retryFailedActivity"
+              type="button"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">replay</span>
+              Reintentar Actividad
+            </button>
+            <div class="flex items-center gap-2 ml-auto text-xs font-bold text-rose-700 bg-rose-50 px-3.5 py-2 rounded-xl border border-rose-200">
+              <span class="material-symbols-outlined text-sm">cancel</span>
+              No Aprobada · Reintenta para ganar los puntos
+            </div>
+          </template>
+
+          <!-- 4. Submitted and pending teacher review -->
+          <template v-else-if="submitted && reviewStatus === 'pending'">
+            <div class="flex items-center gap-2 text-xs font-bold text-amber-700 bg-amber-50 px-3.5 py-2 rounded-xl border border-amber-200">
+              <span class="material-symbols-outlined text-sm">hourglass_top</span>
+              Entrega en revisión por el instructor
+            </div>
+          </template>
+
+          <!-- 5. Submitted practice attempt -->
+          <template v-else-if="submitted && isAlreadyPassed">
+            <button
+              @click="startPracticeMode"
+              type="button"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#006688] hover:bg-[#004e69] text-white transition-all shadow-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">fitness_center</span>
+              Practicar Nuevamente
+            </button>
+            <button
+              @click="restoreSolvedView"
+              type="button"
+              class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">visibility</span>
+              Ver Respuestas Aprobadas
+            </button>
+            <div class="flex items-center gap-2 ml-auto text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-2 rounded-xl border border-emerald-200">
+              <span class="material-symbols-outlined text-sm">verified</span>
+              Práctica Validada (+0 XP)
+            </div>
+          </template>
         </div>
       </div>
 
@@ -628,6 +772,132 @@ const activity = ref(null)
 
 const submitted = ref(false)
 const feedbackResult = ref(null)
+const isAlreadyPassed = ref(false)
+const practiceMode = ref(false)
+const savedSolvedState = ref(null)
+
+const selectedAnswer = ref({})
+const reviewStatus = ref('graded')
+const reviewedAnswers = ref([])
+
+function applySolvedState() {
+  const data = activity.value
+  if (!data) return
+
+  // 1. Quiz / Preguntas
+  if (data.template === 'quiz' || data.template === 'preguntas') {
+    const list = quizQuestionsList.value
+    if (savedSolvedState.value?.answers && Array.isArray(savedSolvedState.value.answers) && savedSolvedState.value.answers.length > 0) {
+      reviewedAnswers.value = savedSolvedState.value.answers
+      savedSolvedState.value.answers.forEach(a => {
+        selectedAnswer.value[a.qIdx] = a.type === 'open' ? a.text : a.selected
+      })
+    } else {
+      const autoAnswers = list.map((q, idx) => {
+        if (q.type === 'truefalse') {
+          selectedAnswer.value[idx] = q.correct
+          return { qIdx: idx, type: 'truefalse', selected: q.correct, correct: true }
+        }
+        if (q.type === 'open') {
+          selectedAnswer.value[idx] = 'Respuesta aprobada'
+          return { qIdx: idx, type: 'open', text: 'Respuesta aprobada', correct: true }
+        }
+        const optIdx = q.options ? q.options.findIndex(opt => opt.correct) : 0
+        const chosen = optIdx >= 0 ? optIdx : 0
+        selectedAnswer.value[idx] = chosen
+        return { qIdx: idx, type: 'multiple', selected: chosen, correct: true }
+      })
+      reviewedAnswers.value = autoAnswers
+    }
+  }
+
+  // 2. Sopa de letras
+  if (data.template === 'sopa') {
+    foundWords.value = [...sopaWordsList.value]
+  }
+
+  // 3. Crucigrama
+  if (data.template === 'crucigrama') {
+    if (crosswordLayout.value?.grid) {
+      const g = {}
+      Object.entries(crosswordLayout.value.grid).forEach(([key, cell]) => {
+        g[key] = cell.char
+      })
+      gridInputs.value = g
+    }
+  }
+
+  // 4. Match
+  if (data.template === 'match') {
+    matchedPairs.value = [
+      { term: data.matchTerm || 'Syringe', meaning: data.matchMeaning || 'Instrument used to inject fluids' },
+      { term: 'Suture', meaning: 'Stitch used to close a wound' },
+      { term: 'Stethoscope', meaning: 'Instrument to listen to body sounds' }
+    ]
+  }
+
+  // 5. Listening
+  if (data.template === 'listening') {
+    listeningInput.value = data.listeningPhrase || 'The patient requires immediate attention'
+  }
+
+  // 6. Pronunciation
+  if (data.template === 'pronunciation') {
+    pronunciationPassed.value = true
+    speechSimilarity.value = 100
+    recognizedText.value = data.pronouncePhrase || 'Nice to meet you too'
+  }
+
+  // 7. Fill in the blank
+  if (data.template === 'fillblank') {
+    fillblankInput.value = data.fillblankAnswer || 'stethoscope'
+  }
+}
+
+function clearAllInputs() {
+  selectedAnswer.value = {}
+  reviewedAnswers.value = []
+  foundWords.value = []
+  selectedLetters.value = []
+  sopaSelectionHint.value = null
+  if (crosswordLayout.value?.grid) {
+    const empty = {}
+    Object.keys(crosswordLayout.value.grid).forEach(k => { empty[k] = '' })
+    gridInputs.value = empty
+  }
+  selectedTerm.value = ''
+  selectedMeaning.value = ''
+  matchedPairs.value = []
+  matchFeedback.value = null
+  listeningInput.value = ''
+  isRecording.value = false
+  recognizedText.value = ''
+  speechSimilarity.value = 0
+  pronunciationPassed.value = false
+  speechError.value = null
+  fillblankInput.value = ''
+  stopSpeechRecognition()
+}
+
+function startPracticeMode() {
+  practiceMode.value = true
+  submitted.value = false
+  feedbackResult.value = null
+  clearAllInputs()
+}
+
+function restoreSolvedView() {
+  practiceMode.value = false
+  submitted.value = true
+  feedbackResult.value = true
+  applySolvedState()
+}
+
+function retryFailedActivity() {
+  submitted.value = false
+  feedbackResult.value = null
+  clearAllInputs()
+}
 
 // ── Fetch activity + check prior submission ─────
 async function fetchActivity() {
@@ -650,22 +920,29 @@ async function fetchActivity() {
         const subs = await subRes.json()
         const existing = subs.find(s => s.activityId === data.id)
         if (existing) {
-          submitted.value = true
           reviewStatus.value = existing.reviewStatus || 'graded'
-          feedbackResult.value = reviewStatus.value === 'pending' ? null : existing.passed
-          if (data.template === 'pronunciation' && existing.passed) {
-            pronunciationPassed.value = true
-            speechSimilarity.value = 100
-            recognizedText.value = data.pronouncePhrase || ''
-          }
+          const isPassed = existing.passed === true
+          isAlreadyPassed.value = isPassed
+          feedbackResult.value = reviewStatus.value === 'pending' ? null : isPassed
+          submitted.value = true
+
           try {
             const parsedAnswers = JSON.parse(existing.answers || '[]')
-            reviewedAnswers.value = parsedAnswers
-            parsedAnswers.forEach(a => {
-              selectedAnswer.value[a.qIdx] = a.type === 'open' ? a.text : a.selected
-            })
+            savedSolvedState.value = { answers: parsedAnswers }
           } catch (e) {
-            console.error('Error parsing stored answers:', e)
+            savedSolvedState.value = { answers: [] }
+          }
+
+          if (isPassed) {
+            applySolvedState()
+          } else {
+            // Failed attempt: preserve user's past answers so they can analyze where they failed
+            if (savedSolvedState.value?.answers?.length) {
+              reviewedAnswers.value = savedSolvedState.value.answers
+              savedSolvedState.value.answers.forEach(a => {
+                selectedAnswer.value[a.qIdx] = a.type === 'open' ? a.text : a.selected
+              })
+            }
           }
         }
       }
@@ -866,7 +1143,11 @@ const crosswordLayout = computed(() => {
 watch(crosswordLayout, (newLayout) => {
   if (!newLayout || !newLayout.success || !newLayout.grid) return
   const newInputs = {}
-  Object.keys(newLayout.grid).forEach(key => { newInputs[key] = gridInputs.value[key] || '' })
+  Object.keys(newLayout.grid).forEach(key => {
+    newInputs[key] = (isAlreadyPassed.value && !practiceMode.value)
+      ? newLayout.grid[key].char
+      : (gridInputs.value[key] || '')
+  })
   gridInputs.value = newInputs
 }, { immediate: true })
 
@@ -928,10 +1209,6 @@ function focusWordStart(word) {
 // ════════════════════════════════════════════════
 //  QUIZ / PREGUNTAS
 // ════════════════════════════════════════════════
-const selectedAnswer = ref({})
-const reviewStatus = ref('graded')
-const reviewedAnswers = ref([])
-
 const quizQuestionsList = computed(() => {
   if (!activity.value) return []
   const qStr = activity.value.quizQuestion || ''
@@ -1347,19 +1624,30 @@ async function submitActivity() {
       message: 'Tu respuesta con preguntas abiertas quedó pendiente de revisión del instructor.'
     })
   } else if (ok) {
-    const xpNotice = xpAwarded > 0 
-      ? ` ¡Ganaste +${xpAwarded} XP agregados a tu perfil!` 
-      : (activity.value.points ? ` Reto superado con éxito (+${activity.value.points} XP).` : '')
-    notificationStore.notify({
-      type: 'success',
-      title: '¡Felicidades!',
-      message: `${activity.value.successMessage || '¡Respuesta correcta!'}${xpNotice}`
-    })
+    if (isAlreadyPassed.value) {
+      notificationStore.notify({
+        type: 'success',
+        title: '¡Práctica completada con éxito!',
+        message: '¡Excelente trabajo! Has validado correctamente la actividad. Como ya la habías aprobado previamente, no se suman puntos adicionales a tu cuenta.'
+      })
+    } else {
+      const xpNotice = xpAwarded > 0 
+        ? ` ¡Ganaste +${xpAwarded} XP agregados a tu perfil!` 
+        : (activity.value.points ? ` ¡Reto superado con éxito (+${activity.value.points} XP)!` : '')
+      notificationStore.notify({
+        type: 'success',
+        title: '¡Felicidades!',
+        message: `${activity.value.successMessage || '¡Respuesta correcta!'}${xpNotice}`
+      })
+      isAlreadyPassed.value = true
+    }
   } else {
     notificationStore.notify({
       type: 'warning',
       title: 'Respuesta incorrecta',
-      message: `${activity.value.hintMessage || 'Sigue intentando.'} Usa "Reiniciar" para volver a intentarlo.`
+      message: isAlreadyPassed.value
+        ? 'Algunas respuestas no fueron correctas en tu práctica. Puedes intentarlo de nuevo.'
+        : `${activity.value.hintMessage || 'Sigue intentando.'} Usa "Reiniciar" para volver a intentarlo.`
     })
   }
 }
@@ -1368,27 +1656,7 @@ function resetActivity() {
   submitted.value      = false
   feedbackResult.value = null
   reviewStatus.value   = 'graded'
-  reviewedAnswers.value = []
-  selectedAnswer.value = {}
-  foundWords.value     = []
-  selectedLetters.value = []
-  sopaSelectionHint.value = null
-  gridInputs.value     = {}
-  if (crosswordLayout.value?.success) {
-    Object.keys(crosswordLayout.value.grid || {}).forEach(key => { gridInputs.value[key] = '' })
-  }
-  selectedTerm.value   = ''
-  selectedMeaning.value = ''
-  matchedPairs.value   = []
-  matchFeedback.value  = null
-  listeningInput.value = ''
-  isRecording.value    = false
-  recognizedText.value = ''
-  speechSimilarity.value = 0
-  pronunciationPassed.value = false
-  speechError.value    = null
-  fillblankInput.value = ''
-  stopSpeechRecognition()
+  clearAllInputs()
 }
 
 onBeforeUnmount(() => {
