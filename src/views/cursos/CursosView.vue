@@ -380,7 +380,7 @@
                         <span class="font-black text-[11px] bg-[#006688] text-white px-1.5 py-0.5 rounded">{{ rap.code }}</span>
                         <span v-if="rap.competency?.code" class="text-[9px] text-gray-400 font-semibold truncate">{{ rap.competency.code }}</span>
                       </div>
-                      <p class="text-[11px] text-gray-600 mt-1 leading-snug font-normal line-clamp-2">{{ rap.description }}</p>
+                      <p class="text-[11px] text-gray-600 mt-1 leading-snug font-normal line-clamp-2">{{ rap.description || rap.name }}</p>
                     </div>
                   </label>
                 </div>
@@ -748,8 +748,16 @@ const showModal = ref(false)
 const showGlobalPostTestModal = ref(false)
 const editingCourse = ref(null)
 const activeModalPhase = ref('inicio')
-const trainingPrograms = ref([])
-const availableRaps = ref([])
+const DEFAULT_OFFICIAL_RAPS = [
+  { id: 1, code: 'RAP-01', name: 'Intercambiar información personal y social básica en el contexto de atención en salud (Módulo 1 · Fase Análisis)' },
+  { id: 2, code: 'RAP-02', name: 'Describir el estado físico del paciente y el entorno hospitalario en inglés técnico (Módulo 2 · Fase Planeación)' },
+  { id: 3, code: 'RAP-03', name: 'Relatar antecedentes clínicos y realizar entregas de turno estructuradas en pasado simple (Módulo 2 · Fase Planeación)' },
+  { id: 4, code: 'RAP-04', name: 'Explicar procedimientos clínicos rutinarios e interactuar en tiempo presente en el área hospitalaria (Módulo 3 · Fase Ejecución)' },
+  { id: 5, code: 'RAP-05', name: 'Proponer mejoras laborales al supervisor y gestionar listas de verificación clínicas (Módulo 3 · Fase Ejecución)' },
+  { id: 6, code: 'RAP-06', name: 'Brindar recomendaciones médicas de egreso y evaluar resultados de listas de verificación (Módulo 4 · Fase Evaluación)' }
+]
+
+const availableRaps = ref([...DEFAULT_OFFICIAL_RAPS])
 
 const newActivity = ref({
   title: '',
@@ -926,15 +934,27 @@ async function fetchCourses() {
 async function fetchCurriculumRaps() {
   try {
     const token = getAuthToken()
-    const res = await fetch(`${apiBaseUrl}/api/curriculum/raps`, {
+    let res = await fetch(`${apiBaseUrl}/api/admin/curriculum/raps`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
+    if (!res.ok) {
+      res = await fetch(`${apiBaseUrl}/api/curriculum/raps`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+    }
     if (res.ok) {
       const data = await res.json()
-      availableRaps.value = Array.isArray(data) ? data : (data?.data || [])
+      const list = Array.isArray(data) ? data : (data?.data || [])
+      if (list.length > 0) {
+        availableRaps.value = list
+        return
+      }
     }
   } catch (err) {
     console.warn('Backend curriculum raps unavailable:', err)
+  }
+  if (!availableRaps.value || availableRaps.value.length === 0) {
+    availableRaps.value = [...DEFAULT_OFFICIAL_RAPS]
   }
 }
 
