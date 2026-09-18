@@ -124,106 +124,7 @@
             </div>
           </div>
 
-          <!-- ================= 2. NOTIFICACIONES ================= -->
-          <div v-if="active === 'notifications'" class="space-y-6 animate-fade-in">
-            <div class="border-b border-gray-100 pb-4">
-              <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                  <span class="material-symbols-outlined text-xl">notifications</span>
-                </div>
-                <div>
-                  <h3 class="text-lg font-bold text-gray-800">{{ t('settings.notifications.title') }}</h3>
-                  <p class="text-xs text-gray-400">{{ t('settings.notifications.subtitle') }}</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="divide-y divide-gray-100">
-              <!-- Notificaciones Email -->
-              <div class="py-4 flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm font-bold text-gray-800">{{ t('settings.notifications.email') }}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">{{ t('settings.notifications.emailDesc') }}</p>
-                </div>
-                <button
-                  type="button"
-                  @click="togglePreference('emailNotifications')"
-                  :class="[
-                    'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none',
-                    preferences.emailNotifications ? 'bg-[#006688]' : 'bg-gray-200'
-                  ]"
-                >
-                  <span
-                    :class="[
-                      'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200',
-                      preferences.emailNotifications ? 'translate-x-6' : 'translate-x-1'
-                    ]"
-                  />
-                </button>
-              </div>
-
-              <!-- Alertas de Actividades -->
-              <div class="py-4 flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm font-bold text-gray-800">{{ t('settings.notifications.activityAlerts') }}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">{{ t('settings.notifications.activityAlertsDesc') }}</p>
-                </div>
-                <button
-                  type="button"
-                  @click="togglePreference('activityAlerts')"
-                  :class="[
-                    'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none',
-                    preferences.activityAlerts ? 'bg-[#006688]' : 'bg-gray-200'
-                  ]"
-                >
-                  <span
-                    :class="[
-                      'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200',
-                      preferences.activityAlerts ? 'translate-x-6' : 'translate-x-1'
-                    ]"
-                  />
-                </button>
-              </div>
-
-              <!-- Alertas de Ranking -->
-              <div class="py-4 flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm font-bold text-gray-800">{{ t('settings.notifications.rankingAlerts') }}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">{{ t('settings.notifications.rankingAlertsDesc') }}</p>
-                </div>
-                <button
-                  type="button"
-                  @click="togglePreference('rankingAlerts')"
-                  :class="[
-                    'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none',
-                    preferences.rankingAlerts ? 'bg-[#006688]' : 'bg-gray-200'
-                  ]"
-                >
-                  <span
-                    :class="[
-                      'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200',
-                      preferences.rankingAlerts ? 'translate-x-6' : 'translate-x-1'
-                    ]"
-                  />
-                </button>
-              </div>
-            </div>
-
-            <!-- Botón Guardar Notificaciones -->
-            <div class="pt-4 flex justify-end">
-              <button
-                @click="savePreferences"
-                :disabled="saving"
-                class="px-5 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md shadow-[#006688]/20 flex items-center gap-2 disabled:opacity-50"
-              >
-                <span v-if="saving" class="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                <span v-else class="material-symbols-outlined text-base">save</span>
-                {{ saving ? t('common.saving') : t('common.save') }}
-              </button>
-            </div>
-          </div>
-
-          <!-- ================= 3. SEGURIDAD Y ACCESO ================= -->
+          <!-- ================= 2. SEGURIDAD Y ACCESO ================= -->
           <div v-if="active === 'security'" class="space-y-6 animate-fade-in">
             <div class="border-b border-gray-100 pb-4">
               <div class="flex items-center gap-2.5">
@@ -422,7 +323,6 @@ const saving = ref(false)
 const sections = computed(() => {
   const list = [
     { key: 'language', label: t('settings.tabs.language'), icon: 'translate' },
-    { key: 'notifications', label: t('settings.tabs.notifications'), icon: 'notifications' },
     { key: 'security', label: t('settings.tabs.security'), icon: 'lock' },
   ]
   if (auth.isAdmin) {
@@ -433,9 +333,6 @@ const sections = computed(() => {
 
 // Preferences State
 const preferences = reactive({
-  emailNotifications: true,
-  activityAlerts: true,
-  rankingAlerts: true,
   language: 'es'
 })
 
@@ -462,13 +359,25 @@ function getToken() {
   return stored ? JSON.parse(stored)?.token : null
 }
 
-function togglePreference(key) {
-  preferences[key] = !preferences[key]
-}
-
 async function handleSelectLanguage(code) {
   i18n.setLocale(code)
   preferences.language = code
+
+  try {
+    const token = getToken()
+    if (token) {
+      await fetch(`${apiBaseUrl}/api/user/preferences`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ language: code })
+      })
+    }
+  } catch (err) {
+    console.warn('Error al persistir idioma preferido:', err)
+  }
 
   notificationStore.notify({
     type: 'success',
@@ -495,60 +404,15 @@ async function loadPreferences() {
       const json = isJson ? await res.json() : null
       const data = json?.data || json
 
-      if (data) {
-        preferences.emailNotifications = data.emailNotifications ?? true
-        preferences.activityAlerts = data.activityAlerts ?? true
-        preferences.rankingAlerts = data.rankingAlerts ?? true
-        if (data.language && ['es', 'en', 'pt'].includes(data.language)) {
-          preferences.language = data.language
-          i18n.setLocale(data.language, false)
-        }
+      if (data?.language && ['es', 'en', 'pt'].includes(data.language)) {
+        preferences.language = data.language
+        i18n.setLocale(data.language, false)
       }
     }
   } catch (error) {
     console.warn('Error al cargar preferencias:', error)
   } finally {
     loading.value = false
-  }
-}
-
-async function savePreferences() {
-  saving.value = true
-  try {
-    const token = getToken()
-    const res = await fetch(`${apiBaseUrl}/api/user/preferences`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        emailNotifications: preferences.emailNotifications,
-        activityAlerts: preferences.activityAlerts,
-        rankingAlerts: preferences.rankingAlerts,
-        language: preferences.language
-      })
-    })
-
-    const isJson = res.headers.get('content-type')?.includes('application/json')
-    const data = isJson ? await res.json() : null
-    if (!res.ok) {
-      throw new Error(data?.message || `Error del servidor (${res.status})`)
-    }
-
-    notificationStore.notify({
-      type: 'success',
-      title: t('settings.notifications.title'),
-      message: t('settings.notifications.savedSuccess')
-    })
-  } catch (error) {
-    notificationStore.notify({
-      type: 'error',
-      title: 'Error',
-      message: error.message || 'No se pudieron guardar las preferencias.'
-    })
-  } finally {
-    saving.value = false
   }
 }
 

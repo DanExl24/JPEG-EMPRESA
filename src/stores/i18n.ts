@@ -101,7 +101,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, any>> = {
     },
     settings: {
       title: 'Configuración',
-      subtitle: 'Personaliza tu experiencia, idioma y notificaciones en la plataforma.',
+      subtitle: 'Personaliza tu experiencia, idioma y seguridad en la plataforma.',
       tabs: {
         language: 'Idioma y Región',
         notifications: 'Notificaciones',
@@ -209,7 +209,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, any>> = {
     },
     settings: {
       title: 'Settings',
-      subtitle: 'Customize your experience, language, and notifications across the platform.',
+      subtitle: 'Customize your experience, language, and security across the platform.',
       tabs: {
         language: 'Language & Region',
         notifications: 'Notifications',
@@ -317,7 +317,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, any>> = {
     },
     settings: {
       title: 'Configurações',
-      subtitle: 'Personalize sua experiência, idioma e notificações na plataforma.',
+      subtitle: 'Personalize sua experiência, idioma e segurança na plataforma.',
       tabs: {
         language: 'Idioma e Região',
         notifications: 'Notificações',
