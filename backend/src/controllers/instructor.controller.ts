@@ -18,14 +18,15 @@ export async function getInstructorCohorts(req: Request, res: Response, next: Ne
 
     // Si es ADMIN puede ver todas o filtrar por instructorId; si es INSTRUCTOR solo ve sus fichas
     const isInstructor = userRole === 'INSTRUCTOR'
-    const instructorFilter = isInstructor
-      ? { instructors: { some: { id: userId } } }
-      : req.query.instructorId
-        ? { instructors: { some: { id: Number(req.query.instructorId) } } }
-        : {}
+    const where: any = {}
+    if (isInstructor) {
+      where.instructors = { some: { id: userId } }
+    } else if (req.query.instructorId) {
+      where.instructors = { some: { id: Number(req.query.instructorId) } }
+    }
 
     const cohorts = await prisma.cohort.findMany({
-      where: instructorFilter,
+      where,
       orderBy: { cohort_number: 'asc' },
       include: {
         program: {

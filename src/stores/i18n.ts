@@ -806,7 +806,6 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Evaluando': 'Evaluating',
 
     // Apprentice Dashboard
-    'Formación en Enfermería': 'Nursing Training',
     'Bienvenido,': 'Welcome,',
     'Continúa tu aprendizaje en inglés clínico y supera nuevos retos.': 'Continue your clinical English learning journey and conquer new challenges.',
     'Continuar Aprendiendo': 'Continue Learning',
@@ -1269,7 +1268,6 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     'Evaluando': 'Avaliando',
 
     // Apprentice Dashboard
-    'Formación en Enfermería': 'Formação em Enfermagem',
     'Bienvenido,': 'Bem-vindo,',
     'Continúa tu aprendizaje en inglés clínico y supera nuevos retos.': 'Continue sua jornada de aprendizado em inglês clínico e supere novos desafios.',
     'Continuar Aprendiendo': 'Continuar Aprendendo',
