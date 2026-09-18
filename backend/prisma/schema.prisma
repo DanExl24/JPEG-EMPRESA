@@ -80,6 +80,7 @@ model Cohort {
   program_id    Int
   program       TrainingProgram @relation(fields: [program_id], references: [id])
   enrollments   Enrollment[]
+  courses       Course[]        @relation("CourseCohorts")
 
   @@map("cohorts")
 }
@@ -142,6 +143,13 @@ model Activity {
   attemptsLimit         String   @default("Ilimitados") @map("attempts_limit")
   successMessage        String   @default("¡Excelente trabajo! Has acertado.") @map("success_message")
   hintMessage           String   @default("") @map("hint_message")
+  description           String?
+  icon                  String?
+  color                 String?
+  order                 Int      @default(0)
+  visible               Boolean  @default(true)
+  required              Boolean  @default(true)
+  orderItems            String?  @map("order_items")
   sopaWords             String?  @map("sopa_words")
   crossword1Clue        String?  @map("crossword1_clue")
   crossword1Word        String?  @map("crossword1_word")
@@ -219,6 +227,7 @@ model Course {
   programId    Int?             @map("program_id")
   program      TrainingProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
   activities   Activity[]
+  cohorts      Cohort[]         @relation("CourseCohorts")
   raps         String?          @default("[]")
   progresses   CourseProgress[]
   createdAt    DateTime         @default(now()) @map("created_at")

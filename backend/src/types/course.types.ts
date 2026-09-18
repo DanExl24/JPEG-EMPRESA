@@ -38,6 +38,7 @@ export interface CreateCourseDto {
   programId?: number | null
   structure?: CourseStructure | null
   raps?: string[] | string
+  cohortIds?: number[]
 }
 
 export interface UpdateCourseDto extends Partial<CreateCourseDto> {}

@@ -9,6 +9,7 @@ import {
   reviewSubmission,
   createActivity,
   updateActivity,
+  reorderActivities,
   deleteActivity
 } from '../controllers/activity.controller.js'
 import { authenticate, optionalAuthenticate } from '../lib/middleware.js'
@@ -24,6 +25,7 @@ router.post('/:id/submit', optionalAuthenticate, submitActivity)
 router.get('/:id/submissions/export-csv', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), exportSubmissionsCsv)
 router.get('/:id/submissions', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), getActivitySubmissions)
 router.patch('/:id/submissions/:apprenticeId/review', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), reviewSubmission)
+router.put('/reorder', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), reorderActivities)
 router.put('/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateActivity)
 router.delete('/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteActivity)
 

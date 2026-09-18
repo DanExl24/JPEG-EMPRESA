@@ -280,13 +280,8 @@ const DEFAULT_ACTIVITIES = [
 ]
 
 export async function ensureDefaultActivities(): Promise<void> {
-  const count = await prisma.activity.count()
-  if (count === 0) {
-    for (const act of DEFAULT_ACTIVITIES) {
-      await prisma.activity.create({ data: act })
-    }
-    console.log('Actividades de prueba sembradas.')
-  }
+  // Ya no se siembran actividades de prueba: toda actividad es creada por
+  // ADMIN/INSTRUCTOR desde el editor y puede editarse/eliminarse libremente.
 
   // Sincronizar columna has_student_submissions con la realidad de activity_submissions
   try {
@@ -299,6 +294,29 @@ export async function ensureDefaultActivities(): Promise<void> {
     `
   } catch (e) {
     console.error('Error sincronizando has_student_submissions:', e)
+  }
+}
+
+/**
+ * Elimina las actividades semilla heredadas de cursos que ya no existen.
+ * Solo borra registros sin entregas para no perder evidencia de aprendices.
+ */
+export async function cleanupLegacySeedActivities(): Promise<void> {
+  try {
+    const legacyTitles = DEFAULT_ACTIVITIES.map(activity => activity.title)
+    const legacy = await prisma.activity.findMany({
+      where: { title: { in: legacyTitles } },
+      select: { id: true, _count: { select: { submissions: true } } }
+    })
+    const deletableIds = legacy
+      .filter(activity => activity._count.submissions === 0)
+      .map(activity => activity.id)
+    if (deletableIds.length > 0) {
+      await prisma.activity.deleteMany({ where: { id: { in: deletableIds } } })
+      console.log(`[Bootstrap] ${deletableIds.length} actividad(es) semilla heredada(s) eliminada(s).`)
+    }
+  } catch (e) {
+    console.warn('[Bootstrap] Could not cleanup legacy seed activities:', e)
   }
 }
 
@@ -479,67 +497,16 @@ export async function ensureDefaultCourses(): Promise<void> {
     }
   ]
 
-  const count = await prisma.course.count()
-  if (count === 0) {
-    await prisma.course.createMany({ data: DEFAULT_COURSES })
-    console.log('Cursos clínicos iniciales (4 módulos de Miro) sembrados con éxito.')
-    return
-  }
-
-  // Sincronizar los 4 cursos oficiales para asegurar que tengan sus RAPs actualizados
+  // Los cursos ya no se siembran ni renombran automáticamente: la gestión es
+  // exclusiva de ADMIN/INSTRUCTOR desde el editor de estructura.
   for (const target of DEFAULT_COURSES) {
     const existing = await prisma.course.findUnique({ where: { slug: target.slug } })
-    if (existing) {
+    if (existing && (!existing.raps || existing.raps === '[]')) {
       await prisma.course.update({
         where: { id: existing.id },
-        data: target
+        data: { raps: target.raps }
       })
     }
-  }
-
-  // Si existen los cursos genéricos antiguos, actualizarlos a los 4 módulos oficiales de Miro
-  const oldCourses = await prisma.course.findMany({
-    where: {
-      slug: {
-        in: [
-          'fundamentos-enfermeria',
-          'cardiologia-clinica',
-          'farmacologia-aplicada',
-          'comunicacion-salud',
-          'urgencias-emergencias',
-          'pediatria-neonatologia'
-        ]
-      }
-    },
-    orderBy: { id: 'asc' }
-  })
-
-  if (oldCourses.length > 0) {
-    for (let i = 0; i < DEFAULT_COURSES.length; i++) {
-      const target = DEFAULT_COURSES[i]
-      if (oldCourses[i]) {
-        await prisma.course.update({
-          where: { id: oldCourses[i].id },
-          data: target
-        })
-      } else {
-        await prisma.course.upsert({
-          where: { slug: target.slug },
-          update: target,
-          create: target
-        })
-      }
-    }
-    // Eliminar los cursos sobrantes genéricos (5 y 6) si no tienen progreso
-    for (let j = DEFAULT_COURSES.length; j < oldCourses.length; j++) {
-      const surplus = oldCourses[j]
-      try {
-        await prisma.course.delete({ where: { id: surplus.id } })
-      } catch {
-        // Ignorar si tiene restricciones
-      }
-    }
-    console.log('Cursos sincronizados exitosamente con la estructura oficial de 4 módulos.')
   }
 }
 

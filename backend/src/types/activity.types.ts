@@ -18,6 +18,13 @@ export interface CreateActivityDto {
   attemptsLimit?: string
   successMessage?: string
   hintMessage?: string
+  description?: string
+  icon?: string
+  color?: string
+  order?: number
+  visible?: boolean
+  required?: boolean
+  orderItems?: string
   sopaWords?: string
   crossword1Clue?: string
   crossword1Word?: string

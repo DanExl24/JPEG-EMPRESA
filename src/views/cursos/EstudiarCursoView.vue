@@ -214,8 +214,120 @@
           </p>
         </div>
 
+        <!-- Inicio editable (ítems de la estructura del curso) -->
+        <div v-if="phaseHasItems('inicio')" class="space-y-6">
+          <div
+            v-for="entry in phaseEntries('inicio')"
+            :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
+            class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3"
+          >
+            <template v-if="entry.kind === 'item'">
+              <div v-if="entry.item.title || entry.item.description" class="space-y-1">
+                <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                  <span class="material-symbols-outlined text-xl" :style="entry.item.color ? `color:${entry.item.color}` : 'color:#006688'">{{ entry.item.icon || 'widgets' }}</span>
+                  {{ entry.item.title || 'Contenido de la fase' }}
+                </h4>
+                <p v-if="entry.item.description" class="text-xs text-gray-600">{{ entry.item.description }}</p>
+              </div>
+
+              <p v-if="entry.item.type === 'welcome' || entry.item.type === 'video'" class="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
+                {{ itemPayload(entry.item, 'text') || 'Contenido en preparación.' }}
+              </p>
+
+              <div v-if="entry.item.type === 'objectives'" class="space-y-1.5">
+                <p v-for="(line, lineIdx) in itemLines(entry.item)" :key="lineIdx" class="text-xs text-gray-700 flex items-start gap-2">
+                  <span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span>
+                  <span>{{ line }}</span>
+                </p>
+              </div>
+
+              <div v-if="entry.item.type === 'wordorder'" class="space-y-3">
+                <div class="min-h-[52px] flex flex-wrap gap-2 items-center bg-white border-2 border-dashed rounded-2xl p-3" :class="itemState(entry.item).done ? 'border-green-400 bg-green-50/60' : 'border-gray-200'">
+                  <template v-if="itemState(entry.item).placed.length">
+                    <span v-for="(word, wordIdx) in itemState(entry.item).placed" :key="wordIdx" class="px-3 py-1.5 bg-green-100 text-green-800 border border-green-200 rounded-xl text-xs font-bold">{{ word }}</span>
+                  </template>
+                  <span v-else class="text-[11px] text-gray-400 italic px-1">Toca las palabras en orden…</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="(word, wordIdx) in structuredWordPool(entry.item)"
+                    :key="wordIdx + '-' + word"
+                    @click="pickStructuredWord(word, entry.item)"
+                    type="button"
+                    class="px-3 py-1.5 bg-white border border-gray-200 hover:border-[#006688] hover:text-[#006688] rounded-xl text-xs font-bold transition-all"
+                  >{{ word }}</button>
+                </div>
+                <p v-if="itemState(entry.item).error" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">{{ itemState(entry.item).error }}</p>
+              </div>
+
+              <div v-if="entry.item.type === 'warmup_drag'" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tarjetas</span>
+                    <div class="flex flex-wrap gap-3 min-h-[90px] p-3 bg-white rounded-2xl border border-gray-100">
+                      <div
+                        v-for="(card, cardIdx) in dragCards(entry.item)"
+                        :key="cardIdx"
+                        v-show="!card.matched"
+                        @pointerdown="startItemDrag($event, entry.item, cardIdx)"
+                        :style="`transform: translate(${card.x}px, ${card.y}px);`"
+                        :class="`select-none cursor-grab active:cursor-grabbing bg-white border border-gray-200 shadow-sm px-3 py-2 rounded-xl text-xs font-bold text-gray-700 touch-none transition-shadow ${card.isResetting ? 'card-reset' : ''}`"
+                      >
+                        {{ card.left }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Destinos</span>
+                    <div class="space-y-2">
+                      <div
+                        v-for="(card, cardIdx) in dragCards(entry.item)"
+                        :key="'slot-' + cardIdx"
+                        :data-item-slot="entry.item.id"
+                        :data-item-slot-right="card.right"
+                        class="border-2 border-dashed rounded-2xl p-3 text-center text-xs font-bold transition-all"
+                        :class="card.matched ? 'border-green-400 bg-green-50/70 text-green-700' : 'border-gray-200 bg-white/70 text-gray-700'"
+                      >
+                        {{ card.right }}
+                        <span v-if="card.matched" class="material-symbols-outlined text-sm align-middle ml-1">check</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p v-if="itemState(entry.item).error" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">{{ itemState(entry.item).error }}</p>
+              </div>
+
+              <button
+                v-if="!itemState(entry.item).done && (entry.item.type === 'welcome' || entry.item.type === 'video' || entry.item.type === 'objectives')"
+                @click="completeStructuredItem(entry.item)"
+                type="button"
+                class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all"
+              >
+                {{ entry.item.type === 'objectives' ? 'He leído los objetivos' : 'Marcar como visto' }}
+              </button>
+
+              <p v-if="itemState(entry.item).done" class="text-xs font-bold text-green-600 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span> Completado
+              </p>
+            </template>
+
+            <router-link v-else :to="`/dashboard/actividades/${entry.activity.id}`" class="block">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base" :style="entry.activity.color ? `color:${entry.activity.color}` : 'color:#006688'">{{ entry.activity.icon || 'extension' }}</span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-800 truncate">{{ entry.activity.title }}</p>
+                    <p class="text-[10px] text-gray-400 truncate">{{ entry.activity.description || 'Actividad de juego' }} · {{ entry.activity.points }} pts</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </div>
+            </router-link>
+          </div>
+        </div>
+
         <!-- Inicio para cursos personalizados -->
-        <div v-if="isCustomCourse" class="space-y-6">
+        <div v-else-if="isCustomCourse" class="space-y-6">
           <div class="bg-gradient-to-tr from-slate-900 via-slate-800 to-cyan-950 rounded-2xl p-6 text-white space-y-3">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-2xl text-cyan-300">waving_hand</span>
@@ -283,7 +395,7 @@
         </div>
 
         <!-- Welcome Video Section -->
-        <div v-if="isOfficialModule" class="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div v-if="showsOfficialPhase('inicio')" class="grid grid-cols-1 md:grid-cols-5 gap-6">
           <div class="md:col-span-3 space-y-4">
             <div class="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video shadow-md">
               <video
@@ -396,7 +508,7 @@
         </div>
 
         <!-- Warm-up Game Section -->
-        <div v-if="isOfficialModule" ref="warmupSectionRef" class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('inicio')" ref="warmupSectionRef" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
             <h4 class="font-bold text-gray-800 text-sm">
@@ -560,7 +672,7 @@
         </div>
 
         <!-- Actividades asignadas a esta fase (módulos oficiales) -->
-        <div v-if="isOfficialModule && activitiesForPhase('inicio').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('inicio') && activitiesForPhase('inicio').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -642,8 +754,133 @@
           </p>
         </div>
 
+        <!-- Estudio editable (ítems de la estructura del curso) -->
+        <div v-if="phaseHasItems('estudio')" class="space-y-6">
+          <div
+            v-for="entry in phaseEntries('estudio')"
+            :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
+            class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3"
+          >
+            <template v-if="entry.kind === 'item'">
+              <div v-if="entry.item.title || entry.item.description" class="space-y-1">
+                <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                  <span class="material-symbols-outlined text-xl" :style="entry.item.color ? `color:${entry.item.color}` : 'color:#006688'">{{ entry.item.icon || 'widgets' }}</span>
+                  {{ entry.item.title || 'Contenido de la fase' }}
+                </h4>
+                <p v-if="entry.item.description" class="text-xs text-gray-600">{{ entry.item.description }}</p>
+              </div>
+
+              <div v-if="entry.item.type === 'grammar'" class="space-y-3">
+                <div v-if="parseStructuredGrammar(entry.item).length" class="overflow-x-auto rounded-2xl border border-gray-100">
+                  <table class="w-full text-xs">
+                    <thead>
+                      <tr class="bg-[#006688] text-white">
+                        <th class="px-4 py-3 text-left font-black">Persona</th>
+                        <th class="px-4 py-3 text-left font-black">Acción</th>
+                        <th class="px-4 py-3 text-left font-black">Detalle</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, rowIdx) in parseStructuredGrammar(entry.item)" :key="rowIdx" class="border-b border-gray-100 last:border-0 bg-white">
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-blue-100 text-blue-700 font-black">{{ row.subject }}</span></td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-orange-100 text-orange-700 font-black">{{ row.verb }}</span></td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-green-100 text-green-700 font-bold">{{ row.complement }}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p v-else class="text-sm font-bold text-gray-800 bg-white border border-gray-100 rounded-2xl p-4 whitespace-pre-line">{{ itemPayload(entry.item, 'lines') }}</p>
+                <button
+                  v-if="!itemState(entry.item).done"
+                  @click="completeStructuredItem(entry.item)"
+                  type="button"
+                  class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all"
+                >
+                  Marcar explicación como vista
+                </button>
+              </div>
+
+              <div v-if="['vocabulary', 'listening', 'spelling'].includes(entry.item.type)" class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold text-gray-500">Escuchados: {{ itemState(entry.item).heard.length }} / {{ itemCsv(entry.item).length }}</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    v-for="word in itemCsv(entry.item)"
+                    :key="word"
+                    @click="playStructuredWord(word, entry.item)"
+                    class="flex items-center justify-between gap-2 px-3 py-2.5 bg-white border rounded-xl text-xs font-bold transition-all"
+                    :class="itemState(entry.item).heard.includes(word) ? 'border-green-300 text-green-700' : 'border-gray-200 text-gray-700 hover:border-[#006688]'"
+                  >
+                    <span>{{ word }}</span>
+                    <span class="material-symbols-outlined text-sm">{{ itemState(entry.item).heard.includes(word) ? 'check_circle' : 'volume_up' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="entry.item.type === 'chat'" class="space-y-3">
+                <div class="space-y-2">
+                  <div
+                    v-for="(line, lineIdx) in itemLines(entry.item).slice(0, itemState(entry.item).step + 1)"
+                    :key="lineIdx"
+                    class="bg-white border border-gray-100 rounded-2xl p-3 text-xs space-y-0.5"
+                  >
+                    <p class="font-black text-[#006688]">{{ parseChatLine(line).speaker }}</p>
+                    <p class="font-semibold text-gray-800">{{ parseChatLine(line).english }}</p>
+                    <p class="text-gray-400 italic">{{ parseChatLine(line).spanish }}</p>
+                  </div>
+                </div>
+                <button
+                  v-if="itemLines(entry.item).length && itemState(entry.item).step < itemLines(entry.item).length - 1"
+                  @click="nextStructuredChat(entry.item)"
+                  type="button"
+                  class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all"
+                >
+                  Siguiente mensaje ({{ itemState(entry.item).step + 1 }} / {{ itemLines(entry.item).length }})
+                </button>
+              </div>
+
+              <p v-if="itemState(entry.item).done" class="text-xs font-bold text-green-600 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span> Completado
+              </p>
+            </template>
+
+            <router-link v-else :to="`/dashboard/actividades/${entry.activity.id}`" class="block">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base" :style="entry.activity.color ? `color:${entry.activity.color}` : 'color:#006688'">{{ entry.activity.icon || 'extension' }}</span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-800 truncate">{{ entry.activity.title }}</p>
+                    <p class="text-[10px] text-gray-400 truncate">{{ entry.activity.description || 'Actividad de juego' }} · {{ entry.activity.points }} pts</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </div>
+            </router-link>
+          </div>
+
+          <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+            <button @click="goToPhase('inicio')" class="flex items-center gap-1 px-4 py-2.5 text-xs border border-gray-200 hover:bg-gray-50 font-bold rounded-xl transition-all">
+              <span class="material-symbols-outlined text-sm">arrow_back</span>
+              Volver a Inicio
+            </button>
+            <button
+              @click="validateStudyPhase"
+              :disabled="!isStudyCompleted"
+              :class="`flex items-center gap-1 px-5 py-3 text-xs font-black rounded-xl shadow transition-all ${
+                isStudyCompleted
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`"
+            >
+              Siguiente Fase: Práctica
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Estudio para cursos personalizados -->
-        <template v-if="isCustomCourse">
+        <template v-else-if="isCustomCourse">
           <div class="space-y-6">
             <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
               <div class="flex items-center gap-2">
@@ -1424,7 +1661,7 @@
         </div>
         </template>
 
-        <div v-if="isOfficialModule && activitiesForPhase('estudio').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('estudio') && activitiesForPhase('estudio').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -1464,8 +1701,119 @@
           </p>
         </div>
 
+        <!-- Práctica editable (ítems de la estructura del curso) -->
+        <div v-if="phaseHasItems('practica')" class="space-y-6">
+          <div
+            v-for="entry in phaseEntries('practica')"
+            :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
+            class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3"
+          >
+            <template v-if="entry.kind === 'item'">
+              <div v-if="entry.item.title || entry.item.description" class="space-y-1">
+                <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                  <span class="material-symbols-outlined text-xl" :style="entry.item.color ? `color:${entry.item.color}` : 'color:#006688'">{{ entry.item.icon || 'widgets' }}</span>
+                  {{ entry.item.title || 'Contenido de la fase' }}
+                </h4>
+                <p v-if="entry.item.description" class="text-xs text-gray-600">{{ entry.item.description }}</p>
+              </div>
+
+              <div v-if="entry.item.type === 'fillblank'" class="space-y-3">
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <input
+                    v-model="itemState(entry.item).input"
+                    @keyup.enter="checkStructuredFill(entry.item)"
+                    type="text"
+                    class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]"
+                    placeholder="Escribe la respuesta"
+                  />
+                  <button @click="checkStructuredFill(entry.item)" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all">Comprobar</button>
+                </div>
+                <p v-if="itemState(entry.item).error" class="text-xs font-bold text-red-600">{{ itemState(entry.item).error }}</p>
+              </div>
+
+              <div v-if="entry.item.type === 'voice' || entry.item.type === 'profile'" class="space-y-3">
+                <p class="text-sm font-bold text-gray-800 bg-white border border-gray-100 rounded-2xl p-4">{{ itemPayload(entry.item, 'target') }}</p>
+                <div class="flex flex-wrap gap-2">
+                  <button @click="speakEnglish(itemPayload(entry.item, 'target'))" class="px-3 py-2 bg-white border border-gray-200 hover:border-[#006688] text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">volume_up</span> Escuchar
+                  </button>
+                  <button
+                    v-if="!itemState(entry.item).done"
+                    @click="completeStructuredItem(entry.item)"
+                    class="px-3 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all"
+                  >
+                    Marcar como practicado
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="entry.item.type === 'match'" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="space-y-2">
+                    <button
+                      v-for="pair in parsedStructuredPairs(entry.item)"
+                      :key="'match-l-' + pair.term"
+                      @click="selectStructuredMatch(entry.item, 'left', pair.term)"
+                      class="w-full px-3 py-2.5 bg-white border rounded-xl text-xs font-bold text-left transition-all"
+                      :class="itemState(entry.item).answers?.[pair.term] ? 'border-green-300 text-green-700' : (itemState(entry.item).matchLeft === pair.term ? 'border-[#006688] text-[#006688]' : 'border-gray-200 text-gray-700 hover:border-[#006688]')"
+                    >
+                      {{ pair.term }}
+                    </button>
+                  </div>
+                  <div class="space-y-2">
+                    <button
+                      v-for="pair in parsedStructuredPairs(entry.item)"
+                      :key="'match-r-' + pair.meaning"
+                      @click="selectStructuredMatch(entry.item, 'right', pair.meaning)"
+                      class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-left text-gray-700 transition-all hover:border-[#006688]"
+                    >
+                      {{ pair.meaning }}
+                    </button>
+                  </div>
+                </div>
+                <p v-if="itemState(entry.item).error" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">{{ itemState(entry.item).error }}</p>
+              </div>
+
+              <div v-if="entry.item.type === 'quiz'" class="space-y-3">
+                <p class="text-sm font-bold text-gray-800">{{ itemPayload(entry.item, 'question') }}</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    v-for="option in [itemPayload(entry.item, 'correct'), itemPayload(entry.item, 'incorrect')].filter(Boolean)"
+                    :key="option"
+                    @click="answerStructuredQuiz(entry.item, option)"
+                    :class="`px-4 py-3 rounded-xl text-xs font-bold border transition-all text-left ${
+                      itemState(entry.item).choice === option
+                        ? 'bg-[#006688] text-white border-[#006688]'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]'
+                    }`"
+                  >
+                    {{ option }}
+                  </button>
+                </div>
+              </div>
+
+              <p v-if="itemState(entry.item).done" class="text-xs font-bold text-green-600 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span> Completado
+              </p>
+            </template>
+
+            <router-link v-else :to="`/dashboard/actividades/${entry.activity.id}`" class="block">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base" :style="entry.activity.color ? `color:${entry.activity.color}` : 'color:#006688'">{{ entry.activity.icon || 'extension' }}</span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-800 truncate">{{ entry.activity.title }}</p>
+                    <p class="text-[10px] text-gray-400 truncate">{{ entry.activity.description || 'Actividad de juego' }} · {{ entry.activity.points }} pts</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </div>
+            </router-link>
+          </div>
+        </div>
+
         <!-- Práctica para cursos personalizados -->
-        <div v-if="isCustomCourse" class="space-y-6">
+        <div v-else-if="isCustomCourse" class="space-y-6">
           <div v-if="customVocabulary.length" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -1550,7 +1898,7 @@
         </div>
 
         <!-- MODULE 4 PRACTICE 1: Discharge Summary Form with Audio -->
-        <div v-if="isOfficialModule && moduleNumber === 4" class="space-y-4">
+        <div v-if="showsOfficialPhase('practica') && moduleNumber === 4" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">description</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Formato Digital "Discharge Summary"</h4>
@@ -1638,7 +1986,7 @@
         </div>
 
         <!-- MODULE 4 PRACTICE 2: Checklist Analysis with Dropdowns -->
-        <div v-if="isOfficialModule && moduleNumber === 4" class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('practica') && moduleNumber === 4" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">fact_check</span>
             <h4 class="font-bold text-gray-800 text-sm">2. Práctica Guiada 2 — Lectura y Análisis de Lista de Verificación (Checklist)</h4>
@@ -1724,7 +2072,7 @@
         </div>
 
         <!-- MODULE 3 PRACTICE 1 -->
-        <div v-else-if="isOfficialModule && moduleNumber === 3" class="space-y-4">
+        <div v-else-if="showsOfficialPhase('practica') && moduleNumber === 3" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">checklist</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Nursing Checklist Digital</h4>
@@ -1791,7 +2139,7 @@
         </div>
 
         <!-- MODULE 2 PRACTICE 1 -->
-        <div v-else-if="isOfficialModule && moduleNumber === 2" class="space-y-4">
+        <div v-else-if="showsOfficialPhase('practica') && moduleNumber === 2" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">clinical_notes</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Completar Notas de Enfermería</h4>
@@ -1814,7 +2162,7 @@
         </div>
 
         <!-- MODULE 1 PRACTICE 1 & 2 -->
-        <div v-else-if="isOfficialModule" class="space-y-6">
+        <div v-else-if="showsOfficialPhase('practica')" class="space-y-6">
 
           <!-- 3.1 — Interactive ID Card (Subject + Verb + Complement) -->
           <div class="space-y-4">
@@ -2054,7 +2402,7 @@
           </div>
         </div>
 
-        <div v-if="isOfficialModule && activitiesForPhase('practica').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('practica') && activitiesForPhase('practica').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -2120,8 +2468,97 @@
           </p>
         </div>
 
+        <!-- Evaluación editable (ítems de la estructura del curso) -->
+        <div v-if="phaseHasItems('evaluacion')" class="space-y-6">
+          <div
+            v-for="entry in phaseEntries('evaluacion')"
+            :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
+            class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3"
+          >
+            <template v-if="entry.kind === 'item'">
+              <div v-if="entry.item.title || entry.item.description" class="space-y-1">
+                <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                  <span class="material-symbols-outlined text-xl" :style="entry.item.color ? `color:${entry.item.color}` : 'color:#006688'">{{ entry.item.icon || 'widgets' }}</span>
+                  {{ entry.item.title || 'Contenido de la fase' }}
+                </h4>
+                <p v-if="entry.item.description" class="text-xs text-gray-600">{{ entry.item.description }}</p>
+              </div>
+
+              <div v-if="entry.item.type === 'quiz'" class="space-y-3">
+                <p class="text-sm font-bold text-gray-800">{{ itemPayload(entry.item, 'question') }}</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    v-for="option in [itemPayload(entry.item, 'correct'), itemPayload(entry.item, 'incorrect')].filter(Boolean)"
+                    :key="option"
+                    @click="answerStructuredQuiz(entry.item, option)"
+                    :class="`px-4 py-3 rounded-xl text-xs font-bold border transition-all text-left ${
+                      itemState(entry.item).choice === option
+                        ? 'bg-[#006688] text-white border-[#006688]'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]'
+                    }`"
+                  >
+                    {{ option }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="entry.item.type === 'preguntas'" class="space-y-4">
+                <div v-for="question in questionEntries(entry.item)" :key="question.index" class="bg-white border border-gray-100 rounded-2xl p-4 space-y-2">
+                  <p class="text-xs font-bold text-gray-800">{{ question.index + 1 }}. {{ question.question }}</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      v-for="option in [question.correct, question.incorrect].filter(Boolean)"
+                      :key="option"
+                      @click="answerStructuredQuestion(entry.item, question.index, question.correct, option)"
+                      :class="`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-left ${
+                        itemState(entry.item).answers?.[question.index] === option
+                          ? 'bg-[#006688] text-white border-[#006688]'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]'
+                      }`"
+                    >
+                      {{ option }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <p v-if="itemState(entry.item).done" class="text-xs font-bold text-green-600 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span> Completado
+              </p>
+            </template>
+
+            <router-link v-else :to="`/dashboard/actividades/${entry.activity.id}`" class="block">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base" :style="entry.activity.color ? `color:${entry.activity.color}` : 'color:#006688'">{{ entry.activity.icon || 'extension' }}</span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-800 truncate">{{ entry.activity.title }}</p>
+                    <p class="text-[10px] text-gray-400 truncate">{{ entry.activity.description || 'Actividad de juego' }} · {{ entry.activity.points }} pts</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </div>
+            </router-link>
+          </div>
+
+          <div v-if="phaseProgress.evaluacion === 100" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-4">
+            <div class="flex justify-center">
+              <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-inner">
+                <span class="material-symbols-outlined text-3xl font-bold">celebration</span>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <h4 class="text-xl font-black text-green-800">🎉 ¡Has completado el {{ currentCourseTitle }}!</h4>
+              <p class="text-xs text-green-700">Evaluación final completada con éxito. ¡Felicitaciones por tu avance profesional!</p>
+            </div>
+            <router-link to="/dashboard/cursos" class="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
+              Volver a la Lista de Cursos
+            </router-link>
+          </div>
+        </div>
+
         <!-- Evaluación para cursos personalizados -->
-        <div v-if="isCustomCourse" class="space-y-6">
+        <div v-else-if="isCustomCourse" class="space-y-6">
           <div v-if="!customExamPassed" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-xl text-[#006688]">quiz</span>
@@ -2200,7 +2637,7 @@
         </div>
 
         <!-- Badge Success Notification -->
-        <div v-if="isOfficialModule && examPassed && showBadgeAward" class="bg-yellow-50 border-2 border-yellow-300 rounded-3xl p-6 text-center space-y-4 shadow-md animate-bounce">
+        <div v-if="showsOfficialPhase('evaluacion') && examPassed && showBadgeAward" class="bg-yellow-50 border-2 border-yellow-300 rounded-3xl p-6 text-center space-y-4 shadow-md animate-bounce">
           <div class="flex justify-center">
             <div class="w-20 h-20 rounded-full bg-yellow-400 flex items-center justify-center shadow-lg relative border-4 border-white">
               <span class="material-symbols-outlined text-white text-5xl">emoji_events</span>
@@ -2235,7 +2672,7 @@
         </div>
 
         <!-- Exam Questions Form -->
-        <div v-if="isOfficialModule && !examPassed" class="space-y-6">
+        <div v-if="showsOfficialPhase('evaluacion') && !examPassed" class="space-y-6">
           <p class="text-xs text-gray-600">
             Deberás responder correctamente al menos <strong>5 de las 6 preguntas</strong> (75%) para aprobar el {{ currentCourseBadge }}.
           </p>
@@ -2288,7 +2725,7 @@
         </div>
 
         <!-- Final Passed Screen -->
-        <div v-if="isOfficialModule && examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
+        <div v-if="showsOfficialPhase('evaluacion') && examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
           <div class="flex justify-center">
             <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-inner">
               <span class="material-symbols-outlined text-3xl font-bold">celebration</span>
@@ -2357,7 +2794,7 @@
           </router-link>
         </div>
 
-        <div v-if="isOfficialModule && activitiesForPhase('evaluacion').length" class="space-y-3 pt-4 border-t border-gray-100">
+        <div v-if="showsOfficialPhase('evaluacion') && activitiesForPhase('evaluacion').length" class="space-y-3 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
             <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
@@ -3059,6 +3496,324 @@ function activitiesForPhase(phaseId) {
       : activity.course === courseDetails.value?.title
     return belongsToCourse && activity.phase === PHASE_ACTIVITY_LABELS[phaseId]
   })
+}
+
+// -----------------------------------------------------------------
+// Contenido estructurado editable (structure v2 / v1 migrado)
+// -----------------------------------------------------------------
+function emptyStructuredPayload() {
+  return { text: '', lines: '', csv: '', answer: '', target: '', question: '', correct: '', incorrect: '' }
+}
+
+function convertStructureToItems(structure) {
+  const result = { inicio: [], estudio: [], practica: [], evaluacion: [] }
+  if (!structure) return result
+  if (structure.version === 2 || Array.isArray(structure.f1?.items)) {
+    const tag = (phase, items) => (items || []).map(item => ({ ...item, phase }))
+    result.inicio = tag('inicio', structure.f1?.items)
+    result.estudio = tag('estudio', structure.f2?.items)
+    result.practica = tag('practica', structure.f3?.items)
+    result.evaluacion = tag('evaluacion', structure.f4?.items)
+    return result
+  }
+  let counter = 0
+  const make = (phase, type, title, payload, options = {}) => {
+    counter++
+    result[phase].push({
+      id: `legacy-${phase}-${counter}`,
+      type,
+      title,
+      description: options.description || '',
+      icon: options.icon || '',
+      color: '',
+      visible: true,
+      required: options.required !== false,
+      order: result[phase].length,
+      payload: { ...emptyStructuredPayload(), ...payload }
+    })
+  }
+  if (structure.f1?.welcome) make('inicio', 'welcome', 'Bienvenida', { text: structure.f1.welcome }, { icon: 'waving_hand', required: false })
+  const words = toList(structure.f1?.gameWords)
+  if (words.length > 1) make('inicio', 'wordorder', 'Calentamiento', { csv: words.join(', ') }, { icon: 'sports_esports', description: 'Ordena las palabras para avanzar' })
+  if (structure.f2?.grammar) make('estudio', 'grammar', 'Explicación', { lines: structure.f2.grammar }, { icon: 'menu_book' })
+  const vocabulary = toList(structure.f2?.vocabulary)
+  if (vocabulary.length) make('estudio', 'vocabulary', 'Vocabulario', { csv: vocabulary.join(', ') }, { icon: 'style', description: 'Escucha y repite cada palabra' })
+  if (structure.f3?.fillBlank) make('practica', 'fillblank', 'Completar la respuesta', { answer: structure.f3.fillBlank }, { icon: 'edit_note' })
+  if (structure.f3?.voiceTarget) make('practica', 'voice', 'Práctica de voz', { target: structure.f3.voiceTarget }, { icon: 'mic' })
+  if (structure.f4?.question) make('evaluacion', 'quiz', 'Evaluación final', { question: structure.f4.question, correct: structure.f4.correct || '', incorrect: structure.f4.incorrect || '' }, { icon: 'quiz' })
+  return result
+}
+
+const structureItems = computed(() => convertStructureToItems(courseDetails.value?.structure))
+const structuredItemCount = computed(() => Object.values(structureItems.value).reduce((total, list) => total + list.length, 0))
+const usesStructuredContent = computed(() => courseLoaded.value && structuredItemCount.value > 0)
+const showsOfficialContent = computed(() => isOfficialModule.value && !usesStructuredContent.value)
+
+function phaseHasItems(phaseId) {
+  return itemsForPhase(phaseId).length > 0
+}
+
+function showsOfficialPhase(phaseId) {
+  return isOfficialModule.value && !phaseHasItems(phaseId)
+}
+
+function itemsForPhase(phaseId) {
+  return [...(structureItems.value[phaseId] || [])]
+    .filter(item => item.visible !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+}
+
+function activitiesForPhaseOrdered(phaseId) {
+  return activitiesForPhase(phaseId)
+    .filter(activity => activity.visible !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0) || a.id - b.id)
+}
+
+function phaseEntries(phaseId) {
+  const items = itemsForPhase(phaseId).map(item => ({ kind: 'item', order: item.order || 0, item }))
+  const acts = activitiesForPhaseOrdered(phaseId).map(activity => ({ kind: 'activity', order: activity.order || 0, activity }))
+  return [...items, ...acts].sort((a, b) => (a.order || 0) - (b.order || 0))
+}
+
+const customItemState = ref({})
+function itemState(item) {
+  if (!customItemState.value[item.id]) {
+    customItemState.value[item.id] = {
+      done: false,
+      choice: null,
+      input: '',
+      heard: [],
+      placed: [],
+      step: 0,
+      error: null,
+      pool: null,
+      matchLeft: null,
+      answers: {},
+      dragCards: null
+    }
+  }
+  return customItemState.value[item.id]
+}
+
+function itemPayload(item, key, fallback = '') {
+  return item?.payload?.[key] ?? fallback
+}
+
+function itemCsv(item, key = 'csv') {
+  return toList(item?.payload?.[key])
+}
+
+function itemLines(item, key = 'lines') {
+  return String(item?.payload?.[key] || '').split('\n').map(line => line.trim()).filter(Boolean)
+}
+
+function completeStructuredItem(item) {
+  const state = itemState(item)
+  if (state.done) return
+  state.done = true
+  checkStructuredPhaseCompletion(item.phase)
+}
+
+function checkStructuredPhaseCompletion(phaseId) {
+  const requiredItems = itemsForPhase(phaseId).filter(item => item.required !== false)
+  if (requiredItems.length === 0) return
+  if (!requiredItems.every(item => itemState(item).done)) return
+  if (phaseProgress.value[phaseId] !== 100) {
+    phaseProgress.value[phaseId] = 100
+    saveProgress()
+  }
+}
+
+function structuredWordPool(item) {
+  const state = itemState(item)
+  if (!state.pool) state.pool = shuffleList(itemCsv(item))
+  return state.pool
+}
+
+function pickStructuredWord(word, item) {
+  const state = itemState(item)
+  if (state.done) return
+  const correct = itemCsv(item)
+  const expected = correct[state.placed.length]
+  if (word !== expected) {
+    state.error = `Orden incorrecto: "${word}" no es la siguiente palabra.`
+    window.setTimeout(() => { state.error = null }, 3000)
+    return
+  }
+  state.error = null
+  state.placed.push(word)
+  if (state.placed.length === correct.length) completeStructuredItem(item)
+}
+
+function playStructuredWord(word, item) {
+  speakEnglish(word)
+  const state = itemState(item)
+  if (!state.heard.includes(word)) state.heard.push(word)
+  const words = itemCsv(item)
+  if (words.length && words.every(entry => state.heard.includes(entry))) completeStructuredItem(item)
+}
+
+function checkStructuredFill(item) {
+  const state = itemState(item)
+  const answer = String(itemPayload(item, 'answer')).trim().toLowerCase()
+  if (state.input.trim().toLowerCase() === answer) {
+    state.error = null
+    completeStructuredItem(item)
+  } else {
+    state.error = 'Respuesta incorrecta. Inténtalo de nuevo.'
+  }
+}
+
+function answerStructuredQuiz(item, option) {
+  const state = itemState(item)
+  state.choice = option
+  if (option === String(itemPayload(item, 'correct'))) completeStructuredItem(item)
+}
+
+function answerStructuredQuestion(item, questionIndex, correct, option) {
+  const state = itemState(item)
+  state.answers = { ...(state.answers || {}), [questionIndex]: option }
+  const entries = itemLines(item).map((line, idx) => {
+    const parts = line.split('|').map(part => part.trim())
+    return { index: idx, correct: parts[1] || '' }
+  })
+  if (entries.every(entry => state.answers[entry.index] === entry.correct)) completeStructuredItem(item)
+}
+
+function nextStructuredChat(item) {
+  const state = itemState(item)
+  const messages = itemLines(item)
+  if (state.step < messages.length - 1) state.step += 1
+  if (state.step >= messages.length - 1) completeStructuredItem(item)
+}
+
+function selectStructuredMatch(item, side, value) {
+  const state = itemState(item)
+  if (side === 'left') {
+    state.matchLeft = value
+    return
+  }
+  const pairs = itemLines(item).map(line => {
+    const [term, meaning] = line.split('=').map(part => part.trim())
+    return { term, meaning }
+  })
+  const pair = pairs.find(entry => entry.term === state.matchLeft)
+  if (pair && pair.meaning === value) {
+    state.answers = { ...(state.answers || {}), [pair.term]: true }
+    state.matchLeft = null
+    if (pairs.every(entry => state.answers[entry.term])) completeStructuredItem(item)
+  } else {
+    state.error = 'Pareja incorrecta. Inténtalo de nuevo.'
+    state.matchLeft = null
+    window.setTimeout(() => { state.error = null }, 2500)
+  }
+}
+
+function parseStructuredGrammar(item) {
+  return itemLines(item).map(line => {
+    const parts = line.split('|').map(part => part.trim())
+    if (parts.length >= 2) return { subject: parts[0] || '', verb: parts[1] || '', complement: parts[2] || '' }
+    return null
+  }).filter(Boolean)
+}
+
+function questionEntries(item) {
+  return itemLines(item).map((line, index) => {
+    const parts = line.split('|').map(part => part.trim())
+    return { index, question: parts[0] || '', correct: parts[1] || '', incorrect: parts[2] || '' }
+  })
+}
+
+function parseChatLine(line) {
+  const [speakerPart, rest] = String(line || '').split(':')
+  const [englishPart, spanishPart] = String(rest || '').split('=')
+  return {
+    speaker: (speakerPart || 'Narrador').trim(),
+    english: (englishPart || '').trim(),
+    spanish: (spanishPart || '').trim()
+  }
+}
+
+function parsedStructuredPairs(item) {
+  return itemLines(item).map(line => {
+    const [term, meaning] = line.split('=').map(part => part.trim())
+    return { term, meaning }
+  }).filter(pair => pair.term && pair.meaning)
+}
+
+// Drag & drop genérico para ítems warmup_drag
+const activeItemDrag = ref(null)
+let itemDragPointer = { x: 0, y: 0, cardX: 0, cardY: 0 }
+
+function dragPairs(item) {
+  return itemLines(item).map(line => {
+    const [left, right] = line.split('=').map(part => part.trim())
+    return { left, right }
+  }).filter(pair => pair.left && pair.right)
+}
+
+function dragCards(item) {
+  const state = itemState(item)
+  if (!state.dragCards) {
+    state.dragCards = dragPairs(item).map(pair => ({ ...pair, x: 0, y: 0, matched: false, isResetting: false }))
+  }
+  return state.dragCards
+}
+
+function startItemDrag(event, item, index) {
+  const card = dragCards(item)[index]
+  if (!card || card.matched) return
+  activeItemDrag.value = { itemId: item.id, index }
+  itemDragPointer = { x: event.clientX, y: event.clientY, cardX: card.x, cardY: card.y }
+  window.addEventListener('pointermove', onItemDragMove)
+  window.addEventListener('pointerup', onItemDragEnd)
+}
+
+function onItemDragMove(event) {
+  if (!activeItemDrag.value) return
+  const item = Object.values(structureItems.value).flatMap(list => list).find(entry => entry.id === activeItemDrag.value.itemId)
+  if (!item) return
+  const card = dragCards(item)[activeItemDrag.value.index]
+  if (!card) return
+  card.x = itemDragPointer.cardX + (event.clientX - itemDragPointer.x)
+  card.y = itemDragPointer.cardY + (event.clientY - itemDragPointer.y)
+}
+
+function onItemDragEnd(event) {
+  if (!activeItemDrag.value) return
+  window.removeEventListener('pointermove', onItemDragMove)
+  window.removeEventListener('pointerup', onItemDragEnd)
+  const { itemId, index } = activeItemDrag.value
+  activeItemDrag.value = null
+  const item = Object.values(structureItems.value).flatMap(list => list).find(entry => entry.id === itemId)
+  if (!item) return
+  const card = dragCards(item)[index]
+  if (!card) return
+
+  let droppedRight = null
+  document.querySelectorAll(`[data-item-slot="${item.id}"]`).forEach(el => {
+    const rect = el.getBoundingClientRect()
+    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+      droppedRight = el.getAttribute('data-item-slot-right')
+    }
+  })
+
+  if (droppedRight && droppedRight === card.right) {
+    card.matched = true
+    card.x = 0
+    card.y = 0
+    itemState(item).error = null
+    if (dragCards(item).every(entry => entry.matched)) completeStructuredItem(item)
+  } else {
+    card.isResetting = true
+    card.x = 0
+    card.y = 0
+    window.setTimeout(() => { card.isResetting = false }, 350)
+    if (droppedRight) {
+      itemState(item).error = 'Esa no es la pareja correcta. La tarjeta volvió a su lugar.'
+      window.setTimeout(() => { itemState(item).error = null }, 2500)
+    }
+  }
 }
 
 async function fetchCourseActivities() {
@@ -4393,6 +5148,13 @@ async function loadProgress() {
     }
 
     // Cursos personalizados: reconstruir el estado visual desde el progreso de fases
+    if (usesStructuredContent.value) {
+      for (const phase of ['inicio', 'estudio', 'practica', 'evaluacion']) {
+        if (phaseProgress.value[phase] === 100) {
+          itemsForPhase(phase).forEach(item => { itemState(item).done = true })
+        }
+      }
+    }
     if (isCustomCourse.value) {
       if (phaseProgress.value.inicio === 100) {
         customWarmupPlaced.value = [...customWords.value]

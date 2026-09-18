@@ -300,6 +300,13 @@ export async function createActivity(req: Request<unknown, unknown, CreateActivi
       attemptsLimit,
       successMessage,
       hintMessage,
+      description,
+      icon,
+      color,
+      order,
+      visible,
+      required,
+      orderItems,
       sopaWords,
       crossword1Clue,
       crossword1Word,
@@ -331,6 +338,13 @@ export async function createActivity(req: Request<unknown, unknown, CreateActivi
         attemptsLimit: attemptsLimit || 'Ilimitados',
         successMessage: successMessage || '¡Excelente trabajo! Has acertado.',
         hintMessage: hintMessage || '',
+        description: description || null,
+        icon: icon || null,
+        color: color || null,
+        order: order !== undefined ? (parseInt(String(order)) || 0) : 0,
+        visible: visible !== undefined ? Boolean(visible) : true,
+        required: required !== undefined ? Boolean(required) : true,
+        orderItems: orderItems || null,
         sopaWords,
         crossword1Clue,
         crossword1Word,
@@ -355,6 +369,25 @@ export async function createActivity(req: Request<unknown, unknown, CreateActivi
   }
 }
 
+// PUT /api/activities/reorder
+export async function reorderActivities(req: Request, res: Response): Promise<void> {
+  try {
+    const items = Array.isArray(req.body?.items) ? req.body.items : []
+    let updated = 0
+    for (const item of items) {
+      const id = parseInt(String(item?.id))
+      const order = parseInt(String(item?.order))
+      if (isNaN(id) || isNaN(order)) continue
+      await prisma.activity.update({ where: { id }, data: { order } })
+      updated++
+    }
+    res.json({ message: 'Orden actualizado.', updated })
+  } catch (error) {
+    console.error('Error reordering activities:', error)
+    res.status(500).json({ message: 'Error interno del servidor al reordenar actividades.' })
+  }
+}
+
 // PUT /api/activities/:id
 export async function updateActivity(req: Request<{ id: string }, unknown, Partial<CreateActivityDto>>, res: Response): Promise<void> {
   try {
@@ -374,6 +407,13 @@ export async function updateActivity(req: Request<{ id: string }, unknown, Parti
       attemptsLimit,
       successMessage,
       hintMessage,
+      description,
+      icon,
+      color,
+      order,
+      visible,
+      required,
+      orderItems,
       sopaWords,
       crossword1Clue,
       crossword1Word,
@@ -402,36 +442,43 @@ export async function updateActivity(req: Request<{ id: string }, unknown, Parti
       where: { activityId: id }
     })
 
-    if (realSubmissions > 0) {
-      res.status(400).json({ message: 'Esta actividad ya fue resuelta por aprendices y no puede ser modificada.' })
-      return
-    }
+    // Con entregas existentes solo se permite ajustar presentación, orden y visibilidad
+    const contentUpdate = realSubmissions === 0
 
     const updated = await prisma.activity.update({
       where: { id },
       data: {
         title: title !== undefined ? title : existing.title,
-        course: course !== undefined ? course : existing.course,
-        courseId: courseId !== undefined ? (courseId ? parseInt(String(courseId)) : null) : existing.courseId,
-        phase: phase !== undefined ? phase : existing.phase,
-        template: template !== undefined ? template : existing.template,
-        points: points !== undefined ? (parseInt(String(points)) || 10) : existing.points,
-        attemptsLimit: attemptsLimit !== undefined ? attemptsLimit : existing.attemptsLimit,
-        successMessage: successMessage !== undefined ? successMessage : existing.successMessage,
-        hintMessage: hintMessage !== undefined ? hintMessage : existing.hintMessage,
-        sopaWords,
-        crossword1Clue,
-        crossword1Word,
-        quizQuestion,
-        quizCorrect,
-        quizIncorrect,
-        matchTerm,
-        matchMeaning,
-        listeningPhrase,
-        pronouncePhrase,
-        fillblankSentence,
-        fillblankAnswer,
-        learningOutcomeId: learningOutcomeId !== undefined ? (learningOutcomeId ? parseInt(String(learningOutcomeId)) : null) : existing.learningOutcomeId
+        description: description !== undefined ? description : existing.description,
+        icon: icon !== undefined ? icon : existing.icon,
+        color: color !== undefined ? color : existing.color,
+        order: order !== undefined ? (parseInt(String(order)) || 0) : existing.order,
+        visible: visible !== undefined ? Boolean(visible) : existing.visible,
+        required: required !== undefined ? Boolean(required) : existing.required,
+        ...(contentUpdate ? {
+          course: course !== undefined ? course : existing.course,
+          courseId: courseId !== undefined ? (courseId ? parseInt(String(courseId)) : null) : existing.courseId,
+          phase: phase !== undefined ? phase : existing.phase,
+          template: template !== undefined ? template : existing.template,
+          points: points !== undefined ? (parseInt(String(points)) || 10) : existing.points,
+          attemptsLimit: attemptsLimit !== undefined ? attemptsLimit : existing.attemptsLimit,
+          successMessage: successMessage !== undefined ? successMessage : existing.successMessage,
+          hintMessage: hintMessage !== undefined ? hintMessage : existing.hintMessage,
+          orderItems: orderItems !== undefined ? orderItems : existing.orderItems,
+          sopaWords,
+          crossword1Clue,
+          crossword1Word,
+          quizQuestion,
+          quizCorrect,
+          quizIncorrect,
+          matchTerm,
+          matchMeaning,
+          listeningPhrase,
+          pronouncePhrase,
+          fillblankSentence,
+          fillblankAnswer,
+          learningOutcomeId: learningOutcomeId !== undefined ? (learningOutcomeId ? parseInt(String(learningOutcomeId)) : null) : existing.learningOutcomeId
+        } : {})
       }
     })
 

@@ -55,54 +55,11 @@ export const OFFICIAL_COURSE_SLUGS = DEFAULT_COURSES.map(course => course.slug)
 
 export class CourseService {
   /**
-   * Inicializa los cursos fundamentales en la base de datos si la tabla está vacía
+   * Los cursos ya no se siembran ni sincronizan automáticamente (gestión exclusiva
+   * de ADMIN/INSTRUCTOR). Solo se asegura que los módulos oficiales conserven sus RAPs.
    */
   static async ensureCourses(): Promise<void> {
     try {
-      const count = await prisma.course.count()
-      if (count === 0) {
-        await prisma.course.createMany({
-          data: DEFAULT_COURSES,
-          skipDuplicates: true
-        })
-        return
-      }
-
-      // Sincronizar si aún existen cursos genéricos anteriores
-      const oldCourses = await prisma.course.findMany({
-        where: {
-          slug: {
-            in: [
-              'fundamentos-enfermeria',
-              'cardiologia-clinica',
-              'farmacologia-aplicada',
-              'comunicacion-salud',
-              'urgencias-emergencias',
-              'pediatria-neonatologia'
-            ]
-          }
-        },
-        orderBy: { id: 'asc' }
-      })
-
-      if (oldCourses.length > 0) {
-        for (let i = 0; i < DEFAULT_COURSES.length; i++) {
-          const target = DEFAULT_COURSES[i]
-          if (oldCourses[i]) {
-            await prisma.course.update({
-              where: { id: oldCourses[i].id },
-              data: target
-            })
-          }
-        }
-        for (let j = DEFAULT_COURSES.length; j < oldCourses.length; j++) {
-          try {
-            await prisma.course.delete({ where: { id: oldCourses[j].id } })
-          } catch {}
-        }
-      }
-
-      // Asegurar que los 4 cursos oficiales tengan sus RAPs asignados si están vacíos
       for (const def of DEFAULT_COURSES) {
         const found = await prisma.course.findUnique({ where: { slug: def.slug } })
         if (found && (!found.raps || found.raps === '[]')) {
@@ -113,7 +70,7 @@ export class CourseService {
         }
       }
     } catch (e) {
-      console.warn('[CourseService] Could not auto-seed courses:', e)
+      console.warn('[CourseService] Could not sync courses:', e)
     }
   }
 
@@ -159,6 +116,9 @@ export class CourseService {
       include: {
         program: {
           select: { id: true, name: true }
+        },
+        cohorts: {
+          select: { id: true, cohort_number: true, program_id: true }
         },
         _count: {
           select: { progresses: true }
@@ -240,6 +200,7 @@ export class CourseService {
         structure: c.structure || null,
         programId: c.programId || null,
         programName: c.program?.name || null,
+        cohorts: c.cohorts || [],
         studentsCount: studentCount,
         students: studentCount,
         activitiesCount,
@@ -259,7 +220,10 @@ export class CourseService {
     const allCourses = await prisma.course.findMany({
       orderBy: { id: 'asc' },
       include: {
-        program: true
+        program: true,
+        cohorts: {
+          select: { id: true, cohort_number: true, program_id: true }
+        }
       }
     })
 
@@ -352,7 +316,10 @@ export class CourseService {
         bg: data.bg || 'bg-blue-50',
         programId: data.programId || null,
         ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
-        raps: rapsValue
+        raps: rapsValue,
+        ...(Array.isArray(data.cohortIds) && data.cohortIds.length > 0
+          ? { cohorts: { connect: data.cohortIds.map(cohortId => ({ id: Number(cohortId) })) } }
+          : {})
       }
     })
   }
@@ -380,7 +347,10 @@ export class CourseService {
         ...(data.bg ? { bg: data.bg } : {}),
         ...(data.programId !== undefined ? { programId: data.programId } : {}),
         ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
-        ...(rapsValue !== undefined ? { raps: rapsValue } : {})
+        ...(rapsValue !== undefined ? { raps: rapsValue } : {}),
+        ...(Array.isArray(data.cohortIds)
+          ? { cohorts: { set: data.cohortIds.map(cohortId => ({ id: Number(cohortId) })) } }
+          : {})
       }
     })
 

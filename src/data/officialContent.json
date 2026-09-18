@@ -1,0 +1,1409 @@
+{
+  "m1GrammarRows": [
+    {
+      "subject": "I",
+      "verb": "am",
+      "complement": "a nurse at this hospital.",
+      "spanish": "Soy enfermero(a) en este hospital.",
+      "full": "I am a nurse at this hospital."
+    },
+    {
+      "subject": "You",
+      "verb": "are",
+      "complement": "a nursing assistant.",
+      "spanish": "Eres auxiliar de enfermería.",
+      "full": "You are a nursing assistant."
+    },
+    {
+      "subject": "He",
+      "verb": "is",
+      "complement": "a patient in room 204.",
+      "spanish": "Él es un paciente de la habitación 204.",
+      "full": "He is a patient in room 204."
+    },
+    {
+      "subject": "She",
+      "verb": "is",
+      "complement": "my work colleague.",
+      "spanish": "Ella es mi compañera de trabajo.",
+      "full": "She is my work colleague."
+    },
+    {
+      "subject": "We",
+      "verb": "are",
+      "complement": "the night shift team.",
+      "spanish": "Somos el equipo del turno de noche.",
+      "full": "We are the night shift team."
+    },
+    {
+      "subject": "They",
+      "verb": "are",
+      "complement": "nurses from Canada.",
+      "spanish": "Ellos son enfermeros de Canadá.",
+      "full": "They are nurses from Canada."
+    }
+  ],
+  "M1_ALPHABET": [
+    [
+      "A",
+      "[éi]"
+    ],
+    [
+      "B",
+      "[bi]"
+    ],
+    [
+      "C",
+      "[si]"
+    ],
+    [
+      "D",
+      "[di]"
+    ],
+    [
+      "E",
+      "[i]"
+    ],
+    [
+      "F",
+      "[ef]"
+    ],
+    [
+      "G",
+      "[yi]"
+    ],
+    [
+      "H",
+      "[éich]"
+    ],
+    [
+      "I",
+      "[ái]"
+    ],
+    [
+      "J",
+      "[dchéi]"
+    ],
+    [
+      "K",
+      "[kéi]"
+    ],
+    [
+      "L",
+      "[el]"
+    ],
+    [
+      "M",
+      "[em]"
+    ],
+    [
+      "N",
+      "[en]"
+    ],
+    [
+      "O",
+      "[óu]"
+    ],
+    [
+      "P",
+      "[pi]"
+    ],
+    [
+      "Q",
+      "[kiu]"
+    ],
+    [
+      "R",
+      "[ar]"
+    ],
+    [
+      "S",
+      "[es]"
+    ],
+    [
+      "T",
+      "[ti]"
+    ],
+    [
+      "U",
+      "[iú]"
+    ],
+    [
+      "V",
+      "[vi]"
+    ],
+    [
+      "W",
+      "[dábliu]"
+    ],
+    [
+      "X",
+      "[eks]"
+    ],
+    [
+      "Y",
+      "[uái]"
+    ],
+    [
+      "Z",
+      "[zi]"
+    ]
+  ],
+  "M1_NUMBERS": [
+    [
+      "Zero",
+      "0",
+      "[zí-rou]"
+    ],
+    [
+      "One",
+      "1",
+      "[uán]"
+    ],
+    [
+      "Two",
+      "2",
+      "[tú]"
+    ],
+    [
+      "Three",
+      "3",
+      "[zrí]"
+    ],
+    [
+      "Four",
+      "4",
+      "[for]"
+    ],
+    [
+      "Five",
+      "5",
+      "[fáiv]"
+    ],
+    [
+      "Six",
+      "6",
+      "[siks]"
+    ],
+    [
+      "Seven",
+      "7",
+      "[sé-ven]"
+    ],
+    [
+      "Eight",
+      "8",
+      "[éit]"
+    ],
+    [
+      "Nine",
+      "9",
+      "[náin]"
+    ],
+    [
+      "Ten",
+      "10",
+      "[ten]"
+    ],
+    [
+      "Eleven",
+      "11",
+      "[i-lé-ven]"
+    ],
+    [
+      "Twelve",
+      "12",
+      "[tuélv]"
+    ],
+    [
+      "Thirteen",
+      "13",
+      "[zer-tín]"
+    ],
+    [
+      "Fourteen",
+      "14",
+      "[for-tín]"
+    ],
+    [
+      "Fifteen",
+      "15",
+      "[fif-tín]"
+    ],
+    [
+      "Sixteen",
+      "16",
+      "[siks-tín]"
+    ],
+    [
+      "Seventeen",
+      "17",
+      "[se-ven-tín]"
+    ],
+    [
+      "Eighteen",
+      "18",
+      "[éi-tín]"
+    ],
+    [
+      "Nineteen",
+      "19",
+      "[nain-tín]"
+    ],
+    [
+      "Twenty",
+      "20",
+      "[tuén-ti]"
+    ],
+    [
+      "Thirty",
+      "30",
+      "[zér-ti]"
+    ],
+    [
+      "Forty",
+      "40",
+      "[fór-ti]"
+    ],
+    [
+      "Fifty",
+      "50",
+      "[fíf-ti]"
+    ],
+    [
+      "Sixty",
+      "60",
+      "[síks-ti]"
+    ],
+    [
+      "Seventy",
+      "70",
+      "[sé-ven-ti]"
+    ],
+    [
+      "Eighty",
+      "80",
+      "[éi-ti]"
+    ],
+    [
+      "Ninety",
+      "90",
+      "[náin-ti]"
+    ],
+    [
+      "One hundred",
+      "100",
+      "[uán ján-dred]"
+    ]
+  ],
+  "M1_GREETINGS": [
+    [
+      "Hello",
+      "[je-lóu]",
+      "Hola (saludo general)"
+    ],
+    [
+      "Hi",
+      "[jái]",
+      "Hola (saludo informal entre colegas)"
+    ],
+    [
+      "Good morning",
+      "[gud mór-ning]",
+      "Buenos días (hasta 12:00 m)"
+    ],
+    [
+      "Good afternoon",
+      "[gud áf-ter-nun]",
+      "Buenas tardes (12:00 m – 6:00 pm)"
+    ],
+    [
+      "Good evening",
+      "[gud ív-ning]",
+      "Buenas noches (al llegar)"
+    ],
+    [
+      "Nice to meet you",
+      "[náis tu mít iu]",
+      "Mucho gusto en conocerte"
+    ],
+    [
+      "How are you?",
+      "[jáu ar iu]",
+      "¿Cómo estás?"
+    ],
+    [
+      "See you later",
+      "[si yu léi-ter]",
+      "Hasta luego"
+    ],
+    [
+      "Goodbye",
+      "[gud-bái]",
+      "Adiós (despedida formal)"
+    ]
+  ],
+  "M1_CONTACT": [
+    [
+      "Name",
+      "[néim]",
+      "Nombre personal"
+    ],
+    [
+      "Last name",
+      "[last néim]",
+      "Apellido"
+    ],
+    [
+      "Age",
+      "[éidch]",
+      "Edad en años"
+    ],
+    [
+      "Nationality",
+      "[na-shon-á-li-ti]",
+      "Nacionalidad u origen"
+    ],
+    [
+      "Phone number",
+      "[fóun nám-ber]",
+      "Número de teléfono"
+    ],
+    [
+      "Email address",
+      "[í-meil a-drés]",
+      "Dirección de correo electrónico"
+    ],
+    [
+      "At sign (@)",
+      "[at sáin]",
+      "Arroba dentro de un correo"
+    ],
+    [
+      "Dot (.)",
+      "[dot]",
+      "Punto dentro de un correo o página web"
+    ],
+    [
+      "Hyphen (-)",
+      "[jái-fen]",
+      "Guion para separar datos"
+    ],
+    [
+      "Spelling",
+      "[spé-ling]",
+      "Deletreo de letras"
+    ]
+  ],
+  "m1ChatMessages": [
+    {
+      "speaker": "Nurse Sarah",
+      "avatarIcon": "person",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Hi! Good morning. I am Sarah.",
+      "spanish": "¡Hola! Buenos días. Soy Sarah.",
+      "parts": [
+        {
+          "text": "Hi! Good morning. ",
+          "type": null
+        },
+        {
+          "text": "I ",
+          "type": "subject"
+        },
+        {
+          "text": "am ",
+          "type": "verb"
+        },
+        {
+          "text": "Sarah.",
+          "type": "complement"
+        }
+      ]
+    },
+    {
+      "speaker": "Nurse David",
+      "avatarIcon": "person",
+      "avatarBg": "bg-indigo-600",
+      "alignLeft": false,
+      "english": "Good morning, Sarah. I am David. Nice to meet you.",
+      "spanish": "Buenos días, Sarah. Soy David. Mucho gusto.",
+      "parts": [
+        {
+          "text": "Good morning, Sarah. ",
+          "type": null
+        },
+        {
+          "text": "I ",
+          "type": "subject"
+        },
+        {
+          "text": "am ",
+          "type": "verb"
+        },
+        {
+          "text": "David.",
+          "type": "complement"
+        },
+        {
+          "text": " Nice to meet you.",
+          "type": null
+        }
+      ]
+    },
+    {
+      "speaker": "Nurse Sarah",
+      "avatarIcon": "person",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Nice to meet you too. Are you a new nurse here?",
+      "spanish": "Mucho gusto también. ¿Eres nuevo aquí como enfermero?"
+    },
+    {
+      "speaker": "Nurse David",
+      "avatarIcon": "person",
+      "avatarBg": "bg-indigo-600",
+      "alignLeft": false,
+      "english": "Yes, I am. I am a nurse at this hospital. I am from Canada.",
+      "spanish": "Sí. Soy enfermero en este hospital. Soy de Canadá.",
+      "parts": [
+        {
+          "text": "Yes, ",
+          "type": null
+        },
+        {
+          "text": "I ",
+          "type": "subject"
+        },
+        {
+          "text": "am",
+          "type": "verb"
+        },
+        {
+          "text": ". ",
+          "type": null
+        },
+        {
+          "text": "I ",
+          "type": "subject"
+        },
+        {
+          "text": "am ",
+          "type": "verb"
+        },
+        {
+          "text": "a nurse at this hospital.",
+          "type": "complement"
+        },
+        {
+          "text": " I am from Canada.",
+          "type": null
+        }
+      ]
+    },
+    {
+      "speaker": "Nurse Sarah",
+      "avatarIcon": "person",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Welcome to the team! How old are you?",
+      "spanish": "¡Bienvenido al equipo! ¿Cuántos años tienes?"
+    },
+    {
+      "speaker": "Nurse David",
+      "avatarIcon": "person",
+      "avatarBg": "bg-indigo-600",
+      "alignLeft": false,
+      "english": "I am twenty-nine years old. And you?",
+      "spanish": "Tengo veintinueve años. ¿Y tú?"
+    },
+    {
+      "speaker": "Nurse Sarah",
+      "avatarIcon": "person",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "I am thirty-two. My email is sarah.jones@clinic.com.",
+      "spanish": "Tengo treinta y dos. Mi correo es sarah.jones@clinic.com."
+    },
+    {
+      "speaker": "Nurse David",
+      "avatarIcon": "person",
+      "avatarBg": "bg-indigo-600",
+      "alignLeft": false,
+      "english": "Great. My phone number is 555 2048. See you later!",
+      "spanish": "Genial. Mi número de teléfono es 555 2048. ¡Hasta luego!"
+    },
+    {
+      "speaker": "Nurse Sarah",
+      "avatarIcon": "person",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "See you later! Goodbye.",
+      "spanish": "¡Hasta luego! Adiós."
+    }
+  ],
+  "m1ExamQuestions": [
+    {
+      "id": "q1",
+      "question": "Which greeting is formal and correct for the morning?",
+      "options": [
+        "Good night",
+        "Good morning",
+        "Goodbye",
+        "See you"
+      ],
+      "correct": "Good morning"
+    },
+    {
+      "id": "q2",
+      "question": "Which of these is an INFORMAL greeting?",
+      "options": [
+        "Good afternoon",
+        "Hello",
+        "Good evening",
+        "Goodbye"
+      ],
+      "correct": "Hello"
+    },
+    {
+      "id": "q3",
+      "question": "¿Cuál es el orden correcto de una oración en inglés?",
+      "options": [
+        "Acción + Persona + Detalle",
+        "Persona + Acción + Detalle",
+        "Detalle + Acción + Persona",
+        "Persona + Detalle + Acción"
+      ],
+      "correct": "Persona + Acción + Detalle"
+    },
+    {
+      "id": "q4",
+      "question": "Identify the VERB in: \"I am a nurse.\"",
+      "options": [
+        "I",
+        "am",
+        "a",
+        "nurse"
+      ],
+      "correct": "am"
+    },
+    {
+      "id": "q5",
+      "question": "How do you write the number 7 in English?",
+      "options": [
+        "seven",
+        "nine",
+        "six",
+        "eleven"
+      ],
+      "correct": "seven"
+    },
+    {
+      "id": "q6",
+      "question": "What number is \"thirteen\"?",
+      "options": [
+        "30",
+        "3",
+        "13",
+        "12"
+      ],
+      "correct": "13"
+    }
+  ],
+  "m2PastExamples": [
+    {
+      "subject": "He",
+      "verb": "fell down",
+      "complement": "at the hotel.",
+      "spanish": "Él se cayó en el hotel.",
+      "full": "He fell down at the hotel."
+    },
+    {
+      "subject": "He",
+      "verb": "had",
+      "complement": "an accident yesterday.",
+      "spanish": "Él tuvo un accidente ayer.",
+      "full": "He had an accident yesterday."
+    },
+    {
+      "subject": "The doctor",
+      "verb": "examined",
+      "complement": "his right arm.",
+      "spanish": "El doctor examinó su brazo derecho.",
+      "full": "The doctor examined his right arm."
+    }
+  ],
+  "m2PresentExamples": [
+    {
+      "subject": "He",
+      "verb": "is",
+      "adjective": "pale and weak.",
+      "spanish": "Él está pálido y débil.",
+      "full": "He is pale and weak."
+    },
+    {
+      "subject": "His right arm",
+      "verb": "is",
+      "adjective": "swollen and painful.",
+      "spanish": "Su brazo derecho está hinchado.",
+      "full": "His right arm is swollen and painful."
+    }
+  ],
+  "m2ExamQuestions": [
+    {
+      "id": "m2_q1",
+      "question": "What happened to Mr. Thomas yesterday?",
+      "options": [
+        "He had knee surgery",
+        "He fell at the hotel and injured his arm",
+        "He caught a cold at the hospital",
+        "He visited a friend"
+      ],
+      "correct": "He fell at the hotel and injured his arm"
+    },
+    {
+      "id": "m2_q2",
+      "question": "Identify the PAST SIMPLE verb in: \"The patient arrived at the emergency room.\"",
+      "options": [
+        "patient",
+        "arrived",
+        "emergency",
+        "room"
+      ],
+      "correct": "arrived"
+    },
+    {
+      "id": "m2_q3",
+      "question": "Which descriptive adjective describes the state of Mr. Thomas's arm?",
+      "options": [
+        "Tall",
+        "Swollen",
+        "Cold",
+        "Dizzy"
+      ],
+      "correct": "Swollen"
+    },
+    {
+      "id": "m2_q4",
+      "question": "Complete the sentence: \"He _____ a bandage on his right arm today.\"",
+      "options": [
+        "has",
+        "fell",
+        "was",
+        "yesterday"
+      ],
+      "correct": "has"
+    },
+    {
+      "id": "m2_q5",
+      "question": "Where is Mr. Thomas located according to the handover report?",
+      "options": [
+        "In the waiting room",
+        "In room 204",
+        "In the pharmacy",
+        "At the hotel"
+      ],
+      "correct": "In room 204"
+    },
+    {
+      "id": "m2_q6",
+      "question": "Which sentence correctly describes a past clinical event?",
+      "options": [
+        "The room is quiet.",
+        "He is pale today.",
+        "He fell down and had an accident.",
+        "He has a clean bandage."
+      ],
+      "correct": "He fell down and had an accident."
+    }
+  ],
+  "m2VocabList": [
+    {
+      "id": "m2_v1",
+      "word": "Head",
+      "pronunciation": "[jed]",
+      "translation": "Cabeza (Anatomía)",
+      "category": "Anatomía",
+      "icon": "psychology",
+      "iconBg": "bg-purple-50 text-purple-600 border-purple-100",
+      "played": false
+    },
+    {
+      "id": "m2_v2",
+      "word": "Arm",
+      "pronunciation": "[arm]",
+      "translation": "Brazo (Anatomía)",
+      "category": "Anatomía",
+      "icon": "front_hand",
+      "iconBg": "bg-blue-50 text-blue-600 border-blue-100",
+      "played": false
+    },
+    {
+      "id": "m2_v3",
+      "word": "Leg",
+      "pronunciation": "[leg]",
+      "translation": "Pierna (Anatomía)",
+      "category": "Anatomía",
+      "icon": "accessible",
+      "iconBg": "bg-teal-50 text-teal-600 border-teal-100",
+      "played": false
+    },
+    {
+      "id": "m2_v4",
+      "word": "Chest",
+      "pronunciation": "[chest]",
+      "translation": "Pecho / Tórax",
+      "category": "Anatomía",
+      "icon": "favorite",
+      "iconBg": "bg-rose-50 text-rose-600 border-rose-100",
+      "played": false
+    },
+    {
+      "id": "m2_v5",
+      "word": "Waiting room",
+      "pronunciation": "[wéi-ting rum]",
+      "translation": "Sala de espera hospitalaria",
+      "category": "Entorno",
+      "icon": "chair",
+      "iconBg": "bg-amber-50 text-amber-600 border-amber-100",
+      "played": false
+    },
+    {
+      "id": "m2_v6",
+      "word": "Stretcher",
+      "pronunciation": "[stré-cher]",
+      "translation": "Camilla de traslado",
+      "category": "Entorno",
+      "icon": "airline_seat_flat",
+      "iconBg": "bg-indigo-50 text-indigo-600 border-indigo-100",
+      "played": false
+    },
+    {
+      "id": "m2_v7",
+      "word": "Hospital room",
+      "pronunciation": "[jós-pi-tal rum]",
+      "translation": "Habitación de hospital (Room 204)",
+      "category": "Entorno",
+      "icon": "hotel",
+      "iconBg": "bg-sky-50 text-sky-600 border-sky-100",
+      "played": false
+    },
+    {
+      "id": "m2_v8",
+      "word": "Bandage",
+      "pronunciation": "[bán-didch]",
+      "translation": "Vendaje elástico de protección",
+      "category": "Tratamiento",
+      "icon": "healing",
+      "iconBg": "bg-emerald-50 text-emerald-600 border-emerald-100",
+      "played": false
+    },
+    {
+      "id": "m2_v9",
+      "word": "Fracture",
+      "pronunciation": "[frák-chur]",
+      "translation": "Fractura ósea confirmada",
+      "category": "Diagnóstico",
+      "icon": "personal_injury",
+      "iconBg": "bg-red-50 text-red-600 border-red-100",
+      "played": false
+    },
+    {
+      "id": "m2_v10",
+      "word": "Swollen",
+      "pronunciation": "[suó-len]",
+      "translation": "Hinchado / Inflamado",
+      "category": "Signo clínico",
+      "icon": "radio_button_checked",
+      "iconBg": "bg-orange-50 text-orange-600 border-orange-100",
+      "played": false
+    },
+    {
+      "id": "m2_v11",
+      "word": "Pale",
+      "pronunciation": "[péil]",
+      "translation": "Pálido (Aspecto físico)",
+      "category": "Signo clínico",
+      "icon": "contrast",
+      "iconBg": "bg-gray-50 text-gray-600 border-gray-200",
+      "played": false
+    },
+    {
+      "id": "m2_v12",
+      "word": "Dizzy",
+      "pronunciation": "[dí-zi]",
+      "translation": "Mareado / Inestable",
+      "category": "Síntoma",
+      "icon": "sync_problem",
+      "iconBg": "bg-yellow-50 text-yellow-600 border-yellow-100",
+      "played": false
+    }
+  ],
+  "m2Dialogue": [
+    {
+      "speaker": "Nurse Andrea",
+      "avatarIcon": "person",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Good morning, Nurse Carlos. How is Mr. Thomas?",
+      "spanish": "Buenos días, Carlos. ¿Cómo está Mr. Thomas?"
+    },
+    {
+      "speaker": "Nurse Carlos",
+      "avatarIcon": "person",
+      "avatarBg": "bg-indigo-600",
+      "alignLeft": false,
+      "english": "He fell yesterday. He has a bandage and is resting.",
+      "spanish": "Se cayó ayer. Tiene un vendaje y está descansando."
+    }
+  ],
+  "m3RoutineExamples": [
+    {
+      "subject": "I",
+      "verb": "give",
+      "complement": "medication at 8:00 AM every day.",
+      "spanish": "Doy medicación a las 8:00 AM todos los días.",
+      "full": "I give medication at 8:00 AM every day."
+    },
+    {
+      "subject": "The nurse",
+      "verb": "records",
+      "complement": "vital signs every two hours.",
+      "spanish": "La enfermera registra signos vitales cada 2 horas.",
+      "full": "The nurse records vital signs every two hours."
+    }
+  ],
+  "m3ContinuousExamples": [
+    {
+      "subject": "I",
+      "verb": "am checking",
+      "complement": "the blood pressure now.",
+      "spanish": "Estoy tomando la presión arterial ahora.",
+      "full": "I am checking the blood pressure now."
+    },
+    {
+      "subject": "We",
+      "verb": "are updating",
+      "complement": "the digital nursing checklist.",
+      "spanish": "Estamos actualizando el checklist digital.",
+      "full": "We are updating the digital nursing checklist."
+    }
+  ],
+  "m3ExamQuestions": [
+    {
+      "id": "m3_q1",
+      "question": "Which sentence describes an action happening RIGHT NOW?",
+      "options": [
+        "I give medication at 8 AM.",
+        "I am checking the patient's blood pressure now.",
+        "We disinfect tools after each shift.",
+        "The doctor visits patients in the morning."
+      ],
+      "correct": "I am checking the patient's blood pressure now."
+    },
+    {
+      "id": "m3_q2",
+      "question": "Which sentence describes a DAILY ROUTINE?",
+      "options": [
+        "I am talking to the visitor.",
+        "We give medication at 8:00 AM every day.",
+        "The doctor is examining the patient right now.",
+        "We are updating the checklist."
+      ],
+      "correct": "We give medication at 8:00 AM every day."
+    },
+    {
+      "id": "m3_q3",
+      "question": "How do you politely propose a workflow improvement to a colleague?",
+      "options": [
+        "Do it right now.",
+        "I think we should update the digital checklist.",
+        "You are working slow.",
+        "Don't touch the checklist."
+      ],
+      "correct": "I think we should update the digital checklist."
+    },
+    {
+      "id": "m3_q4",
+      "question": "Which medical tool is used to measure body temperature?",
+      "options": [
+        "Stethoscope",
+        "Thermometer",
+        "Pulse oximeter",
+        "Syringe"
+      ],
+      "correct": "Thermometer"
+    },
+    {
+      "id": "m3_q5",
+      "question": "What is the appropriate response to a visitor asking about a patient right now?",
+      "options": [
+        "Go away please.",
+        "We are checking his vitals right now; he is resting comfortably.",
+        "I don't know him.",
+        "Come back tomorrow."
+      ],
+      "correct": "We are checking his vitals right now; he is resting comfortably."
+    },
+    {
+      "id": "m3_q6",
+      "question": "Which instrument is used to measure blood oxygen saturation?",
+      "options": [
+        "Pulse oximeter",
+        "Stethoscope",
+        "Checklist",
+        "Thermometer"
+      ],
+      "correct": "Pulse oximeter"
+    }
+  ],
+  "m3VocabList": [
+    {
+      "id": "m3_v1",
+      "word": "Thermometer",
+      "pronunciation": "[zer-mó-me-ter]",
+      "translation": "Termómetro clínico",
+      "category": "Herramienta",
+      "icon": "device_thermostat",
+      "iconBg": "bg-red-50 text-red-600 border-red-100",
+      "played": false
+    },
+    {
+      "id": "m3_v2",
+      "word": "Stethoscope",
+      "pronunciation": "[sté-zo-scoup]",
+      "translation": "Estetoscopio de auscultación",
+      "category": "Herramienta",
+      "icon": "stethoscope",
+      "iconBg": "bg-cyan-50 text-cyan-600 border-cyan-100",
+      "played": false
+    },
+    {
+      "id": "m3_v3",
+      "word": "Blood pressure monitor",
+      "pronunciation": "[blad pré-shur mó-ni-tor]",
+      "translation": "Monitor de presión arterial",
+      "category": "Herramienta",
+      "icon": "monitor_heart",
+      "iconBg": "bg-rose-50 text-rose-600 border-rose-100",
+      "played": false
+    },
+    {
+      "id": "m3_v4",
+      "word": "Checklist",
+      "pronunciation": "[chék-list]",
+      "translation": "Lista de verificación clínica",
+      "category": "Formato",
+      "icon": "checklist",
+      "iconBg": "bg-amber-50 text-amber-600 border-amber-100",
+      "played": false
+    },
+    {
+      "id": "m3_v5",
+      "word": "Syringe",
+      "pronunciation": "[se-ríndch]",
+      "translation": "Jeringa médica descartable",
+      "category": "Herramienta",
+      "icon": "vaccines",
+      "iconBg": "bg-blue-50 text-blue-600 border-blue-100",
+      "played": false
+    },
+    {
+      "id": "m3_v6",
+      "word": "Pulse oximeter",
+      "pronunciation": "[pals ok-sí-me-ter]",
+      "translation": "Pulsioxímetro de saturación",
+      "category": "Herramienta",
+      "icon": "sensors",
+      "iconBg": "bg-purple-50 text-purple-600 border-purple-100",
+      "played": false
+    },
+    {
+      "id": "m3_v7",
+      "word": "IV Drip",
+      "pronunciation": "[ái-vi drip]",
+      "translation": "Suero / Bomba de infusión",
+      "category": "Equipo",
+      "icon": "water_drop",
+      "iconBg": "bg-sky-50 text-sky-600 border-sky-100",
+      "played": false
+    },
+    {
+      "id": "m3_v8",
+      "word": "Administer",
+      "pronunciation": "[ad-mí-nis-ter]",
+      "translation": "Administrar medicamentos",
+      "category": "Acción",
+      "icon": "medication",
+      "iconBg": "bg-emerald-50 text-emerald-600 border-emerald-100",
+      "played": false
+    },
+    {
+      "id": "m3_v9",
+      "word": "Monitor",
+      "pronunciation": "[mó-ni-tor]",
+      "translation": "Monitorear signos vitales",
+      "category": "Acción",
+      "icon": "vital_signs",
+      "iconBg": "bg-teal-50 text-teal-600 border-teal-100",
+      "played": false
+    },
+    {
+      "id": "m3_v10",
+      "word": "Disinfect",
+      "pronunciation": "[dis-in-féct]",
+      "translation": "Desinfectar instrumental",
+      "category": "Acción",
+      "icon": "cleaning_services",
+      "iconBg": "bg-indigo-50 text-indigo-600 border-indigo-100",
+      "played": false
+    },
+    {
+      "id": "m3_v11",
+      "word": "Explain",
+      "pronunciation": "[ex-pléin]",
+      "translation": "Explicar procedimientos",
+      "category": "Acción",
+      "icon": "record_voice_over",
+      "iconBg": "bg-blue-50 text-blue-600 border-blue-100",
+      "played": false
+    },
+    {
+      "id": "m3_v12",
+      "word": "Gauze",
+      "pronunciation": "[goz]",
+      "translation": "Gasa estéril de curación",
+      "category": "Material",
+      "icon": "healing",
+      "iconBg": "bg-amber-50 text-amber-600 border-amber-100",
+      "played": false
+    }
+  ],
+  "m3Dialogue": [
+    {
+      "speaker": "Emma (Visitor)",
+      "avatarIcon": "family_restroom",
+      "avatarBg": "bg-purple-600",
+      "alignLeft": true,
+      "english": "Excuse me, nurse. How is my father doing?",
+      "spanish": "Disculpe, enfermero. ¿Cómo está mi padre?"
+    },
+    {
+      "speaker": "Nurse (You)",
+      "avatarIcon": "medical_services",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": false,
+      "english": "We are checking his blood pressure right now. He is resting well.",
+      "spanish": "Estamos tomando su presión ahora. Está descansando bien."
+    }
+  ],
+  "m4AdviceExamples": [
+    {
+      "subject": "You",
+      "modal": "must take",
+      "action": "this painkiller every 8 hours with water.",
+      "spanish": "Debe tomar este analgésico cada 8 horas con agua.",
+      "full": "You must take this painkiller every 8 hours with water."
+    },
+    {
+      "subject": "You",
+      "modal": "should rest",
+      "action": "your right arm for at least three days.",
+      "spanish": "Debería descansar su brazo derecho al menos 3 días.",
+      "full": "You should rest your right arm for at least three days."
+    },
+    {
+      "subject": "You",
+      "modal": "need to keep",
+      "action": "the bandage clean and completely dry.",
+      "spanish": "Necesita mantener el vendaje limpio y seco.",
+      "full": "You need to keep the bandage clean and completely dry."
+    },
+    {
+      "subject": "You",
+      "modal": "must attend",
+      "action": "the follow-up appointment next Monday.",
+      "spanish": "Debe asistir a la cita de control el próximo lunes.",
+      "full": "You must attend the follow-up appointment next Monday."
+    }
+  ],
+  "m4ResultsExamples": [
+    {
+      "subject": "The vital signs",
+      "verb": "are",
+      "complement": "stable and within normal limits.",
+      "spanish": "Los signos vitales están estables dentro de límites normales.",
+      "full": "The vital signs are stable and within normal limits."
+    },
+    {
+      "subject": "The patient",
+      "verb": "is ready",
+      "complement": "for hospital discharge today.",
+      "spanish": "El paciente está listo para el alta médica hoy.",
+      "full": "The patient is ready for hospital discharge today."
+    },
+    {
+      "subject": "The pain level",
+      "verb": "is",
+      "complement": "low and fully resolved.",
+      "spanish": "El nivel de dolor es bajo y completamente resuelto.",
+      "full": "The pain level is low and fully resolved."
+    },
+    {
+      "subject": "The nursing checklist",
+      "verb": "is",
+      "complement": "complete and signed by Dr. Miller.",
+      "spanish": "La lista de verificación está completa y firmada.",
+      "full": "The nursing checklist is complete and signed by Dr. Miller."
+    }
+  ],
+  "m4ExamQuestions": [
+    {
+      "id": "m4_q1",
+      "question": "Which modal verb indicates an essential medical obligation for taking medication?",
+      "options": [
+        "You must take your medication.",
+        "You might visit.",
+        "You could ignore the pill.",
+        "You would sleep."
+      ],
+      "correct": "You must take your medication."
+    },
+    {
+      "id": "m4_q2",
+      "question": "Which sentence gives polite medical advice for home care?",
+      "options": [
+        "You should rest for three days.",
+        "You must work hard today.",
+        "Never rest.",
+        "You cannot leave."
+      ],
+      "correct": "You should rest for three days."
+    },
+    {
+      "id": "m4_q3",
+      "question": "What does \"Follow-up appointment\" mean in nursing practice?",
+      "options": [
+        "A hospital invoice",
+        "A scheduled return visit to evaluate recovery",
+        "An emergency surgery",
+        "A cafeteria reservation"
+      ],
+      "correct": "A scheduled return visit to evaluate recovery"
+    },
+    {
+      "id": "m4_q4",
+      "question": "How do you report that all checks are finished and patient is stable?",
+      "options": [
+        "The checklist is complete and vital signs are stable.",
+        "We forgot the checklist.",
+        "Patient is missing.",
+        "Checklist is not signed."
+      ],
+      "correct": "The checklist is complete and vital signs are stable."
+    },
+    {
+      "id": "m4_q5",
+      "question": "What is a \"Discharge Summary\"?",
+      "options": [
+        "A lunch recipe",
+        "The official medical document authorizing the patient to leave hospital",
+        "A job contract",
+        "A parking ticket"
+      ],
+      "correct": "The official medical document authorizing the patient to leave hospital"
+    },
+    {
+      "id": "m4_q6",
+      "question": "Complete the home care advice: \"You must keep the bandage _____ and clean.\"",
+      "options": [
+        "dry",
+        "wet",
+        "dirty",
+        "swollen"
+      ],
+      "correct": "dry"
+    }
+  ],
+  "m4VocabList": [
+    {
+      "id": "m4_v1",
+      "word": "Discharge",
+      "pronunciation": "[dis-chárdch]",
+      "translation": "Alta médica / Egreso hospitalario",
+      "category": "Egreso",
+      "icon": "door_open",
+      "iconBg": "bg-emerald-50 text-emerald-600 border-emerald-100",
+      "played": false
+    },
+    {
+      "id": "m4_v2",
+      "word": "Prescription",
+      "pronunciation": "[pris-críp-shon]",
+      "translation": "Receta médica autorizada",
+      "category": "Tratamiento",
+      "icon": "receipt_long",
+      "iconBg": "bg-indigo-50 text-indigo-600 border-indigo-100",
+      "played": false
+    },
+    {
+      "id": "m4_v3",
+      "word": "Painkiller",
+      "pronunciation": "[péin-ki-ler]",
+      "translation": "Analgésico para el dolor",
+      "category": "Medicamento",
+      "icon": "medication",
+      "iconBg": "bg-rose-50 text-rose-600 border-rose-100",
+      "played": false
+    },
+    {
+      "id": "m4_v4",
+      "word": "Follow-up appointment",
+      "pronunciation": "[fó-lou-ap a-póint-ment]",
+      "translation": "Cita de control y seguimiento",
+      "category": "Atención",
+      "icon": "event_available",
+      "iconBg": "bg-sky-50 text-sky-600 border-sky-100",
+      "played": false
+    },
+    {
+      "id": "m4_v5",
+      "word": "Recovery",
+      "pronunciation": "[ri-kó-ve-ri]",
+      "translation": "Recuperación clínica del paciente",
+      "category": "Evolución",
+      "icon": "health_and_safety",
+      "iconBg": "bg-teal-50 text-teal-600 border-teal-100",
+      "played": false
+    },
+    {
+      "id": "m4_v6",
+      "word": "Outcomes",
+      "pronunciation": "[áut-cams]",
+      "translation": "Resultados y desenlaces del cuidado",
+      "category": "Evaluación",
+      "icon": "trending_up",
+      "iconBg": "bg-blue-50 text-blue-600 border-blue-100",
+      "played": false
+    },
+    {
+      "id": "m4_v7",
+      "word": "Dosage",
+      "pronunciation": "[dóu-sidch]",
+      "translation": "Dosis y posología indicada",
+      "category": "Tratamiento",
+      "icon": "vaccines",
+      "iconBg": "bg-cyan-50 text-cyan-600 border-cyan-100",
+      "played": false
+    },
+    {
+      "id": "m4_v8",
+      "word": "Home care",
+      "pronunciation": "[jóum quer]",
+      "translation": "Cuidado y reposo en el hogar",
+      "category": "Egreso",
+      "icon": "home_health",
+      "iconBg": "bg-emerald-50 text-emerald-600 border-emerald-100",
+      "played": false
+    },
+    {
+      "id": "m4_v9",
+      "word": "Wound care",
+      "pronunciation": "[wund quer]",
+      "translation": "Cuidado e higiene de la herida",
+      "category": "Curación",
+      "icon": "healing",
+      "iconBg": "bg-amber-50 text-amber-600 border-amber-100",
+      "played": false
+    },
+    {
+      "id": "m4_v10",
+      "word": "Precautions",
+      "pronunciation": "[pri-có-shons]",
+      "translation": "Precauciones de seguridad",
+      "category": "Recomendación",
+      "icon": "security",
+      "iconBg": "bg-yellow-50 text-yellow-600 border-yellow-100",
+      "played": false
+    },
+    {
+      "id": "m4_v11",
+      "word": "Side effects",
+      "pronunciation": "[sáid i-fécts]",
+      "translation": "Efectos secundarios a vigilar",
+      "category": "Seguridad",
+      "icon": "troubleshoot",
+      "iconBg": "bg-purple-50 text-purple-600 border-purple-100",
+      "played": false
+    },
+    {
+      "id": "m4_v12",
+      "word": "Signed orders",
+      "pronunciation": "[sáind ór-ders]",
+      "translation": "Órdenes médicas firmadas",
+      "category": "Documento",
+      "icon": "draw",
+      "iconBg": "bg-indigo-50 text-indigo-600 border-indigo-100",
+      "played": false
+    }
+  ],
+  "m4Dialogue": [
+    {
+      "speaker": "Nurse (You)",
+      "avatarIcon": "medical_services",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Good morning, Mr. Thomas! Good news: you are ready for discharge today.",
+      "spanish": "¡Buenos días, Sr. Thomas! Buenas noticias: está listo para el alta médica hoy."
+    },
+    {
+      "speaker": "Mr. Thomas (Patient)",
+      "avatarIcon": "elderly",
+      "avatarBg": "bg-emerald-700",
+      "alignLeft": false,
+      "english": "Wonderful news! What are my instructions for home care?",
+      "spanish": "¡Maravillosa noticia! ¿Cuáles son mis instrucciones para el cuidado en casa?"
+    },
+    {
+      "speaker": "Nurse (You)",
+      "avatarIcon": "medical_services",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Mr. Thomas, you must take this painkiller every 8 hours. You should keep your arm rested for 3 days.",
+      "spanish": "Sr. Thomas, debe tomar este analgésico cada 8 horas. Debería descansar el brazo por 3 días."
+    },
+    {
+      "speaker": "Mr. Thomas (Patient)",
+      "avatarIcon": "elderly",
+      "avatarBg": "bg-emerald-700",
+      "alignLeft": false,
+      "english": "Understood. When is my follow-up appointment?",
+      "spanish": "Entendido. ¿Cuándo es mi cita de control?"
+    },
+    {
+      "speaker": "Nurse (You)",
+      "avatarIcon": "medical_services",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Your follow-up appointment is next Monday at 10:00 AM with Dr. Miller.",
+      "spanish": "Su cita de control es el próximo lunes a las 10:00 AM con el Dr. Miller."
+    },
+    {
+      "speaker": "Head Nurse",
+      "avatarIcon": "health_and_safety",
+      "avatarBg": "bg-teal-700",
+      "alignLeft": false,
+      "english": "Nurse, is the final checklist complete for room 204?",
+      "spanish": "Enfermero, ¿la lista de verificación final de la habitación 204 está completa?"
+    },
+    {
+      "speaker": "Nurse (You)",
+      "avatarIcon": "medical_services",
+      "avatarBg": "bg-[#006688]",
+      "alignLeft": true,
+      "english": "Yes, Head Nurse. Vitals are stable, pain is resolved and medical orders are signed. He is ready.",
+      "spanish": "Sí, jefa de enfermería. Los signos están estables, el dolor resuelto y las órdenes firmadas. Está listo."
+    }
+  ]
+}
