@@ -20,6 +20,6 @@ router.post('/:id/progress', authenticate, CourseController.saveCourseProgress)
 // Gestión de estructura de cursos (Admin e Instructor)
 router.post('/', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), CourseController.createCourse)
 router.put('/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), CourseController.updateCourse)
-router.delete('/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), CourseController.deleteCourse)
+router.delete('/:id', authenticate, requireRole('ADMIN'), CourseController.deleteCourse)
 
 export default router

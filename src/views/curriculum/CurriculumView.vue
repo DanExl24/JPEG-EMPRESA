@@ -263,10 +263,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
 
+const router = useRouter()
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
 const apiBaseUrl = getApiBaseUrl()
@@ -503,5 +505,11 @@ async function performDelete(url) {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  if (!auth.isAdmin) {
+    router.replace('/dashboard/inicio')
+    return
+  }
+  loadData()
+})
 </script>

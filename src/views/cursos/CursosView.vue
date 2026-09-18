@@ -157,6 +157,7 @@
                 Editar
               </button>
               <button
+                v-if="auth.isAdmin"
                 @click="deleteCourse(course)"
                 class="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline flex items-center gap-0.5 cursor-pointer"
                 title="Eliminar este curso"
@@ -368,7 +369,9 @@
                     {{ ficha.cohort_number }}
                   </label>
                 </div>
-                <p v-else class="text-[11px] text-gray-400 italic">No hay fichas registradas{{ form.programId ? ' para este programa' : '' }}. Créalas en Gestión Curricular.</p>
+                <p v-else class="text-[11px] text-gray-400 italic">
+                  No hay fichas registradas{{ form.programId ? ' para este programa' : '' }}. {{ auth.isAdmin ? 'Créalas en Gestión Curricular.' : 'Solicita al Administrador crearlas en Gestión Curricular.' }}
+                </p>
               </div>
 
               <!-- RAPs Curriculum Linking -->
@@ -2437,6 +2440,15 @@ async function saveCourse() {
 }
 
 async function deleteCourse(course) {
+  if (!auth.isAdmin) {
+    notificationStore.notify({
+      type: 'error',
+      title: 'Acción No Permitida',
+      message: 'Solo los administradores tienen permisos para eliminar cursos o módulos.'
+    })
+    return
+  }
+
   if (!confirm(`¿Estás seguro de que deseas eliminar el curso "${course.title}"? Esta acción no se puede deshacer.`)) {
     return
   }

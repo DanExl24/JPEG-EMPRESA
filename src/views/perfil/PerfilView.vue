@@ -456,6 +456,7 @@
               </router-link>
 
               <router-link
+                v-if="auth.isAdmin"
                 to="/dashboard/curriculum"
                 class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-sky-50/80 border border-gray-100 hover:border-[#006688]/30 transition-all text-gray-700 hover:text-[#006688] group"
               >

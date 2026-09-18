@@ -171,7 +171,6 @@ const menuGroups = computed(() => {
         items: [
           { name: t('nav.courses'), path: '/dashboard/cursos', icon: 'school' },
           { name: t('nav.activities'), path: '/dashboard/actividades', icon: 'task' },
-          { name: t('nav.curriculum'), path: '/dashboard/curriculum', icon: 'schema' },
           { name: t('nav.vocabulary'), path: '/dashboard/vocabulario', icon: 'translate' },
           { name: t('nav.glossary'), path: '/dashboard/glosario', icon: 'menu_book' },
           { name: t('nav.dialogues'), path: '/dashboard/dialogos', icon: 'chat' },

@@ -44,12 +44,12 @@ const routes: RouteRecordRaw[] = [
       { path: 'juegos', component: JuegosView },
       { path: 'juegos/:gameId', component: JuegosView },
       { path: 'analiticas', component: AnaliticasView },
-      { path: 'usuarios', component: UsuariosView },
+      { path: 'usuarios', component: UsuariosView, meta: { requiresAdmin: true } },
       { path: 'perfil', component: PerfilView },
       { path: 'settings', component: SettingsView },
       { path: 'vocabulario', component: VocabularioView },
       { path: 'glosario', component: GlosarioView },
-      { path: 'curriculum', component: CurriculumView },
+      { path: 'curriculum', component: CurriculumView, meta: { requiresAdmin: true } },
       { path: 'dialogos', component: DialogosView },
     ],
   },
@@ -77,6 +77,10 @@ router.beforeEach(async (to) => {
 
   if (to.meta['requiresAuth'] && !auth.isAuthenticated) {
     return '/login'
+  }
+
+  if (to.meta['requiresAdmin'] && !auth.isAdmin) {
+    return '/dashboard/inicio'
   }
 
   if ((to.path === '/login' || to.path === '/recover') && auth.isAuthenticated) {

@@ -13,26 +13,26 @@ const router = Router()
 
 // Programs/Levels
 router.get('/programs', optionalAuthenticate, getPrograms)
-router.post('/programs', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createProgram)
-router.put('/programs/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateProgram)
-router.delete('/programs/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteProgram)
+router.post('/programs', authenticate, requireRole('ADMIN'), createProgram)
+router.put('/programs/:id', authenticate, requireRole('ADMIN'), updateProgram)
+router.delete('/programs/:id', authenticate, requireRole('ADMIN'), deleteProgram)
 
 // Competencies
 router.get('/competencies', optionalAuthenticate, getCompetencies)
-router.post('/competencies', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createCompetency)
-router.put('/competencies/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateCompetency)
-router.delete('/competencies/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteCompetency)
+router.post('/competencies', authenticate, requireRole('ADMIN'), createCompetency)
+router.put('/competencies/:id', authenticate, requireRole('ADMIN'), updateCompetency)
+router.delete('/competencies/:id', authenticate, requireRole('ADMIN'), deleteCompetency)
 
 // RAPs / Learning Outcomes
 router.get('/raps', optionalAuthenticate, getRaps)
-router.post('/raps', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createRap)
-router.put('/raps/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateRap)
-router.delete('/raps/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteRap)
+router.post('/raps', authenticate, requireRole('ADMIN'), createRap)
+router.put('/raps/:id', authenticate, requireRole('ADMIN'), updateRap)
+router.delete('/raps/:id', authenticate, requireRole('ADMIN'), deleteRap)
 
 // Fichas / Cohortes
 router.get('/cohorts', optionalAuthenticate, getCohorts)
-router.post('/cohorts', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createCohort)
-router.put('/cohorts/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), updateCohort)
-router.delete('/cohorts/:id', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), deleteCohort)
+router.post('/cohorts', authenticate, requireRole('ADMIN'), createCohort)
+router.put('/cohorts/:id', authenticate, requireRole('ADMIN'), updateCohort)
+router.delete('/cohorts/:id', authenticate, requireRole('ADMIN'), deleteCohort)
 
 export default router
