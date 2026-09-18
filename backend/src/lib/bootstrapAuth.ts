@@ -395,20 +395,100 @@ export async function ensureDefaultDialogues(): Promise<void> {
 }
 
 export async function ensureDefaultCourses(): Promise<void> {
-  const count = await prisma.course.count()
-  if (count > 0) return
-
   const DEFAULT_COURSES = [
-    { slug: 'fundamentos-enfermeria', title: 'Fundamentos de Enfermería', description: 'Conceptos esenciales, protocolos de atención básica y ética del cuidado del paciente.', category: 'Básico', duration: '4 semanas', icon: 'medical_services', iconColor: '#3b82f6', bg: 'bg-blue-50' },
-    { slug: 'cardiologia-clinica', title: 'Cardiología Clínica', description: 'Evaluación cardiovascular, lectura básica de ECG y manejo de fármacos antiarrítmicos.', category: 'Especialidad', duration: '6 semanas', icon: 'cardiology', iconColor: '#ef4444', bg: 'bg-red-50' },
-    { slug: 'farmacologia-aplicada', title: 'Farmacología Aplicada', description: 'Cálculo de dosis, vías de administración e interacciones farmacológicas frecuentes.', category: 'Farmacia', duration: '5 semanas', icon: 'prescriptions', iconColor: '#10b981', bg: 'bg-emerald-50' },
-    { slug: 'comunicacion-salud', title: 'Comunicación en Salud', description: 'Técnicas de comunicación terapéutica, empatía y trato con pacientes y familiares en inglés.', category: 'Habilidades', duration: '3 semanas', icon: 'forum', iconColor: '#8b5cf6', bg: 'bg-purple-50' },
-    { slug: 'urgencias-emergencias', title: 'Urgencias y Emergencias', description: 'Soporte vital básico y avanzado, triage estructurado y manejo de situaciones críticas.', category: 'Crítico', duration: '8 semanas', icon: 'emergency', iconColor: '#f59e0b', bg: 'bg-amber-50' },
-    { slug: 'pediatria-neonatologia', title: 'Pediatría y Neonatología', description: 'Cuidados especializados en recién nacidos, lactantes y niños en entorno hospitalario.', category: 'Especialidad', duration: '6 semanas', icon: 'child_care', iconColor: '#ec4899', bg: 'bg-pink-50' }
+    {
+      slug: 'getting-to-know-other-people',
+      title: 'Getting to Know Other People',
+      description: 'Módulo 1 — Fase Análisis · RAP 1. Aprende a saludar, presentarte, dar información personal y comunicarte con pacientes extranjeros en inglés.',
+      category: 'Básico',
+      duration: '8h',
+      icon: 'medical_services',
+      iconColor: '#006688',
+      bg: 'bg-teal-50'
+    },
+    {
+      slug: 'work-life-interaction',
+      title: 'Work Life Interaction',
+      description: 'Módulo 2 — Fase Planeación · RAP 2 y 3. Caso Mr. Thomas: Pasado simple, adjetivos descriptivos, partes del cuerpo, notas de enfermería y entrega de turno (Handover).',
+      category: 'Intermedio',
+      duration: '12h',
+      icon: 'assignment_ind',
+      iconColor: '#4f46e5',
+      bg: 'bg-indigo-50'
+    },
+    {
+      slug: 'workplace-communication',
+      title: 'Workplace Communication',
+      description: 'Módulo 3 — Fase Ejecución · RAP 4 y 5. Comunicación con médicos, colegas y visitantes: Presente simple vs. continuo, herramientas médicas, checklist clínico y propuestas de mejora.',
+      category: 'Avanzado',
+      duration: '14h',
+      icon: 'groups',
+      iconColor: '#d97706',
+      bg: 'bg-amber-50'
+    },
+    {
+      slug: 'professional-practice',
+      title: 'Professional Practice',
+      description: 'Módulo 4 — Fase Evaluación · RAP 6. ¡Mr. Thomas se va a casa! Instrucciones de alta médica, recomendaciones de cuidado en casa con modales y análisis de listas de verificación.',
+      category: 'Profesional',
+      duration: '10h',
+      icon: 'verified_user',
+      iconColor: '#059669',
+      bg: 'bg-emerald-50'
+    }
   ]
 
-  await prisma.course.createMany({ data: DEFAULT_COURSES })
-  console.log('Cursos clínicos iniciales sembrados con éxito.')
+  const count = await prisma.course.count()
+  if (count === 0) {
+    await prisma.course.createMany({ data: DEFAULT_COURSES })
+    console.log('Cursos clínicos iniciales (4 módulos de Miro) sembrados con éxito.')
+    return
+  }
+
+  // Si existen los cursos genéricos antiguos, actualizarlos a los 4 módulos oficiales de Miro
+  const oldCourses = await prisma.course.findMany({
+    where: {
+      slug: {
+        in: [
+          'fundamentos-enfermeria',
+          'cardiologia-clinica',
+          'farmacologia-aplicada',
+          'comunicacion-salud',
+          'urgencias-emergencias',
+          'pediatria-neonatologia'
+        ]
+      }
+    },
+    orderBy: { id: 'asc' }
+  })
+
+  if (oldCourses.length > 0) {
+    for (let i = 0; i < DEFAULT_COURSES.length; i++) {
+      const target = DEFAULT_COURSES[i]
+      if (oldCourses[i]) {
+        await prisma.course.update({
+          where: { id: oldCourses[i].id },
+          data: target
+        })
+      } else {
+        await prisma.course.upsert({
+          where: { slug: target.slug },
+          update: target,
+          create: target
+        })
+      }
+    }
+    // Eliminar los cursos sobrantes genéricos (5 y 6) si no tienen progreso
+    for (let j = DEFAULT_COURSES.length; j < oldCourses.length; j++) {
+      const surplus = oldCourses[j]
+      try {
+        await prisma.course.delete({ where: { id: surplus.id } })
+      } catch {
+        // Ignorar si tiene restricciones
+      }
+    }
+    console.log('Cursos sincronizados exitosamente con la estructura oficial de 4 módulos.')
+  }
 }
 
 export async function ensureDefaultGlossary(): Promise<void> {

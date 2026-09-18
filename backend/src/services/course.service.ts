@@ -58,6 +58,41 @@ export class CourseService {
           data: DEFAULT_COURSES,
           skipDuplicates: true
         })
+        return
+      }
+
+      // Sincronizar si aún existen cursos genéricos anteriores
+      const oldCourses = await prisma.course.findMany({
+        where: {
+          slug: {
+            in: [
+              'fundamentos-enfermeria',
+              'cardiologia-clinica',
+              'farmacologia-aplicada',
+              'comunicacion-salud',
+              'urgencias-emergencias',
+              'pediatria-neonatologia'
+            ]
+          }
+        },
+        orderBy: { id: 'asc' }
+      })
+
+      if (oldCourses.length > 0) {
+        for (let i = 0; i < DEFAULT_COURSES.length; i++) {
+          const target = DEFAULT_COURSES[i]
+          if (oldCourses[i]) {
+            await prisma.course.update({
+              where: { id: oldCourses[i].id },
+              data: target
+            })
+          }
+        }
+        for (let j = DEFAULT_COURSES.length; j < oldCourses.length; j++) {
+          try {
+            await prisma.course.delete({ where: { id: oldCourses[j].id } })
+          } catch {}
+        }
       }
     } catch (e) {
       console.warn('[CourseService] Could not auto-seed courses:', e)

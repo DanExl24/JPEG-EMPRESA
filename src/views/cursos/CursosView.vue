@@ -659,6 +659,9 @@ async function fetchCourses() {
         courses.value = list.map((c, i) => {
           const fallback = courses.value[i] || courses.value[0] || {}
           const studentTotal = c.students !== undefined ? c.students : (c.studentsCount !== undefined ? c.studentsCount : 0)
+          const cat = c.category || fallback.category || 'Básico'
+          const catBg = cat === 'Profesional' ? 'bg-emerald-100' : cat === 'Avanzado' ? 'bg-amber-100' : cat === 'Intermedio' ? 'bg-indigo-100' : 'bg-teal-100'
+          const catText = cat === 'Profesional' ? 'text-emerald-700' : cat === 'Avanzado' ? 'text-amber-700' : cat === 'Intermedio' ? 'text-indigo-700' : 'text-teal-700'
           return {
             ...fallback,
             ...c,
@@ -667,15 +670,15 @@ async function fetchCourses() {
             title: c.title,
             description: c.description,
             duration: c.duration || fallback.duration || '10h',
-            category: c.category || fallback.category || 'Básico',
+            category: cat,
             students: studentTotal,
             studentsCount: studentTotal,
             activitiesCount: c.activitiesCount !== undefined ? c.activitiesCount : 0,
             icon: c.icon || fallback.icon || 'medical_services',
             iconColor: c.iconColor || fallback.iconColor || '#006688',
             bg: c.bg || fallback.bg || 'bg-teal-50',
-            categoryBg: c.categoryBg || fallback.categoryBg || 'bg-teal-100',
-            categoryText: c.categoryText || fallback.categoryText || 'text-teal-700',
+            categoryBg: catBg,
+            categoryText: catText,
             programId: c.programId || null,
             programName: c.programName || null,
             progress: c.progress || 0
