@@ -689,10 +689,10 @@
                     :key="idx" 
                     @click="selectSopaCell(idx)"
                     :class="`w-8 h-8 rounded text-xs font-bold border transition-all ${
-                      isCellFoundWord(idx)
-                        ? 'bg-green-400 text-white border-green-500'
-                        : selectedLetters.includes(idx)
-                          ? 'bg-[#006688] text-white border-[#006688] scale-105'
+                      selectedLetters.includes(idx)
+                        ? 'bg-[#006688] text-white border-[#006688] scale-105 shadow-sm'
+                        : isCellFoundWord(idx)
+                          ? 'bg-green-400 text-white border-green-500'
                           : 'bg-white text-gray-700 border-gray-200 hover:bg-[#006688]/10 cursor-pointer'
                     }`"
                   >
@@ -1719,9 +1719,9 @@ const sopaGrid = computed(() => {
   const seed = words.join('').split('').reduce((acc, c) => acc + c.charCodeAt(0), 1)
   const rand = seededRand(seed)
 
-  // grid[row][col] = { letter, wordIdx, posInWord }
+  // grid[row][col] = { letter, words: [{ word, wordIdx, posInWord }] }
   const grid = Array.from({ length: size }, () =>
-    Array.from({ length: size }, () => ({ letter: '', wordIdx: -1, posInWord: -1 }))
+    Array.from({ length: size }, () => ({ letter: '', words: [] }))
   )
 
   // Directions: horizontal, vertical, diagonal
@@ -1760,7 +1760,8 @@ const sopaGrid = computed(() => {
         for (let i = 0; i < word.length; i++) {
           const r = startR + dr * i
           const c = startC + dc * i
-          grid[r][c] = { letter: word[i], wordIdx: wi, posInWord: i }
+          grid[r][c].letter = word[i]
+          grid[r][c].words.push({ word, wordIdx: wi, posInWord: i })
         }
         placed = true
       }
@@ -1772,7 +1773,7 @@ const sopaGrid = computed(() => {
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
       if (grid[r][c].letter === '') {
-        grid[r][c] = { letter: alphabet[Math.floor(rand() * alphabet.length)], wordIdx: -1, posInWord: -1 }
+        grid[r][c] = { letter: alphabet[Math.floor(rand() * alphabet.length)], words: [] }
       }
     }
   }
@@ -1782,12 +1783,22 @@ const sopaGrid = computed(() => {
 // wordCellMap: for each word, the list of cell indices in sopaGrid
 const wordCellMap = computed(() => {
   const map = {}
-  sopaWordsList.value.forEach((w, wi) => {
-    map[w] = sopaGrid.value
-      .map((cell, idx) => ({ cell, idx }))
-      .filter(({ cell }) => cell.wordIdx === wi)
-      .sort((a, b) => a.cell.posInWord - b.cell.posInWord)
-      .map(({ idx }) => idx)
+  sopaWordsList.value.forEach(w => {
+    map[w] = []
+  })
+  sopaGrid.value.forEach((cell, idx) => {
+    if (cell.words && cell.words.length) {
+      cell.words.forEach(info => {
+        if (!map[info.word]) map[info.word] = []
+        map[info.word].push({ idx, posInWord: info.posInWord })
+      })
+    }
+  })
+  sopaWordsList.value.forEach(w => {
+    if (map[w]) {
+      map[w].sort((a, b) => a.posInWord - b.posInWord)
+      map[w] = map[w].map(item => item.idx)
+    }
   })
   return map
 })
@@ -1806,13 +1817,24 @@ function isCellFoundWord(idx) {
   return foundWordCells.value.has(idx)
 }
 
+function isCellFullyFound(idx) {
+  // Check if this cell belongs to any remaining unfound word
+  const belongsToUnfound = sopaWordsList.value.some(w => {
+    if (foundWords.value.includes(w)) return false
+    const cells = wordCellMap.value[w] || []
+    return cells.includes(idx)
+  })
+  if (belongsToUnfound) return false
+  return foundWordCells.value.has(idx)
+}
+
 // Selection hint feedback
 const sopaSelectionHint = ref(null)
 let sopaHintTimer = null
 
 function selectSopaCell(idx) {
-  // If cell belongs to an already-found word, ignore
-  if (isCellFoundWord(idx)) return
+  // If cell belongs exclusively to already-found words, ignore
+  if (isCellFullyFound(idx)) return
 
   const pos = selectedLetters.value.indexOf(idx)
   if (pos >= 0) {
@@ -1823,11 +1845,6 @@ function selectSopaCell(idx) {
   }
 
   selectedLetters.value.push(idx)
-
-  // After each selection, check if the current selection spells any word
-  const selectedWord = selectedLetters.value
-    .map(i => sopaGrid.value[i]?.letter || '')
-    .join('')
 
   // Check all words: does current selection exactly match word cells?
   let matched = null
