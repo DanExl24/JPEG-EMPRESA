@@ -36,23 +36,217 @@
       </div>
     </div>
 
-    <!-- Alphabet filter -->
-    <div class="flex flex-wrap gap-1.5 items-center">
+    <!-- Interactive Filter Toolbar -->
+    <div class="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-4">
+      
+      <!-- Filter Row 1: Clinical Specialties / Areas (Horizontal Scrollable Chips) -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-black text-gray-700 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-emerald-600 text-base">category</span>
+            Especialidades Médicas:
+          </span>
+          <span class="text-[11px] font-bold text-gray-400">
+            {{ presentAreasWithCount.length }} áreas registradas
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+          <button
+            @click="selectedArea = 'all'"
+            :class="`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+              selectedArea === 'all'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/70'
+            }`"
+          >
+            <span>Todas</span>
+            <span :class="`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+              selectedArea === 'all' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+            }`">
+              {{ glossaryTerms.length }}
+            </span>
+          </button>
+
+          <button
+            v-for="area in presentAreasWithCount"
+            :key="area.name"
+            @click="selectedArea = selectedArea === area.name ? 'all' : area.name"
+            :class="`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+              selectedArea === area.name
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/70'
+            }`"
+          >
+            <span>{{ area.name }}</span>
+            <span :class="`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+              selectedArea === area.name ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+            }`">
+              {{ area.count }}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Row 2: Alphabet Index (A-Z) -->
+      <div class="pt-3 border-t border-gray-100 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-black text-gray-700 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-teal-600 text-base">spellcheck</span>
+            Índice Alfabético:
+          </span>
+          <button
+            v-if="activeLetter"
+            @click="activeLetter = null"
+            class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-0.5"
+          >
+            <span class="material-symbols-outlined text-xs">close</span>
+            Mostrar todo el abecedario
+          </button>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 items-center">
+          <button
+            @click="activeLetter = null"
+            :class="`px-2.5 h-7 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              activeLetter === null
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'bg-gray-50 text-gray-500 border border-gray-200/70 hover:bg-gray-100'
+            }`"
+          >
+            Todas
+          </button>
+
+          <button
+            v-for="letter in alphabet"
+            :key="letter"
+            @click="activeLetter = activeLetter === letter ? null : letter"
+            :class="`w-7 h-7 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              activeLetter === letter
+                ? 'bg-emerald-600 text-white shadow-sm scale-105'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-400 hover:text-emerald-600'
+            }`"
+          >
+            {{ letter }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Row 3: Content Types, Sort & View Actions -->
+      <div class="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+        
+        <!-- Content Attributes Filters -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="font-bold text-gray-500 mr-1">Contenido:</span>
+          <button
+            @click="contentFilter = 'all'"
+            :class="`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+              contentFilter === 'all'
+                ? 'bg-gray-800 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`"
+          >
+            Todos
+          </button>
+
+          <button
+            @click="contentFilter = contentFilter === 'with_example' ? 'all' : 'with_example'"
+            :class="`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              contentFilter === 'with_example'
+                ? 'bg-teal-700 text-white shadow-2xs'
+                : 'bg-teal-50 text-teal-800 border border-teal-200/80 hover:bg-teal-100'
+            }`"
+            title="Mostrar solo términos que incluyen ejemplo o contexto clínico"
+          >
+            <span class="material-symbols-outlined text-xs">clinical_notes</span>
+            <span>Con Caso Clínico</span>
+            <span class="text-[10px] opacity-75 font-semibold">({{ termsWithExampleCount }})</span>
+          </button>
+
+          <button
+            @click="contentFilter = contentFilter === 'with_related' ? 'all' : 'with_related'"
+            :class="`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              contentFilter === 'with_related'
+                ? 'bg-indigo-700 text-white shadow-2xs'
+                : 'bg-indigo-50 text-indigo-800 border border-indigo-200/80 hover:bg-indigo-100'
+            }`"
+            title="Mostrar solo conceptos con términos relacionados"
+          >
+            <span class="material-symbols-outlined text-xs">hub</span>
+            <span>Con Relacionados</span>
+            <span class="text-[10px] opacity-75 font-semibold">({{ termsWithRelatedCount }})</span>
+          </button>
+        </div>
+
+        <!-- Sorting & Global Actions -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex items-center gap-1 bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-200">
+            <span class="material-symbols-outlined text-gray-400 text-sm">sort</span>
+            <select
+              v-model="sortBy"
+              class="bg-transparent text-xs font-bold text-gray-700 outline-none cursor-pointer"
+            >
+              <option value="alpha_asc">Alfabético: A → Z</option>
+              <option value="alpha_desc">Alfabético: Z → A</option>
+              <option value="area">Por Especialidad</option>
+              <option value="newest">Más Recientes</option>
+            </select>
+          </div>
+
+          <button
+            @click="expanded.size === filteredTerms.length ? collapseAll() : expandAll()"
+            class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold flex items-center gap-1 cursor-pointer transition-colors"
+            :title="expanded.size === filteredTerms.length ? 'Colapsar todas las tarjetas' : 'Expandir todas las tarjetas'"
+          >
+            <span class="material-symbols-outlined text-xs">
+              {{ expanded.size === filteredTerms.length ? 'unfold_less' : 'unfold_more' }}
+            </span>
+            <span>{{ expanded.size === filteredTerms.length ? 'Colapsar' : 'Expandir' }}</span>
+          </button>
+
+          <button
+            v-if="hasActiveFilters"
+            @click="resetFilters"
+            class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold flex items-center gap-1 cursor-pointer transition-colors"
+            title="Restablecer todos los filtros"
+          >
+            <span class="material-symbols-outlined text-xs">restart_alt</span>
+            <span>Limpiar</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Active Filters Summary Banner -->
+    <div class="flex items-center justify-between flex-wrap gap-2 text-xs font-bold text-gray-500 px-1">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span>Mostrando <span class="text-emerald-700 font-black">{{ filteredTerms.length }}</span> de {{ glossaryTerms.length }} conceptos</span>
+        <span v-if="selectedArea !== 'all'" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md text-[11px] border border-emerald-200 flex items-center gap-1">
+          Área: {{ selectedArea }}
+          <button @click="selectedArea = 'all'" class="hover:text-emerald-900 cursor-pointer">×</button>
+        </span>
+        <span v-if="activeLetter" class="px-2 py-0.5 bg-teal-50 text-teal-700 rounded-md text-[11px] border border-teal-200 flex items-center gap-1">
+          Letra: {{ activeLetter }}
+          <button @click="activeLetter = null" class="hover:text-teal-900 cursor-pointer">×</button>
+        </span>
+        <span v-if="contentFilter !== 'all'" class="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md text-[11px] border border-purple-200 flex items-center gap-1">
+          {{ contentFilter === 'with_example' ? 'Con Caso Clínico' : 'Con Relacionados' }}
+          <button @click="contentFilter = 'all'" class="hover:text-purple-900 cursor-pointer">×</button>
+        </span>
+        <span v-if="searchQuery.trim()" class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md text-[11px] border border-amber-200 flex items-center gap-1">
+          Búsqueda: "{{ searchQuery }}"
+          <button @click="searchQuery = ''" class="hover:text-amber-900 cursor-pointer">×</button>
+        </span>
+      </div>
+
       <button
-        v-for="letter in alphabet"
-        :key="letter"
-        @click="activeLetter = activeLetter === letter ? null : letter"
-        :class="`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
-          activeLetter === letter
-            ? 'bg-emerald-600 text-white shadow-sm'
-            : 'bg-white text-gray-500 border border-gray-200 hover:border-emerald-400 hover:text-emerald-600'
-        }`"
-      >{{ letter }}</button>
-      <button
-        v-if="activeLetter"
-        @click="activeLetter = null"
-        class="px-3 h-8 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
-      >Todas</button>
+        v-if="hasActiveFilters"
+        @click="resetFilters"
+        class="text-xs text-emerald-600 hover:text-emerald-700 cursor-pointer flex items-center gap-1"
+      >
+        <span>Restablecer vista</span>
+      </button>
     </div>
 
     <!-- Loading spinner -->
@@ -77,8 +271,25 @@
               <span class="text-lg font-black text-emerald-600">{{ (term.term || '?')[0].toUpperCase() }}</span>
             </div>
             <div class="min-w-0">
-              <p class="font-black text-gray-800 truncate">{{ term.term }}</p>
-              <p class="text-xs text-gray-400 mt-0.5 truncate">{{ term.area }}</p>
+              <div class="flex items-center gap-2">
+                <p class="font-black text-gray-800 truncate text-base">{{ term.term }}</p>
+                <button
+                  @click.stop="speak(term.term)"
+                  class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all cursor-pointer"
+                  title="Pronunciar término clínico"
+                >
+                  <span class="material-symbols-outlined text-sm block">volume_up</span>
+                </button>
+              </div>
+              <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span class="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.2 rounded-md">{{ term.area }}</span>
+                <span v-if="term.example" class="text-[10px] font-semibold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded flex items-center gap-0.5" title="Tiene caso clínico">
+                  <span class="material-symbols-outlined text-[11px]">clinical_notes</span> Caso
+                </span>
+                <span v-if="term.related && term.related.length" class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded flex items-center gap-0.5" title="Tiene términos relacionados">
+                  <span class="material-symbols-outlined text-[11px]">hub</span> {{ term.related.length }} rel.
+                </span>
+              </div>
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
@@ -106,10 +317,27 @@
           <p class="text-sm text-gray-700 leading-relaxed">{{ term.definition }}</p>
           <div v-if="term.related && term.related.length" class="flex flex-wrap gap-2 items-center">
             <span class="text-xs font-bold text-gray-400">Relacionados:</span>
-            <span v-for="r in term.related" :key="r" class="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-full">{{ r }}</span>
+            <span 
+              v-for="r in term.related" 
+              :key="r" 
+              @click.stop="searchQuery = r"
+              class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-full cursor-pointer transition-colors"
+              title="Filtrar por este término relacionado"
+            >
+              {{ r }}
+            </span>
           </div>
           <div v-if="term.example" class="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
-            <p class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-1">Contexto clínico / Aplicación</p>
+            <div class="flex items-center justify-between mb-1">
+              <p class="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Contexto clínico / Aplicación</p>
+              <button
+                @click="speak(term.example)"
+                class="text-[11px] text-gray-400 hover:text-emerald-600 flex items-center gap-1 cursor-pointer"
+                title="Escuchar contexto clínico"
+              >
+                <span class="material-symbols-outlined text-xs">volume_up</span> Escuchar
+              </button>
+            </div>
             <p class="text-xs text-gray-600 italic leading-relaxed">"{{ term.example }}"</p>
           </div>
         </div>
@@ -234,6 +462,9 @@ const apiBaseUrl = getApiBaseUrl()
 
 const searchQuery = ref('')
 const activeLetter = ref(null)
+const selectedArea = ref('all')
+const contentFilter = ref('all') // 'all' | 'with_example' | 'with_related'
+const sortBy = ref('alpha_asc') // 'alpha_asc' | 'alpha_desc' | 'area' | 'newest'
 const expanded = ref(new Set())
 const loading = ref(false)
 const saving = ref(false)
@@ -329,19 +560,104 @@ const availableAreas = computed(() => {
   return Array.from(set).sort()
 })
 
+const presentAreasWithCount = computed(() => {
+  const map = new Map()
+  glossaryTerms.value.forEach(t => {
+    if (t.area) {
+      map.set(t.area, (map.get(t.area) || 0) + 1)
+    }
+  })
+  return Array.from(map.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+})
+
+const termsWithExampleCount = computed(() => {
+  return glossaryTerms.value.filter(t => Boolean(t.example && t.example.trim())).length
+})
+
+const termsWithRelatedCount = computed(() => {
+  return glossaryTerms.value.filter(t => Array.isArray(t.related) && t.related.length > 0).length
+})
+
+const hasActiveFilters = computed(() => {
+  return Boolean(
+    searchQuery.value.trim() || 
+    activeLetter.value || 
+    selectedArea.value !== 'all' || 
+    contentFilter.value !== 'all' ||
+    sortBy.value !== 'alpha_asc'
+  )
+})
+
+function resetFilters() {
+  searchQuery.value = ''
+  activeLetter.value = null
+  selectedArea.value = 'all'
+  contentFilter.value = 'all'
+  sortBy.value = 'alpha_asc'
+}
+
+function expandAll() {
+  filteredTerms.value.forEach(t => expanded.value.add(t.term))
+}
+
+function collapseAll() {
+  expanded.value.clear()
+}
+
+function speak(text) {
+  if (!text || !('speechSynthesis' in window)) return
+  window.speechSynthesis.cancel()
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'es-ES'
+  utterance.rate = 0.92
+  window.speechSynthesis.speak(utterance)
+}
+
 const filteredTerms = computed(() => {
-  let terms = [...glossaryTerms.value].sort((a, b) => (a.term || '').localeCompare(b.term || ''))
-  if (activeLetter.value) {
-    terms = terms.filter(t => (t.term || '?')[0].toUpperCase() === activeLetter.value)
-  }
+  let terms = [...glossaryTerms.value]
+
+  // Filtro por búsqueda textual (término, definición, área, ejemplos o relacionados)
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
     terms = terms.filter(t =>
       (t.term || '').toLowerCase().includes(q) ||
       (t.definition || '').toLowerCase().includes(q) ||
-      (t.area || '').toLowerCase().includes(q)
+      (t.area || '').toLowerCase().includes(q) ||
+      (Array.isArray(t.related) && t.related.some(r => r.toLowerCase().includes(q))) ||
+      (t.example || '').toLowerCase().includes(q)
     )
   }
+
+  // Filtro por letra inicial
+  if (activeLetter.value) {
+    terms = terms.filter(t => (t.term || '?')[0].toUpperCase() === activeLetter.value)
+  }
+
+  // Filtro por Especialidad / Área Médica
+  if (selectedArea.value !== 'all') {
+    terms = terms.filter(t => t.area === selectedArea.value)
+  }
+
+  // Filtro por tipo de contenido
+  if (contentFilter.value === 'with_example') {
+    terms = terms.filter(t => Boolean(t.example && t.example.trim()))
+  } else if (contentFilter.value === 'with_related') {
+    terms = terms.filter(t => Array.isArray(t.related) && t.related.length > 0)
+  }
+
+  // Ordenamiento interactivo
+  if (sortBy.value === 'alpha_asc') {
+    terms.sort((a, b) => (a.term || '').localeCompare(b.term || ''))
+  } else if (sortBy.value === 'alpha_desc') {
+    terms.sort((a, b) => (b.term || '').localeCompare(a.term || ''))
+  } else if (sortBy.value === 'area') {
+    terms.sort((a, b) => (a.area || '').localeCompare(b.area || '') || (a.term || '').localeCompare(b.term || ''))
+  } else if (sortBy.value === 'newest') {
+    terms.sort((a, b) => (b.id || 0) - (a.id || 0))
+  }
+
   return terms
 })
 
