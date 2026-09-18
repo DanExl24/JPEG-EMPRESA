@@ -238,6 +238,8 @@ const pageTitleKeys = {
 
 const currentPageTitle = computed(() => {
   if (route.path.startsWith('/dashboard/actividades/')) return t('nav.activities')
+  if (route.path.startsWith('/dashboard/juegos/')) return t('nav.games')
+  if (route.path.startsWith('/dashboard/cursos/')) return t('nav.courses')
   const key = pageTitleKeys[route.path]
   return key ? t(key) : t('nav.dashboard')
 })

@@ -49,7 +49,7 @@
         <div v-if="!gameFinished" class="space-y-6">
           <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <span class="text-[10px] font-black uppercase tracking-wider text-blue-700">Ronda {{ currentRoundIndex + 1 }} de {{ rounds.length }}</span>
+              <span class="text-[10px] font-black uppercase tracking-wider text-blue-700">Ronda {{ currentRoundIndex + 1 }} de {{ activeRounds.length }}</span>
               <p class="text-sm font-bold text-gray-800">{{ currentRound.theme }}</p>
             </div>
             <span class="text-xs font-semibold text-gray-500">Arrastra cada elemento a su casilla en inglés</span>
@@ -119,7 +119,7 @@
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
               }`"
             >
-              {{ currentRoundIndex === rounds.length - 1 ? 'Finalizar Calentamiento' : 'Siguiente Ronda' }}
+              {{ currentRoundIndex === activeRounds.length - 1 ? 'Finalizar Calentamiento' : 'Siguiente Ronda' }}
               <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>
@@ -402,6 +402,23 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Fallback en caso de que activeEngine no coincida con ningún motor conocido -->
+      <div v-else class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center space-y-4">
+        <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+          <span class="material-symbols-outlined text-3xl">sports_esports</span>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-base font-black text-gray-800">Motor de Minijuego no Disponible</h4>
+          <p class="text-xs text-gray-500">Este minijuego está en configuración o su plantilla aún no está disponible.</p>
+        </div>
+        <button 
+          @click="quitGame" 
+          class="px-5 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
+        >
+          Volver al Catálogo de Juegos
+        </button>
       </div>
     </div>
 
@@ -1424,9 +1441,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
+
+const route = useRoute()
+const router = useRouter()
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
@@ -2035,26 +2056,38 @@ function launchGame(gameOrKey) {
 
   if (typeof gameOrKey === 'string') {
     keyOrTemplate = gameOrKey
-    game = arcadeGamesList.value.find(g => g.key === gameOrKey || g.template === gameOrKey)
+    game = arcadeGamesList.value.find(g => g.key === gameOrKey || g.template === gameOrKey || String(g.id) === String(gameOrKey))
   } else if (gameOrKey && typeof gameOrKey === 'object') {
     game = gameOrKey
-    keyOrTemplate = game.template || game.key
+    keyOrTemplate = game.key || game.template
   }
+
+  const selectedKey = game?.key || keyOrTemplate || 'warmup_drag_match'
 
   currentGameInstance.value = game || {
     name: 'Minijuego Clínico',
     subtitle: 'Práctica de enfermería',
     pts: 100,
-    key: keyOrTemplate
+    key: selectedKey
   }
 
-  activeGame.value = game?.key || keyOrTemplate
-  activeEngine.value = game?.template || keyOrTemplate
+  activeGame.value = selectedKey
+  activeEngine.value = game?.template || keyOrTemplate || 'warmup_drag_match'
   gameFinished.value = false
 
-  const customConfig = game?.config
-    ? (typeof game.config === 'string' ? JSON.parse(game.config) : game.config)
-    : null
+  // Sincronizar ruta en la URL si difiere
+  if (route.params.gameId !== selectedKey) {
+    router.replace(`/dashboard/juegos/${selectedKey}`)
+  }
+
+  let customConfig = null
+  if (game?.config) {
+    try {
+      customConfig = typeof game.config === 'string' ? JSON.parse(game.config) : game.config
+    } catch {
+      customConfig = null
+    }
+  }
 
   if (activeEngine.value === 'warmup_drag_match') {
     resetDragGame(customConfig)
@@ -2073,6 +2106,9 @@ function quitGame() {
   currentGameInstance.value = null
   isTeacherTestMode.value = false
   gameFinished.value = false
+  if (route.params.gameId) {
+    router.push('/dashboard/juegos')
+  }
   if (auth.isAdmin || auth.isInstructor) {
     loadAdminData()
   }
@@ -2164,6 +2200,7 @@ const DEFAULT_DRAG_ROUNDS = [
 ]
 
 const activeRounds = ref([...DEFAULT_DRAG_ROUNDS])
+const rounds = computed(() => activeRounds.value)
 const currentRoundCards = ref([])
 const currentRoundTargets = ref([])
 
@@ -2563,12 +2600,32 @@ function formatDate(dateStr) {
 // ─────────────────────────────────────────────────────────────
 // LIFECYCLE
 // ─────────────────────────────────────────────────────────────
+function checkRouteGame() {
+  const gameId = route.params.gameId
+  if (gameId && activeGame.value !== gameId) {
+    const found = arcadeGamesList.value.find(g => g.key === gameId || g.template === gameId || String(g.id) === String(gameId))
+    launchGame(found || gameId)
+  }
+}
+
+watch(() => route.params.gameId, (newGameId) => {
+  if (newGameId && activeGame.value !== newGameId) {
+    const found = arcadeGamesList.value.find(g => g.key === newGameId || g.template === newGameId || String(g.id) === String(newGameId))
+    launchGame(found || newGameId)
+  } else if (!newGameId && activeGame.value) {
+    activeGame.value = null
+    activeEngine.value = null
+    currentGameInstance.value = null
+  }
+})
+
 onMounted(async () => {
   setupMatchCardsFromData()
   if (auth.isAdmin || auth.isInstructor) {
     await loadAdminData()
   }
   await fetchArcadeContent()
+  checkRouteGame()
 })
 </script>
 
