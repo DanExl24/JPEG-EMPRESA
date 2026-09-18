@@ -293,6 +293,7 @@ export async function createActivity(req: Request<unknown, unknown, CreateActivi
     const {
       title,
       course,
+      courseId,
       phase,
       template,
       points,
@@ -323,6 +324,7 @@ export async function createActivity(req: Request<unknown, unknown, CreateActivi
       data: {
         title,
         course,
+        courseId: courseId ? parseInt(String(courseId)) : null,
         phase,
         template,
         points: parseInt(String(points)) || 10,
@@ -365,6 +367,7 @@ export async function updateActivity(req: Request<{ id: string }, unknown, Parti
     const {
       title,
       course,
+      courseId,
       phase,
       template,
       points,
@@ -409,6 +412,7 @@ export async function updateActivity(req: Request<{ id: string }, unknown, Parti
       data: {
         title: title !== undefined ? title : existing.title,
         course: course !== undefined ? course : existing.course,
+        courseId: courseId !== undefined ? (courseId ? parseInt(String(courseId)) : null) : existing.courseId,
         phase: phase !== undefined ? phase : existing.phase,
         template: template !== undefined ? template : existing.template,
         points: points !== undefined ? (parseInt(String(points)) || 10) : existing.points,

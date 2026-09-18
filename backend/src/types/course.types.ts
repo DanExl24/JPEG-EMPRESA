@@ -1,3 +1,31 @@
+export interface CourseStructurePhaseOne {
+  welcome?: string
+  gameWords?: string[] | string
+}
+
+export interface CourseStructurePhaseTwo {
+  grammar?: string
+  vocabulary?: string[] | string
+}
+
+export interface CourseStructurePhaseThree {
+  fillBlank?: string
+  voiceTarget?: string
+}
+
+export interface CourseStructurePhaseFour {
+  question?: string
+  correct?: string
+  incorrect?: string
+}
+
+export interface CourseStructure {
+  f1?: CourseStructurePhaseOne
+  f2?: CourseStructurePhaseTwo
+  f3?: CourseStructurePhaseThree
+  f4?: CourseStructurePhaseFour
+}
+
 export interface CreateCourseDto {
   title: string
   slug: string
@@ -8,6 +36,7 @@ export interface CreateCourseDto {
   iconColor?: string
   bg?: string
   programId?: number | null
+  structure?: CourseStructure | null
   raps?: string[] | string
 }
 

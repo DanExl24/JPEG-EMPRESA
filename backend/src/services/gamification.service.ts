@@ -746,8 +746,11 @@ export class GamificationService {
    * Operaciones CRUD sobre los Juegos del Arcade (Admin / Instructor)
    */
   static async createArcadeGame(data: any) {
+    if (!data.name || !data.name.trim()) {
+      throw new Error('El nombre del minijuego es requerido.')
+    }
     const rawKey = (data.name || 'game').toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30)
-    const key = `${rawKey}_${Date.now().toString().slice(-4)}`
+    const key = `${rawKey}_${Date.now()}_${Math.floor(Math.random() * 1000)}`
 
     return (prisma as any).arcadeGame.create({
       data: {

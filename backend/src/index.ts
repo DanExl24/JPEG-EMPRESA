@@ -18,6 +18,7 @@ import {
   ensureDefaultArcadeGames
 } from './lib/bootstrapAuth.js'
 import { GamificationService } from './services/gamification.service.js'
+import { CourseService } from './services/course.service.js'
 import { globalErrorHandler } from './middlewares/error.middleware.js'
 import prisma from './lib/db.js'
 
@@ -68,6 +69,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // 5. Rutas API Modulares (SRP & DRY)
 app.use('/api', apiRouter)
+app.use('/', apiRouter)
 app.use('/', testRoutes)
 
 // 6. Manejador Global de Errores (DRY)
@@ -86,6 +88,7 @@ try {
   await ensureDefaultVocabulary()
   await ensureDefaultDialogues()
   await ensureDefaultCourses()
+  await CourseService.syncActivityCourseIds()
   await ensureDefaultGlossary()
   await ensureDefaultArcadeGames()
   await GamificationService.ensureBadges()

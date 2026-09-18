@@ -423,14 +423,14 @@
             </div>
             <div>
               <h3 class="text-base font-black text-gray-800">{{ i18n.t('Entregas Recientes de Aprendices') }}</h3>
-              <p class="text-xs text-gray-400">{{ i18n.t('Talleres, quizzes y ejercicios de pronunciación en espera de retroalimentación.') }}</p>
+              <p class="text-xs text-gray-400">{{ i18n.t('Registro de actividades y retos formativos culminados por los aprendices.') }}</p>
             </div>
           </div>
           <router-link
             to="/dashboard/actividades"
             class="text-xs font-bold text-[#006688] hover:underline flex items-center gap-1"
           >
-            {{ i18n.t('Ver todas en Actividades') }}
+            {{ i18n.t('Ir a Actividades y Ver Entregas') }}
             <span class="material-symbols-outlined text-sm">arrow_forward</span>
           </router-link>
         </div>
@@ -459,19 +459,13 @@
 
             <div class="flex items-center gap-3">
               <span 
-                :class="`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${
-                  sub.passed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                :class="`text-[10px] font-black uppercase px-3 py-1.5 rounded-full flex items-center gap-1 shadow-2xs ${
+                  sub.passed ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
                 }`"
               >
+                <span class="material-symbols-outlined text-xs">{{ sub.passed ? 'check_circle' : 'pending' }}</span>
                 {{ sub.passed ? i18n.t('Completado') : i18n.t('Por Calificar') }}
               </span>
-              <router-link
-                :to="`/dashboard/actividades/${sub.activityId}`"
-                class="px-3 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1 shadow-xs"
-              >
-                <span class="material-symbols-outlined text-xs">edit_note</span>
-                {{ i18n.t('Evaluar') }}
-              </router-link>
             </div>
           </div>
         </div>
