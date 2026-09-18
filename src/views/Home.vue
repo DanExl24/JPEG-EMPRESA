@@ -1,13 +1,14 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { getApiBaseUrl } from '../lib/api'
 
 const router = useRouter()
+const auth = useAuthStore()
+const apiBaseUrl = getApiBaseUrl()
 
 const nurseImg = '/nurse.png'
-const cardiologiaImg = '/cardiologia.png'
-const farmacologiaImg = '/farmacologia.png'
-const comunicacionImg = '/comunicacion.png'
 
 function goLogin() {
   router.push('/login')
@@ -18,19 +19,52 @@ function scrollToSection(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
-const rankingTab = ref('semanal')
-const rankingData = {
-  semanal: [
-    { pos: 1, name: 'Julian Walters', role: 'Nurse Specialist', xp: '15,840', bg: 'bg-blue-200', text: 'text-blue-700', initials: 'JW' },
-    { pos: 2, name: 'Elena Rodriguez', role: 'Medical Student', xp: '14,210', bg: 'bg-rose-200', text: 'text-rose-700', initials: 'ER' },
-    { pos: 3, name: 'Mark Thompson', role: 'Care Assistant', xp: '12,900', bg: 'bg-green-200', text: 'text-green-700', initials: 'MT' },
-  ],
-  historico: [
-    { pos: 1, name: 'Sofia Martinez', role: 'Head Nurse', xp: '128,540', bg: 'bg-amber-200', text: 'text-amber-700', initials: 'SM' },
-    { pos: 2, name: 'Julian Walters', role: 'Nurse Specialist', xp: '119,220', bg: 'bg-blue-200', text: 'text-blue-700', initials: 'JW' },
-    { pos: 3, name: 'David Chen', role: 'ICU Nurse', xp: '104,870', bg: 'bg-sky-200', text: 'text-sky-700', initials: 'DC' },
-  ],
+// -------------------- Datos reales --------------------
+const profile = ref(null)   // { name, xp, badges: [] }
+const ranking = ref([])     // top-3 aprendices por XP (leaderboard real)
+const courses = ref([])     // catálogo real de cursos
+
+const authHeaders = () => (auth.token ? { Authorization: `Bearer ${auth.token}` } : {})
+
+const firstName = computed(() => (auth.user?.name || '').split(' ')[0] || 'Invitado')
+const xp = computed(() => profile.value?.xp ?? auth.user?.xp ?? 0)
+const level = computed(() => Math.floor(xp.value / 100) + 1)
+const xpInLevel = computed(() => xp.value % 100) // 0–99 → % de la barra de nivel
+const medals = computed(() => profile.value?.badges?.length ?? 0)
+
+async function loadProfile() {
+  if (!auth.isAuthenticated) return
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/learner/profile`, { headers: authHeaders() })
+    if (res.ok) { const d = await res.json(); profile.value = d.data ?? d }
+  } catch (e) { console.warn('No se pudo cargar el perfil:', e) }
 }
+
+async function loadRanking() {
+  if (!auth.isAuthenticated) return
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/learner/leaderboard`, { headers: authHeaders() })
+    if (res.ok) { const d = await res.json(); ranking.value = (d.data ?? d).slice(0, 3) }
+  } catch (e) { console.warn('No se pudo cargar el ranking:', e) }
+}
+
+async function loadCourses() {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/courses`, { headers: authHeaders() })
+    if (res.ok) { const d = await res.json(); courses.value = (d.data ?? d).slice(0, 3) }
+  } catch (e) { console.warn('No se pudieron cargar los cursos:', e) }
+}
+
+function openCourse(course) {
+  if (auth.isAuthenticated) router.push(`/dashboard/cursos/${course.id}`)
+  else goLogin()
+}
+
+onMounted(() => {
+  loadProfile()
+  loadRanking()
+  loadCourses()
+})
 </script>
 
 <template>
@@ -352,70 +386,84 @@ const rankingData = {
     <section id="comunidad" class="max-w-6xl mx-auto px-8 py-12 scroll-mt-20">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-        <!-- Profile card -->
-        <div class="bg-violet-600 rounded-2xl p-6 text-white">
+        <!-- Profile card (real, si hay sesión) -->
+        <div v-if="auth.isAuthenticated" class="bg-violet-600 rounded-2xl p-6 text-white">
           <div class="flex items-center gap-4 mb-6">
             <div class="w-14 h-14 rounded-full bg-violet-400 border-4 border-violet-300 flex items-center justify-center text-2xl">
               👩‍⚕️
             </div>
             <div>
-              <p class="font-bold text-lg">¡Hola, Sarah!</p>
-              <p class="text-xs text-violet-200">Rango: Nurse Resident</p>
+              <p class="font-bold text-lg">¡Hola, {{ firstName }}!</p>
+              <p class="text-xs text-violet-200">Rango: {{ auth.roleLabel }}</p>
             </div>
           </div>
 
           <div class="mb-4">
             <div class="flex items-center justify-between text-sm mb-1">
-              <span class="font-bold">Nivel 24</span>
-              <span class="text-violet-200 text-xs">2,400 XP</span>
+              <span class="font-bold">Nivel {{ level }}</span>
+              <span class="text-violet-200 text-xs">{{ xp.toLocaleString() }} XP</span>
             </div>
             <div class="w-full bg-violet-500 rounded-full h-2">
-              <div class="bg-white h-2 rounded-full" style="width: 62%"></div>
+              <div class="bg-white h-2 rounded-full transition-all" :style="`width: ${xpInLevel}%`"></div>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4 mb-6">
             <div class="bg-violet-700 bg-opacity-50 rounded-xl p-3 text-center">
               <div class="text-xl mb-1">🏅</div>
-              <p class="text-xs text-violet-200">18 MEDALLAS</p>
+              <p class="text-xs text-violet-200">{{ medals }} MEDALLAS</p>
             </div>
             <div class="bg-violet-700 bg-opacity-50 rounded-xl p-3 text-center">
               <div class="text-xl mb-1">⚡</div>
-              <p class="text-xs text-violet-200">8 ÍTEMS</p>
+              <p class="text-xs text-violet-200">NIVEL {{ level }}</p>
             </div>
           </div>
 
-          <button @click="goLogin" class="w-full bg-white text-violet-700 font-semibold text-sm py-3 rounded-xl hover:bg-violet-50 transition-colors">
+          <button @click="router.push('/dashboard/perfil')" class="w-full bg-white text-violet-700 font-semibold text-sm py-3 rounded-xl hover:bg-violet-50 transition-colors">
             Ver mi perfil completo
           </button>
         </div>
 
-        <!-- Ranking Global -->
+        <!-- Profile card (invitado) -->
+        <div v-else class="bg-violet-600 rounded-2xl p-6 text-white flex flex-col justify-center">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 rounded-full bg-violet-400 border-4 border-violet-300 flex items-center justify-center text-2xl">👋</div>
+            <div>
+              <p class="font-bold text-lg">Crea tu perfil</p>
+              <p class="text-xs text-violet-200">Gana XP, medallas y sube de nivel</p>
+            </div>
+          </div>
+          <p class="text-sm text-violet-100 mb-6 leading-relaxed">Inicia sesión para ver tu progreso real, tus insignias y tu posición en el ranking.</p>
+          <button @click="goLogin" class="w-full bg-white text-violet-700 font-semibold text-sm py-3 rounded-xl hover:bg-violet-50 transition-colors">
+            Iniciar sesión
+          </button>
+        </div>
+
+        <!-- Ranking Global (real) -->
         <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-gray-900">Ranking Global</h3>
-            <div class="flex gap-2">
-              <button
-                @click="rankingTab = 'semanal'"
-                :class="`text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${rankingTab === 'semanal' ? 'text-violet-600 bg-violet-50' : 'text-gray-500 hover:text-violet-600'}`"
-              >Semanal</button>
-              <button
-                @click="rankingTab = 'historico'"
-                :class="`text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${rankingTab === 'historico' ? 'text-violet-600 bg-violet-50' : 'text-gray-500 hover:text-violet-600'}`"
-              >Histórico</button>
+            <span class="text-xs font-semibold text-violet-600 bg-violet-50 px-3 py-1 rounded-lg">Por XP</span>
+          </div>
+
+          <div v-if="ranking.length" class="space-y-4">
+            <div v-for="row in ranking" :key="row.id" class="flex items-center gap-4">
+              <span class="text-gray-400 font-bold text-sm w-4">{{ row.rank }}</span>
+              <div class="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-sm font-bold text-violet-700">{{ row.initials }}</div>
+              <div class="flex-1">
+                <p class="font-semibold text-gray-900 text-sm">{{ row.name }}</p>
+                <p class="text-gray-400 text-xs">{{ row.activitiesPassed }} actividades superadas</p>
+              </div>
+              <span class="font-bold text-gray-800 text-sm">{{ row.points.toLocaleString() }} XP</span>
             </div>
           </div>
 
-          <div class="space-y-4">
-            <div v-for="row in rankingData[rankingTab]" :key="row.pos" class="flex items-center gap-4">
-              <span class="text-gray-400 font-bold text-sm w-4">{{ row.pos }}</span>
-              <div :class="`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${row.bg} ${row.text}`">{{ row.initials }}</div>
-              <div class="flex-1">
-                <p class="font-semibold text-gray-900 text-sm">{{ row.name }}</p>
-                <p class="text-gray-400 text-xs">{{ row.role }}</p>
-              </div>
-              <span class="font-bold text-gray-800 text-sm">{{ row.xp }}</span>
-            </div>
+          <div v-else class="py-10 text-center text-gray-400 text-sm font-semibold">
+            <p v-if="auth.isAuthenticated">Aún no hay datos de ranking.</p>
+            <template v-else>
+              <p class="mb-3">Inicia sesión para ver el ranking global.</p>
+              <button @click="goLogin" class="text-violet-600 font-bold hover:underline">Iniciar sesión</button>
+            </template>
           </div>
         </div>
       </div>
@@ -426,72 +474,28 @@ const rankingData = {
       <h2 class="text-2xl font-bold text-gray-900 mb-1">Tus Cursos</h2>
       <p class="text-gray-500 text-sm mb-8">Continúa donde lo dejaste y domina nuevas especialidades.</p>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- Cardiología -->
-        <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="h-40 bg-gradient-to-br from-blue-400 to-blue-700 relative flex items-center justify-center">
-            <span class="absolute top-3 left-3 bg-blue-900 bg-opacity-60 text-white text-xs font-bold px-2 py-1 rounded-lg">INTERMEDIO</span>
-            <img :src="cardiologiaImg" alt="" class="w-full h-full object-cover">
+      <div v-if="courses.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-for="course in courses" :key="course.id" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          <div class="h-40 relative flex items-center justify-center" :style="`background: linear-gradient(135deg, ${course.iconColor || '#7c3aed'}, ${course.iconColor || '#7c3aed'}bb)`">
+            <span class="absolute top-3 left-3 bg-black/40 text-white text-xs font-bold px-2 py-1 rounded-lg uppercase">{{ course.category }}</span>
+            <span class="material-symbols-outlined text-white text-6xl opacity-90">{{ course.icon || 'school' }}</span>
           </div>
           <div class="p-5">
-            <h4 class="font-bold text-gray-900 mb-3">Cardiología en Inglés</h4>
+            <h4 class="font-bold text-gray-900 mb-3 leading-snug">{{ course.title }}</h4>
             <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span>Progreso</span><span>65%</span>
+              <span>Progreso</span><span>{{ course.progress || 0 }}%</span>
             </div>
             <div class="w-full bg-gray-100 rounded-full h-2 mb-4">
-              <div class="bg-violet-500 h-2 rounded-full" style="width: 65%"></div>
+              <div class="bg-violet-500 h-2 rounded-full transition-all" :style="`width: ${course.progress || 0}%`"></div>
             </div>
-            <button @click="goLogin" class="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
-              Continuar
+            <button @click="openCourse(course)" class="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+              {{ (course.progress || 0) > 0 ? 'Continuar' : 'Iniciar' }}
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
             </button>
           </div>
         </div>
-
-        <!-- Farmacología -->
-        <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="h-40 bg-gradient-to-br from-gray-600 to-gray-900 relative flex items-center justify-center">
-            <span class="absolute top-3 left-3 bg-gray-800 bg-opacity-80 text-white text-xs font-bold px-2 py-1 rounded-lg">AVANZADO</span>
-            <img :src="farmacologiaImg" alt="" class="w-full h-full object-cover">
-          </div>
-          <div class="p-5">
-            <h4 class="font-bold text-gray-900 mb-3">Farmacología Aplicada</h4>
-            <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span>Progreso</span><span>52%</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-2 mb-4">
-              <div class="bg-green-500 h-2 rounded-full" style="width: 52%"></div>
-            </div>
-            <button @click="goLogin" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
-              Continuar
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Comunicación -->
-        <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="h-40 bg-gradient-to-br from-sky-400 to-sky-700 relative flex items-center justify-center">
-            <span class="absolute top-3 left-3 bg-sky-900 bg-opacity-60 text-white text-xs font-bold px-2 py-1 rounded-lg">BÁSICO</span>
-            <img :src="comunicacionImg" alt="" class="w-full h-full object-cover">
-          </div>
-          <div class="p-5">
-            <h4 class="font-bold text-gray-900 mb-3">Comunicación con Pacientes</h4>
-            <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span>Progreso</span><span>88%</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-2 mb-4">
-              <div class="bg-violet-500 h-2 rounded-full" style="width: 88%"></div>
-            </div>
-            <button @click="goLogin" class="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
-              Continuar
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
-            </button>
-          </div>
-        </div>
-
       </div>
+      <div v-else class="py-12 text-center text-gray-400 text-sm font-semibold">Cargando cursos...</div>
     </section>
 
     <!-- FEATURES 3 COL -->
