@@ -533,27 +533,55 @@ export class AnalyticsService {
       ]
     }
 
-    // Obtener las últimas entradas de auditoría
-    const recentLogs = await prisma.auditLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 4
-    })
+    // Actividad reciente adaptada estrictamente por rol para evitar filtración cruzada
+    let recentActivity: any[] = []
 
-    let recentActivity = recentLogs.map((log: any) => ({
-      id: log.id,
-      title: log.title,
-      time: new Date(log.createdAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-      icon: log.badge === 'XP' ? 'stars' : 'task_alt',
-      bg: 'bg-blue-100',
-      iconColor: '#006688',
-      badge: log.badge || 'Sistema',
-      badgeBg: 'bg-blue-100',
-      badgeText: 'text-blue-700'
-    }))
+    if (userRole === 'APRENDIZ') {
+      // Para aprendiz: EXCLUSIVAMENTE su propia actividad y logros personales
+      if (userId) {
+        const myLogs = await prisma.auditLog.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 4
+        })
 
-    if (recentActivity.length < 4) {
+        recentActivity = myLogs.map((log: any) => ({
+          id: log.id,
+          title: log.title,
+          time: new Date(log.createdAt).toLocaleString('es-ES', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          icon: log.badge === 'XP' ? 'stars' : 'emoji_events',
+          bg: 'bg-blue-100',
+          iconColor: '#006688',
+          badge: log.badge || 'Progreso',
+          badgeBg: 'bg-blue-100',
+          badgeText: 'text-blue-700'
+        }))
+
+        if (recentActivity.length < 4) {
+          const mySubs = await prisma.activitySubmission.findMany({
+            where: { apprenticeId: userId },
+            take: 4 - recentActivity.length,
+            orderBy: { submittedAt: 'desc' },
+            include: { activity: { select: { title: true } } }
+          })
+          const mappedSubs = mySubs.map((s: any) => ({
+            id: s.id + 10000,
+            title: `Completaste "${s.activity?.title || 'Actividad'}"`,
+            time: new Date(s.submittedAt).toLocaleString('es-ES', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            icon: s.passed ? 'check_circle' : 'pending_actions',
+            bg: s.passed ? 'bg-green-100' : 'bg-orange-100',
+            iconColor: s.passed ? '#10b981' : '#f97316',
+            badge: s.passed ? 'Aprobado' : 'Pendiente',
+            badgeBg: s.passed ? 'bg-green-100' : 'bg-orange-100',
+            badgeText: s.passed ? 'text-green-700' : 'text-orange-700'
+          }))
+          recentActivity = [...recentActivity, ...mappedSubs]
+        }
+      }
+    } else if (userRole === 'INSTRUCTOR') {
+      // Para docente: entregas del aula clínica (con nombre del aprendiz)
       const recentSubs = await prisma.activitySubmission.findMany({
-        take: 4 - recentActivity.length,
+        take: 4,
         orderBy: { submittedAt: 'desc' },
         include: {
           activity: { select: { title: true } }
@@ -566,91 +594,23 @@ export class AnalyticsService {
       })
       const userMap = new Map(users.map((u: any) => [u.id, `${u.nombre || ''} ${u.apellido || ''}`.trim()]))
 
-      const mappedSubs = recentSubs.map((s: any) => {
+      recentActivity = recentSubs.map((s: any) => {
         const studentName = userMap.get(s.apprenticeId) || 'Aprendiz'
         return {
           id: s.id + 10000,
-          title: `${studentName} completó "${s.activity?.title || 'Actividad'}"`,
-          time: new Date(s.submittedAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          title: `${studentName} entregó "${s.activity?.title || 'Actividad'}"`,
+          time: new Date(s.submittedAt).toLocaleString('es-ES', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
           icon: s.passed ? 'check_circle' : 'pending_actions',
-          bg: s.passed ? 'bg-green-100' : 'bg-orange-100',
-          iconColor: s.passed ? '#10b981' : '#f97316',
-          badge: s.passed ? 'Aprobado' : 'Pendiente',
-          badgeBg: s.passed ? 'bg-green-100' : 'bg-orange-100',
-          badgeText: s.passed ? 'text-green-700' : 'text-orange-700'
+          bg: s.passed ? 'bg-green-100' : 'bg-amber-100',
+          iconColor: s.passed ? '#10b981' : '#d97706',
+          badge: s.passed ? 'Aprobado' : 'Por Calificar',
+          badgeBg: s.passed ? 'bg-green-100' : 'bg-amber-100',
+          badgeText: s.passed ? 'text-green-700' : 'text-amber-700'
         }
       })
-      recentActivity = [...recentActivity, ...mappedSubs]
-    }
-
-    // Si aún faltan elementos, consultar cursos completados o avances reales en la BD
-    if (recentActivity.length < 4) {
-      const recentProgress = await prisma.courseProgress.findMany({
-        where: { completed: true },
-        take: 4 - recentActivity.length,
-        orderBy: { completedAt: 'desc' },
-        include: {
-          user: { select: { nombre: true, apellido: true } },
-          course: { select: { title: true } }
-        }
-      })
-      const mappedProg = recentProgress.map((p: any) => ({
-        id: p.id + 20000,
-        title: `${p.user?.nombre || 'Aprendiz'} completó "${p.course?.title || 'Curso Clínico'}"`,
-        time: p.completedAt ? new Date(p.completedAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'Recientemente',
-        icon: 'school',
-        bg: 'bg-blue-100',
-        iconColor: '#006688',
-        badge: 'Completado',
-        badgeBg: 'bg-green-100',
-        badgeText: 'text-green-700'
-      }))
-      recentActivity = [...recentActivity, ...mappedProg]
-    }
-
-    // Si aún faltan elementos, consultar partidas reales del Arcade
-    if (recentActivity.length < 4) {
-      const recentScores = await prisma.gameScore.findMany({
-        take: 4 - recentActivity.length,
-        orderBy: { playedAt: 'desc' },
-        include: {
-          user: { select: { nombre: true, apellido: true } }
-        }
-      })
-      const mappedScores = recentScores.map((g: any) => ({
-        id: g.id + 30000,
-        title: `${g.user?.nombre || 'Aprendiz'} registró ${g.score} pts en el Arcade`,
-        time: new Date(g.playedAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-        icon: 'sports_esports',
-        bg: 'bg-purple-100',
-        iconColor: '#8b5cf6',
-        badge: 'Arcade',
-        badgeBg: 'bg-purple-100',
-        badgeText: 'text-purple-700'
-      }))
-      recentActivity = [...recentActivity, ...mappedScores]
-    }
-
-    // Si aún faltan elementos, consultar nuevos aprendices registrados en la BD
-    if (recentActivity.length < 4) {
-      const recentUsers = await prisma.user.findMany({
-        where: { rol: 'APRENDIZ' },
-        take: 4 - recentActivity.length,
-        orderBy: { createdAt: 'desc' },
-        select: { id: true, nombre: true, apellido: true, createdAt: true }
-      })
-      const mappedUsers = recentUsers.map((u: any) => ({
-        id: u.id + 40000,
-        title: `${u.nombre} ${u.apellido} ingresó a la plataforma`,
-        time: new Date(u.createdAt).toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-        icon: 'person_add',
-        bg: 'bg-teal-100',
-        iconColor: '#0d9488',
-        badge: 'Nuevo Registro',
-        badgeBg: 'bg-teal-100',
-        badgeText: 'text-teal-700'
-      }))
-      recentActivity = [...recentActivity, ...mappedUsers]
+    } else {
+      // Para admin: no se muestran registros personales de XP de aprendices
+      recentActivity = []
     }
 
     // Bandeja de revisiones / entregas para docentes y administradores

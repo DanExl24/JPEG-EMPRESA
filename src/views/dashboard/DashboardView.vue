@@ -502,11 +502,11 @@
       </div>
     </div>
 
-    <!-- Recent Activity Feed (For all roles) -->
-    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+    <!-- Recent Activity Feed (Solo para Aprendiz e Instructor; el Administrador tiene su propio panel de supervisión y métricas) -->
+    <div v-if="!auth.isAdmin" class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-base font-black text-gray-800">
-          {{ auth.isInstructor ? i18n.t('Actividad Reciente del Aula Clínica') : i18n.t('Actividad Reciente') }}
+          {{ auth.isInstructor ? i18n.t('Actividad Reciente del Aula Clínica') : i18n.t('Mi Actividad Reciente') }}
         </h3>
         <span class="text-xs text-gray-400 font-semibold">{{ i18n.t('Eventos en vivo') }}</span>
       </div>
@@ -532,7 +532,12 @@
       <div v-else class="text-center py-8 bg-gray-50/60 rounded-2xl border border-dashed border-gray-200 space-y-2">
         <span class="material-symbols-outlined text-4xl text-gray-300 block">history</span>
         <p class="text-xs font-bold text-gray-500">{{ i18n.t('Sin actividad registrada aún') }}</p>
-        <p class="text-[11px] text-gray-400">{{ i18n.t('Los eventos de aprendizaje y entregas de tus estudiantes aparecerán aquí en tiempo real a medida que interactúen con la plataforma.') }}</p>
+        <p class="text-[11px] text-gray-400">
+          {{ auth.isInstructor 
+            ? i18n.t('Los eventos de aprendizaje y entregas de tus estudiantes aparecerán aquí en tiempo real.') 
+            : i18n.t('Tus logros, avances en cursos y retos completados aparecerán aquí.') 
+          }}
+        </p>
       </div>
     </div>
 
@@ -681,12 +686,7 @@ const quickActions = computed(() => {
   ]
 })
 
-const recentActivity = ref([
-  { id: 1, title: 'Aprendiz Laura Gómez completó "Fundamentos de Enfermería"', time: 'Hace 2 horas', icon: 'school', bg: 'bg-blue-100', iconColor: '#006688', badge: 'Completado', badgeBg: 'bg-green-100', badgeText: 'text-green-700' },
-  { id: 2, title: 'Nueva entrega en "Caso Clínico #7: Signos Vitales"', time: 'Hace 4 horas', icon: 'task', bg: 'bg-amber-100', iconColor: '#d97706', badge: 'Por Calificar', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700' },
-  { id: 3, title: 'Nuevo récord en Trivia Médica Contrarreloj (320 pts)', time: 'Ayer', icon: 'sports_esports', bg: 'bg-purple-100', iconColor: '#8b5cf6', badge: 'Arcade', badgeBg: 'bg-purple-100', badgeText: 'text-purple-700' },
-  { id: 4, title: '3 aprendices avanzaron al 100% en Farmacología', time: 'Hace 2 días', icon: 'trending_up', bg: 'bg-emerald-100', iconColor: '#10b981', badge: 'Rendimiento', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700' },
-])
+const recentActivity = ref([])
 
 onMounted(async () => {
   try {
