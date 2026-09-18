@@ -28,6 +28,7 @@ model User {
   updatedAt        DateTime     @updatedAt @map("updated_at")
 
   enrollments      Enrollment[]
+  instructedCohorts Cohort[]    @relation("InstructorCohorts")
   evaluationsAsApprentice Evaluation[] @relation("ApprenticeEvaluations")
   evaluationsAsInstructor Evaluation[] @relation("InstructorEvaluations")
   userBadges       UserBadge[]
@@ -81,6 +82,7 @@ model Cohort {
   program       TrainingProgram @relation(fields: [program_id], references: [id])
   enrollments   Enrollment[]
   courses       Course[]        @relation("CourseCohorts")
+  instructors   User[]          @relation("InstructorCohorts")
 
   @@map("cohorts")
 }
@@ -100,10 +102,11 @@ model Enrollment {
   id            Int        @id @default(autoincrement())
   apprentice_id Int
   cohort_id     Int
-  status        String
-  apprentice    User       @relation(fields: [apprentice_id], references: [id])
-  cohort        Cohort     @relation(fields: [cohort_id], references: [id])
+  status        String     @default("active")
+  apprentice    User       @relation(fields: [apprentice_id], references: [id], onDelete: Cascade)
+  cohort        Cohort     @relation(fields: [cohort_id], references: [id], onDelete: Cascade)
 
+  @@unique([apprentice_id, cohort_id])
   @@map("enrollments")
 }
 

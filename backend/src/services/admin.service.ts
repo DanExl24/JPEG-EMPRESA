@@ -38,6 +38,20 @@ export class AdminService {
         rol: true,
         xp: true,
         createdAt: true,
+        enrollments: {
+          include: {
+            cohort: {
+              include: {
+                program: { select: { id: true, name: true } }
+              }
+            }
+          }
+        },
+        instructedCohorts: {
+          include: {
+            program: { select: { id: true, name: true } }
+          }
+        },
         _count: {
           select: {
             evaluationsAsApprentice: true,
@@ -59,6 +73,21 @@ export class AdminService {
       const roleKey = u.rol.toUpperCase()
       const colors = roleColors[roleKey] || roleColors.APRENDIZ
 
+      // Cohorte para Aprendiz (matriculado)
+      const activeEnrollment = u.enrollments?.[0] || null
+      const cohortId = activeEnrollment?.cohort_id || null
+      const cohortNumber = activeEnrollment?.cohort?.cohort_number || null
+      const programName = activeEnrollment?.cohort?.program?.name || null
+
+      // Cohortes para Instructor (fichas que imparte)
+      const instructedCohorts = (u.instructedCohorts || []).map((c: any) => ({
+        id: c.id,
+        cohort_number: c.cohort_number,
+        program_id: c.program_id,
+        programName: c.program?.name || null
+      }))
+      const cohortIds = instructedCohorts.map((c: any) => c.id)
+
       return {
         id: u.id,
         nombre: u.nombre,
@@ -77,7 +106,14 @@ export class AdminService {
         avatarBg: colors.avatarBg,
         avatarColor: colors.avatarColor,
         xp: u.xp,
-        createdAt: u.createdAt
+        createdAt: u.createdAt,
+        // Datos de ficha/cohorte
+        cohortId,
+        cohortNumber,
+        programName,
+        instructedCohorts,
+        cohortIds,
+        cohortCount: instructedCohorts.length
       }
     })
   }
@@ -86,7 +122,7 @@ export class AdminService {
    * Crea un nuevo usuario desde el panel de administración
    */
   static async createUser(data: CreateUserAdminDto) {
-    const { nombre, apellido, cedula, correo, password, rol } = data
+    const { nombre, apellido, cedula, correo, password, rol, cohortId, cohortIds } = data
     if (!nombre || !apellido || !cedula || !correo || !password || !rol) {
       throw new BadRequestError('Todos los campos son obligatorios.')
     }
@@ -130,6 +166,27 @@ export class AdminService {
       }
     })
 
+    // Si es Aprendiz y se asigna una ficha, matricularlo
+    if (normalizedRole === 'APRENDIZ' && cohortId) {
+      await prisma.enrollment.create({
+        data: {
+          apprentice_id: newUser.id,
+          cohort_id: Number(cohortId),
+          status: 'active'
+        }
+      })
+    } else if (normalizedRole === 'INSTRUCTOR' && Array.isArray(cohortIds) && cohortIds.length > 0) {
+      // Si es Instructor y se asignan fichas, vincularlas
+      await prisma.user.update({
+        where: { id: newUser.id },
+        data: {
+          instructedCohorts: {
+            connect: cohortIds.map((cid: number | string) => ({ id: Number(cid) }))
+          }
+        }
+      })
+    }
+
     return newUser
   }
 
@@ -158,7 +215,9 @@ export class AdminService {
       }
     }
 
-    return await prisma.user.update({
+    const targetRole = data.rol ? data.rol.toUpperCase() : existing.rol.toUpperCase()
+
+    const updated = await prisma.user.update({
       where: { id },
       data: {
         ...(data.nombre ? { nombre: data.nombre.trim() } : {}),
@@ -176,6 +235,34 @@ export class AdminService {
         rol: true
       }
     })
+
+    // Sincronizar Ficha para Aprendiz
+    if (targetRole === 'APRENDIZ' && data.cohortId !== undefined) {
+      await prisma.enrollment.deleteMany({ where: { apprentice_id: id } })
+      if (data.cohortId) {
+        await prisma.enrollment.create({
+          data: {
+            apprentice_id: id,
+            cohort_id: Number(data.cohortId),
+            status: 'active'
+          }
+        })
+      }
+    }
+
+    // Sincronizar Fichas para Instructor
+    if (targetRole === 'INSTRUCTOR' && data.cohortIds !== undefined) {
+      await prisma.user.update({
+        where: { id },
+        data: {
+          instructedCohorts: {
+            set: Array.isArray(data.cohortIds) ? data.cohortIds.map((cid: number | string) => ({ id: Number(cid) })) : []
+          }
+        }
+      })
+    }
+
+    return updated
   }
 
   /**
@@ -185,6 +272,7 @@ export class AdminService {
     const existing = await prisma.user.findUnique({ where: { id } })
     if (!existing) throw new NotFoundError(`Usuario #${id} no encontrado.`)
 
+    await prisma.enrollment.deleteMany({ where: { apprentice_id: id } })
     await prisma.activitySubmission.deleteMany({ where: { apprenticeId: id } })
     await prisma.evaluation.deleteMany({ where: { apprentice_id: id } })
     await prisma.userBadge.deleteMany({ where: { userId: id } })
