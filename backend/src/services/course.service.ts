@@ -55,18 +55,26 @@ export const OFFICIAL_COURSE_SLUGS = DEFAULT_COURSES.map(course => course.slug)
 
 export class CourseService {
   /**
-   * Los cursos ya no se siembran ni sincronizan automáticamente (gestión exclusiva
-   * de ADMIN/INSTRUCTOR). Solo se asegura que los módulos oficiales conserven sus RAPs.
+   * Si la tabla de cursos está vacía (ej. tras docker compose down -v), siembra los 4 módulos oficiales.
+   * Si ya existen cursos, asegura que los módulos oficiales conserven sus RAPs.
    */
   static async ensureCourses(): Promise<void> {
     try {
-      for (const def of DEFAULT_COURSES) {
-        const found = await prisma.course.findUnique({ where: { slug: def.slug } })
-        if (found && (!found.raps || found.raps === '[]')) {
-          await prisma.course.update({
-            where: { id: found.id },
-            data: { raps: def.raps }
-          })
+      const count = await prisma.course.count()
+      if (count === 0) {
+        for (const def of DEFAULT_COURSES) {
+          await prisma.course.create({ data: def })
+        }
+        console.log('[CourseService] Cursos clínicos oficiales iniciales sembrados exitosamente.')
+      } else {
+        for (const def of DEFAULT_COURSES) {
+          const found = await prisma.course.findUnique({ where: { slug: def.slug } })
+          if (found && (!found.raps || found.raps === '[]')) {
+            await prisma.course.update({
+              where: { id: found.id },
+              data: { raps: def.raps }
+            })
+          }
         }
       }
     } catch (e) {

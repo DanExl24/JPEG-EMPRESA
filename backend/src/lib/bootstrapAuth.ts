@@ -172,7 +172,7 @@ export async function ensureDefaultApprenticeUser(): Promise<void> {
 const DEFAULT_ACTIVITIES = [
   {
     title: 'Greetings and Farewells Match',
-    course: 'Fundamentos de Enfermería',
+    course: 'Getting to Know Other People',
     phase: 'Preparación',
     template: 'match',
     points: 10,
@@ -184,7 +184,7 @@ const DEFAULT_ACTIVITIES = [
   },
   {
     title: 'Vocabulary Quiz: Personal Info',
-    course: 'Fundamentos de Enfermería',
+    course: 'Getting to Know Other People',
     phase: 'Absorción',
     template: 'quiz',
     points: 10,
@@ -197,7 +197,7 @@ const DEFAULT_ACTIVITIES = [
   },
   {
     title: 'Spelling Practice: Medical Assistant',
-    course: 'Fundamentos de Enfermería',
+    course: 'Getting to Know Other People',
     phase: 'Práctica',
     template: 'listening',
     points: 15,
@@ -208,7 +208,7 @@ const DEFAULT_ACTIVITIES = [
   },
   {
     title: 'RAP 1 Practice Challenge',
-    course: 'Fundamentos de Enfermería',
+    course: 'Getting to Know Other People',
     phase: 'Cierre',
     template: 'pronunciation',
     points: 20,
@@ -218,70 +218,108 @@ const DEFAULT_ACTIVITIES = [
     hasStudentSubmissions: false
   },
   {
-    title: 'Caso Clínico: Insuficiencia Cardíaca',
-    course: 'Cuidados Críticos UCI',
-    phase: 'Cierre',
-    template: 'quiz',
-    points: 20,
+    title: 'Clinical Handover Match',
+    course: 'Work Life Interaction',
+    phase: 'Preparación',
+    template: 'match',
+    points: 15,
     attemptsLimit: 'Ilimitados',
-    successMessage: '¡Excelente! Has respondido correctamente.',
-    quizQuestion: '¿Qué mide un esfigmomanómetro?',
-    quizCorrect: 'Presión arterial',
-    quizIncorrect: 'Ritmo cardíaco',
+    successMessage: '¡Excelente! Has emparejado correctamente.',
+    matchTerm: 'Handover report',
+    matchMeaning: 'Entrega de turno',
     hasStudentSubmissions: false
   },
   {
-    title: 'Quiz: Farmacología Básica',
-    course: 'Farmacología Clínica',
+    title: 'Quiz: Vital Signs & Patient Symptoms',
+    course: 'Work Life Interaction',
     phase: 'Absorción',
     template: 'quiz',
     points: 15,
     attemptsLimit: 'Ilimitados',
     successMessage: '¡Excelente trabajo!',
-    quizQuestion: '¿Qué mide un esfigmomanómetro?',
-    quizCorrect: 'Presión arterial',
-    quizIncorrect: 'Ritmo cardíaco',
+    quizQuestion: 'What does "Shortness of breath" mean in clinical practice?',
+    quizCorrect: 'Dificultad respiratoria / Disnea',
+    quizIncorrect: 'Dolor de cabeza agudo',
     hasStudentSubmissions: false
   },
   {
-    title: 'Simulación: RCP Avanzado',
-    course: 'Urgencias y Emergencias',
+    title: 'Practice: Patient Body Notes',
+    course: 'Work Life Interaction',
+    phase: 'Práctica',
+    template: 'listening',
+    points: 20,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente trabajo!',
+    listeningPhrase: 'The patient is resting in room 204',
+    hasStudentSubmissions: false
+  },
+  {
+    title: 'Simulation: Medical Checklist & Tools',
+    course: 'Workplace Communication',
     phase: 'Práctica',
     template: 'pronunciation',
-    points: 25,
+    points: 20,
     attemptsLimit: 'Ilimitados',
     successMessage: '¡Excelente! Correcto.',
     pronouncePhrase: 'Check the respiratory rate of the patient',
     hasStudentSubmissions: false
   },
   {
-    title: 'Lectura: Psicología del Paciente',
-    course: 'Salud Mental y Psiquiatría',
-    phase: 'Preparación',
-    template: 'match',
-    points: 10,
+    title: 'Workplace Communication Quiz',
+    course: 'Workplace Communication',
+    phase: 'Absorción',
+    template: 'quiz',
+    points: 15,
     attemptsLimit: 'Ilimitados',
     successMessage: '¡Excelente trabajo!',
-    matchTerm: 'Intravenous',
-    matchMeaning: 'Administración en vena',
+    quizQuestion: 'Which tool is used to auscultate heart and lung sounds?',
+    quizCorrect: 'Stethoscope',
+    quizIncorrect: 'Sphygmomanometer',
     hasStudentSubmissions: false
   },
   {
-    title: 'Evaluación: Cuidados Neonatales',
-    course: 'Atención Materno-Infantil',
+    title: 'Discharge Summary & Patient Care',
+    course: 'Professional Practice',
     phase: 'Cierre',
     template: 'listening',
-    points: 30,
+    points: 25,
     attemptsLimit: 'Ilimitados',
     successMessage: '¡Excelente trabajo!',
-    listeningPhrase: 'The patient requires immediate attention',
+    listeningPhrase: 'The patient is ready for hospital discharge',
+    hasStudentSubmissions: false
+  },
+  {
+    title: 'Final Clinical Triage Challenge',
+    course: 'Professional Practice',
+    phase: 'Cierre',
+    template: 'quiz',
+    points: 30,
+    attemptsLimit: 'Ilimitados',
+    successMessage: '¡Excelente! Has completado la evaluación.',
+    quizQuestion: 'What is the primary purpose of clinical triage in emergency care?',
+    quizCorrect: 'Prioritize patient care according to urgency',
+    quizIncorrect: 'Schedule routine follow-up visits',
     hasStudentSubmissions: false
   }
 ]
 
 export async function ensureDefaultActivities(): Promise<void> {
-  // Ya no se siembran actividades de prueba: toda actividad es creada por
-  // ADMIN/INSTRUCTOR desde el editor y puede editarse/eliminarse libremente.
+  const count = await prisma.activity.count()
+  if (count === 0) {
+    const courses = await prisma.course.findMany({ select: { id: true, title: true } })
+    const courseMap = new Map(courses.map(c => [c.title, c.id]))
+
+    for (const act of DEFAULT_ACTIVITIES) {
+      const courseId = courseMap.get(act.course) || null
+      await prisma.activity.create({
+        data: {
+          ...act,
+          courseId
+        }
+      })
+    }
+    console.log(`[Bootstrap] ${DEFAULT_ACTIVITIES.length} actividades iniciales sembradas con éxito.`)
+  }
 
   // Sincronizar columna has_student_submissions con la realidad de activity_submissions
   try {
@@ -298,22 +336,28 @@ export async function ensureDefaultActivities(): Promise<void> {
 }
 
 /**
- * Elimina las actividades semilla heredadas de cursos que ya no existen.
- * Solo borra registros sin entregas para no perder evidencia de aprendices.
+ * Elimina actividades obsoletas de versiones previas si no tienen entregas de estudiantes.
  */
 export async function cleanupLegacySeedActivities(): Promise<void> {
   try {
-    const legacyTitles = DEFAULT_ACTIVITIES.map(activity => activity.title)
+    const obsoleteTitles = [
+      'Caso Clínico: Insuficiencia Cardíaca',
+      'Quiz: Farmacología Básica',
+      'Simulación: RCP Avanzado',
+      'Lectura: Psicología del Paciente',
+      'Evaluación: Cuidados Neonatales'
+    ]
     const legacy = await prisma.activity.findMany({
-      where: { title: { in: legacyTitles } },
-      select: { id: true, _count: { select: { submissions: true } } }
+      where: {
+        title: { in: obsoleteTitles },
+        submissions: { none: {} }
+      },
+      select: { id: true }
     })
-    const deletableIds = legacy
-      .filter(activity => activity._count.submissions === 0)
-      .map(activity => activity.id)
+    const deletableIds = legacy.map(activity => activity.id)
     if (deletableIds.length > 0) {
       await prisma.activity.deleteMany({ where: { id: { in: deletableIds } } })
-      console.log(`[Bootstrap] ${deletableIds.length} actividad(es) semilla heredada(s) eliminada(s).`)
+      console.log(`[Bootstrap] ${deletableIds.length} actividad(es) obsoleta(s) eliminada(s).`)
     }
   } catch (e) {
     console.warn('[Bootstrap] Could not cleanup legacy seed activities:', e)
@@ -497,15 +541,21 @@ export async function ensureDefaultCourses(): Promise<void> {
     }
   ]
 
-  // Los cursos ya no se siembran ni renombran automáticamente: la gestión es
-  // exclusiva de ADMIN/INSTRUCTOR desde el editor de estructura.
-  for (const target of DEFAULT_COURSES) {
-    const existing = await prisma.course.findUnique({ where: { slug: target.slug } })
-    if (existing && (!existing.raps || existing.raps === '[]')) {
-      await prisma.course.update({
-        where: { id: existing.id },
-        data: { raps: target.raps }
-      })
+  const count = await prisma.course.count()
+  if (count === 0) {
+    for (const target of DEFAULT_COURSES) {
+      await prisma.course.create({ data: target })
+    }
+    console.log('[Bootstrap] Cursos clínicos oficiales iniciales sembrados con éxito.')
+  } else {
+    for (const target of DEFAULT_COURSES) {
+      const existing = await prisma.course.findUnique({ where: { slug: target.slug } })
+      if (existing && (!existing.raps || existing.raps === '[]')) {
+        await prisma.course.update({
+          where: { id: existing.id },
+          data: { raps: target.raps }
+        })
+      }
     }
   }
 }
