@@ -540,14 +540,83 @@ function closeModal() {
 }
 
 function printCertificate() {
+  const certElem = document.getElementById('printableCertificate')
+  if (!certElem) return
+
   const rawName = certificateData.value?.studentName || auth.user?.nombre || 'Aprendiz'
   const cleanName = rawName.trim().replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')
-  const originalTitle = document.title
-  document.title = `Certificado_Nursing_Academy_${cleanName}`
-  window.print()
+
+  // Crear un iframe invisible aislado para que se imprima ÚNICAMENTE el certificado
+  const iframe = document.createElement('iframe')
+  iframe.style.position = 'fixed'
+  iframe.style.right = '0'
+  iframe.style.bottom = '0'
+  iframe.style.width = '0'
+  iframe.style.height = '0'
+  iframe.style.border = '0'
+  iframe.style.opacity = '0'
+  iframe.style.pointerEvents = 'none'
+  document.body.appendChild(iframe)
+
+  // Inyectar hojas de estilo activas (Tailwind, Google Fonts, Material Icons)
+  const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+    .map(el => el.outerHTML)
+    .join('\n')
+
+  const doc = iframe.contentWindow.document
+  doc.open()
+  doc.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8">
+      <title>Certificado_Nursing_Academy_${cleanName}</title>
+      ${styles}
+      <style>
+        @page {
+          size: A4 landscape;
+          margin: 6mm;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        body {
+          margin: 0;
+          padding: 8px;
+          background: #ffffff !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 98vh;
+        }
+        #printableCertificate {
+          width: 100%;
+          max-width: 1020px;
+          margin: 0 auto;
+          box-shadow: none !important;
+          border: 4px double #f59e0b !important;
+          background: #ffffff !important;
+        }
+      </style>
+    </head>
+    <body>
+      ${certElem.outerHTML}
+    </body>
+    </html>
+  `)
+  doc.close()
+
+  iframe.contentWindow.focus()
   setTimeout(() => {
-    document.title = originalTitle
-  }, 1000)
+    iframe.contentWindow.print()
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe)
+      }
+    }, 4000)
+  }, 400)
 }
 
 function exportToPdf() {
