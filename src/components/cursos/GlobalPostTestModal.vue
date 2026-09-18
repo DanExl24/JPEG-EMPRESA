@@ -249,113 +249,143 @@
       </div>
     </div>
 
-    <!-- CERTIFICATE / DIPLOMA MODAL (Imprimible y Descargable) -->
-    <div v-if="showCertificateModal" class="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in print:p-0 print:bg-white print:static">
-      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-10 shadow-2xl space-y-6 relative border border-amber-200 print:shadow-none print:border-none print:p-0">
+    <!-- CERTIFICATE / DIPLOMA MODAL (Imprimible y Descargable, adaptable a pantalla) -->
+    <div 
+      v-if="showCertificateModal" 
+      class="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 z-50 animate-fade-in overflow-y-auto print:p-0 print:bg-white print:static"
+      @click.self="showCertificateModal = false"
+    >
+      <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl relative border border-amber-200 overflow-hidden print:shadow-none print:border-none print:max-w-none print:max-h-none print:p-0">
         
-        <!-- Close button (Hidden during print) -->
-        <div class="flex justify-between items-center print:hidden">
-          <span class="text-xs font-bold text-gray-400">Constancia de Culminación de Ruta</span>
-          <button @click="showCertificateModal = false" class="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-xl transition-all cursor-pointer">
-            <span class="material-symbols-outlined">close</span>
+        <!-- Header: Siempre visible en la parte superior (Hidden during print) -->
+        <div class="flex justify-between items-center px-6 py-3.5 border-b border-gray-100 shrink-0 bg-white print:hidden">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-600 text-xl">workspace_premium</span>
+            <span class="text-xs font-black uppercase tracking-wider text-gray-700">Constancia Oficial de Culminación de Ruta</span>
+          </div>
+          <button 
+            @click="showCertificateModal = false" 
+            class="text-gray-400 hover:text-gray-700 p-1.5 hover:bg-gray-100 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+            title="Cerrar certificado"
+          >
+            <span class="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
 
-        <!-- CERTIFICATE BODY (PRINTABLE AREA) -->
-        <div id="printableCertificate" class="p-8 sm:p-10 rounded-2xl border-4 border-double border-amber-300 bg-gradient-to-b from-amber-50/40 via-white to-amber-50/30 text-center space-y-6 relative overflow-hidden shadow-sm">
-          
-          <!-- Watermark -->
-          <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
-            <span class="material-symbols-outlined text-[260px]">local_hospital</span>
-          </div>
+        <!-- Scrollable Middle Body (Garantiza adaptación perfecta en cualquier resolución) -->
+        <div class="overflow-y-auto p-4 sm:p-6 flex-1 bg-amber-50/20">
+          <!-- CERTIFICATE BODY (PRINTABLE AREA) -->
+          <div id="printableCertificate" class="p-6 sm:p-8 rounded-2xl border-4 border-double border-amber-300 bg-gradient-to-b from-amber-50/40 via-white to-amber-50/30 text-center space-y-4 sm:space-y-5 relative overflow-hidden shadow-sm bg-white">
+            
+            <!-- Watermark -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+              <span class="material-symbols-outlined text-[240px]">local_hospital</span>
+            </div>
 
-          <!-- Header Logos & Branding -->
-          <div class="flex items-center justify-between border-b border-amber-200/80 pb-4 relative z-10">
-            <div class="text-left">
-              <span class="text-sm font-black tracking-widest text-[#006688] uppercase block">SENA · ADSO</span>
-              <span class="text-[10px] text-gray-500 font-semibold">Servicio Nacional de Aprendizaje</span>
+            <!-- Header Logos & Branding -->
+            <div class="flex items-center justify-between border-b border-amber-200/80 pb-3 relative z-10">
+              <div class="text-left">
+                <span class="text-xs sm:text-sm font-black tracking-widest text-[#006688] uppercase block">SENA · ADSO</span>
+                <span class="text-[10px] text-gray-500 font-semibold">Servicio Nacional de Aprendizaje</span>
+              </div>
+              <div class="w-11 h-11 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center border border-amber-300 shadow-xs">
+                <span class="material-symbols-outlined text-2xl">verified</span>
+              </div>
+              <div class="text-right">
+                <span class="text-xs sm:text-sm font-black tracking-widest text-emerald-700 uppercase block">NURSING ACADEMY</span>
+                <span class="text-[10px] text-gray-500 font-semibold">Formación Bilingüe Hospitalaria</span>
+              </div>
             </div>
-            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center border border-amber-300 shadow-xs">
-              <span class="material-symbols-outlined text-2xl">verified</span>
-            </div>
-            <div class="text-right">
-              <span class="text-sm font-black tracking-widest text-emerald-700 uppercase block">NURSING ACADEMY</span>
-              <span class="text-[10px] text-gray-500 font-semibold">Formación Bilingüe Hospitalaria</span>
-            </div>
-          </div>
 
-          <!-- Main Title -->
-          <div class="space-y-2 relative z-10">
-            <p class="text-xs font-black uppercase tracking-widest text-amber-800">Constancia de Competencia Académica</p>
-            <h3 class="text-2xl sm:text-3xl font-serif font-black text-gray-900 tracking-wide">
-              CERTIFICADO DE FINALIZACIÓN
-            </h3>
-            <p class="text-xs text-gray-600 max-w-lg mx-auto leading-relaxed pt-1">
-              Se certifica que el aprendiz ha culminado con éxito todos los requerimientos académicos, formativos y de evaluación de la:
-            </p>
-            <p class="text-sm sm:text-base font-black text-[#006688] uppercase tracking-wide">
-              {{ certificateData?.programTitle || 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria' }}
-            </p>
-          </div>
+            <!-- Main Title -->
+            <div class="space-y-1.5 relative z-10">
+              <p class="text-[11px] font-black uppercase tracking-widest text-amber-800">Constancia de Competencia Académica</p>
+              <h3 class="text-2xl sm:text-3xl font-serif font-black text-gray-900 tracking-wide">
+                CERTIFICADO DE FINALIZACIÓN
+              </h3>
+              <p class="text-xs text-gray-600 max-w-lg mx-auto leading-relaxed">
+                Se certifica que el aprendiz ha culminado con éxito todos los requerimientos académicos, formativos y de evaluación de la:
+              </p>
+              <p class="text-xs sm:text-sm font-black text-[#006688] uppercase tracking-wide">
+                {{ certificateData?.programTitle || 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria' }}
+              </p>
+            </div>
 
-          <!-- Student Name -->
-          <div class="py-2 relative z-10 border-y border-amber-200/60 max-w-lg mx-auto space-y-1">
-            <span class="text-[11px] uppercase tracking-wider text-gray-500 font-bold block">Otorgado a:</span>
-            <h4 class="text-xl sm:text-2xl font-black text-gray-900 capitalize">
-              {{ certificateData?.studentName || (auth.user?.nombre + ' ' + auth.user?.apellido) }}
-            </h4>
-            <p class="text-xs text-gray-500 font-medium">Documento de Identidad: {{ certificateData?.documentId || auth.user?.cedula || 'N/A' }}</p>
-          </div>
+            <!-- Student Name -->
+            <div class="py-2 relative z-10 border-y border-amber-200/60 max-w-lg mx-auto space-y-0.5">
+              <span class="text-[10px] uppercase tracking-wider text-gray-500 font-bold block">Otorgado a:</span>
+              <h4 class="text-xl sm:text-2xl font-black text-gray-900 capitalize">
+                {{ certificateData?.studentName || (auth.user?.nombre + ' ' + auth.user?.apellido) }}
+              </h4>
+              <p class="text-xs text-gray-500 font-medium">Documento de Identidad: {{ certificateData?.documentId || auth.user?.cedula || 'N/A' }}</p>
+            </div>
 
-          <!-- Metrics summary -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs relative z-10 max-w-xl mx-auto pt-1">
-            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
-              <span class="text-[9px] uppercase font-bold text-gray-400 block">Intensidad</span>
-              <span class="font-black text-gray-800">{{ certificateData?.totalHours || '44 Horas' }}</span>
+            <!-- Metrics summary -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs relative z-10 max-w-xl mx-auto pt-1">
+              <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                <span class="text-[9px] uppercase font-bold text-gray-400 block">Intensidad</span>
+                <span class="font-black text-gray-800">{{ certificateData?.totalHours || '44 Horas' }}</span>
+              </div>
+              <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                <span class="text-[9px] uppercase font-bold text-gray-400 block">Alcance</span>
+                <span class="font-black text-gray-800">{{ certificateData?.rapsCompleted || 'RAP 1 al RAP 6' }}</span>
+              </div>
+              <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                <span class="text-[9px] uppercase font-bold text-gray-400 block">Calificación Final</span>
+                <span class="font-black text-emerald-700">{{ certificateData?.finalScore || globalScore }}%</span>
+              </div>
+              <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                <span class="text-[9px] uppercase font-bold text-gray-400 block">Crecimiento Net</span>
+                <span class="font-black text-emerald-600">{{ certificateData?.growthDelta || ('+' + growthDelta + '%') }}</span>
+              </div>
             </div>
-            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
-              <span class="text-[9px] uppercase font-bold text-gray-400 block">Alcance</span>
-              <span class="font-black text-gray-800">{{ certificateData?.rapsCompleted || 'RAP 1 al RAP 6' }}</span>
-            </div>
-            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
-              <span class="text-[9px] uppercase font-bold text-gray-400 block">Calificación Final</span>
-              <span class="font-black text-emerald-700">{{ certificateData?.finalScore || globalScore }}%</span>
-            </div>
-            <div class="p-2 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
-              <span class="text-[9px] uppercase font-bold text-gray-400 block">Crecimiento Net</span>
-              <span class="font-black text-emerald-600">{{ certificateData?.growthDelta || ('+' + growthDelta + '%') }}</span>
-            </div>
-          </div>
 
-          <!-- Signatures & Validation -->
-          <div class="pt-6 flex items-end justify-between text-left text-xs border-t border-amber-200/80 relative z-10">
-            <div class="space-y-1">
-              <div class="w-32 border-b border-gray-400"></div>
-              <p class="font-bold text-gray-800 text-[11px]">Instructor Responsable</p>
-              <p class="text-[10px] text-gray-400">Comité Académico SENA</p>
-            </div>
-            <div class="text-right space-y-0.5">
-              <p class="text-[10px] font-bold text-gray-500">Fecha de Emisión: {{ certificateData?.completionDate || '17 de Septiembre, 2026' }}</p>
-              <p class="text-[9px] font-mono text-gray-400">Cód. Verificación: {{ certificateData?.certificateCode || 'SENA-NURS-VERIFIED' }}</p>
+            <!-- Signatures & Validation -->
+            <div class="pt-4 flex items-end justify-between text-left text-xs border-t border-amber-200/80 relative z-10">
+              <div class="space-y-1">
+                <div class="w-28 sm:w-32 border-b border-gray-400"></div>
+                <p class="font-bold text-gray-800 text-[11px]">Instructor Responsable</p>
+                <p class="text-[10px] text-gray-400">Comité Académico SENA</p>
+              </div>
+              <div class="text-right space-y-0.5">
+                <p class="text-[10px] font-bold text-gray-500">Fecha de Emisión: {{ certificateData?.completionDate || '17 de Septiembre, 2026' }}</p>
+                <p class="text-[9px] font-mono text-gray-400">Cód. Verificación: {{ certificateData?.certificateCode || 'SENA-NURS-VERIFIED' }}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Actions (Print & Close) -->
-        <div class="flex items-center justify-between pt-2 print:hidden">
+        <!-- Footer: Acciones siempre visibles en la parte inferior (Print, Export & Close) -->
+        <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 border-t border-gray-100 bg-white shrink-0 print:hidden">
           <button 
             @click="showCertificateModal = false" 
             class="px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-xs font-bold rounded-xl text-gray-600 transition-all cursor-pointer"
           >
             Volver
           </button>
-          <button 
-            @click="printCertificate" 
-            class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-black rounded-xl shadow-md flex items-center gap-2 transition-transform hover:scale-105 cursor-pointer"
-          >
-            <span class="material-symbols-outlined text-sm">print</span>
-            Imprimir / Guardar Diploma (PDF)
-          </button>
+          
+          <div class="flex items-center gap-2">
+            <!-- Botón Exportar PDF -->
+            <button 
+              @click="exportToPdf" 
+              :disabled="isExportingPdf"
+              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer"
+              title="Descargar archivo PDF directamente a tu equipo"
+            >
+              <span class="material-symbols-outlined text-base">{{ isExportingPdf ? 'hourglass_top' : 'picture_as_pdf' }}</span>
+              {{ isExportingPdf ? 'Generando PDF...' : 'Exportar PDF' }}
+            </button>
+
+            <!-- Botón Imprimir -->
+            <button 
+              @click="printCertificate" 
+              class="px-5 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer"
+              title="Abrir cuadro de diálogo de impresión"
+            >
+              <span class="material-symbols-outlined text-base">print</span>
+              Imprimir Diploma
+            </button>
+          </div>
         </div>
 
       </div>
@@ -365,6 +395,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import html2pdf from 'html2pdf.js'
 import { useAuthStore } from '../../stores/auth'
 import { getApiBaseUrl } from '../../lib/api'
 
@@ -383,6 +414,7 @@ const apiBaseUrl = getApiBaseUrl()
 // State
 const globalPostTestSubmitted = ref(false)
 const isSubmittingPostTest = ref(false)
+const isExportingPdf = ref(false)
 const globalAnswers = ref({})
 const globalScore = ref(0)
 const preTestBaseline = ref(35)
@@ -511,6 +543,35 @@ function closeModal() {
 
 function printCertificate() {
   window.print()
+}
+
+async function exportToPdf() {
+  const element = document.getElementById('printableCertificate')
+  if (!element) return
+
+  isExportingPdf.value = true
+  try {
+    const rawName = certificateData.value?.studentName || auth.user?.nombre || 'Aprendiz'
+    const cleanName = rawName.trim().replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `Certificado_Nursing_Academy_${cleanName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    }
+    await html2pdf().set(opt).from(element).save()
+  } catch (err) {
+    console.error('Error al exportar PDF:', err)
+    window.print()
+  } finally {
+    isExportingPdf.value = false
+  }
 }
 
 async function loadExistingResult() {
