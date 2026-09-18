@@ -198,11 +198,17 @@
 
               <!-- Pending video placeholder -->
               <div v-if="!videoAvailable" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-tr from-slate-900 via-slate-800 to-cyan-950 text-white p-6 text-center space-y-3">
-                <span class="material-symbols-outlined text-5xl text-white/70">movie</span>
-                <p class="font-bold text-sm">Video de bienvenida en producción</p>
-                <p class="text-[11px] text-gray-300 max-w-sm leading-relaxed">
+                <div class="w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-1 ring-2 ring-white/20">
+                  <span class="material-symbols-outlined text-5xl text-white/80">play_circle</span>
+                </div>
+                <p class="font-bold text-sm">
                   {{ moduleNumber === 1
-                    ? 'Aquí verás qué aprenderás en el módulo y por qué conocer a otras personas es clave en tu entorno laboral. Mientras tanto, puedes confirmar la lectura de los objetivos para habilitar el calentamiento.'
+                    ? '🎬 Video Introductorio — Getting to Know Other People'
+                    : 'Video de bienvenida en producción' }}
+                </p>
+                <p class="text-[11px] text-gray-300 max-w-md leading-relaxed">
+                  {{ moduleNumber === 1
+                    ? 'En este video descubrirás por qué saber presentarte, saludar y pedir información personal en inglés es esencial para tu práctica profesional como enfermero(a). Conocer a pacientes, colegas y familiares extranjeros es una habilidad clave en el entorno hospitalario. Mientras tanto, confirma la lectura de los objetivos para habilitar el calentamiento.'
                     : 'Muy pronto encontrarás aquí el video de introducción de este módulo. Mientras tanto, puedes confirmar la lectura de los objetivos para habilitar el calentamiento.' }}
                 </p>
               </div>
@@ -342,32 +348,40 @@
                       selectedWarmupCardId === card.id ? 'border-[#006688] ring-2 ring-[#006688]/30' : 'border-gray-200'
                     }`"
                   >
-                    <span v-if="moduleNumber === 1" class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-white/60" :class="card.bg">
-                      <svg v-if="card.illustration === 'morning'" viewBox="0 0 64 64" class="w-11 h-11">
-                        <circle cx="32" cy="26" r="12" fill="#fbbf24" />
-                        <g stroke="#f59e0b" stroke-width="3" stroke-linecap="round">
-                          <line x1="32" y1="4" x2="32" y2="10" />
-                          <line x1="50" y1="8" x2="46" y2="12" />
-                          <line x1="14" y1="8" x2="18" y2="12" />
-                          <line x1="58" y1="26" x2="52" y2="26" />
-                          <line x1="6" y1="26" x2="12" y2="26" />
+                    <span v-if="moduleNumber === 1" class="w-20 h-20 rounded-2xl flex items-center justify-center shrink-0 border border-white/60 shadow-sm" :class="card.bg">
+                      <svg v-if="card.illustration === 'morning'" viewBox="0 0 80 80" class="w-16 h-16">
+                        <defs><radialGradient id="m1SunGlow"><stop offset="0%" stop-color="#fef08a"/><stop offset="100%" stop-color="#fbbf24"/></radialGradient></defs>
+                        <rect x="0" y="50" width="80" height="30" rx="6" fill="#86efac" />
+                        <rect x="0" y="44" width="80" height="10" rx="0" fill="#bef264" opacity="0.5" />
+                        <circle cx="40" cy="28" r="15" fill="url(#m1SunGlow)" />
+                        <g stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round">
+                          <line x1="40" y1="4" x2="40" y2="10" /><line x1="40" y1="46" x2="40" y2="40" />
+                          <line x1="58" y1="10" x2="54" y2="15" /><line x1="22" y1="10" x2="26" y2="15" />
+                          <line x1="66" y1="28" x2="60" y2="28" /><line x1="14" y1="28" x2="20" y2="28" />
+                          <line x1="58" y1="46" x2="54" y2="41" /><line x1="22" y1="46" x2="26" y2="41" />
                         </g>
-                        <rect x="4" y="44" width="56" height="16" rx="5" fill="#86efac" />
+                        <text x="40" y="72" text-anchor="middle" fill="#15803d" font-size="9" font-weight="bold">Mañana</text>
                       </svg>
-                      <svg v-else-if="card.illustration === 'afternoon'" viewBox="0 0 64 64" class="w-11 h-11">
-                        <circle cx="32" cy="40" r="12" fill="#fb923c" />
-                        <g stroke="#f97316" stroke-width="3" stroke-linecap="round">
-                          <line x1="32" y1="20" x2="32" y2="24" />
-                          <line x1="48" y1="24" x2="45" y2="27" />
-                          <line x1="16" y1="24" x2="19" y2="27" />
+                      <svg v-else-if="card.illustration === 'afternoon'" viewBox="0 0 80 80" class="w-16 h-16">
+                        <defs><linearGradient id="m1SunsetSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#fb923c"/></linearGradient></defs>
+                        <rect x="0" y="0" width="80" height="55" rx="6" fill="url(#m1SunsetSky)" opacity="0.3" />
+                        <rect x="0" y="52" width="80" height="28" rx="6" fill="#fcd34d" />
+                        <circle cx="40" cy="44" r="14" fill="#fb923c" />
+                        <g stroke="#f97316" stroke-width="2.5" stroke-linecap="round">
+                          <line x1="40" y1="22" x2="40" y2="27" />
+                          <line x1="56" y1="28" x2="52" y2="32" /><line x1="24" y1="28" x2="28" y2="32" />
+                          <line x1="62" y1="44" x2="57" y2="44" /><line x1="18" y1="44" x2="23" y2="44" />
                         </g>
-                        <rect x="4" y="50" width="56" height="10" rx="5" fill="#fcd34d" />
+                        <text x="40" y="72" text-anchor="middle" fill="#9a3412" font-size="9" font-weight="bold">Tarde</text>
                       </svg>
-                      <svg v-else viewBox="0 0 64 64" class="w-11 h-11">
-                        <path d="M42 8a20 20 0 1 0 14 30A22 22 0 0 1 42 8z" fill="#c7d2fe" />
-                        <circle cx="16" cy="14" r="2" fill="#fef08a" />
-                        <circle cx="27" cy="22" r="1.5" fill="#fef08a" />
-                        <circle cx="10" cy="30" r="1.5" fill="#e0e7ff" />
+                      <svg v-else viewBox="0 0 80 80" class="w-16 h-16">
+                        <rect x="0" y="0" width="80" height="80" rx="10" fill="#1e1b4b" opacity="0.3" />
+                        <path d="M50 10a22 22 0 1 0 16 34A24 24 0 0 1 50 10z" fill="#c7d2fe" />
+                        <circle cx="18" cy="14" r="2" fill="#fef08a" /><circle cx="12" cy="28" r="1.5" fill="#fef08a" />
+                        <circle cx="30" cy="8" r="1.5" fill="#e0e7ff" /><circle cx="70" cy="18" r="2" fill="#fef08a" />
+                        <circle cx="65" cy="50" r="1.5" fill="#e0e7ff" /><circle cx="22" cy="48" r="1" fill="#fef08a" />
+                        <circle cx="55" cy="60" r="1.5" fill="#c7d2fe" /><circle cx="10" cy="58" r="1" fill="#e0e7ff" />
+                        <text x="40" y="74" text-anchor="middle" fill="#a5b4fc" font-size="9" font-weight="bold">Noche</text>
                       </svg>
                     </span>
                     <span v-else class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="card.bg">
@@ -375,7 +389,8 @@
                     </span>
                     <div class="text-left">
                       <p class="text-xs font-black text-gray-800 leading-tight">{{ card.label }}</p>
-                      <span class="text-[10px] text-gray-400 font-semibold">Arrastrar</span>
+                      <span v-if="card.sublabel" class="text-[10px] text-gray-500 font-semibold block leading-tight">{{ card.sublabel }}</span>
+                      <span class="text-[10px] text-gray-400 font-semibold">{{ moduleNumber === 1 ? 'Arrastra al saludo ➜' : 'Arrastrar' }}</span>
                     </div>
                   </div>
                   <p v-if="gameSuccess === true" class="text-xs font-bold text-green-600 flex items-center gap-1 my-auto">
@@ -388,7 +403,7 @@
               <!-- Drop Zones -->
               <div class="space-y-2">
                 <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                  {{ moduleNumber === 4 ? 'Criterio de Checklist (Verificado)' : moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : 'Saludos en Inglés' }}
+                  {{ moduleNumber === 4 ? 'Criterio de Checklist (Verificado)' : moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : '🇺🇸 Tarjetas de Saludo en Inglés' }}
                 </span>
                 <div class="grid grid-cols-1 gap-3">
                   <div 
@@ -396,22 +411,23 @@
                     :key="pair.id"
                     :data-warmup-slot="pair.id"
                     @click="placeSelectedOnSlot(pair.id)"
-                    :class="`border-2 border-dashed rounded-2xl p-4 min-h-[92px] flex flex-col items-center justify-center text-center transition-all ${
+                    :class="`border-2 rounded-2xl p-5 min-h-[100px] flex flex-col items-center justify-center text-center transition-all ${
                       isPairMatched(pair.id)
-                        ? 'border-green-400 bg-green-50/70'
+                        ? 'border-green-400 bg-green-50/70 shadow-md shadow-green-100'
                         : selectedWarmupCardId
-                          ? 'border-[#006688]/40 bg-white cursor-pointer hover:bg-[#006688]/5'
-                          : 'border-gray-200 bg-white/70'
+                          ? 'border-dashed border-[#006688]/40 bg-white cursor-pointer hover:bg-[#006688]/5 hover:shadow-md'
+                          : 'border-dashed border-gray-200 bg-white/70'
                     }`"
                   >
                     <template v-if="isPairMatched(pair.id)">
-                      <span class="material-symbols-outlined text-lg bg-green-500 text-white rounded-full p-0.5 mb-1">check</span>
-                      <p class="text-xs font-black text-green-700">{{ pair.right }}</p>
-                      <p class="text-[10px] font-bold text-green-600/80">¡Asociación correcta!</p>
+                      <span class="material-symbols-outlined text-xl bg-green-500 text-white rounded-full p-1 mb-1.5 shadow-sm">check</span>
+                      <p class="text-sm font-black text-green-700">{{ pair.right }}</p>
+                      <p class="text-[10px] font-bold text-green-600/80 mt-0.5">✅ ¡Asociación correcta!</p>
                     </template>
                     <template v-else>
-                      <p class="text-xs font-black text-gray-700">{{ pair.right }}</p>
-                      <p class="text-[10px] text-gray-400 mt-1">Suelta aquí la tarjeta correcta</p>
+                      <span v-if="moduleNumber === 1" class="material-symbols-outlined text-lg text-[#006688]/40 mb-1">translate</span>
+                      <p class="text-sm font-black text-gray-700">{{ pair.right }}</p>
+                      <p class="text-[10px] text-gray-400 mt-1">{{ moduleNumber === 1 ? 'Arrastra aquí la ilustración del momento del día que corresponde' : 'Suelta aquí la tarjeta correcta' }}</p>
                     </template>
                   </div>
                 </div>
@@ -460,19 +476,26 @@
 
         <!-- Warm-up Celebration Modal -->
         <div v-if="warmupCelebration" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl p-8 text-center space-y-4">
-            <div class="w-16 h-16 rounded-full bg-amber-400 text-white flex items-center justify-center mx-auto shadow-lg">
-              <span class="material-symbols-outlined text-3xl">emoji_events</span>
+          <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl p-8 text-center space-y-5">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center mx-auto shadow-lg">
+              <span class="material-symbols-outlined text-4xl">emoji_events</span>
             </div>
-            <div class="space-y-1">
-              <h3 class="text-xl font-black text-gray-800">¡Felicitaciones!</h3>
+            <div class="space-y-2">
+              <h3 class="text-xl font-black text-gray-800">🎉 ¡Felicitaciones!</h3>
+              <p class="text-sm font-bold text-[#006688]">Calentamiento Completado — Saludos e Información Personal</p>
               <p class="text-xs text-gray-600 leading-relaxed">
-                Completaste el calentamiento sobre saludos e información personal. Activaste tus conocimientos previos y desbloqueaste el Momento 2.
+                Asociaste correctamente los tres momentos del día con sus saludos en inglés:
+                <strong>Good morning</strong>, <strong>Good afternoon</strong> y <strong>Good evening</strong>.
+                Has activado tus conocimientos previos y estás listo para iniciar las explicaciones principales del módulo.
               </p>
+              <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <span class="text-[10px] font-bold bg-green-100 text-green-700 px-2.5 py-1 rounded-full">✅ Preparación completada</span>
+                <span class="text-[10px] font-bold bg-blue-100 text-[#006688] px-2.5 py-1 rounded-full">🔓 Momento 2 desbloqueado</span>
+              </div>
             </div>
-            <button @click="goToMomento2" class="w-full flex items-center justify-center gap-1 px-5 py-3 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow transition-all">
-              Ir al Momento 2 (Absorción)
-              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            <button @click="goToMomento2" class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-green-600 hover:bg-green-700 text-white text-sm font-black rounded-xl shadow-md transition-all">
+              Continuar al Momento 2 — Absorción de Conocimiento
+              <span class="material-symbols-outlined text-base">arrow_forward</span>
             </button>
           </div>
         </div>
@@ -2013,9 +2036,9 @@ const warmupPairs = computed(() => {
     ]
   }
   return [
-    { id: 'morning', label: 'Morning', right: 'Good morning', icon: 'wb_sunny', color: 'text-amber-600', bg: 'bg-gradient-to-b from-sky-200 to-amber-100', illustration: 'morning' },
-    { id: 'afternoon', label: 'Afternoon', right: 'Good afternoon', icon: 'wb_twilight', color: 'text-orange-600', bg: 'bg-gradient-to-b from-orange-200 to-rose-100', illustration: 'afternoon' },
-    { id: 'night', label: 'Night', right: 'Good evening', icon: 'dark_mode', color: 'text-indigo-600', bg: 'bg-gradient-to-b from-indigo-900 to-slate-900', illustration: 'night' },
+    { id: 'morning', label: 'Morning', sublabel: '☀️ Sol de la mañana', right: 'Good morning', icon: 'wb_sunny', color: 'text-amber-600', bg: 'bg-gradient-to-b from-sky-200 to-amber-100', illustration: 'morning' },
+    { id: 'afternoon', label: 'Afternoon', sublabel: '🌇 Sol de la tarde', right: 'Good afternoon', icon: 'wb_twilight', color: 'text-orange-600', bg: 'bg-gradient-to-b from-orange-200 to-rose-100', illustration: 'afternoon' },
+    { id: 'night', label: 'Night', sublabel: '🌙 Luna en la noche', right: 'Good evening', icon: 'dark_mode', color: 'text-indigo-600', bg: 'bg-gradient-to-b from-indigo-900 to-slate-900', illustration: 'night' },
   ]
 })
 
