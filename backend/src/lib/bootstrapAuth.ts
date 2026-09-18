@@ -303,36 +303,73 @@ export async function ensureDefaultActivities(): Promise<void> {
 }
 
 export async function ensureDefaultCurriculum(): Promise<void> {
-  const programCount = await prisma.trainingProgram.count()
-  if (programCount > 0) return
+  let program = await prisma.trainingProgram.findFirst()
+  if (!program) {
+    program = await prisma.trainingProgram.create({
+      data: { name: 'Programa de Formación en Enfermería' }
+    })
+  }
 
-  const program = await prisma.trainingProgram.create({
-    data: { name: 'Programa de Formación en Enfermería' }
+  let competency = await prisma.competency.findFirst({
+    where: { program_id: program.id }
   })
-
-  const competency = await prisma.competency.create({
-    data: {
-      code: 'COMP-230101',
-      name: 'Asistencia en Procedimientos Clínicos y Hospitalarios',
-      program_id: program.id
-    }
-  })
-
-  await prisma.learningOutcome.createMany({
-    data: [
-      {
-        code: 'RAP-01',
-        name: 'Administrar medicamentos y tratamientos básicos según prescripción médica.',
-        competency_id: competency.id
-      },
-      {
-        code: 'RAP-02',
-        name: 'Monitorear y registrar signos vitales del paciente de acuerdo a protocolos clínicos.',
-        competency_id: competency.id
+  if (!competency) {
+    competency = await prisma.competency.create({
+      data: {
+        code: 'COMP-230101',
+        name: 'Comunicación en Salud y Asistencia en Procedimientos Clínicos',
+        program_id: program.id
       }
-    ]
-  })
-  console.log('Currículum de prueba sembrado.')
+    })
+  }
+
+  const OFFICIAL_RAPS = [
+    {
+      code: 'RAP-01',
+      name: 'Intercambiar información personal y social básica en el contexto de atención en salud (Módulo 1 · Fase Análisis)'
+    },
+    {
+      code: 'RAP-02',
+      name: 'Describir el estado físico del paciente y el entorno hospitalario en inglés técnico (Módulo 2 · Fase Planeación)'
+    },
+    {
+      code: 'RAP-03',
+      name: 'Relatar antecedentes clínicos y realizar entregas de turno estructuradas en pasado simple (Módulo 2 · Fase Planeación)'
+    },
+    {
+      code: 'RAP-04',
+      name: 'Explicar procedimientos clínicos rutinarios e interactuar en tiempo presente en el área hospitalaria (Módulo 3 · Fase Ejecución)'
+    },
+    {
+      code: 'RAP-05',
+      name: 'Proponer mejoras laborales al supervisor y gestionar listas de verificación clínicas (Módulo 3 · Fase Ejecución)'
+    },
+    {
+      code: 'RAP-06',
+      name: 'Brindar recomendaciones médicas de egreso y evaluar resultados de listas de verificación (Módulo 4 · Fase Evaluación)'
+    }
+  ]
+
+  for (const rap of OFFICIAL_RAPS) {
+    const existing = await prisma.learningOutcome.findFirst({
+      where: { code: rap.code }
+    })
+    if (existing) {
+      await prisma.learningOutcome.update({
+        where: { id: existing.id },
+        data: { name: rap.name }
+      })
+    } else {
+      await prisma.learningOutcome.create({
+        data: {
+          code: rap.code,
+          name: rap.name,
+          competency_id: competency.id
+        }
+      })
+    }
+  }
+  console.log('Currículum oficial con los 6 RAPs sincronizado con éxito.')
 }
 
 export async function ensureDefaultVocabulary(): Promise<void> {
@@ -371,7 +408,7 @@ export async function ensureDefaultVocabulary(): Promise<void> {
       await prisma.vocabulary.create({ data: item })
     }
   }
-  console.log('Vocabulario de prueba sembrado y sincronizado.')
+  console.log('Vocabulario clínico de prueba sembrado.')
 }
 
 export async function ensureDefaultDialogues(): Promise<void> {
@@ -404,7 +441,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       duration: '8h',
       icon: 'medical_services',
       iconColor: '#006688',
-      bg: 'bg-teal-50'
+      bg: 'bg-teal-50',
+      raps: JSON.stringify(['RAP-01'])
     },
     {
       slug: 'work-life-interaction',
@@ -414,7 +452,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       duration: '12h',
       icon: 'assignment_ind',
       iconColor: '#4f46e5',
-      bg: 'bg-indigo-50'
+      bg: 'bg-indigo-50',
+      raps: JSON.stringify(['RAP-02', 'RAP-03'])
     },
     {
       slug: 'workplace-communication',
@@ -424,7 +463,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       duration: '14h',
       icon: 'groups',
       iconColor: '#d97706',
-      bg: 'bg-amber-50'
+      bg: 'bg-amber-50',
+      raps: JSON.stringify(['RAP-04', 'RAP-05'])
     },
     {
       slug: 'professional-practice',
@@ -434,7 +474,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       duration: '10h',
       icon: 'verified_user',
       iconColor: '#059669',
-      bg: 'bg-emerald-50'
+      bg: 'bg-emerald-50',
+      raps: JSON.stringify(['RAP-06'])
     }
   ]
 
@@ -443,6 +484,17 @@ export async function ensureDefaultCourses(): Promise<void> {
     await prisma.course.createMany({ data: DEFAULT_COURSES })
     console.log('Cursos clínicos iniciales (4 módulos de Miro) sembrados con éxito.')
     return
+  }
+
+  // Sincronizar los 4 cursos oficiales para asegurar que tengan sus RAPs actualizados
+  for (const target of DEFAULT_COURSES) {
+    const existing = await prisma.course.findUnique({ where: { slug: target.slug } })
+    if (existing) {
+      await prisma.course.update({
+        where: { id: existing.id },
+        data: target
+      })
+    }
   }
 
   // Si existen los cursos genéricos antiguos, actualizarlos a los 4 módulos oficiales de Miro

@@ -37,6 +37,7 @@ export interface CreateCourseDto {
   bg?: string
   programId?: number | null
   structure?: CourseStructure | null
+  raps?: string[] | string
 }
 
 export interface UpdateCourseDto extends Partial<CreateCourseDto> {}
@@ -66,6 +67,14 @@ export interface CourseWithProgressDto {
   icon: string
   iconColor: string
   bg: string
+  programId?: number | null
+  programName?: string | null
   studentsCount: number
+  students?: number
+  activitiesCount: number
   progress: number
+  raps: string[]
+  isLocked?: boolean
+  prerequisiteTitle?: string | null
+  prerequisiteId?: number | null
 }

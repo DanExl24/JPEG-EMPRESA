@@ -13,7 +13,8 @@ export const DEFAULT_COURSES = [
     duration: '8h',
     icon: 'medical_services',
     iconColor: '#006688',
-    bg: 'bg-teal-50'
+    bg: 'bg-teal-50',
+    raps: JSON.stringify(['RAP-01'])
   },
   {
     slug: 'work-life-interaction',
@@ -23,7 +24,8 @@ export const DEFAULT_COURSES = [
     duration: '12h',
     icon: 'assignment_ind',
     iconColor: '#4f46e5',
-    bg: 'bg-indigo-50'
+    bg: 'bg-indigo-50',
+    raps: JSON.stringify(['RAP-02', 'RAP-03'])
   },
   {
     slug: 'workplace-communication',
@@ -33,7 +35,8 @@ export const DEFAULT_COURSES = [
     duration: '14h',
     icon: 'groups',
     iconColor: '#d97706',
-    bg: 'bg-amber-50'
+    bg: 'bg-amber-50',
+    raps: JSON.stringify(['RAP-04', 'RAP-05'])
   },
   {
     slug: 'professional-practice',
@@ -43,9 +46,12 @@ export const DEFAULT_COURSES = [
     duration: '10h',
     icon: 'verified_user',
     iconColor: '#059669',
-    bg: 'bg-emerald-50'
+    bg: 'bg-emerald-50',
+    raps: JSON.stringify(['RAP-06'])
   }
 ]
+
+export const OFFICIAL_COURSE_SLUGS = DEFAULT_COURSES.map(course => course.slug)
 
 export class CourseService {
   /**
@@ -95,6 +101,17 @@ export class CourseService {
           } catch {}
         }
       }
+
+      // Asegurar que los 4 cursos oficiales tengan sus RAPs asignados si están vacíos
+      for (const def of DEFAULT_COURSES) {
+        const found = await prisma.course.findUnique({ where: { slug: def.slug } })
+        if (found && (!found.raps || found.raps === '[]')) {
+          await prisma.course.update({
+            where: { id: found.id },
+            data: { raps: def.raps }
+          })
+        }
+      }
     } catch (e) {
       console.warn('[CourseService] Could not auto-seed courses:', e)
     }
@@ -133,9 +150,9 @@ export class CourseService {
   }
 
   /**
-   * Obtiene la lista de todos los cursos con el progreso del usuario conectado
+   * Obtiene la lista de todos los cursos con el progreso del usuario conectado y estado de bloqueo secuencial
    */
-  static async listCourses(userId?: number) {
+  static async listCourses(userId?: number, userRole?: string) {
     await this.ensureCourses()
 
     const courses = await prisma.course.findMany({
@@ -151,11 +168,15 @@ export class CourseService {
     })
 
     const activities = await prisma.activity.findMany({
-      select: { course: true }
+      select: { course: true, courseId: true }
     })
     const activityCountMap = new Map<string, number>()
+    const activityCountByCourseId = new Map<number, number>()
     activities.forEach((a: any) => {
       activityCountMap.set(a.course, (activityCountMap.get(a.course) || 0) + 1)
+      if (a.courseId) {
+        activityCountByCourseId.set(a.courseId, (activityCountByCourseId.get(a.courseId) || 0) + 1)
+      }
     })
 
     let progressMap = new Map<number, number>()
@@ -168,9 +189,43 @@ export class CourseService {
       })
     }
 
+    const isPrivileged = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+
+    // Bloqueo secuencial solo entre los 4 módulos oficiales (RAP): los cursos
+    // personalizados creados por admin/instructor nunca se bloquean.
+    const officialCourses = courses.filter((c: any) => OFFICIAL_COURSE_SLUGS.includes(c.slug))
+    const lockInfoMap = new Map<number, { isLocked: boolean; prerequisiteTitle: string | null; prerequisiteId: number | null }>()
+    let previousCourse: any = null
+    let previousProgress = 100
+    for (const officialCourse of officialCourses) {
+      const currentProgress = userId ? (progressMap.get(officialCourse.id) || 0) : 0
+      let isLocked = false
+      let prerequisiteTitle: string | null = null
+      let prerequisiteId: number | null = null
+      if (!isPrivileged && previousCourse && previousProgress < 100) {
+        isLocked = true
+        prerequisiteTitle = previousCourse.title
+        prerequisiteId = previousCourse.id
+      }
+      lockInfoMap.set(officialCourse.id, { isLocked, prerequisiteTitle, prerequisiteId })
+      previousCourse = officialCourse
+      previousProgress = currentProgress
+    }
+
     return courses.map((c: any) => {
       const studentCount = c._count?.progresses || 0
-      const activitiesCount = activityCountMap.get(c.title) || 0
+      const activitiesCount = activityCountByCourseId.get(c.id) || activityCountMap.get(c.title) || 0
+      const currentProgress = userId ? (progressMap.get(c.id) || 0) : 0
+      const lockInfo = lockInfoMap.get(c.id) || { isLocked: false, prerequisiteTitle: null, prerequisiteId: null }
+
+      let rapsList: string[] = []
+      if (c.raps) {
+        try {
+          rapsList = Array.isArray(c.raps) ? c.raps : JSON.parse(c.raps)
+        } catch {
+          rapsList = []
+        }
+      }
 
       return {
         id: c.id,
@@ -182,32 +237,89 @@ export class CourseService {
         icon: c.icon,
         iconColor: c.iconColor,
         bg: c.bg,
+        structure: c.structure || null,
         programId: c.programId || null,
         programName: c.program?.name || null,
         studentsCount: studentCount,
         students: studentCount,
         activitiesCount,
-        progress: userId ? (progressMap.get(c.id) || 0) : 0
+        progress: currentProgress,
+        raps: rapsList,
+        isLocked: lockInfo.isLocked,
+        prerequisiteTitle: lockInfo.prerequisiteTitle,
+        prerequisiteId: lockInfo.prerequisiteId
       }
     })
   }
 
   /**
-   * Obtiene el detalle de un curso por ID o por slug
+   * Obtiene el detalle de un curso por ID con estado de prerrequisito y RAPs
    */
-  static async getCourseById(id: number) {
-    const course = await prisma.course.findUnique({
-      where: { id },
+  static async getCourseById(id: number, userId?: number, userRole?: string) {
+    const allCourses = await prisma.course.findMany({
+      orderBy: { id: 'asc' },
       include: {
         program: true
       }
     })
 
-    if (!course) {
+    const courseIndex = allCourses.findIndex(c => c.id === id)
+    if (courseIndex === -1) {
       throw new NotFoundError(`Curso con ID ${id} no encontrado.`)
     }
 
-    return course
+    const course = allCourses[courseIndex]
+    const isPrivileged = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+    const isOfficialCourse = OFFICIAL_COURSE_SLUGS.includes(course.slug)
+
+    let isLocked = false
+    let prerequisiteTitle: string | null = null
+    let prerequisiteId: number | null = null
+
+    // Bloqueo secuencial solo entre módulos oficiales (RAP); los cursos personalizados no se bloquean
+    if (!isPrivileged && isOfficialCourse) {
+      const officialCourses = allCourses.filter(c => OFFICIAL_COURSE_SLUGS.includes(c.slug))
+      const officialIndex = officialCourses.findIndex(c => c.id === id)
+
+      if (officialIndex > 0) {
+        const prevCourse = officialCourses[officialIndex - 1]
+        let prevProgress = 0
+        if (userId) {
+          const p = await prisma.courseProgress.findUnique({
+            where: {
+              userId_courseId: {
+                userId,
+                courseId: prevCourse.id
+              }
+            }
+          })
+          prevProgress = p ? p.overallPct : 0
+        }
+
+        if (prevProgress < 100) {
+          isLocked = true
+          prerequisiteTitle = prevCourse.title
+          prerequisiteId = prevCourse.id
+        }
+      }
+    }
+
+    let rapsList: string[] = []
+    if (course.raps) {
+      try {
+        rapsList = Array.isArray(course.raps) ? course.raps : JSON.parse(course.raps)
+      } catch {
+        rapsList = []
+      }
+    }
+
+    return {
+      ...course,
+      raps: rapsList,
+      isLocked,
+      prerequisiteTitle,
+      prerequisiteId
+    }
   }
 
   /**
@@ -224,6 +336,10 @@ export class CourseService {
       slug = `${slug}-${Date.now().toString().slice(-4)}`
     }
 
+    const rapsValue = data.raps
+      ? (typeof data.raps === 'string' ? data.raps : JSON.stringify(data.raps))
+      : '[]'
+
     return await prisma.course.create({
       data: {
         title: data.title.trim(),
@@ -235,7 +351,8 @@ export class CourseService {
         iconColor: data.iconColor || '#006688',
         bg: data.bg || 'bg-blue-50',
         programId: data.programId || null,
-        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {})
+        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
+        raps: rapsValue
       }
     })
   }
@@ -245,6 +362,10 @@ export class CourseService {
    */
   static async updateCourse(id: number, data: UpdateCourseDto) {
     const existing = await this.getCourseById(id)
+
+    const rapsValue = data.raps !== undefined
+      ? (typeof data.raps === 'string' ? data.raps : JSON.stringify(data.raps))
+      : undefined
 
     const updated = await prisma.course.update({
       where: { id },
@@ -258,7 +379,8 @@ export class CourseService {
         ...(data.iconColor ? { iconColor: data.iconColor } : {}),
         ...(data.bg ? { bg: data.bg } : {}),
         ...(data.programId !== undefined ? { programId: data.programId } : {}),
-        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {})
+        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
+        ...(rapsValue !== undefined ? { raps: rapsValue } : {})
       }
     })
 
@@ -391,5 +513,168 @@ export class CourseService {
       overallPct: saved.overallPct,
       completed: saved.completed
     }
+  }
+
+  /**
+   * Guarda la entrega del POS-TEST GLOBAL, otorgando XP e insignia de graduación
+   */
+  static async savePostTestResult(userId: number, data: {
+    finalScore: number
+    preTestBaseline?: number
+    answers?: Record<string, any>
+    moduleBreakdown?: {
+      m1: number
+      m2: number
+      m3: number
+      m4: number
+    }
+  }) {
+    if (!userId) throw new BadRequestError('Usuario no autenticado.')
+
+    const finalScore = Math.max(0, Math.min(100, Math.round(data.finalScore || 0)))
+    const preTestBaseline = Math.max(0, Math.min(100, Math.round(data.preTestBaseline !== undefined ? data.preTestBaseline : 35)))
+    const delta = Math.max(0, finalScore - preTestBaseline)
+
+    // Buscar curso 4 o curso de evaluación
+    const m4Course = await prisma.course.findFirst({
+      where: {
+        OR: [
+          { slug: 'professional-practice' },
+          { id: 4 }
+        ]
+      }
+    })
+
+    const courseId = m4Course?.id || 4
+
+    // Actualizar progreso en curso 4 con datos del post-test
+    const existing = await prisma.courseProgress.findUnique({
+      where: { userId_courseId: { userId, courseId } }
+    })
+
+    let phaseMap: any = { inicio: 100, estudio: 100, practica: 100, evaluacion: 100 }
+    if (existing?.phaseProgress) {
+      try {
+        phaseMap = JSON.parse(existing.phaseProgress)
+      } catch {}
+    }
+
+    phaseMap.postTest = {
+      score: finalScore,
+      preTestBaseline,
+      delta,
+      moduleBreakdown: data.moduleBreakdown || { m1: 100, m2: 100, m3: 100, m4: 100 },
+      completedAt: new Date().toISOString()
+    }
+
+    await prisma.courseProgress.upsert({
+      where: { userId_courseId: { userId, courseId } },
+      create: {
+        userId,
+        courseId,
+        currentPhase: 'evaluacion',
+        phaseProgress: JSON.stringify(phaseMap),
+        overallPct: 100,
+        completed: true,
+        completedAt: new Date()
+      },
+      update: {
+        phaseProgress: JSON.stringify(phaseMap),
+        overallPct: 100,
+        completed: true,
+        completedAt: new Date()
+      }
+    })
+
+    // Otorgar 150 XP de culminación de ruta formativa
+    await GamificationService.awardXp(userId, 150, 'Culminación exitosa del POS-TEST GLOBAL de enfermería')
+
+    // Otorgar insignia oficial post_test_master ("Graduado Bilingüe")
+    await GamificationService.awardBadgeExplicit(userId, 'post_test_master')
+
+    // Obtener datos del usuario para el certificado
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, nombre: true, apellido: true, cedula: true, correo: true }
+    })
+
+    const certificateData = {
+      studentName: `${user?.nombre || ''} ${user?.apellido || ''}`.trim() || 'Aprendiz SENA',
+      documentId: user?.cedula || 'N/A',
+      programTitle: 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria',
+      totalHours: '44 Horas Académicas',
+      modulesCount: 4,
+      rapsCompleted: 'RAP 1 al RAP 6',
+      preTestBaseline,
+      finalScore,
+      growthDelta: `+${delta}%`,
+      awardedBadge: 'Graduado Bilingüe',
+      completionDate: new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }),
+      certificateCode: `SENA-NURS-${userId}-${Date.now().toString(36).toUpperCase()}`
+    }
+
+    return {
+      success: true,
+      finalScore,
+      preTestBaseline,
+      delta,
+      certificateData
+    }
+  }
+
+  /**
+   * Consulta el resultado previo del POS-TEST GLOBAL
+   */
+  static async getPostTestResult(userId: number) {
+    if (!userId) throw new BadRequestError('Usuario no autenticado.')
+
+    const m4Course = await prisma.course.findFirst({
+      where: {
+        OR: [
+          { slug: 'professional-practice' },
+          { id: 4 }
+        ]
+      }
+    })
+
+    const courseId = m4Course?.id || 4
+    const progress = await prisma.courseProgress.findUnique({
+      where: { userId_courseId: { userId, courseId } }
+    })
+
+    if (!progress?.phaseProgress) return null
+
+    try {
+      const parsed = JSON.parse(progress.phaseProgress)
+      if (parsed.postTest) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { nombre: true, apellido: true, cedula: true }
+        })
+        return {
+          ...parsed.postTest,
+          certificateData: {
+            studentName: `${user?.nombre || ''} ${user?.apellido || ''}`.trim() || 'Aprendiz SENA',
+            documentId: user?.cedula || 'N/A',
+            programTitle: 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria',
+            totalHours: '44 Horas Académicas',
+            modulesCount: 4,
+            rapsCompleted: 'RAP 1 al RAP 6',
+            preTestBaseline: parsed.postTest.preTestBaseline || 35,
+            finalScore: parsed.postTest.score || 90,
+            growthDelta: `+${parsed.postTest.delta || 55}%`,
+            awardedBadge: 'Graduado Bilingüe',
+            completionDate: parsed.postTest.completedAt 
+              ? new Date(parsed.postTest.completedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+              : new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }),
+            certificateCode: `SENA-NURS-${userId}-VERIFIED`
+          }
+        }
+      }
+    } catch {
+      return null
+    }
+
+    return null
   }
 }

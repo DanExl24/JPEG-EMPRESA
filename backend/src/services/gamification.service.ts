@@ -8,6 +8,7 @@ export const BADGE_CATALOG = [
   { key: 'estudiante_activo', name: 'Estudiante Activo',   description: 'Acumulaste 50 XP',                   iconEmoji: '🔥', xpRequired: 50  },
   { key: 'quiz_master',       name: 'Quiz Master',         description: 'Acumulaste 100 XP',                  iconEmoji: '🧠', xpRequired: 100 },
   { key: 'dedicado',          name: 'Dedicado',            description: 'Acumulaste 250 XP',                  iconEmoji: '⚡', xpRequired: 250 },
+  { key: 'post_test_master',   name: 'Graduado Bilingüe',   description: 'Completaste el POST-TEST Global de enfermería', iconEmoji: '🎓', xpRequired: 300 },
   { key: 'enfermero_pro',     name: 'Enfermero Pro',       description: 'Acumulaste 500 XP',                  iconEmoji: '👩‍⚕️', xpRequired: 500 },
   { key: 'experto_clinico',   name: 'Experto Clínico',     description: 'Acumulaste 1000 XP',                 iconEmoji: '🏆', xpRequired: 1000 },
 ]
@@ -31,10 +32,41 @@ export class GamificationService {
    * Asegura que el catálogo de insignias exista en la base de datos
    */
   static async ensureBadges(): Promise<void> {
-    const count = await prisma.badge.count()
-    if (count === 0) {
-      await prisma.badge.createMany({ data: BADGE_CATALOG, skipDuplicates: true })
+    for (const b of BADGE_CATALOG) {
+      await prisma.badge.upsert({
+        where: { key: b.key },
+        update: { name: b.name, description: b.description, iconEmoji: b.iconEmoji, xpRequired: b.xpRequired },
+        create: b
+      })
     }
+  }
+
+  /**
+   * Otorga una insignia explícita directamente al usuario
+   */
+  static async awardBadgeExplicit(userId: number, badgeKey: string): Promise<boolean> {
+    await this.ensureBadges()
+    const badge = await prisma.badge.findUnique({ where: { key: badgeKey } })
+    if (!badge) return false
+
+    const existing = await prisma.userBadge.findUnique({
+      where: { userId_badgeKey: { userId, badgeKey } }
+    })
+    if (!existing) {
+      await prisma.userBadge.create({
+        data: { userId, badgeKey }
+      })
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'BADGE_UNLOCKED',
+          title: `¡Desbloqueaste la insignia "${badge.name}"!`,
+          badge: badge.iconEmoji
+        }
+      })
+      return true
+    }
+    return false
   }
 
   /**

@@ -22,6 +22,19 @@
           </span>
         </div>
         <p class="text-xs text-gray-500">{{ currentCourseSubtitle }}</p>
+        
+        <!-- RAP Badges in Header -->
+        <div v-if="courseRaps && courseRaps.length > 0" class="flex flex-wrap gap-1.5 pt-1">
+          <span 
+            v-for="rap in courseRaps" 
+            :key="rap" 
+            class="text-[10px] font-extrabold bg-blue-50 text-[#006688] border border-blue-200/80 px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs"
+            :title="`Resultado de Aprendizaje: ${rap}`"
+          >
+            <span class="material-symbols-outlined text-[13px]">verified</span>
+            {{ rap }}
+          </span>
+        </div>
       </div>
 
       <!-- Main Progress Tracking -->
@@ -36,6 +49,51 @@
       </div>
     </div>
 
+    <!-- Prerequisite Sequential Lock Screen for Apprentice -->
+    <div v-if="isCourseLocked && !auth.isAdmin && !auth.isInstructor" class="bg-white rounded-3xl border border-amber-200 shadow-md p-8 sm:p-12 text-center space-y-6 animate-fade-in max-w-2xl mx-auto my-6">
+      <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+        <span class="material-symbols-outlined text-4xl">lock</span>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs font-black tracking-wider uppercase bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+          Módulo Bloqueado por Prerrequisito
+        </span>
+        <h2 class="text-2xl font-black text-gray-800 pt-2">
+          {{ currentCourseTitle }}
+        </h2>
+        <p class="text-sm text-gray-600 max-w-lg mx-auto leading-relaxed">
+          Para garantizar la continuidad pedagógica y el cumplimiento de los RAPs, debes completar al <strong>100%</strong> el módulo previo antes de ingresar a este nivel.
+        </p>
+      </div>
+
+      <div class="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center justify-center gap-3 text-left">
+        <span class="material-symbols-outlined text-amber-600 text-2xl shrink-0">school</span>
+        <div>
+          <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wide">Prerrequisito Obligatorio Pendiente:</span>
+          <p class="text-sm font-black text-amber-900">{{ prerequisiteCourseTitle || 'Módulo Anterior' }}</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+        <router-link 
+          :to="`/dashboard/cursos/${prerequisiteCourseId || 1}`"
+          class="w-full sm:w-auto px-6 py-3 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+        >
+          <span class="material-symbols-outlined text-base">arrow_back</span>
+          Ir al Módulo Prerrequisito
+        </router-link>
+        <router-link 
+          to="/dashboard/cursos"
+          class="w-full sm:w-auto px-6 py-3 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-sm rounded-xl transition-all flex items-center justify-center"
+        >
+          Ver Todos los Cursos
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Active Course Content (Rendered only if course is unlocked) -->
+    <template v-else>
     <!-- Media Check Settings Banner (Simulation) -->
     <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
       <div class="flex items-center gap-2">
@@ -2105,71 +2163,10 @@
 
     </div>
 
-    <!-- POST-TEST GLOBAL MODAL -->
-    <div v-if="showGlobalPostTestModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-2xl text-yellow-500">workspace_premium</span>
-            <div>
-              <h3 class="text-base font-black text-gray-800">POST-TEST GLOBAL DE EVALUACIÓN</h3>
-              <p class="text-xs text-gray-500">Evaluación integradora de toda la ruta formativa (RAP 1 a RAP 6)</p>
-            </div>
-          </div>
-          <button @click="showGlobalPostTestModal = false" class="text-gray-400 hover:text-gray-600">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
+    <!-- POST-TEST GLOBAL REUSABLE COMPONENT -->
+    <GlobalPostTestModal v-model="showGlobalPostTestModal" />
 
-        <div v-if="!globalPostTestSubmitted" class="space-y-4">
-          <p class="text-xs text-gray-600">
-            Responde las siguientes preguntas representativas de cada uno de los 4 módulos para obtener tu calificación final global.
-          </p>
-
-          <div v-for="(q, idx) in globalQuestions" :key="q.id" class="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
-            <span class="text-[10px] font-bold text-[#006688] uppercase tracking-wider">{{ q.moduleTag }}</span>
-            <p class="text-xs font-bold text-gray-800">{{ idx + 1 }}. {{ q.question }}</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-              <button 
-                v-for="opt in q.options" 
-                :key="opt"
-                @click="globalAnswers[q.id] = opt"
-                :class="`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all ${
-                  globalAnswers[q.id] === opt ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                }`"
-              >
-                {{ opt }}
-              </button>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <button @click="showGlobalPostTestModal = false" class="px-4 py-2 border border-gray-200 text-xs font-bold rounded-xl text-gray-600">Cancelar</button>
-            <button 
-              @click="submitGlobalPostTest" 
-              :disabled="Object.keys(globalAnswers).length < globalQuestions.length"
-              class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow disabled:bg-gray-200 disabled:text-gray-400"
-            >
-              Calificar Post-Test Global
-            </button>
-          </div>
-        </div>
-
-        <div v-else class="text-center py-6 space-y-4">
-          <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <span class="material-symbols-outlined text-3xl">emoji_events</span>
-          </div>
-          <div class="space-y-1">
-            <h4 class="text-lg font-black text-gray-800">¡Post-Test Global Completado!</h4>
-            <p class="text-sm font-bold text-green-600">Tu calificación final: {{ globalScore }}%</p>
-            <p class="text-xs text-gray-500 max-w-md mx-auto">
-              Has demostrado tu progreso en inglés técnico de enfermería desde el análisis inicial hasta el egreso hospitalario. ¡Felicitaciones por culminar toda la ruta académica!
-            </p>
-          </div>
-          <button @click="showGlobalPostTestModal = false" class="px-6 py-2.5 bg-[#006688] text-white font-bold text-xs rounded-xl shadow">Cerrar</button>
-        </div>
-      </div>
-    </div>
+    </template>
 
   </div>
 </template>
@@ -2178,10 +2175,13 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
+import GlobalPostTestModal from '../../components/cursos/GlobalPostTestModal.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
+const notificationStore = useNotificationStore()
 
 // Course Route State
 const courseId = computed(() => route.params.courseId || '1')
@@ -2216,12 +2216,76 @@ const OFFICIAL_COURSES = {
   }
 }
 
-const courseDetail = ref(null)
+// Course Details, Lock Status and RAPs
+const courseDetails = ref(null)
 const courseLoaded = ref(false)
+const isCourseLocked = ref(false)
+const prerequisiteCourseTitle = ref('')
+const prerequisiteCourseId = ref(null)
 
+const courseRaps = computed(() => {
+  if (courseDetails.value?.raps && courseDetails.value.raps.length > 0) {
+    return courseDetails.value.raps
+  }
+  if (moduleNumber.value === 1) return ['RAP-01']
+  if (moduleNumber.value === 2) return ['RAP-02', 'RAP-03']
+  if (moduleNumber.value === 3) return ['RAP-04', 'RAP-05']
+  if (moduleNumber.value === 4) return ['RAP-06']
+  return []
+})
+
+async function checkCourseLockAndDetails() {
+  resetCustomState()
+  try {
+    const token = auth.token || ''
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+    const res = await fetch(`${apiBaseUrl}/api/courses/${courseId.value}`, { headers })
+    if (res.ok) {
+      const payload = await res.json()
+      const course = payload?.data || payload
+      courseDetails.value = course
+      if (!auth.isAdmin && !auth.isInstructor && course.isLocked) {
+        isCourseLocked.value = true
+        prerequisiteCourseTitle.value = course.prerequisiteTitle || 'el módulo previo'
+        prerequisiteCourseId.value = course.prerequisiteId || (Number(courseId.value) - 1)
+        return
+      }
+    }
+  } catch (err) {
+    console.warn('Could not check course lock from backend:', err)
+  }
+
+  // Comprobación de seguridad local en caso de desconexión o progreso en cliente
+  if (!auth.isAdmin && !auth.isInstructor && moduleNumber.value > 1) {
+    const prevModuleId = moduleNumber.value - 1
+    const apprenticeId = auth.user?.id || 'guest'
+    const prevKey = `nursing_academy_progress_${apprenticeId}_course_${prevModuleId}`
+    try {
+      const raw = localStorage.getItem(prevKey)
+      let prevProg = 0
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed.phaseProgress) {
+          const sum = Object.values(parsed.phaseProgress).reduce((a, b) => a + b, 0)
+          prevProg = Math.round(sum / Object.keys(parsed.phaseProgress).length)
+        }
+      }
+      if (prevProg < 100 && (courseDetails.value?.isLocked ?? true)) {
+        isCourseLocked.value = true
+        prerequisiteCourseTitle.value = courseDetails.value?.prerequisiteTitle || `Módulo ${prevModuleId}`
+        prerequisiteCourseId.value = courseDetails.value?.prerequisiteId || prevModuleId
+        return
+      }
+    } catch {}
+  }
+
+  isCourseLocked.value = false
+  courseLoaded.value = true
+  initCustomWarmup()
+}
 const moduleNumber = computed(() => {
   if (courseLoaded.value) {
-    const slug = courseDetail.value?.slug
+    const slug = courseDetails.value?.slug
     return (slug && OFFICIAL_MODULE_SLUGS[slug]) || 0
   }
   const id = String(courseId.value)
@@ -2233,20 +2297,20 @@ const moduleNumber = computed(() => {
 
 const isOfficialModule = computed(() => moduleNumber.value >= 1)
 const isCustomCourse = computed(() => courseLoaded.value && moduleNumber.value === 0)
-const customStructure = computed(() => courseDetail.value?.structure || null)
+const customStructure = computed(() => courseDetails.value?.structure || null)
 
 const currentCourseTitle = computed(() => {
-  if (isCustomCourse.value) return courseDetail.value?.title || 'Curso'
+  if (isCustomCourse.value) return courseDetails.value?.title || 'Curso'
   return OFFICIAL_COURSES[moduleNumber.value]?.title || 'Getting to Know Other People'
 })
 
 const currentCourseSubtitle = computed(() => {
-  if (isCustomCourse.value) return courseDetail.value?.description || 'Curso personalizado'
+  if (isCustomCourse.value) return courseDetails.value?.description || 'Curso personalizado'
   return OFFICIAL_COURSES[moduleNumber.value]?.subtitle || OFFICIAL_COURSES[1].subtitle
 })
 
 const currentCourseBadge = computed(() => {
-  if (isCustomCourse.value) return courseDetail.value?.category || 'Curso Personalizado'
+  if (isCustomCourse.value) return courseDetails.value?.category || 'Curso Personalizado'
   return OFFICIAL_COURSES[moduleNumber.value]?.badge || OFFICIAL_COURSES[1].badge
 })
 
@@ -2766,25 +2830,9 @@ function activitiesForPhase(phaseId) {
   return courseActivities.value.filter(activity => {
     const belongsToCourse = activity.courseId
       ? Number(activity.courseId) === Number(courseId.value)
-      : activity.course === courseDetail.value?.title
+      : activity.course === courseDetails.value?.title
     return belongsToCourse && activity.phase === PHASE_ACTIVITY_LABELS[phaseId]
   })
-}
-
-async function fetchCourseDetail() {
-  resetCustomState()
-  try {
-    const res = await fetch(`${apiBaseUrl}/api/courses/${courseId.value}`)
-    if (res.ok) {
-      const payload = await res.json()
-      courseDetail.value = payload?.data || payload
-    }
-  } catch (err) {
-    console.warn('Course detail unavailable:', err)
-  } finally {
-    courseLoaded.value = true
-    initCustomWarmup()
-  }
 }
 
 async function fetchCourseActivities() {
@@ -3460,37 +3508,239 @@ function resetExamForReview() {
 }
 
 // -----------------------------------------------------------------
-// POST-TEST GLOBAL INTEGRATOR MODAL (All 4 Modules)
+// POST-TEST GLOBAL INTEGRATOR (All 4 Modules + Pre/Post Contrast)
 // -----------------------------------------------------------------
 const showGlobalPostTestModal = ref(false)
+const showCertificateModal = ref(false)
 const globalPostTestSubmitted = ref(false)
+const isSubmittingPostTest = ref(false)
 const globalAnswers = ref({})
 const globalScore = ref(0)
+const preTestBaseline = ref(35)
+const growthDelta = ref(0)
+const moduleBreakdown = ref({ m1: 0, m2: 0, m3: 0, m4: 0 })
+const certificateData = ref(null)
 
 const globalQuestions = [
-  { id: 'gq1', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'Which greeting is used in the morning?', options: ['Good morning', 'Good night', 'Goodbye'], correct: 'Good morning' },
-  { id: 'gq2', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'What is the correct structure of a basic sentence?', options: ['Subject + Verb + Complement', 'Verb + Subject + Complement', 'Complement + Verb'], correct: 'Subject + Verb + Complement' },
-  { id: 'gq3', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'How do you describe a past accident in hospital history?', options: ['He fell yesterday and had a fracture.', 'He is falling tomorrow.', 'He fall down now.'], correct: 'He fell yesterday and had a fracture.' },
-  { id: 'gq4', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'Which adjective describes a swollen limb?', options: ['Swollen', 'Fast', 'Tall'], correct: 'Swollen' },
-  { id: 'gq5', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you describe an action happening right now to a visitor?', options: ['We are checking his blood pressure right now.', 'We checked him yesterday.', 'We check him next year.'], correct: 'We are checking his blood pressure right now.' },
-  { id: 'gq6', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you politely suggest an improvement to your colleague?', options: ['I think we should update the digital checklist.', 'You must leave now.', 'Do not speak.'], correct: 'I think we should update the digital checklist.' },
-  { id: 'gq7', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'Which modal expresses a direct medical obligation?', options: ['You must take this painkiller every 8 hours.', 'You might take tea.', 'You would run.'], correct: 'You must take this painkiller every 8 hours.' },
-  { id: 'gq8', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'What is the final confirmation when evaluating the checklist?', options: ['The vital signs are stable and the checklist is complete.', 'The patient is not ready.', 'The doctor is lost.'], correct: 'The vital signs are stable and the checklist is complete.' },
+  {
+    id: 'gq1',
+    moduleKey: 'm1',
+    moduleTag: 'MÓDULO 1 · RAP 1',
+    title: 'Presentación y Saludos Clínicos',
+    question: 'A British patient arrives at the hospital emergency room at 08:30 AM. Which formal greeting should the nurse use?',
+    options: ['Good morning, sir. Welcome to our hospital.', 'Good evening, sir. See you later.', 'Good night, mister.'],
+    correct: 'Good morning, sir. Welcome to our hospital.',
+    explanation: 'Para la atención matutina en triaje u hospitalización se emplea "Good morning".'
+  },
+  {
+    id: 'gq2',
+    moduleKey: 'm1',
+    moduleTag: 'MÓDULO 1 · RAP 1',
+    title: 'Estructura Básica Oracional (Grammar Pill)',
+    question: 'Listen to the clinical sentence and identify the correct syntactic structure (Subject + Verb + Complement):',
+    audioText: 'The nurse prepares the daily medication.',
+    hasAudio: true,
+    options: ['The nurse (S) + prepares (V) + the daily medication (C)', 'Prepares (V) + the nurse (S) + medication (C)', 'The medication (C) + prepares (V) + nurse (S)'],
+    correct: 'The nurse (S) + prepares (V) + the daily medication (C)',
+    explanation: 'El orden estándar en inglés técnico es Sujeto (The nurse) + Verbo (prepares) + Complemento (the daily medication).'
+  },
+  {
+    id: 'gq3',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Antecedentes y Pasado Simple (Mr. Thomas)',
+    question: 'How do you correctly report Mr. Thomas\'s admission event using Past Simple verbs?',
+    options: ['Yesterday, Mr. Thomas fell at the hotel and had an arm injury.', 'Yesterday, Mr. Thomas falls and is having injury.', 'Yesterday, Mr. Thomas will fall at the hotel.'],
+    correct: 'Yesterday, Mr. Thomas fell at the hotel and had an arm injury.',
+    explanation: 'Para hechos ocurridos en el pasado se usan las formas irregulares "fell" (caer) y "had" (tener).'
+  },
+  {
+    id: 'gq4',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Adjetivos Descriptivos y Signos Actuales',
+    question: 'Which sentence accurately describes the patient\'s current state in Room 204?',
+    options: ['He is pale, feels dizzy, and his right arm is swollen.', 'He is run quickly and happily.', 'He was surgery next week.'],
+    correct: 'He is pale, feels dizzy, and his right arm is swollen.',
+    explanation: '"Pale" (pálido), "dizzy" (mareado) y "swollen" (hinchado) son adjetivos descriptivos del estado actual.'
+  },
+  {
+    id: 'gq5',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Comprensión de Entrega de Turno (Handover Report)',
+    question: 'Listen to the handover audio snippet and select the correct report summary:',
+    audioText: 'Handover report: Mr. Thomas in room 204 has vital signs stable and resting in bed.',
+    hasAudio: true,
+    options: ['Mr. Thomas in room 204 has stable vital signs and is resting.', 'Mr. Thomas was discharged this morning.', 'Mr. Thomas has acute emergency in room 101.'],
+    correct: 'Mr. Thomas in room 204 has stable vital signs and is resting.',
+    explanation: 'El reporte de entrega confirma signos estables y reposo en la habitación 204.'
+  },
+  {
+    id: 'gq6',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Acciones en Progreso Clínico (Present Continuous)',
+    question: 'Mr. Thomas\'s daughter asks what the nurse is doing right now. How should the nurse answer in Present Continuous?',
+    options: ['"We are checking his blood pressure and monitoring his heart rate right now."', '"We checked his pressure yesterday morning."', '"We check him next Monday."'],
+    correct: '"We are checking his blood pressure and monitoring his heart rate right now."',
+    explanation: 'El Presente Continuo (am/is/are + -ing) comunica lo que se está ejecutando en el momento presente.'
+  },
+  {
+    id: 'gq7',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Propuesta de Mejora al Supervisor (Polite Suggestions)',
+    question: 'How do you politely suggest an improvement to the Nurse Manager regarding the vital signs checklist?',
+    options: ['"I think we should digitize the nursing checklist to reduce charting time."', '"You must change the paper immediately."', '"Stop using checklists right now."'],
+    correct: '"I think we should digitize the nursing checklist to reduce charting time."',
+    explanation: 'La fórmula de cortesía colaborativa es "I think we should..." (Creo que deberíamos...).'
+  },
+  {
+    id: 'gq8',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Instrumental y Herramientas Hospitalarias',
+    question: 'Which instrument is primarily used to listen to pulmonary and cardiovascular heart sounds?',
+    options: ['Stethoscope', 'Thermometer', 'Wheelchair'],
+    correct: 'Stethoscope',
+    explanation: 'El estetoscopio (Stethoscope) es el instrumento utilizado para la auscultación cardíaca y pulmonar.'
+  },
+  {
+    id: 'gq9',
+    moduleKey: 'm4',
+    moduleTag: 'MÓDULO 4 · RAP 6',
+    title: 'Órdenes de Alta y Modales Médicos (Discharge Advice)',
+    question: 'When giving discharge instructions to Mr. Thomas, which modal verb expresses a mandatory clinical necessity?',
+    options: ['"You must take this antibiotic every 8 hours with meals."', '"You might take water."', '"You could dance tomorrow."'],
+    correct: '"You must take this antibiotic every 8 hours with meals."',
+    explanation: '"Must" expresa prescripción médica obligatoria e imperativa.'
+  },
+  {
+    id: 'gq10',
+    moduleKey: 'm4',
+    moduleTag: 'MÓDULO 4 · RAP 6',
+    title: 'Cierre y Verificación del Checklist de Egreso',
+    question: 'What is the standard professional statement to confirm that all discharge criteria have been met?',
+    options: ['"The pain level is low, vital signs are stable, and the discharge checklist is complete."', '"The patient wants to go but no checklist is done."', '"The doctor forgot the signature."'],
+    correct: '"The pain level is low, vital signs are stable, and the discharge checklist is complete."',
+    explanation: 'Confirma la resolución del dolor, estabilidad de constantes vitales y cierre de la lista de verificación.'
+  }
 ]
 
-function openGlobalPostTest() {
-  globalAnswers.value = {}
-  globalPostTestSubmitted.value = false
+async function openGlobalPostTest() {
+  if (!auth.isAdmin && !auth.isInstructor) {
+    const isModule4 = Number(moduleNumber.value) === 4
+    const hasReachedCierre = currentPhase.value === 'evaluacion' || (phaseProgress.value.practica >= 100) || examPassed.value || (phaseProgress.value.evaluacion > 0)
+    
+    if (!isModule4 || !hasReachedCierre) {
+      notificationStore.notify({
+        type: 'warning',
+        title: 'Acceso Restringido al POST-TEST',
+        message: 'No puedes presentar el POST-TEST Global hasta haber llegado al Módulo 4 y completado sus fases previas hasta el Cierre.'
+      })
+      return
+    }
+  }
+
   showGlobalPostTestModal.value = true
 }
 
-function submitGlobalPostTest() {
-  let count = 0
+async function submitGlobalPostTest() {
+  isSubmittingPostTest.value = true
+
+  let correctCount = 0
+  const breakdownCount = { m1: { total: 0, correct: 0 }, m2: { total: 0, correct: 0 }, m3: { total: 0, correct: 0 }, m4: { total: 0, correct: 0 } }
+
   globalQuestions.forEach(q => {
-    if (globalAnswers.value[q.id] === q.correct) count++
+    const key = q.moduleKey || 'm1'
+    if (breakdownCount[key]) breakdownCount[key].total++
+    if (globalAnswers.value[q.id] === q.correct) {
+      correctCount++
+      if (breakdownCount[key]) breakdownCount[key].correct++
+    }
   })
-  globalScore.value = Math.round((count / globalQuestions.length) * 100)
+
+  globalScore.value = Math.round((correctCount / globalQuestions.length) * 100)
+  preTestBaseline.value = 35 // Línea base diagnóstica inicial del PRE-TEST
+  growthDelta.value = Math.max(0, globalScore.value - preTestBaseline.value)
+
+  moduleBreakdown.value = {
+    m1: Math.round((breakdownCount.m1.correct / (breakdownCount.m1.total || 1)) * 100),
+    m2: Math.round((breakdownCount.m2.correct / (breakdownCount.m2.total || 1)) * 100),
+    m3: Math.round((breakdownCount.m3.correct / (breakdownCount.m3.total || 1)) * 100),
+    m4: Math.round((breakdownCount.m4.correct / (breakdownCount.m4.total || 1)) * 100),
+  }
+
+  // Generar datos locales para certificado de respaldo
+  const studentName = `${auth.user?.nombre || ''} ${auth.user?.apellido || ''}`.trim() || 'Aprendiz SENA'
+  certificateData.value = {
+    studentName,
+    documentId: auth.user?.cedula || 'N/A',
+    programTitle: 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria',
+    totalHours: '44 Horas Académicas',
+    modulesCount: 4,
+    rapsCompleted: 'RAP 1 al RAP 6',
+    preTestBaseline: preTestBaseline.value,
+    finalScore: globalScore.value,
+    growthDelta: `+${growthDelta.value}%`,
+    awardedBadge: 'Graduado Bilingüe',
+    completionDate: new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }),
+    certificateCode: `SENA-NURS-${auth.user?.id || 1}-${Date.now().toString(36).toUpperCase()}`
+  }
+
+  // Sincronizar y persistir con backend si hay sesión
+  if (auth.token) {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/courses/post-test/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        },
+        body: JSON.stringify({
+          finalScore: globalScore.value,
+          preTestBaseline: preTestBaseline.value,
+          answers: globalAnswers.value,
+          moduleBreakdown: moduleBreakdown.value
+        })
+      })
+
+      if (res.ok) {
+        const json = await res.json()
+        const data = json?.data || json
+        if (data.certificateData) {
+          certificateData.value = data.certificateData
+        }
+        // Incrementar XP en el store local si aplica
+        if (auth.user) {
+          auth.user.xp = (auth.user.xp || 0) + 150
+        }
+      }
+    } catch (err) {
+      console.warn('Persistencia de Post-Test en backend completada con respaldo local:', err)
+    }
+  }
+
+  // Guardar en almacenamiento local
+  try {
+    const key = `nursing_academy_post_test_${auth.user?.id || 'guest'}`
+    localStorage.setItem(key, JSON.stringify({
+      score: globalScore.value,
+      preTestBaseline: preTestBaseline.value,
+      delta: growthDelta.value,
+      moduleBreakdown: moduleBreakdown.value,
+      certificateData: certificateData.value,
+      completedAt: new Date().toISOString()
+    }))
+  } catch {}
+
   globalPostTestSubmitted.value = true
+  isSubmittingPostTest.value = false
+}
+
+function printCertificate() {
+  window.print()
 }
 
 // -----------------------------------------------------------------
@@ -3608,6 +3858,8 @@ async function saveProgress() {
 
 async function loadProgress() {
   try {
+    await checkCourseLockAndDetails()
+
     const raw = localStorage.getItem(storageKey.value)
     const hadLocal = Boolean(raw)
     if (!raw) {
@@ -3737,18 +3989,37 @@ async function loadProgress() {
 
 watch(courseId, async () => {
   courseLoaded.value = false
-  courseDetail.value = null
-  await fetchCourseDetail()
+  courseDetails.value = null
+  await checkCourseLockAndDetails()
   checkVideoAsset()
-  loadProgress()
+  await loadProgress()
   fetchCourseActivities()
 })
 
 onMounted(async () => {
-  await fetchCourseDetail()
   checkVideoAsset()
-  loadProgress()
+  await checkCourseLockAndDetails()
+  await loadProgress()
   fetchCourseActivities()
+
+  // Si proviene del enlace de acceso directo al POST-TEST Global (?postTest=true)
+  if (route.query.postTest === 'true') {
+    if (auth.isAdmin || auth.isInstructor) {
+      openGlobalPostTest()
+    } else {
+      const isModule4 = Number(moduleNumber.value) === 4
+      const hasReachedCierre = currentPhase.value === 'evaluacion' || (phaseProgress.value.practica >= 100) || examPassed.value || (phaseProgress.value.evaluacion > 0)
+      if (isModule4 && hasReachedCierre && !isCourseLocked.value) {
+        openGlobalPostTest()
+      } else {
+        notificationStore.notify({
+          type: 'warning',
+          title: 'POST-TEST Global Bloqueado',
+          message: 'Debes completar los módulos 1 a 3 y alcanzar la fase de Cierre del Módulo 4 antes de presentar este examen integrador.'
+        })
+      }
+    }
+  }
 })
 </script>
 
@@ -3777,5 +4048,28 @@ onMounted(async () => {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableCertificate,
+  #printableCertificate * {
+    visibility: visible;
+  }
+  #printableCertificate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 24px;
+    border: 3px double #d97706;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 </style>

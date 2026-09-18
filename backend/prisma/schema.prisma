@@ -219,6 +219,7 @@ model Course {
   programId    Int?             @map("program_id")
   program      TrainingProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
   activities   Activity[]
+  raps         String?          @default("[]")
   progresses   CourseProgress[]
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
