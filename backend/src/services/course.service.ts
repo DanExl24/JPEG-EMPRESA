@@ -1,4 +1,5 @@
 import prisma from '../lib/db.js'
+import type { Prisma } from '@prisma/client'
 import { NotFoundError, BadRequestError } from '../utils/appError.js'
 import type { CreateCourseDto, UpdateCourseDto, SaveCourseProgressDto } from '../types/course.types.js'
 import { GamificationService } from './gamification.service.js'
@@ -96,6 +97,38 @@ export class CourseService {
       }
     } catch (e) {
       console.warn('[CourseService] Could not auto-seed courses:', e)
+    }
+  }
+
+  /**
+   * Enlaza las actividades antiguas (que solo guardaban el título del curso) con su curso real
+   */
+  static async syncActivityCourseIds(): Promise<void> {
+    try {
+      const courses = await prisma.course.findMany({ select: { id: true, title: true } })
+      if (courses.length === 0) return
+
+      const pending = await prisma.activity.findMany({
+        where: { courseId: null },
+        select: { id: true, course: true }
+      })
+
+      let linked = 0
+      for (const activity of pending) {
+        const match = courses.find(course => course.title === activity.course)
+        if (!match) continue
+        await prisma.activity.update({
+          where: { id: activity.id },
+          data: { courseId: match.id }
+        })
+        linked++
+      }
+
+      if (linked > 0) {
+        console.log(`[CourseService] ${linked} actividad(es) enlazada(s) a su curso.`)
+      }
+    } catch (e) {
+      console.warn('[CourseService] Could not link activities to courses:', e)
     }
   }
 
@@ -201,7 +234,8 @@ export class CourseService {
         icon: data.icon || 'school',
         iconColor: data.iconColor || '#006688',
         bg: data.bg || 'bg-blue-50',
-        programId: data.programId || null
+        programId: data.programId || null,
+        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {})
       }
     })
   }
@@ -223,7 +257,8 @@ export class CourseService {
         ...(data.icon ? { icon: data.icon } : {}),
         ...(data.iconColor ? { iconColor: data.iconColor } : {}),
         ...(data.bg ? { bg: data.bg } : {}),
-        ...(data.programId !== undefined ? { programId: data.programId } : {})
+        ...(data.programId !== undefined ? { programId: data.programId } : {}),
+        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {})
       }
     })
 

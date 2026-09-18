@@ -214,8 +214,8 @@
                   <input type="text" v-model="form.f1_welcome" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Bienvenido al módulo de enfermería básica." />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Palabras desordenadas para el Calentamiento (separadas por comas)</label>
-                  <input type="text" v-model="form.f1_gameWords" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. checks, The nurse, the, patient's, blood pressure" />
+                  <label class="text-xs font-bold text-gray-500">Palabras del Calentamiento en orden correcto (separadas por comas)</label>
+                  <input type="text" v-model="form.f1_gameWords" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. The nurse, checks, the, patient's, blood pressure" />
                   <p class="text-[10px] text-gray-400 italic">El estudiante deberá ordenarlas para avanzar a la fase de estudio.</p>
                 </div>
               </div>
@@ -657,7 +657,7 @@ async function fetchCourses() {
       const list = Array.isArray(data) ? data : (data?.data || [])
       if (Array.isArray(list) && list.length > 0) {
         courses.value = list.map((c, i) => {
-          const fallback = courses.value[i] || courses.value[0] || {}
+          const fallback = courses.value.find(f => String(f.id) === String(c.id)) || courses.value.find(f => f.title === c.title) || {}
           const studentTotal = c.students !== undefined ? c.students : (c.studentsCount !== undefined ? c.studentsCount : 0)
           const cat = c.category || fallback.category || 'Básico'
           const catBg = cat === 'Profesional' ? 'bg-emerald-100' : cat === 'Avanzado' ? 'bg-amber-100' : cat === 'Intermedio' ? 'bg-indigo-100' : 'bg-teal-100'
@@ -826,6 +826,34 @@ const form = ref({
   f4_incorrect: '',
 })
 
+function structureListToCsv(value) {
+  if (Array.isArray(value)) return value.join(', ')
+  return value || ''
+}
+
+function buildStructurePayload() {
+  const splitList = value => String(value || '').split(',').map(item => item.trim()).filter(Boolean)
+  return {
+    f1: {
+      welcome: form.value.f1_welcome.trim(),
+      gameWords: splitList(form.value.f1_gameWords)
+    },
+    f2: {
+      grammar: form.value.f2_grammar.trim(),
+      vocabulary: splitList(form.value.f2_vocabulary)
+    },
+    f3: {
+      fillBlank: form.value.f3_fillBlank.trim(),
+      voiceTarget: form.value.f3_voiceTarget.trim()
+    },
+    f4: {
+      question: form.value.f4_q.trim(),
+      correct: form.value.f4_correct.trim(),
+      incorrect: form.value.f4_incorrect.trim()
+    }
+  }
+}
+
 const coursePhaseActivities = computed(() => {
   if (!editingCourse.value) return []
   const phaseMapping = {
@@ -835,7 +863,12 @@ const coursePhaseActivities = computed(() => {
     evaluacion: 'Cierre'
   }
   const targetPhase = phaseMapping[activeModalPhase.value]
-  return activities.value.filter(a => a.course === editingCourse.value.title && a.phase === targetPhase)
+  return activities.value.filter(a => {
+    const belongsToCourse = a.courseId
+      ? Number(a.courseId) === Number(editingCourse.value.id)
+      : a.course === editingCourse.value.title
+    return belongsToCourse && a.phase === targetPhase
+  })
 })
 
 const showAddActivityForm = ref(false)
@@ -899,6 +932,7 @@ async function saveNewActivity() {
   const payload = {
     title: newActivity.value.title,
     course: editingCourse.value.title,
+    courseId: editingCourse.value.id,
     phase: targetPhase,
     template: newActivity.value.template,
     points: parseInt(newActivity.value.points) || 10,
@@ -918,9 +952,13 @@ async function saveNewActivity() {
   }
 
   try {
+    const token = getAuthToken()
     const response = await fetch(`${apiBaseUrl}/api/activities`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify(payload)
     })
     if (!response.ok) {
@@ -942,8 +980,10 @@ async function saveNewActivity() {
 async function deleteInlineActivity(id) {
   if (!confirm('¿Estás seguro de que deseas eliminar esta actividad de la fase?')) return
   try {
+    const token = getAuthToken()
     const response = await fetch(`${apiBaseUrl}/api/activities/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
@@ -985,7 +1025,7 @@ function openNewCourseModal() {
     categoryText: 'text-blue-700',
     programId: null,
     f1_welcome: 'Welcome to this technical training module.',
-    f1_gameWords: 'checks, The nurse, the, patient\'s, blood pressure',
+    f1_gameWords: 'The nurse, checks, the, patient\'s, blood pressure',
     f2_grammar: 'The nurse checks the patient.',
     f2_vocabulary: 'Stethoscope, Suture, Heart rate',
     f3_fillBlank: 'prescription',
@@ -1000,6 +1040,7 @@ function openNewCourseModal() {
 function openEditCourseModal(course) {
   editingCourse.value = course
   activeModalPhase.value = 'inicio'
+  const structure = course.structure || null
   
   // Fill form with current data (or defaults if missing)
   form.value = {
@@ -1013,15 +1054,15 @@ function openEditCourseModal(course) {
     categoryBg: course.categoryBg,
     categoryText: course.categoryText,
     programId: course.programId || null,
-    f1_welcome: course.f1_welcome || 'Welcome to this technical training module.',
-    f1_gameWords: course.f1_gameWords || 'checks, The nurse, the, patient\'s, blood pressure',
-    f2_grammar: course.f2_grammar || 'The nurse checks the patient.',
-    f2_vocabulary: course.f2_vocabulary || 'Stethoscope, Suture, Heart rate',
-    f3_fillBlank: course.f3_fillBlank || 'prescription',
-    f3_voiceTarget: course.f3_voiceTarget || 'The patient is stable.',
-    f4_q: course.f4_q || '¿Qué significa respiration rate?',
-    f4_correct: course.f4_correct || 'Frecuencia respiratoria',
-    f4_incorrect: course.f4_incorrect || 'Presión arterial',
+    f1_welcome: structure?.f1?.welcome ?? course.f1_welcome ?? 'Welcome to this technical training module.',
+    f1_gameWords: structure ? structureListToCsv(structure.f1?.gameWords) : (course.f1_gameWords || 'The nurse, checks, the, patient\'s, blood pressure'),
+    f2_grammar: structure?.f2?.grammar ?? course.f2_grammar ?? 'The nurse checks the patient.',
+    f2_vocabulary: structure ? structureListToCsv(structure.f2?.vocabulary) : (course.f2_vocabulary || 'Stethoscope, Suture, Heart rate'),
+    f3_fillBlank: structure?.f3?.fillBlank ?? course.f3_fillBlank ?? 'prescription',
+    f3_voiceTarget: structure?.f3?.voiceTarget ?? course.f3_voiceTarget ?? 'The patient is stable.',
+    f4_q: structure?.f4?.question ?? course.f4_q ?? '¿Qué significa respiration rate?',
+    f4_correct: structure?.f4?.correct ?? course.f4_correct ?? 'Frecuencia respiratoria',
+    f4_incorrect: structure?.f4?.incorrect ?? course.f4_incorrect ?? 'Presión arterial',
   }
   
   showModal.value = true
@@ -1054,6 +1095,7 @@ async function saveCourse() {
     iconColor: form.value.iconColor,
     bg: form.value.bg,
     programId: form.value.programId ? parseInt(form.value.programId) : null,
+    structure: buildStructurePayload()
   }
 
   const token = getAuthToken()
