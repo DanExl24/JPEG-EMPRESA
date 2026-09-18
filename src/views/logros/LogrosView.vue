@@ -715,8 +715,25 @@ async function fetchData() {
   }
 }
 
-onMounted(() => {
-  fetchData()
+// Insignias de módulo (RAP) ganadas por el aprendiz, guardadas localmente al aprobar el cierre
+function mergeLocalModuleBadges() {
+  if (auth.isAdmin) return
+  try {
+    const userId = auth.user?.id || 'guest'
+    const list = JSON.parse(localStorage.getItem(`nursed.badges.${userId}`) || '[]')
+    list.forEach(b => {
+      if (!unlockedBadges.value.some(u => u.name === b.name)) {
+        unlockedBadges.value.unshift({ id: `local-${b.id}`, name: b.name, desc: b.desc, emoji: b.emoji, pts: 0 })
+      }
+    })
+  } catch (error) {
+    console.warn('No se pudieron cargar las insignias locales:', error)
+  }
+}
+
+onMounted(async () => {
+  await fetchData()
+  mergeLocalModuleBadges()
 })
 
 // Learner completion percentage

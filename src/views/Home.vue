@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -7,6 +8,29 @@ const nurseImg = '/nurse.png'
 const cardiologiaImg = '/cardiologia.png'
 const farmacologiaImg = '/farmacologia.png'
 const comunicacionImg = '/comunicacion.png'
+
+function goLogin() {
+  router.push('/login')
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
+}
+
+const rankingTab = ref('semanal')
+const rankingData = {
+  semanal: [
+    { pos: 1, name: 'Julian Walters', role: 'Nurse Specialist', xp: '15,840', bg: 'bg-blue-200', text: 'text-blue-700', initials: 'JW' },
+    { pos: 2, name: 'Elena Rodriguez', role: 'Medical Student', xp: '14,210', bg: 'bg-rose-200', text: 'text-rose-700', initials: 'ER' },
+    { pos: 3, name: 'Mark Thompson', role: 'Care Assistant', xp: '12,900', bg: 'bg-green-200', text: 'text-green-700', initials: 'MT' },
+  ],
+  historico: [
+    { pos: 1, name: 'Sofia Martinez', role: 'Head Nurse', xp: '128,540', bg: 'bg-amber-200', text: 'text-amber-700', initials: 'SM' },
+    { pos: 2, name: 'Julian Walters', role: 'Nurse Specialist', xp: '119,220', bg: 'bg-blue-200', text: 'text-blue-700', initials: 'JW' },
+    { pos: 3, name: 'David Chen', role: 'ICU Nurse', xp: '104,870', bg: 'bg-sky-200', text: 'text-sky-700', initials: 'DC' },
+  ],
+}
 </script>
 
 <template>
@@ -29,15 +53,15 @@ const comunicacionImg = '/comunicacion.png'
 
       <!-- Nav links -->
       <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-        <a href="#" class="hover:text-violet-600 transition-colors">Cómo funciona</a>
-        <a href="#" class="hover:text-violet-600 transition-colors">Juegos</a>
-        <a href="#" class="hover:text-violet-600 transition-colors">Precios</a>
-        <a href="#" class="hover:text-violet-600 transition-colors">Recursos</a>
+        <button type="button" @click="scrollToSection('como-funciona')" class="hover:text-violet-600 transition-colors">Cómo funciona</button>
+        <button type="button" @click="scrollToSection('actividades')" class="hover:text-violet-600 transition-colors">Juegos</button>
+        <button type="button" @click="scrollToSection('cursos')" class="hover:text-violet-600 transition-colors">Cursos</button>
+        <button type="button" @click="scrollToSection('comunidad')" class="hover:text-violet-600 transition-colors">Comunidad</button>
       </div>
 
       <!-- CTA -->
       <button
-        @click="router.push('/login')"
+        @click="goLogin"
         class="border border-violet-600 text-violet-600 hover:bg-violet-600 hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
       >
         Iniciar Sesión
@@ -78,14 +102,14 @@ const comunicacionImg = '/comunicacion.png'
           <div class="flex items-center gap-4 mb-8">
             <button
               class="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2"
-              @click="router.push('/login')"
+              @click="goLogin"
             >
               Empezar ahora
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
-            <button class="border border-gray-300 bg-white hover:border-violet-600 text-gray-700 hover:text-violet-600 font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2">
+            <button @click="scrollToSection('actividades')" class="border border-gray-300 bg-white hover:border-violet-600 text-gray-700 hover:text-violet-600 font-semibold px-6 py-3 rounded-xl transition-colors flex items-center gap-2">
               Probar juegos
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
@@ -122,15 +146,15 @@ const comunicacionImg = '/comunicacion.png'
     </section>
 
     <!-- ACTIVIDADES DESTACADAS -->
-    <section class="max-w-6xl mx-auto px-8 py-16">
+    <section id="actividades" class="max-w-6xl mx-auto px-8 py-16 scroll-mt-20">
       <div class="flex items-center justify-between mb-2">
         <h2 class="text-2xl font-bold text-gray-900">Actividades Destacadas</h2>
-        <a href="#" class="text-violet-600 text-sm font-semibold hover:underline flex items-center gap-1">
+        <button type="button" @click="goLogin" class="text-violet-600 text-sm font-semibold hover:underline flex items-center gap-1">
           Ver todo el catálogo
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
-        </a>
+        </button>
       </div>
       <p class="text-gray-500 text-sm mb-10 max-w-lg">
         Explora diferentes formas de mejorar tus habilidades clínicas mientras te diviertes. Retos rápidos diseñados para encajar en tu jornada.
@@ -170,7 +194,7 @@ const comunicacionImg = '/comunicacion.png'
             <p class="text-gray-500 text-xs mb-4 leading-relaxed">
               Refuerza anatomía y terminología técnica completando paneles interactivos.
             </p>
-            <button class="w-full border border-violet-200 hover:bg-violet-600 hover:text-white hover:border-violet-600 text-violet-600 text-sm font-semibold py-2 rounded-lg transition-colors">
+            <button @click="goLogin" class="w-full border border-violet-200 hover:bg-violet-600 hover:text-white hover:border-violet-600 text-violet-600 text-sm font-semibold py-2 rounded-lg transition-colors">
               Jugar
             </button>
           </div>
@@ -202,7 +226,7 @@ const comunicacionImg = '/comunicacion.png'
             <p class="text-gray-500 text-xs mb-4 leading-relaxed">
               Pon a prueba tus conocimientos diagnósticos con preguntas de opción múltiple.
             </p>
-            <button class="w-full border border-green-200 hover:bg-green-500 hover:text-white hover:border-green-500 text-green-600 text-sm font-semibold py-2 rounded-lg transition-colors">
+            <button @click="goLogin" class="w-full border border-green-200 hover:bg-green-500 hover:text-white hover:border-green-500 text-green-600 text-sm font-semibold py-2 rounded-lg transition-colors">
               Jugar
             </button>
           </div>
@@ -234,7 +258,7 @@ const comunicacionImg = '/comunicacion.png'
             <p class="text-gray-500 text-xs mb-4 leading-relaxed">
               Conecta síntomas con patologías y tratamientos en tiempos récord.
             </p>
-            <button class="w-full border border-amber-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 text-amber-600 text-sm font-semibold py-2 rounded-lg transition-colors">
+            <button @click="goLogin" class="w-full border border-amber-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 text-amber-600 text-sm font-semibold py-2 rounded-lg transition-colors">
               Jugar
             </button>
           </div>
@@ -260,7 +284,7 @@ const comunicacionImg = '/comunicacion.png'
             <p class="text-gray-500 text-xs mb-4 leading-relaxed">
               Aprende a redactar reportes clínicos rellenando los huecos correctamente.
             </p>
-            <button class="w-full border border-gray-200 hover:bg-gray-700 hover:text-white hover:border-gray-700 text-gray-600 text-sm font-semibold py-2 rounded-lg transition-colors">
+            <button @click="goLogin" class="w-full border border-gray-200 hover:bg-gray-700 hover:text-white hover:border-gray-700 text-gray-600 text-sm font-semibold py-2 rounded-lg transition-colors">
               Jugar
             </button>
           </div>
@@ -325,7 +349,7 @@ const comunicacionImg = '/comunicacion.png'
     </section>
 
     <!-- PROFILE + RANKING -->
-    <section class="max-w-6xl mx-auto px-8 py-12">
+    <section id="comunidad" class="max-w-6xl mx-auto px-8 py-12 scroll-mt-20">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
         <!-- Profile card -->
@@ -361,7 +385,7 @@ const comunicacionImg = '/comunicacion.png'
             </div>
           </div>
 
-          <button class="w-full bg-white text-violet-700 font-semibold text-sm py-3 rounded-xl hover:bg-violet-50 transition-colors">
+          <button @click="goLogin" class="w-full bg-white text-violet-700 font-semibold text-sm py-3 rounded-xl hover:bg-violet-50 transition-colors">
             Ver mi perfil completo
           </button>
         </div>
@@ -371,38 +395,26 @@ const comunicacionImg = '/comunicacion.png'
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-gray-900">Ranking Global</h3>
             <div class="flex gap-2">
-              <button class="text-xs font-semibold text-violet-600 bg-violet-50 px-3 py-1 rounded-lg">Semanal</button>
-              <button class="text-xs font-semibold text-gray-500 hover:text-violet-600 px-3 py-1 rounded-lg transition-colors">Histórico</button>
+              <button
+                @click="rankingTab = 'semanal'"
+                :class="`text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${rankingTab === 'semanal' ? 'text-violet-600 bg-violet-50' : 'text-gray-500 hover:text-violet-600'}`"
+              >Semanal</button>
+              <button
+                @click="rankingTab = 'historico'"
+                :class="`text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${rankingTab === 'historico' ? 'text-violet-600 bg-violet-50' : 'text-gray-500 hover:text-violet-600'}`"
+              >Histórico</button>
             </div>
           </div>
 
           <div class="space-y-4">
-            <div class="flex items-center gap-4">
-              <span class="text-gray-400 font-bold text-sm w-4">1</span>
-              <div class="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-sm font-bold text-blue-700">JW</div>
+            <div v-for="row in rankingData[rankingTab]" :key="row.pos" class="flex items-center gap-4">
+              <span class="text-gray-400 font-bold text-sm w-4">{{ row.pos }}</span>
+              <div :class="`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${row.bg} ${row.text}`">{{ row.initials }}</div>
               <div class="flex-1">
-                <p class="font-semibold text-gray-900 text-sm">Julian Walters</p>
-                <p class="text-gray-400 text-xs">Nurse Specialist</p>
+                <p class="font-semibold text-gray-900 text-sm">{{ row.name }}</p>
+                <p class="text-gray-400 text-xs">{{ row.role }}</p>
               </div>
-              <span class="font-bold text-gray-800 text-sm">15,840</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="text-gray-400 font-bold text-sm w-4">2</span>
-              <div class="w-10 h-10 rounded-full bg-rose-200 flex items-center justify-center text-sm font-bold text-rose-700">ER</div>
-              <div class="flex-1">
-                <p class="font-semibold text-gray-900 text-sm">Elena Rodriguez</p>
-                <p class="text-gray-400 text-xs">Medical Student</p>
-              </div>
-              <span class="font-bold text-gray-800 text-sm">14,210</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="text-gray-400 font-bold text-sm w-4">3</span>
-              <div class="w-10 h-10 rounded-full bg-green-200 flex items-center justify-center text-sm font-bold text-green-700">MT</div>
-              <div class="flex-1">
-                <p class="font-semibold text-gray-900 text-sm">Mark Thompson</p>
-                <p class="text-gray-400 text-xs">Care Assistant</p>
-              </div>
-              <span class="font-bold text-gray-800 text-sm">12,900</span>
+              <span class="font-bold text-gray-800 text-sm">{{ row.xp }}</span>
             </div>
           </div>
         </div>
@@ -410,7 +422,7 @@ const comunicacionImg = '/comunicacion.png'
     </section>
 
     <!-- TUS CURSOS -->
-    <section class="max-w-6xl mx-auto px-8 py-12">
+    <section id="cursos" class="max-w-6xl mx-auto px-8 py-12 scroll-mt-20">
       <h2 class="text-2xl font-bold text-gray-900 mb-1">Tus Cursos</h2>
       <p class="text-gray-500 text-sm mb-8">Continúa donde lo dejaste y domina nuevas especialidades.</p>
 
@@ -430,7 +442,7 @@ const comunicacionImg = '/comunicacion.png'
             <div class="w-full bg-gray-100 rounded-full h-2 mb-4">
               <div class="bg-violet-500 h-2 rounded-full" style="width: 65%"></div>
             </div>
-            <button class="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+            <button @click="goLogin" class="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
               Continuar
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
             </button>
@@ -451,7 +463,7 @@ const comunicacionImg = '/comunicacion.png'
             <div class="w-full bg-gray-100 rounded-full h-2 mb-4">
               <div class="bg-green-500 h-2 rounded-full" style="width: 52%"></div>
             </div>
-            <button class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+            <button @click="goLogin" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
               Continuar
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
             </button>
@@ -472,7 +484,7 @@ const comunicacionImg = '/comunicacion.png'
             <div class="w-full bg-gray-100 rounded-full h-2 mb-4">
               <div class="bg-violet-500 h-2 rounded-full" style="width: 88%"></div>
             </div>
-            <button class="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+            <button @click="goLogin" class="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
               Continuar
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
             </button>
@@ -483,7 +495,7 @@ const comunicacionImg = '/comunicacion.png'
     </section>
 
     <!-- FEATURES 3 COL -->
-    <section class="max-w-6xl mx-auto px-8 py-12">
+    <section id="como-funciona" class="max-w-6xl mx-auto px-8 py-12 scroll-mt-20">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
         <div class="flex flex-col items-start gap-3">
@@ -533,7 +545,7 @@ const comunicacionImg = '/comunicacion.png'
       <p class="text-gray-400 text-sm mb-8">
         Miles de enfermeros ya están transformando su carrera. ¿Estás listo para el siguiente nivel?
       </p>
-      <button class="bg-violet-500 hover:bg-violet-400 text-white font-semibold px-8 py-3 rounded-full transition-colors">
+      <button @click="goLogin" class="bg-violet-500 hover:bg-violet-400 text-white font-semibold px-8 py-3 rounded-full transition-colors">
         Registrarse ahora gratis
       </button>
     </section>
@@ -550,9 +562,9 @@ const comunicacionImg = '/comunicacion.png'
       </div>
       <p class="text-xs hidden md:block">© 2026 NursePlay. Precision in Nursing Education.</p>
       <div class="flex gap-4 text-xs">
-        <a href="#" class="hover:text-violet-600 transition-colors">Privacidad</a>
-        <a href="#" class="hover:text-violet-600 transition-colors">Términos</a>
-        <a href="#" class="hover:text-violet-600 transition-colors">Contacto</a>
+        <button type="button" @click="scrollToSection('como-funciona')" class="hover:text-violet-600 transition-colors">Cómo funciona</button>
+        <button type="button" @click="scrollToSection('cursos')" class="hover:text-violet-600 transition-colors">Cursos</button>
+        <button type="button" @click="goLogin" class="hover:text-violet-600 transition-colors">Iniciar sesión</button>
       </div>
     </footer>
 
