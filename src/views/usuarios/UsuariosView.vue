@@ -87,16 +87,31 @@
           </button>
         </div>
 
-        <div class="flex items-center gap-3 w-full md:w-auto">
-          <div class="relative flex-1 md:flex-initial">
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <!-- Filtro por Rol -->
+          <div class="relative flex-1 sm:flex-initial">
             <select
               v-model="filterRole"
-              class="w-full md:w-48 pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-[#006688] focus:ring-2 focus:ring-[#006688]/20 appearance-none transition-all cursor-pointer"
+              class="w-full sm:w-44 pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-[#006688] focus:ring-2 focus:ring-[#006688]/20 appearance-none transition-all cursor-pointer"
             >
               <option value="">Todos los roles</option>
               <option value="admin">Administradores</option>
               <option value="instructor">Instructores</option>
               <option value="aprendiz">Aprendices</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-base">expand_more</span>
+          </div>
+
+          <!-- Filtro por Ficha / Cohorte -->
+          <div class="relative flex-1 sm:flex-initial">
+            <select
+              v-model="filterCohort"
+              class="w-full sm:w-48 pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-[#006688] focus:ring-2 focus:ring-[#006688]/20 appearance-none transition-all cursor-pointer truncate"
+            >
+              <option value="">Todas las fichas</option>
+              <option v-for="ficha in availableCohorts" :key="'filter-c-' + ficha.id" :value="ficha.id">
+                Ficha {{ ficha.cohort_number }}
+              </option>
             </select>
             <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-base">expand_more</span>
           </div>
@@ -120,6 +135,9 @@
               </th>
               <th class="text-xs font-bold text-gray-500 uppercase tracking-wider px-5 py-3.5">
                 Rol
+              </th>
+              <th class="text-xs font-bold text-gray-500 uppercase tracking-wider px-5 py-3.5">
+                Ficha / Formación
               </th>
               <th class="text-xs font-bold text-gray-500 uppercase tracking-wider px-5 py-3.5">
                 Cursos
@@ -150,6 +168,7 @@
               </td>
               <td class="px-5 py-4"><div class="w-20 h-4 bg-gray-200 rounded"></div></td>
               <td class="px-5 py-4"><div class="w-16 h-5 bg-gray-200 rounded-full"></div></td>
+              <td class="px-5 py-4"><div class="w-24 h-5 bg-gray-200 rounded-md"></div></td>
               <td class="px-5 py-4"><div class="w-12 h-4 bg-gray-200 rounded"></div></td>
               <td class="px-5 py-4"><div class="w-16 h-4 bg-gray-200 rounded"></div></td>
               <td class="px-5 py-4"><div class="w-14 h-4 bg-gray-200 rounded"></div></td>
@@ -207,6 +226,48 @@
                   </span>
                   {{ user.roleLabel || user.role }}
                 </span>
+              </td>
+
+              <!-- Ficha / Formación -->
+              <td class="px-5 py-4">
+                <!-- Aprendiz -->
+                <template v-if="user.role === 'aprendiz'">
+                  <span
+                    v-if="user.cohortNumber"
+                    class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs"
+                    :title="`Programa: ${user.programName || 'Formación SENA'}`"
+                  >
+                    <span class="material-symbols-outlined text-xs text-teal-600">groups</span>
+                    Ficha {{ user.cohortNumber }}
+                  </span>
+                  <span v-else class="text-xs text-gray-400 italic">
+                    Sin ficha
+                  </span>
+                </template>
+
+                <!-- Instructor -->
+                <template v-else-if="user.role === 'instructor'">
+                  <div v-if="user.cohortCount > 0" class="flex flex-col gap-0.5">
+                    <span
+                      class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs w-fit cursor-default"
+                      :title="(user.instructedCohorts || []).map(c => `Ficha ${c.cohort_number} (${c.programName || 'SENA'})`).join('\n')"
+                    >
+                      <span class="material-symbols-outlined text-xs text-indigo-600">school</span>
+                      {{ user.cohortCount }} {{ user.cohortCount === 1 ? 'ficha' : 'fichas' }}
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-medium truncate max-w-[160px]">
+                      {{ (user.instructedCohorts || []).map(c => c.cohort_number).join(', ') }}
+                    </span>
+                  </div>
+                  <span v-else class="text-xs text-gray-400 italic">
+                    Sin fichas
+                  </span>
+                </template>
+
+                <!-- Admin -->
+                <template v-else>
+                  <span class="text-xs text-gray-300 font-mono pl-2">—</span>
+                </template>
               </td>
 
               <!-- Cursos -->
@@ -374,6 +435,78 @@
                 Administrador
               </button>
             </div>
+          </div>
+
+          <!-- Asignación de Ficha para Aprendiz -->
+          <div v-if="createForm.rol === 'APRENDIZ'" class="space-y-1.5 p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl animate-fade-in">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-emerald-700">groups</span>
+                Ficha de Formación (Cohorte)
+              </label>
+              <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                SENA
+              </span>
+            </div>
+            <select
+              v-model="createForm.cohortId"
+              class="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#006688] focus:ring-1 focus:ring-[#006688] transition-all font-medium cursor-pointer"
+            >
+              <option :value="null">-- Sin asignar ficha por ahora --</option>
+              <optgroup
+                v-for="group in cohortsGroupedByProgram"
+                :key="'create-grp-' + group.programName"
+                :label="group.programName"
+              >
+                <option
+                  v-for="ficha in group.cohorts"
+                  :key="'create-f-' + ficha.id"
+                  :value="ficha.id"
+                >
+                  Ficha {{ ficha.cohort_number }} ({{ group.programName }})
+                </option>
+              </optgroup>
+            </select>
+            <p class="text-[11px] text-emerald-800/80">
+              El aprendiz quedará formalmente matriculado y vinculado a esta ficha.
+            </p>
+          </div>
+
+          <!-- Asignación de Múltiples Fichas para Instructor -->
+          <div v-if="createForm.rol === 'INSTRUCTOR'" class="space-y-2 p-3.5 bg-blue-50/60 border border-blue-200/80 rounded-2xl animate-fade-in">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-blue-950 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-blue-700">school</span>
+                Fichas donde imparte clase ({{ createForm.cohortIds.length }})
+              </label>
+              <span class="text-[10px] text-blue-700 font-bold bg-blue-100/70 px-2 py-0.5 rounded-full">
+                Múltiples fichas
+              </span>
+            </div>
+            <p class="text-[11px] text-blue-800/80">
+              Selecciona todas las fichas de formación en las que este instructor repartirá clase:
+            </p>
+            <div v-if="availableCohorts.length > 0" class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+              <label
+                v-for="ficha in availableCohorts"
+                :key="'create-inst-f-' + ficha.id"
+                class="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[#006688] cursor-pointer transition-all shadow-2xs"
+              >
+                <input
+                  type="checkbox"
+                  :value="ficha.id"
+                  v-model="createForm.cohortIds"
+                  class="rounded text-[#006688] focus:ring-[#006688] w-4 h-4 cursor-pointer"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-gray-800">Ficha {{ ficha.cohort_number }}</span>
+                    <span v-if="ficha.program?.name" class="text-[10px] font-medium text-gray-400 truncate">· {{ ficha.program.name }}</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <p v-else class="text-xs text-gray-400 italic">No hay fichas creadas aún en el currículo.</p>
           </div>
 
           <!-- Nombres y Apellidos -->
@@ -589,6 +722,78 @@
             </div>
           </div>
 
+          <!-- Asignación de Ficha para Aprendiz (Edición) -->
+          <div v-if="editForm.rol === 'APRENDIZ'" class="space-y-1.5 p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl animate-fade-in">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-emerald-700">groups</span>
+                Ficha de Formación (Cohorte)
+              </label>
+              <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                SENA
+              </span>
+            </div>
+            <select
+              v-model="editForm.cohortId"
+              class="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#006688] focus:ring-1 focus:ring-[#006688] transition-all font-medium cursor-pointer"
+            >
+              <option :value="null">-- Sin ficha asignada --</option>
+              <optgroup
+                v-for="group in cohortsGroupedByProgram"
+                :key="'edit-grp-' + group.programName"
+                :label="group.programName"
+              >
+                <option
+                  v-for="ficha in group.cohorts"
+                  :key="'edit-f-' + ficha.id"
+                  :value="ficha.id"
+                >
+                  Ficha {{ ficha.cohort_number }} ({{ group.programName }})
+                </option>
+              </optgroup>
+            </select>
+            <p class="text-[11px] text-emerald-800/80">
+              Puedes reasignar o desvincular al aprendiz de su ficha actual.
+            </p>
+          </div>
+
+          <!-- Asignación de Múltiples Fichas para Instructor (Edición) -->
+          <div v-if="editForm.rol === 'INSTRUCTOR'" class="space-y-2 p-3.5 bg-blue-50/60 border border-blue-200/80 rounded-2xl animate-fade-in">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-blue-950 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-blue-700">school</span>
+                Fichas donde imparte clase ({{ editForm.cohortIds.length }})
+              </label>
+              <span class="text-[10px] text-blue-700 font-bold bg-blue-100/70 px-2 py-0.5 rounded-full">
+                Múltiples fichas
+              </span>
+            </div>
+            <p class="text-[11px] text-blue-800/80">
+              Modifica las fichas de formación en las que este instructor imparte formación:
+            </p>
+            <div v-if="availableCohorts.length > 0" class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+              <label
+                v-for="ficha in availableCohorts"
+                :key="'edit-inst-f-' + ficha.id"
+                class="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-200 hover:border-[#006688] cursor-pointer transition-all shadow-2xs"
+              >
+                <input
+                  type="checkbox"
+                  :value="ficha.id"
+                  v-model="editForm.cohortIds"
+                  class="rounded text-[#006688] focus:ring-[#006688] w-4 h-4 cursor-pointer"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-gray-800">Ficha {{ ficha.cohort_number }}</span>
+                    <span v-if="ficha.program?.name" class="text-[10px] font-medium text-gray-400 truncate">· {{ ficha.program.name }}</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <p v-else class="text-xs text-gray-400 italic">No hay fichas creadas aún en el currículo.</p>
+          </div>
+
           <!-- Nombres y Apellidos -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -761,12 +966,14 @@ const apiBaseUrl = getApiBaseUrl()
 
 const search = ref('')
 const filterRole = ref('')
+const filterCohort = ref('')
 const loading = ref(false)
 const actionLoading = ref(false)
 
 const STORAGE_KEY = 'nursed.users.list'
 
 const users = ref([])
+const availableCohorts = ref([])
 
 // Modals state
 const showCreateModal = ref(false)
@@ -782,7 +989,9 @@ const createForm = reactive({
   cedula: '',
   correo: '',
   password: '',
-  showPassword: false
+  showPassword: false,
+  cohortId: null,
+  cohortIds: []
 })
 
 // Edit Form State
@@ -794,13 +1003,50 @@ const editForm = reactive({
   correo: '',
   rol: 'APRENDIZ',
   password: '',
-  showPassword: false
+  showPassword: false,
+  cohortId: null,
+  cohortIds: []
 })
 
 function getToken() {
   const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
   return stored ? JSON.parse(stored)?.token : null
 }
+
+async function fetchCohorts() {
+  try {
+    const token = getToken()
+    let res = await fetch(`${apiBaseUrl}/api/admin/curriculum/cohorts`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (!res.ok) {
+      res = await fetch(`${apiBaseUrl}/api/curriculum/cohorts`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+    }
+    if (res.ok) {
+      const data = await res.json()
+      availableCohorts.value = Array.isArray(data) ? data : (data?.data || [])
+    }
+  } catch (err) {
+    console.warn('Error fetching cohorts:', err)
+  }
+}
+
+const cohortsGroupedByProgram = computed(() => {
+  const map = new Map()
+  for (const c of availableCohorts.value) {
+    const pName = c.program?.name || 'Programa de Formación General'
+    if (!map.has(pName)) {
+      map.set(pName, [])
+    }
+    map.get(pName).push(c)
+  }
+  return Array.from(map.entries()).map(([programName, cohorts]) => ({
+    programName,
+    cohorts
+  }))
+})
 
 // Password Generator complying with backend requirements (length >= 8, 1 uppercase, 1 special @#$%&*!._-)
 function generateSecurePassword() {
@@ -882,6 +1128,7 @@ onMounted(() => {
       console.warn('Error al cargar usuarios de caché:', e)
     }
   }
+  fetchCohorts()
   fetchUsers()
 })
 
@@ -933,6 +1180,7 @@ const summary = computed(() => {
 // Filtered and Searched Users
 const filteredUsers = computed(() => {
   const query = search.value.trim().toLowerCase()
+  const cFilter = filterCohort.value ? Number(filterCohort.value) : null
   return users.value.filter((u) => {
     const matchSearch =
       !query ||
@@ -940,13 +1188,24 @@ const filteredUsers = computed(() => {
       (u.email && u.email.toLowerCase().includes(query)) ||
       (u.cedula && String(u.cedula).includes(query))
     const matchRole = !filterRole.value || u.role === filterRole.value
-    return matchSearch && matchRole
+    let matchCohort = true
+    if (cFilter) {
+      if (u.role === 'aprendiz') {
+        matchCohort = Number(u.cohortId) === cFilter
+      } else if (u.role === 'instructor') {
+        matchCohort = Array.isArray(u.cohortIds) && u.cohortIds.map(Number).includes(cFilter)
+      } else {
+        matchCohort = false
+      }
+    }
+    return matchSearch && matchRole && matchCohort
   })
 })
 
 function resetFilters() {
   search.value = ''
   filterRole.value = ''
+  filterCohort.value = ''
 }
 
 // ----------------- CREATE USER -----------------
@@ -958,6 +1217,8 @@ function openCreateModal() {
   createForm.correo = ''
   createForm.password = generateSecurePassword()
   createForm.showPassword = true
+  createForm.cohortId = null
+  createForm.cohortIds = []
   showCreateModal.value = true
 }
 
@@ -978,20 +1239,28 @@ async function handleCreateUser() {
   actionLoading.value = true
   try {
     const token = getToken()
+    const payload = {
+      nombre: createForm.nombre.trim(),
+      apellido: createForm.apellido.trim(),
+      cedula: createForm.cedula.trim(),
+      correo: createForm.correo.trim().toLowerCase(),
+      password: createForm.password,
+      rol: createForm.rol
+    }
+
+    if (createForm.rol === 'APRENDIZ' && createForm.cohortId) {
+      payload.cohortId = Number(createForm.cohortId)
+    } else if (createForm.rol === 'INSTRUCTOR' && createForm.cohortIds?.length) {
+      payload.cohortIds = createForm.cohortIds.map(Number)
+    }
+
     const res = await fetch(`${apiBaseUrl}/api/admin/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: JSON.stringify({
-        nombre: createForm.nombre.trim(),
-        apellido: createForm.apellido.trim(),
-        cedula: createForm.cedula.trim(),
-        correo: createForm.correo.trim().toLowerCase(),
-        password: createForm.password,
-        rol: createForm.rol
-      })
+      body: JSON.stringify(payload)
     })
 
     const data = await res.json()
@@ -1038,6 +1307,8 @@ function openEditModal(user) {
   editForm.rol = (user.role || 'APRENDIZ').toUpperCase()
   editForm.password = ''
   editForm.showPassword = false
+  editForm.cohortId = user.cohortId ? Number(user.cohortId) : null
+  editForm.cohortIds = Array.isArray(user.cohortIds) ? [...user.cohortIds.map(Number)] : []
 
   showEditModal.value = true
 }
@@ -1069,6 +1340,12 @@ async function handleUpdateUser() {
 
     if (editForm.password.trim()) {
       payload.password = editForm.password.trim()
+    }
+
+    if (editForm.rol === 'APRENDIZ') {
+      payload.cohortId = editForm.cohortId ? Number(editForm.cohortId) : null
+    } else if (editForm.rol === 'INSTRUCTOR') {
+      payload.cohortIds = Array.isArray(editForm.cohortIds) ? editForm.cohortIds.map(Number) : []
     }
 
     const res = await fetch(`${apiBaseUrl}/api/admin/users/${editForm.id}`, {

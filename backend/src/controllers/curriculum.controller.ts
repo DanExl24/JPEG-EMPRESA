@@ -369,7 +369,9 @@ export async function getCohorts(_req: Request, res: Response): Promise<void> {
     const list = await prisma.cohort.findMany({
       include: {
         program: { select: { id: true, name: true } },
-        courses: { select: { id: true, title: true } }
+        courses: { select: { id: true, title: true } },
+        instructors: { select: { id: true, nombre: true, apellido: true, correo: true } },
+        _count: { select: { enrollments: true } }
       },
       orderBy: { id: 'asc' }
     })

@@ -5,6 +5,8 @@ export interface CreateUserAdminDto {
   correo: string
   password: string
   rol: 'ADMIN' | 'INSTRUCTOR' | 'APRENDIZ'
+  cohortId?: number | null
+  cohortIds?: number[]
 }
 
 export interface UpdateUserAdminDto {
@@ -14,6 +16,8 @@ export interface UpdateUserAdminDto {
   password?: string
   rol?: 'ADMIN' | 'INSTRUCTOR' | 'APRENDIZ'
   active?: boolean
+  cohortId?: number | null
+  cohortIds?: number[]
 }
 
 export interface UserSummaryDto {
