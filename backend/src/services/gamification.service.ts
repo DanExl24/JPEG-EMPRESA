@@ -8,6 +8,7 @@ export const BADGE_CATALOG = [
   { key: 'estudiante_activo', name: 'Estudiante Activo',   description: 'Acumulaste 50 XP',                   iconEmoji: '🔥', xpRequired: 50  },
   { key: 'quiz_master',       name: 'Quiz Master',         description: 'Acumulaste 100 XP',                  iconEmoji: '🧠', xpRequired: 100 },
   { key: 'dedicado',          name: 'Dedicado',            description: 'Acumulaste 250 XP',                  iconEmoji: '⚡', xpRequired: 250 },
+  { key: 'post_test_master',   name: 'Graduado Bilingüe',   description: 'Completaste el POST-TEST Global de enfermería', iconEmoji: '🎓', xpRequired: 300 },
   { key: 'enfermero_pro',     name: 'Enfermero Pro',       description: 'Acumulaste 500 XP',                  iconEmoji: '👩‍⚕️', xpRequired: 500 },
   { key: 'experto_clinico',   name: 'Experto Clínico',     description: 'Acumulaste 1000 XP',                 iconEmoji: '🏆', xpRequired: 1000 },
 ]
@@ -31,10 +32,41 @@ export class GamificationService {
    * Asegura que el catálogo de insignias exista en la base de datos
    */
   static async ensureBadges(): Promise<void> {
-    const count = await prisma.badge.count()
-    if (count === 0) {
-      await prisma.badge.createMany({ data: BADGE_CATALOG, skipDuplicates: true })
+    for (const b of BADGE_CATALOG) {
+      await prisma.badge.upsert({
+        where: { key: b.key },
+        update: { name: b.name, description: b.description, iconEmoji: b.iconEmoji, xpRequired: b.xpRequired },
+        create: b
+      })
     }
+  }
+
+  /**
+   * Otorga una insignia explícita directamente al usuario
+   */
+  static async awardBadgeExplicit(userId: number, badgeKey: string): Promise<boolean> {
+    await this.ensureBadges()
+    const badge = await prisma.badge.findUnique({ where: { key: badgeKey } })
+    if (!badge) return false
+
+    const existing = await prisma.userBadge.findUnique({
+      where: { userId_badgeKey: { userId, badgeKey } }
+    })
+    if (!existing) {
+      await prisma.userBadge.create({
+        data: { userId, badgeKey }
+      })
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'BADGE_UNLOCKED',
+          title: `¡Desbloqueaste la insignia "${badge.name}"!`,
+          badge: badge.iconEmoji
+        }
+      })
+      return true
+    }
+    return false
   }
 
   /**
@@ -359,26 +391,59 @@ export class GamificationService {
    * Registra los resultados de una partida de mini-juego (JuegosView) y otorga XP
    */
   static async recordGameScore(userId: number, data: RecordGameScoreDto) {
-    const score = data.score || 100
+    const score = Number(data.score) || 100
+    const gameKey = String(data.gameKey || 'arcade_game')
+
+    // Verificar si el usuario ya completó este juego anteriormente
+    const existing = await prisma.gameScore.findFirst({
+      where: {
+        userId,
+        gameKey
+      }
+    })
+
+    const isFirstTime = !existing
 
     const record = await prisma.gameScore.create({
       data: {
         userId,
-        gameKey: data.gameKey,
+        gameKey,
         score,
         roundsCompleted: data.roundsCompleted || 4
       }
     })
 
-    // Sumar XP real al usuario
-    const newXp = await this.awardXp(userId, score, `Partida superada en "${data.gameKey}"`)
+    let newXp: number
+    if (isFirstTime) {
+      // Sumar XP real al usuario sólo la primera vez que supera el juego
+      newXp = await this.awardXp(userId, score, `Partida superada en "${gameKey}"`)
+    } else {
+      // Modo repaso: se registra la jugada pero no se acumulan puntos indefinidamente
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { xp: true }
+      })
+      newXp = currentUser?.xp || 0
+    }
 
     return {
       success: true,
       gameScoreId: record.id,
-      scoreAwarded: score,
-      currentTotalXp: newXp
+      scoreAwarded: isFirstTime ? score : 0,
+      currentTotalXp: newXp,
+      isFirstTime,
+      isReview: !isFirstTime
     }
+  }
+
+  /**
+   * Obtiene las partidas y juegos completados por el usuario autenticado
+   */
+  static async getMyGameScores(userId: number) {
+    return await prisma.gameScore.findMany({
+      where: { userId },
+      orderBy: { playedAt: 'desc' }
+    })
   }
 
   /**
@@ -681,8 +746,11 @@ export class GamificationService {
    * Operaciones CRUD sobre los Juegos del Arcade (Admin / Instructor)
    */
   static async createArcadeGame(data: any) {
+    if (!data.name || !data.name.trim()) {
+      throw new Error('El nombre del minijuego es requerido.')
+    }
     const rawKey = (data.name || 'game').toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30)
-    const key = `${rawKey}_${Date.now().toString().slice(-4)}`
+    const key = `${rawKey}_${Date.now()}_${Math.floor(Math.random() * 1000)}`
 
     return (prisma as any).arcadeGame.create({
       data: {

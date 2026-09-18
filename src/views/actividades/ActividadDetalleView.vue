@@ -62,11 +62,19 @@
             </div>
             <div class="flex items-center gap-1.5 text-xs font-semibold text-white/80">
               <span class="material-symbols-outlined text-sm">emoji_events</span>
-              {{ activity.points }} puntos al completar
+              {{ isAlreadyPassed ? 'Puntos ya obtenidos' : `${activity.points} puntos al completar` }}
             </div>
-            <div v-if="submitted" class="flex items-center gap-1.5 text-xs font-bold text-green-300">
-              <span class="material-symbols-outlined text-sm">check_circle</span>
-              Entregada
+            <div v-if="isAlreadyPassed" class="flex items-center gap-1.5 text-xs font-bold text-emerald-300">
+              <span class="material-symbols-outlined text-sm">verified</span>
+              Aprobada ({{ activity.points }} XP)
+            </div>
+            <div v-else-if="submitted && feedbackResult === false" class="flex items-center gap-1.5 text-xs font-bold text-rose-300">
+              <span class="material-symbols-outlined text-sm">cancel</span>
+              No Aprobada
+            </div>
+            <div v-else-if="submitted && reviewStatus === 'pending'" class="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+              <span class="material-symbols-outlined text-sm">hourglass_top</span>
+              En Calificación
             </div>
           </div>
         </div>
@@ -74,6 +82,67 @@
 
       <!-- Activity Panel -->
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
+
+        <!-- Status Banner: Solved / Practice / Failed -->
+        <div v-if="isAlreadyPassed" class="p-4 rounded-2xl border flex items-center justify-between gap-4 flex-wrap" :class="practiceMode ? 'bg-indigo-50/90 border-indigo-200' : 'bg-emerald-50/90 border-emerald-200'">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="practiceMode ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'">
+              <span class="material-symbols-outlined text-xl">{{ practiceMode ? 'fitness_center' : 'verified' }}</span>
+            </div>
+            <div>
+              <p class="font-bold text-sm" :class="practiceMode ? 'text-indigo-950' : 'text-emerald-950'">
+                {{ practiceMode ? 'Modo Práctica Activo' : 'Actividad Aprobada · Visualizando Respuestas' }}
+              </p>
+              <p class="text-xs" :class="practiceMode ? 'text-indigo-700' : 'text-emerald-700'">
+                {{ practiceMode 
+                  ? 'Estás repasando esta actividad libremente. No se sumarán puntos adicionales (XP ya acreditado previamente).' 
+                  : 'Ya superaste este reto con éxito y tus puntos fueron otorgados. Puedes revisar lo resuelto o activar el modo práctica para repasar.' 
+                }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="!practiceMode"
+              @click="startPracticeMode"
+              type="button"
+              class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-sm">fitness_center</span>
+              Repasar en Modo Práctica
+            </button>
+            <button
+              v-else
+              @click="restoreSolvedView"
+              type="button"
+              class="px-3.5 py-1.5 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-800 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-sm">visibility</span>
+              Ver Respuestas Aprobadas
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner for Failed Activity -->
+        <div v-else-if="submitted && feedbackResult === false" class="p-4 rounded-2xl border bg-rose-50 border-rose-200 flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-xl">cancel</span>
+            </div>
+            <div>
+              <p class="font-bold text-sm text-rose-950">Actividad No Aprobada</p>
+              <p class="text-xs text-rose-700">Aún no has superado este reto. Puedes revisar tus respuestas anteriores o reintentarlo para ganar tus {{ activity.points }} puntos XP.</p>
+            </div>
+          </div>
+          <button
+            @click="retryFailedActivity"
+            type="button"
+            class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-sm">replay</span>
+            Reintentar Ahora
+          </button>
+        </div>
 
         <!-- Feedback Banner -->
         <transition name="fade">
@@ -85,7 +154,7 @@
             <span>Tu entrega tiene preguntas abiertas. Queda pendiente de revisión por el instructor.</span>
           </div>
           <div
-            v-else-if="feedbackResult !== null"
+            v-else-if="feedbackResult !== null && !isAlreadyPassed"
             :class="`flex items-center gap-3 p-4 rounded-2xl text-sm font-bold animate-slide-up ${
               feedbackResult ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-amber-50 border border-amber-200 text-amber-700'
             }`"
@@ -128,10 +197,10 @@
               :key="idx"
               @click="selectSopaCell(idx)"
               :class="`w-9 h-9 rounded-lg text-xs font-black border transition-all select-none ${
-                isCellFoundWord(idx)
-                  ? 'bg-green-400 text-white border-green-500 shadow-sm'
-                  : selectedLetters.includes(idx)
-                    ? 'bg-[#006688] text-white border-[#006688] scale-105 shadow-md'
+                selectedLetters.includes(idx)
+                  ? 'bg-[#006688] text-white border-[#006688] scale-105 shadow-md'
+                  : isCellFoundWord(idx)
+                    ? 'bg-green-400 text-white border-green-500 shadow-sm'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-[#006688]/10 cursor-pointer'
               }`"
             >
@@ -185,7 +254,8 @@
                       @input="onGridInput($event, x-1, y-1)"
                       @keydown="onGridKeyDown($event, x-1, y-1)"
                       @focus="onCellFocus(x-1, y-1)"
-                      class="w-full h-full text-center border-none bg-transparent focus:outline-none font-black uppercase text-sm text-gray-800"
+                      :disabled="submitted"
+                      class="w-full h-full text-center border-none bg-transparent focus:outline-none font-black uppercase text-sm text-gray-800 disabled:cursor-default"
                       :id="`cw-cell-${x-1}-${y-1}`"
                     />
                   </div>
@@ -396,30 +466,141 @@
           />
         </div>
 
-        <!-- ── PRONUNCIACIÓN ── -->
-        <div v-else-if="activity.template === 'pronunciation'" class="space-y-4">
-          <h3 class="font-black text-gray-800 text-base flex items-center gap-2">
-            <span class="w-2 h-5 bg-red-500 rounded-full"></span>
-            Práctica de Pronunciación
-          </h3>
-          <p class="text-xs text-gray-500">Lee esta oración en voz alta y graba tu pronunciación:</p>
-          <div class="p-4 bg-[#006688]/5 border border-[#006688]/20 rounded-xl text-center">
-            <p class="text-base font-bold text-[#006688]">"{{ activity.pronouncePhrase || 'Frase a pronunciar' }}"</p>
-          </div>
-          <div class="flex flex-col items-center gap-3">
+        <!-- ── PRONUNCIACIÓN (RECONOCIMIENTO DE VOZ REAL) ── -->
+        <div v-else-if="activity.template === 'pronunciation'" class="space-y-5">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h3 class="font-black text-gray-800 text-base flex items-center gap-2">
+              <span class="w-2 h-5 bg-red-500 rounded-full"></span>
+              Práctica de Pronunciación en Inglés
+            </h3>
             <button
-              @click="simulateMicRecording"
+              @click="playModelPronunciation"
               type="button"
-              :disabled="submitted"
-              :class="`w-16 h-16 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${
-                isRecording ? 'bg-red-600 animate-pulse' : 'bg-[#006688] hover:bg-[#004e69] hover:scale-105'
-              }`"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl transition-all border border-red-200 shadow-2xs"
+              title="Escuchar pronunciación modelo en inglés"
             >
-              <span class="material-symbols-outlined text-2xl">{{ isRecording ? 'stop' : 'mic' }}</span>
+              <span class="material-symbols-outlined text-base">volume_up</span>
+              Escuchar frase modelo
             </button>
-            <span class="text-xs text-gray-500 font-semibold">
-              {{ isRecording ? 'Grabando... (haz clic para detener)' : voiceRecorded ? '✓ Grabación lista' : 'Haz clic para grabar tu voz' }}
+          </div>
+
+          <p class="text-xs text-gray-500">
+            Escucha la frase de referencia y luego presiona el micrófono para leerla en voz alta en inglés:
+          </p>
+
+          <!-- Phrase target card -->
+          <div class="p-5 bg-gradient-to-br from-red-50/40 via-white to-gray-50 border border-red-100 rounded-2xl text-center space-y-1.5 shadow-2xs">
+            <span class="text-[10px] font-black tracking-wider uppercase text-red-600 bg-red-100/70 px-2.5 py-0.5 rounded-full">
+              Frase Objetivo
             </span>
+            <p class="text-xl sm:text-2xl font-black text-gray-800 tracking-wide mt-1">
+              "{{ activity.pronouncePhrase || 'Nice to meet you too' }}"
+            </p>
+          </div>
+
+          <!-- Browser Support Warning if SpeechRecognition not available -->
+          <div v-if="!speechSupported" class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 space-y-1">
+            <p class="font-bold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-base text-amber-600">warning</span>
+              Reconocimiento de voz no soportado por este navegador
+            </p>
+            <p>Te sugerimos usar Google Chrome, Microsoft Edge o Safari para interactuar con actividades de pronunciación por micrófono.</p>
+          </div>
+
+          <!-- Microphone Controls & Status -->
+          <div v-else class="flex flex-col items-center gap-4 py-2">
+            <div class="relative flex items-center justify-center">
+              <!-- Pulsing outer ring when recording -->
+              <div 
+                v-if="isRecording"
+                class="absolute w-24 h-24 rounded-full bg-red-500/20 animate-ping pointer-events-none"
+              ></div>
+              <div 
+                v-if="isRecording"
+                class="absolute w-20 h-20 rounded-full bg-red-500/30 animate-pulse pointer-events-none"
+              ></div>
+
+              <button
+                @click="toggleSpeechRecognition"
+                type="button"
+                :disabled="submitted"
+                :class="`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${
+                  isRecording 
+                    ? 'bg-red-600 hover:bg-red-700 hover:scale-105 shadow-red-600/30' 
+                    : pronunciationPassed
+                      ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
+                      : 'bg-[#006688] hover:bg-[#004e69] hover:scale-105 shadow-[#006688]/30'
+                } disabled:opacity-50 disabled:cursor-not-allowed`"
+              >
+                <span class="material-symbols-outlined text-2xl">
+                  {{ isRecording ? 'mic' : pronunciationPassed ? 'check' : 'mic' }}
+                </span>
+              </button>
+            </div>
+
+            <p class="text-xs font-bold text-gray-600 text-center">
+              {{ isRecording ? '🎙️ Escuchando en inglés... ¡Habla ahora!' : pronunciationPassed ? '✓ Pronunciación validada con éxito' : 'Presiona el micrófono y pronuncia la frase en voz alta' }}
+            </p>
+
+            <!-- Error message if any -->
+            <div v-if="speechError" class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-semibold text-center max-w-md">
+              {{ speechError }}
+            </div>
+
+            <!-- Recognition Result & Live Evaluation Panel -->
+            <div v-if="recognizedText" class="w-full max-w-lg bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-gray-500 uppercase tracking-wider">Lo que escuchamos:</span>
+                <span 
+                  class="font-black px-2.5 py-0.5 rounded-full text-[11px]"
+                  :class="pronunciationPassed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                >
+                  {{ speechSimilarity }}% de similitud
+                </span>
+              </div>
+
+              <p class="text-sm font-bold text-gray-800 bg-white p-3 rounded-xl border border-gray-150 italic text-center">
+                "{{ recognizedText }}"
+              </p>
+
+              <!-- Progress Bar -->
+              <div class="h-2.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  class="h-full transition-all duration-500 rounded-full"
+                  :class="pronunciationPassed ? 'bg-emerald-500' : 'bg-amber-500'"
+                  :style="`width: ${Math.max(5, speechSimilarity)}%`"
+                ></div>
+              </div>
+
+              <!-- Word Breakdown Highlight -->
+              <div class="pt-1">
+                <span class="text-[10px] font-bold text-gray-400 block mb-1.5 uppercase">Desglose de palabras detectadas:</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span 
+                    v-for="(w, idx) in wordBreakdown" 
+                    :key="idx"
+                    :class="`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all ${
+                      w.matched 
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                        : 'bg-gray-100 text-gray-500 border border-gray-200 line-through'
+                    }`"
+                  >
+                    {{ w.word }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Feedback message -->
+              <div 
+                class="p-2.5 rounded-xl text-xs font-bold text-center"
+                :class="pronunciationPassed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'"
+              >
+                {{ pronunciationPassed 
+                  ? '¡Excelente pronunciación! Cumples con el estándar clínico requerido.' 
+                  : 'Pronunciación no del todo clara. Vuelve a presionar el micrófono para intentar de nuevo.' 
+                }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -455,33 +636,107 @@
 
         <!-- Action Bar -->
         <div class="flex items-center gap-3 pt-6 border-t border-gray-100 flex-wrap">
-          <button
-            v-if="!submitted"
-            @click="submitActivity"
-            :disabled="!canSubmit"
-            :class="`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black shadow transition-all ${
-              canSubmit
-                ? 'bg-[#006688] hover:bg-[#004e69] text-white hover:shadow-lg'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`"
-          >
-            <span class="material-symbols-outlined text-base">send</span>
-            Entregar Actividad
-          </button>
-          <button
-            @click="resetActivity"
-            :disabled="reviewStatus === 'pending'"
-            :title="reviewStatus === 'pending' ? 'Espera a que el instructor revise tu entrega antes de reiniciar' : ''"
-            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span class="material-symbols-outlined text-base">restart_alt</span>
-            Reiniciar
-          </button>
+          <!-- 1. Activity already passed and in consultation mode -->
+          <template v-if="isAlreadyPassed && !practiceMode">
+            <button
+              @click="startPracticeMode"
+              type="button"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#006688] hover:bg-[#004e69] text-white transition-all shadow-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">fitness_center</span>
+              Repasar en Modo Práctica
+            </button>
+            <div class="flex items-center gap-2 ml-auto text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-2 rounded-xl border border-emerald-200">
+              <span class="material-symbols-outlined text-sm">verified</span>
+              Actividad Aprobada (XP ya acreditado)
+            </div>
+          </template>
 
-          <div v-if="submitted" class="flex items-center gap-2 ml-auto text-xs font-bold text-green-600 bg-green-50 px-3 py-2 rounded-xl border border-green-200">
-            <span class="material-symbols-outlined text-sm">verified</span>
-            Actividad entregada exitosamente
-          </div>
+          <!-- 2. Active solving / practice mode (not yet submitted) -->
+          <template v-else-if="!submitted">
+            <button
+              @click="submitActivity"
+              :disabled="!canSubmit"
+              :class="`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black shadow transition-all ${
+                canSubmit
+                  ? 'bg-[#006688] hover:bg-[#004e69] text-white hover:shadow-lg cursor-pointer'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`"
+            >
+              <span class="material-symbols-outlined text-base">send</span>
+              {{ isAlreadyPassed ? 'Comprobar Práctica' : 'Entregar Actividad' }}
+              <span v-if="isAlreadyPassed" class="text-[11px] font-semibold opacity-80">(+0 XP)</span>
+            </button>
+
+            <button
+              v-if="isAlreadyPassed"
+              @click="restoreSolvedView"
+              type="button"
+              class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">visibility</span>
+              Ver Respuestas Aprobadas
+            </button>
+
+            <button
+              v-else
+              @click="resetActivity"
+              :disabled="reviewStatus === 'pending'"
+              :title="reviewStatus === 'pending' ? 'Espera a que el instructor revise tu entrega antes de reiniciar' : ''"
+              class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">restart_alt</span>
+              Reiniciar
+            </button>
+          </template>
+
+          <!-- 3. Submitted and failed -->
+          <template v-else-if="submitted && feedbackResult === false">
+            <button
+              @click="retryFailedActivity"
+              type="button"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">replay</span>
+              Reintentar Actividad
+            </button>
+            <div class="flex items-center gap-2 ml-auto text-xs font-bold text-rose-700 bg-rose-50 px-3.5 py-2 rounded-xl border border-rose-200">
+              <span class="material-symbols-outlined text-sm">cancel</span>
+              No Aprobada · Reintenta para ganar los puntos
+            </div>
+          </template>
+
+          <!-- 4. Submitted and pending teacher review -->
+          <template v-else-if="submitted && reviewStatus === 'pending'">
+            <div class="flex items-center gap-2 text-xs font-bold text-amber-700 bg-amber-50 px-3.5 py-2 rounded-xl border border-amber-200">
+              <span class="material-symbols-outlined text-sm">hourglass_top</span>
+              Entrega en revisión por el instructor
+            </div>
+          </template>
+
+          <!-- 5. Submitted practice attempt -->
+          <template v-else-if="submitted && isAlreadyPassed">
+            <button
+              @click="startPracticeMode"
+              type="button"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#006688] hover:bg-[#004e69] text-white transition-all shadow-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">fitness_center</span>
+              Practicar Nuevamente
+            </button>
+            <button
+              @click="restoreSolvedView"
+              type="button"
+              class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">visibility</span>
+              Ver Respuestas Aprobadas
+            </button>
+            <div class="flex items-center gap-2 ml-auto text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-2 rounded-xl border border-emerald-200">
+              <span class="material-symbols-outlined text-sm">verified</span>
+              Práctica Validada (+0 XP)
+            </div>
+          </template>
         </div>
       </div>
 
@@ -490,7 +745,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
@@ -503,6 +758,13 @@ const auth = useAuthStore()
 
 const apiBaseUrl = getApiBaseUrl()
 
+function getToken() {
+  const rawToken = auth.token || (auth.user && auth.user.token)
+  if (rawToken) return typeof rawToken === 'string' ? rawToken : rawToken.value || null
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
 // ── State ──────────────────────────────────────
 const loading = ref(true)
 const error = ref(null)
@@ -510,6 +772,132 @@ const activity = ref(null)
 
 const submitted = ref(false)
 const feedbackResult = ref(null)
+const isAlreadyPassed = ref(false)
+const practiceMode = ref(false)
+const savedSolvedState = ref(null)
+
+const selectedAnswer = ref({})
+const reviewStatus = ref('graded')
+const reviewedAnswers = ref([])
+
+function applySolvedState() {
+  const data = activity.value
+  if (!data) return
+
+  // 1. Quiz / Preguntas
+  if (data.template === 'quiz' || data.template === 'preguntas') {
+    const list = quizQuestionsList.value
+    if (savedSolvedState.value?.answers && Array.isArray(savedSolvedState.value.answers) && savedSolvedState.value.answers.length > 0) {
+      reviewedAnswers.value = savedSolvedState.value.answers
+      savedSolvedState.value.answers.forEach(a => {
+        selectedAnswer.value[a.qIdx] = a.type === 'open' ? a.text : a.selected
+      })
+    } else {
+      const autoAnswers = list.map((q, idx) => {
+        if (q.type === 'truefalse') {
+          selectedAnswer.value[idx] = q.correct
+          return { qIdx: idx, type: 'truefalse', selected: q.correct, correct: true }
+        }
+        if (q.type === 'open') {
+          selectedAnswer.value[idx] = 'Respuesta aprobada'
+          return { qIdx: idx, type: 'open', text: 'Respuesta aprobada', correct: true }
+        }
+        const optIdx = q.options ? q.options.findIndex(opt => opt.correct) : 0
+        const chosen = optIdx >= 0 ? optIdx : 0
+        selectedAnswer.value[idx] = chosen
+        return { qIdx: idx, type: 'multiple', selected: chosen, correct: true }
+      })
+      reviewedAnswers.value = autoAnswers
+    }
+  }
+
+  // 2. Sopa de letras
+  if (data.template === 'sopa') {
+    foundWords.value = [...sopaWordsList.value]
+  }
+
+  // 3. Crucigrama
+  if (data.template === 'crucigrama') {
+    if (crosswordLayout.value?.grid) {
+      const g = {}
+      Object.entries(crosswordLayout.value.grid).forEach(([key, cell]) => {
+        g[key] = cell.char
+      })
+      gridInputs.value = g
+    }
+  }
+
+  // 4. Match
+  if (data.template === 'match') {
+    matchedPairs.value = [
+      { term: data.matchTerm || 'Syringe', meaning: data.matchMeaning || 'Instrument used to inject fluids' },
+      { term: 'Suture', meaning: 'Stitch used to close a wound' },
+      { term: 'Stethoscope', meaning: 'Instrument to listen to body sounds' }
+    ]
+  }
+
+  // 5. Listening
+  if (data.template === 'listening') {
+    listeningInput.value = data.listeningPhrase || 'The patient requires immediate attention'
+  }
+
+  // 6. Pronunciation
+  if (data.template === 'pronunciation') {
+    pronunciationPassed.value = true
+    speechSimilarity.value = 100
+    recognizedText.value = data.pronouncePhrase || 'Nice to meet you too'
+  }
+
+  // 7. Fill in the blank
+  if (data.template === 'fillblank') {
+    fillblankInput.value = data.fillblankAnswer || 'stethoscope'
+  }
+}
+
+function clearAllInputs() {
+  selectedAnswer.value = {}
+  reviewedAnswers.value = []
+  foundWords.value = []
+  selectedLetters.value = []
+  sopaSelectionHint.value = null
+  if (crosswordLayout.value?.grid) {
+    const empty = {}
+    Object.keys(crosswordLayout.value.grid).forEach(k => { empty[k] = '' })
+    gridInputs.value = empty
+  }
+  selectedTerm.value = ''
+  selectedMeaning.value = ''
+  matchedPairs.value = []
+  matchFeedback.value = null
+  listeningInput.value = ''
+  isRecording.value = false
+  recognizedText.value = ''
+  speechSimilarity.value = 0
+  pronunciationPassed.value = false
+  speechError.value = null
+  fillblankInput.value = ''
+  stopSpeechRecognition()
+}
+
+function startPracticeMode() {
+  practiceMode.value = true
+  submitted.value = false
+  feedbackResult.value = null
+  clearAllInputs()
+}
+
+function restoreSolvedView() {
+  practiceMode.value = false
+  submitted.value = true
+  feedbackResult.value = true
+  applySolvedState()
+}
+
+function retryFailedActivity() {
+  submitted.value = false
+  feedbackResult.value = null
+  clearAllInputs()
+}
 
 // ── Fetch activity + check prior submission ─────
 async function fetchActivity() {
@@ -524,22 +912,37 @@ async function fetchActivity() {
     // Check if this apprentice already submitted
     const userId = auth.user?.id
     if (userId) {
-      const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${userId}`)
+      const token = getToken()
+      const subRes = await fetch(`${apiBaseUrl}/api/activities/my-submissions?apprenticeId=${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       if (subRes.ok) {
         const subs = await subRes.json()
         const existing = subs.find(s => s.activityId === data.id)
         if (existing) {
-          submitted.value = true
           reviewStatus.value = existing.reviewStatus || 'graded'
-          feedbackResult.value = reviewStatus.value === 'pending' ? null : existing.passed
+          const isPassed = existing.passed === true
+          isAlreadyPassed.value = isPassed
+          feedbackResult.value = reviewStatus.value === 'pending' ? null : isPassed
+          submitted.value = true
+
           try {
             const parsedAnswers = JSON.parse(existing.answers || '[]')
-            reviewedAnswers.value = parsedAnswers
-            parsedAnswers.forEach(a => {
-              selectedAnswer.value[a.qIdx] = a.type === 'open' ? a.text : a.selected
-            })
+            savedSolvedState.value = { answers: parsedAnswers }
           } catch (e) {
-            console.error('Error parsing stored answers:', e)
+            savedSolvedState.value = { answers: [] }
+          }
+
+          if (isPassed) {
+            applySolvedState()
+          } else {
+            // Failed attempt: preserve user's past answers so they can analyze where they failed
+            if (savedSolvedState.value?.answers?.length) {
+              reviewedAnswers.value = savedSolvedState.value.answers
+              savedSolvedState.value.answers.forEach(a => {
+                selectedAnswer.value[a.qIdx] = a.type === 'open' ? a.text : a.selected
+              })
+            }
           }
         }
       }
@@ -603,7 +1006,7 @@ const sopaGrid = computed(() => {
   const rand  = seededRand(seed)
 
   const grid = Array.from({ length: size }, () =>
-    Array.from({ length: size }, () => ({ letter: '', wordIdx: -1, posInWord: -1 }))
+    Array.from({ length: size }, () => ({ letter: '', words: [] }))
   )
 
   const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]]
@@ -632,7 +1035,8 @@ const sopaGrid = computed(() => {
       if (canPlace) {
         for (let i = 0; i < word.length; i++) {
           const r = startR + dr * i, c = startC + dc * i
-          grid[r][c] = { letter: word[i], wordIdx: wi, posInWord: i }
+          grid[r][c].letter = word[i]
+          grid[r][c].words.push({ word, wordIdx: wi, posInWord: i })
         }
         placed = true
       }
@@ -643,19 +1047,29 @@ const sopaGrid = computed(() => {
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++)
       if (grid[r][c].letter === '')
-        grid[r][c] = { letter: alpha[Math.floor(rand() * alpha.length)], wordIdx: -1, posInWord: -1 }
+        grid[r][c] = { letter: alpha[Math.floor(rand() * alpha.length)], words: [] }
 
   return grid.flat()
 })
 
 const wordCellMap = computed(() => {
   const map = {}
-  sopaWordsList.value.forEach((w, wi) => {
-    map[w] = sopaGrid.value
-      .map((cell, idx) => ({ cell, idx }))
-      .filter(({ cell }) => cell.wordIdx === wi)
-      .sort((a, b) => a.cell.posInWord - b.cell.posInWord)
-      .map(({ idx }) => idx)
+  sopaWordsList.value.forEach(w => {
+    map[w] = []
+  })
+  sopaGrid.value.forEach((cell, idx) => {
+    if (cell.words && cell.words.length) {
+      cell.words.forEach(info => {
+        if (!map[info.word]) map[info.word] = []
+        map[info.word].push({ idx, posInWord: info.posInWord })
+      })
+    }
+  })
+  sopaWordsList.value.forEach(w => {
+    if (map[w]) {
+      map[w].sort((a, b) => a.posInWord - b.posInWord)
+      map[w] = map[w].map(item => item.idx)
+    }
   })
   return map
 })
@@ -668,8 +1082,18 @@ const foundWordCells = computed(() => {
 
 function isCellFoundWord(idx) { return foundWordCells.value.has(idx) }
 
+function isCellFullyFound(idx) {
+  const belongsToUnfound = sopaWordsList.value.some(w => {
+    if (foundWords.value.includes(w)) return false
+    const cells = wordCellMap.value[w] || []
+    return cells.includes(idx)
+  })
+  if (belongsToUnfound) return false
+  return foundWordCells.value.has(idx)
+}
+
 function selectSopaCell(idx) {
-  if (submitted.value || isCellFoundWord(idx)) return
+  if (submitted.value || isCellFullyFound(idx)) return
   const pos = selectedLetters.value.indexOf(idx)
   if (pos >= 0) { selectedLetters.value.splice(pos, 1); sopaSelectionHint.value = null; return }
   selectedLetters.value.push(idx)
@@ -740,7 +1164,11 @@ const crosswordLayout = computed(() => {
 watch(crosswordLayout, (newLayout) => {
   if (!newLayout || !newLayout.success || !newLayout.grid) return
   const newInputs = {}
-  Object.keys(newLayout.grid).forEach(key => { newInputs[key] = gridInputs.value[key] || '' })
+  Object.keys(newLayout.grid).forEach(key => {
+    newInputs[key] = (isAlreadyPassed.value && !practiceMode.value)
+      ? newLayout.grid[key].char
+      : (gridInputs.value[key] || '')
+  })
   gridInputs.value = newInputs
 }, { immediate: true })
 
@@ -802,10 +1230,6 @@ function focusWordStart(word) {
 // ════════════════════════════════════════════════
 //  QUIZ / PREGUNTAS
 // ════════════════════════════════════════════════
-const selectedAnswer = ref({})
-const reviewStatus = ref('graded')
-const reviewedAnswers = ref([])
-
 const quizQuestionsList = computed(() => {
   if (!activity.value) return []
   const qStr = activity.value.quizQuestion || ''
@@ -916,23 +1340,204 @@ function playListeningAudio() {
 }
 
 // ════════════════════════════════════════════════
-//  PRONUNCIATION
+//  PRONUNCIATION (REAL WEB SPEECH API)
 // ════════════════════════════════════════════════
-const isRecording  = ref(false)
-const voiceRecorded = ref(false)
+const isRecording = ref(false)
+const recognizedText = ref('')
+const speechSimilarity = ref(0)
+const pronunciationPassed = ref(false)
+const speechError = ref(null)
+const speechSupported = ref(typeof window !== 'undefined' && Boolean(window.SpeechRecognition || window.webkitSpeechRecognition))
 
-function simulateMicRecording() {
-  if (isRecording.value) {
-    isRecording.value  = false
-    voiceRecorded.value = true
+let recognitionInstance = null
+
+function normalizeText(text) {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.,!?;:'"¿¡()\-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function levenshteinDistance(s1, s2) {
+  const m = s1.length
+  const n = s2.length
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (s1[i - 1] === s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1]
+      } else {
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + 1
+        )
+      }
+    }
+  }
+  return dp[m][n]
+}
+
+function evaluateSpeech(spoken) {
+  const target = activity.value?.pronouncePhrase || ''
+  const normTarget = normalizeText(target)
+  const normSpoken = normalizeText(spoken)
+
+  if (!normTarget || !normSpoken) {
+    speechSimilarity.value = 0
+    pronunciationPassed.value = false
+    return
+  }
+
+  if (normTarget === normSpoken) {
+    speechSimilarity.value = 100
+    pronunciationPassed.value = true
+    return
+  }
+
+  const maxLen = Math.max(normTarget.length, normSpoken.length)
+  const dist = levenshteinDistance(normTarget, normSpoken)
+  const levRatio = maxLen > 0 ? (maxLen - dist) / maxLen : 0
+
+  const targetWords = normTarget.split(' ').filter(Boolean)
+  const spokenWords = normSpoken.split(' ').filter(Boolean)
+  let matches = 0
+  targetWords.forEach(tw => {
+    if (spokenWords.some(sw => sw === tw || (sw.length >= 4 && (tw.includes(sw) || sw.includes(tw))))) {
+      matches++
+    }
+  })
+  const wordRatio = targetWords.length > 0 ? matches / targetWords.length : 0
+
+  const score = Math.round((levRatio * 0.5 + wordRatio * 0.5) * 100)
+  speechSimilarity.value = Math.max(0, Math.min(100, score))
+  // Aprobado con 70% o más de coincidencia fonética/textual
+  pronunciationPassed.value = score >= 70
+}
+
+const wordBreakdown = computed(() => {
+  const target = activity.value?.pronouncePhrase || ''
+  const spoken = recognizedText.value || ''
+  const normSpoken = normalizeText(spoken).split(' ').filter(Boolean)
+  const targetWords = target.split(/\s+/).filter(Boolean)
+
+  return targetWords.map(word => {
+    const cleanWord = normalizeText(word)
+    const matched = normSpoken.some(sw => sw === cleanWord || (cleanWord.length >= 4 && (sw.includes(cleanWord) || cleanWord.includes(sw))))
+    return { word, matched }
+  })
+})
+
+function playModelPronunciation() {
+  const phrase = activity.value?.pronouncePhrase || ''
+  if (!phrase) return
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
+    const utt = new SpeechSynthesisUtterance(phrase)
+    utt.lang = 'en-US'
+    utt.rate = 0.85
+    window.speechSynthesis.speak(utt)
   } else {
-    isRecording.value  = true
-    voiceRecorded.value = false
-    setTimeout(() => {
-      if (isRecording.value) { isRecording.value = false; voiceRecorded.value = true }
-    }, 4000)
+    notificationStore.notify({ type: 'info', title: 'Frase Modelo', message: phrase })
   }
 }
+
+function toggleSpeechRecognition() {
+  if (isRecording.value) {
+    stopSpeechRecognition()
+  } else {
+    startSpeechRecognition()
+  }
+}
+
+function startSpeechRecognition() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRec) {
+    speechSupported.value = false
+    speechError.value = 'Tu navegador no soporta reconocimiento de voz nativo. Te recomendamos usar Google Chrome o Edge.'
+    return
+  }
+
+  speechError.value = null
+  recognizedText.value = ''
+  speechSimilarity.value = 0
+  pronunciationPassed.value = false
+
+  try {
+    if (recognitionInstance) {
+      try { recognitionInstance.abort() } catch {}
+    }
+
+    const rec = new SpeechRec()
+    rec.lang = 'en-US'
+    rec.continuous = false
+    rec.interimResults = true
+    rec.maxAlternatives = 1
+
+    rec.onstart = () => {
+      isRecording.value = true
+    }
+
+    rec.onresult = (event) => {
+      let interim = ''
+      let finalTranscript = ''
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript
+        } else {
+          interim += event.results[i][0].transcript
+        }
+      }
+      const text = (finalTranscript || interim).trim()
+      if (text) {
+        recognizedText.value = text
+        evaluateSpeech(text)
+      }
+    }
+
+    rec.onerror = (event) => {
+      isRecording.value = false
+      if (event.error === 'not-allowed') {
+        speechError.value = 'Permiso de micrófono denegado. Permite el acceso al micrófono en la barra de direcciones del navegador.'
+      } else if (event.error === 'no-speech') {
+        speechError.value = 'No se detectó voz. Por favor habla de nuevo más cerca del micrófono.'
+      } else if (event.error !== 'aborted') {
+        speechError.value = `Aviso de audio (${event.error}). Puedes presionar el botón e intentar de nuevo.`
+      }
+    }
+
+    rec.onend = () => {
+      isRecording.value = false
+      if (recognizedText.value) {
+        evaluateSpeech(recognizedText.value)
+      }
+    }
+
+    recognitionInstance = rec
+    rec.start()
+  } catch (err) {
+    isRecording.value = false
+    speechError.value = 'No se pudo iniciar el micrófono. Verifica los permisos de tu navegador.'
+    console.error('Speech recognition error:', err)
+  }
+}
+
+function stopSpeechRecognition() {
+  if (recognitionInstance) {
+    try {
+      recognitionInstance.stop()
+    } catch {}
+  }
+  isRecording.value = false
+}
+
 // ════════════════════════════════════════════════
 //  FILL IN THE BLANK
 // ════════════════════════════════════════════════
@@ -953,7 +1558,7 @@ const canSubmit = computed(() => {
   if (tpl === 'quiz' || tpl === 'preguntas') return quizQuestionsList.value.length > 0 && quizQuestionsList.value.every((q, idx) => isQuizQuestionAnswered(q, idx))
   if (tpl === 'match') return matchedPairs.value.length === matchTermsList.value.length
   if (tpl === 'listening') return listeningInput.value.trim().length > 0
-  if (tpl === 'pronunciation') return voiceRecorded.value
+  if (tpl === 'pronunciation') return pronunciationPassed.value
   if (tpl === 'fillblank') return fillblankInput.value.trim().length > 0
   return false
 })
@@ -990,7 +1595,7 @@ async function submitActivity() {
     const entered  = listeningInput.value.toLowerCase().replace(/[.,!?;:]/g, '')
     ok = entered.includes(phrase) || phrase.includes(entered)
   } else if (tpl === 'pronunciation') {
-    ok = voiceRecorded.value
+    ok = pronunciationPassed.value
   } else if (tpl === 'fillblank') {
     const correct = (activity.value.fillblankAnswer || '').trim().toLowerCase()
     const entered = fillblankInput.value.trim().toLowerCase()
@@ -1001,6 +1606,38 @@ async function submitActivity() {
   submitted.value      = pending ? true : ok
   feedbackResult.value = pending ? null : ok
 
+  // Persist to backend and award XP
+  const userId = auth.user?.id
+  let xpAwarded = 0
+  if (userId) {
+    try {
+      const token = getToken()
+      const res = await fetch(`${apiBaseUrl}/api/activities/${activity.value.id}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ apprenticeId: userId, passed: ok, answers: quizAnswers })
+      })
+      if (res.ok) {
+        const json = await res.json()
+        xpAwarded = json.xpAwarded || 0
+        if (json.newXpTotal && auth.user) {
+          auth.user.xp = json.newXpTotal
+        }
+        if (typeof auth.checkAuth === 'function') {
+          await auth.checkAuth()
+        }
+      } else {
+        const errText = await res.text().catch(() => '')
+        console.error('Error submitting activity:', res.status, errText)
+      }
+    } catch (err) {
+      console.error('Error saving submission:', err)
+    }
+  }
+
   if (pending) {
     notificationStore.notify({
       type: 'info',
@@ -1008,31 +1645,31 @@ async function submitActivity() {
       message: 'Tu respuesta con preguntas abiertas quedó pendiente de revisión del instructor.'
     })
   } else if (ok) {
-    notificationStore.notify({
-      type: 'success',
-      title: '¡Felicidades!',
-      message: `${activity.value.successMessage || '¡Respuesta correcta!'} Ganaste ${activity.value.points} puntos, se agregaron a tu progreso.`
-    })
+    if (isAlreadyPassed.value) {
+      notificationStore.notify({
+        type: 'success',
+        title: '¡Práctica completada con éxito!',
+        message: '¡Excelente trabajo! Has validado correctamente la actividad. Como ya la habías aprobado previamente, no se suman puntos adicionales a tu cuenta.'
+      })
+    } else {
+      const xpNotice = xpAwarded > 0 
+        ? ` ¡Ganaste +${xpAwarded} XP agregados a tu perfil!` 
+        : (activity.value.points ? ` ¡Reto superado con éxito (+${activity.value.points} XP)!` : '')
+      notificationStore.notify({
+        type: 'success',
+        title: '¡Felicidades!',
+        message: `${activity.value.successMessage || '¡Respuesta correcta!'}${xpNotice}`
+      })
+      isAlreadyPassed.value = true
+    }
   } else {
     notificationStore.notify({
       type: 'warning',
       title: 'Respuesta incorrecta',
-      message: `${activity.value.hintMessage || 'Sigue intentando.'} Usa "Reiniciar" para volver a intentarlo.`
+      message: isAlreadyPassed.value
+        ? 'Algunas respuestas no fueron correctas en tu práctica. Puedes intentarlo de nuevo.'
+        : `${activity.value.hintMessage || 'Sigue intentando.'} Usa "Reiniciar" para volver a intentarlo.`
     })
-  }
-
-  // Persist to backend
-  const userId = auth.user?.id
-  if (userId) {
-    try {
-      await fetch(`${apiBaseUrl}/api/activities/${activity.value.id}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apprenticeId: userId, passed: ok, answers: quizAnswers })
-      })
-    } catch (err) {
-      console.error('Error saving submission:', err)
-    }
   }
 }
 
@@ -1040,24 +1677,15 @@ function resetActivity() {
   submitted.value      = false
   feedbackResult.value = null
   reviewStatus.value   = 'graded'
-  reviewedAnswers.value = []
-  selectedAnswer.value = {}
-  foundWords.value     = []
-  selectedLetters.value = []
-  sopaSelectionHint.value = null
-  gridInputs.value     = {}
-  if (crosswordLayout.value?.success) {
-    Object.keys(crosswordLayout.value.grid || {}).forEach(key => { gridInputs.value[key] = '' })
-  }
-  selectedTerm.value   = ''
-  selectedMeaning.value = ''
-  matchedPairs.value   = []
-  matchFeedback.value  = null
-  listeningInput.value = ''
-  isRecording.value    = false
-  voiceRecorded.value  = false
-  fillblankInput.value = ''
+  clearAllInputs()
 }
+
+onBeforeUnmount(() => {
+  stopSpeechRecognition()
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
+  }
+})
 </script>
 
 <style scoped>

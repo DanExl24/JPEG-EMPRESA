@@ -22,10 +22,30 @@
           </span>
         </div>
         <p class="text-xs text-gray-500">{{ currentCourseSubtitle }}</p>
+        
+        <!-- RAP Badges in Header -->
+        <div v-if="courseRaps && courseRaps.length > 0" class="flex flex-wrap gap-1.5 pt-1">
+          <span 
+            v-for="rap in courseRaps" 
+            :key="rap" 
+            class="text-[10px] font-extrabold bg-blue-50 text-[#006688] border border-blue-200/80 px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs"
+            :title="`Resultado de Aprendizaje: ${rap}`"
+          >
+            <span class="material-symbols-outlined text-[13px]">verified</span>
+            {{ rap }}
+          </span>
+        </div>
       </div>
 
-      <!-- Main Progress Tracking -->
-      <div class="w-full sm:w-64 space-y-2">
+      <!-- Main Progress Tracking / Modo Auditoría Docente -->
+      <div v-if="isPrivilegedUser" class="flex flex-col sm:items-end gap-1.5">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#006688]/10 border border-[#006688]/30 rounded-xl text-[#006688] shadow-2xs">
+          <span class="material-symbols-outlined text-base">admin_panel_settings</span>
+          <span class="text-xs font-black uppercase tracking-wider">Modo Auditoría Docente</span>
+        </div>
+        <span class="text-[11px] text-gray-500 font-medium">Navegación libre: 4 fases 100% accesibles</span>
+      </div>
+      <div v-else class="w-full sm:w-64 space-y-2">
         <div class="flex justify-between text-xs font-bold text-gray-600">
           <span>Progreso del Módulo</span>
           <span class="text-[#006688]">{{ Math.round(moduleProgress) }}%</span>
@@ -33,6 +53,75 @@
         <div class="w-full bg-gray-100 rounded-full h-2">
           <div class="h-2 rounded-full bg-[#006688] transition-all duration-500 shadow-sm" :style="`width: ${moduleProgress}%`"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- Prerequisite Sequential Lock Screen for Apprentice -->
+    <div v-if="isCourseLocked && !auth.isAdmin && !auth.isInstructor" class="bg-white rounded-3xl border border-amber-200 shadow-md p-8 sm:p-12 text-center space-y-6 animate-fade-in max-w-2xl mx-auto my-6">
+      <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+        <span class="material-symbols-outlined text-4xl">lock</span>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs font-black tracking-wider uppercase bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+          Módulo Bloqueado por Prerrequisito
+        </span>
+        <h2 class="text-2xl font-black text-gray-800 pt-2">
+          {{ currentCourseTitle }}
+        </h2>
+        <p class="text-sm text-gray-600 max-w-lg mx-auto leading-relaxed">
+          Para garantizar la continuidad pedagógica y el cumplimiento de los RAPs, debes completar al <strong>100%</strong> el módulo previo antes de ingresar a este nivel.
+        </p>
+      </div>
+
+      <div class="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center justify-center gap-3 text-left">
+        <span class="material-symbols-outlined text-amber-600 text-2xl shrink-0">school</span>
+        <div>
+          <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wide">Prerrequisito Obligatorio Pendiente:</span>
+          <p class="text-sm font-black text-amber-900">{{ prerequisiteCourseTitle || 'Módulo Anterior' }}</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+        <router-link 
+          :to="`/dashboard/cursos/${prerequisiteCourseId || 1}`"
+          class="w-full sm:w-auto px-6 py-3 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+        >
+          <span class="material-symbols-outlined text-base">arrow_back</span>
+          Ir al Módulo Prerrequisito
+        </router-link>
+        <router-link 
+          to="/dashboard/cursos"
+          class="w-full sm:w-auto px-6 py-3 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-sm rounded-xl transition-all flex items-center justify-center"
+        >
+          Ver Todos los Cursos
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Active Course Content (Rendered only if course is unlocked) -->
+    <template v-else>
+    <!-- Banner de modo auditor docente / admin -->
+    <div v-if="isPrivilegedUser" class="bg-linear-to-r from-teal-50 via-sky-50 to-blue-50 border border-[#006688]/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-[#006688] text-white flex items-center justify-center shrink-0 shadow-sm">
+          <span class="material-symbols-outlined text-xl">visibility</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h4 class="font-black text-gray-800 text-sm">Vista de Inspección Pedagógica ({{ auth.isAdmin ? 'Administrador' : 'Instructor' }})</h4>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#006688] text-white uppercase tracking-wider">Sin Restricciones</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-0.5">
+            Estás visualizando el curso con privilegios docentes. Tienes acceso directo e irrestricto a todas las fases (Inicio, Estudio, Práctica y Cierre), materiales y cuestionarios.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-[#006688] bg-white px-3 py-1.5 rounded-xl border border-sky-200/80 shadow-2xs">
+          <span class="material-symbols-outlined text-sm text-green-600">lock_open</span>
+          4 Fases Desbloqueadas
+        </span>
       </div>
     </div>
 
@@ -50,7 +139,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="text-gray-400 font-medium">Progreso guardado automáticamente en:</span>
-        <span class="font-bold text-gray-700 bg-white border border-gray-100 px-2 py-1 rounded">LocalStorage</span>
+        <span class="font-bold text-gray-700 bg-white border border-gray-100 px-2 py-1 rounded">Cuenta de usuario + LocalStorage</span>
       </div>
     </div>
 
@@ -113,7 +202,9 @@
             </span>
           </h3>
           <p class="text-xs text-gray-500 mt-1">
-            {{ moduleNumber === 4
+            {{ isCustomCourse
+              ? 'Momento 1: Revisa la introducción del curso y completa el calentamiento para desbloquear la absorción de conocimiento.'
+              : moduleNumber === 4
               ? 'Momento 1: ¡Mr. Thomas se va a casa! Completa el video de alta médica y el juego de calentamiento de verificación de estados clínicos.'
               : moduleNumber === 3
               ? 'Momento 1: ¡Tu turno ha comenzado! Completa el video introductorio y el juego de calentamiento de acciones clínicas y roles hospitalarios.'
@@ -123,42 +214,111 @@
           </p>
         </div>
 
-        <!-- Welcome Video Section -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div class="md:col-span-3 space-y-4">
-            <div class="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video shadow-md group flex items-center justify-center">
-              
-              <!-- Video Placeholder Overlay -->
-              <div v-if="!videoPlaying && !videoCompleted" class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white p-6 text-center space-y-3 z-10">
-                <span class="material-symbols-outlined text-5xl text-[#006688] bg-white rounded-full p-3 shadow-lg group-hover:scale-105 transition-transform cursor-pointer" @click="playVideo">play_arrow</span>
-                <p class="font-bold text-sm">
-                  {{ moduleNumber === 4 ? 'Video Clínico: ¡Mr. Thomas se va a casa! (Discharge Preparation)' : moduleNumber === 3 ? 'Video Clínico: ¡Tu turno en el hospital ha comenzado!' : moduleNumber === 2 ? 'Caso Clínico: Hospitalización de Mr. Thomas (Habitación 204)' : 'Video de Bienvenida: Nursing Basics Introduction' }}
-                </p>
-                <p class="text-[10px] text-gray-300">Duración estimada: 25s (Simulado)</p>
+        <!-- Inicio para cursos personalizados -->
+        <div v-if="isCustomCourse" class="space-y-6">
+          <div class="bg-gradient-to-tr from-slate-900 via-slate-800 to-cyan-950 rounded-2xl p-6 text-white space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-2xl text-cyan-300">waving_hand</span>
+              <h4 class="text-sm font-black">Bienvenida al curso</h4>
+            </div>
+            <p class="text-xs text-gray-200 leading-relaxed">
+              {{ customStructure?.f1?.welcome || 'Bienvenido a este curso. Explora la introducción y completa el calentamiento para comenzar.' }}
+            </p>
+            <p class="text-[11px] text-cyan-200 font-semibold">
+              Meta: comprender los conceptos clave del curso y activar tus conocimientos previos antes de la fase de estudio.
+            </p>
+          </div>
+
+          <div class="space-y-3 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
+              <h4 class="font-bold text-gray-800 text-sm">Warm-Up: Ordena las palabras</h4>
+            </div>
+            <p class="text-xs text-gray-600">Toca las palabras en el orden correcto para formar la idea principal del curso.</p>
+
+            <div v-if="customWords.length" class="space-y-3">
+              <div class="min-h-[56px] flex flex-wrap gap-2 items-center bg-white border-2 border-dashed rounded-2xl p-3" :class="phaseProgress.inicio === 100 ? 'border-green-400 bg-green-50/60' : 'border-gray-200'">
+                <template v-if="customWarmupPlaced.length">
+                  <span v-for="(word, idx) in customWarmupPlaced" :key="`placed-${idx}`" class="px-3 py-1.5 bg-green-100 text-green-800 border border-green-200 rounded-xl text-xs font-bold">{{ word }}</span>
+                </template>
+                <span v-else class="text-[11px] text-gray-400 italic px-1">Tus palabras aparecerán aquí…</span>
               </div>
 
-              <!-- Simulating Video Playing -->
-              <div v-if="videoPlaying" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center text-white p-6 z-10">
-                <span class="material-symbols-outlined text-4xl text-[#006688] animate-spin">sync</span>
-                <p class="text-sm mt-3 font-semibold">Reproduciendo Video de Introducción...</p>
-                <div class="w-48 bg-white/20 h-1 rounded-full mt-4 overflow-hidden">
-                  <div class="bg-[#006688] h-1 transition-all duration-[25000ms] linear" :style="`width: ${videoProgress}%`"></div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="(word, idx) in customWarmupPool"
+                  :key="`pool-${idx}-${word}`"
+                  @click="pickCustomWord(word)"
+                  type="button"
+                  class="px-3 py-1.5 bg-white border border-gray-200 hover:border-[#006688] hover:text-[#006688] rounded-xl text-xs font-bold transition-all"
+                >
+                  {{ word }}
+                </button>
+              </div>
+
+              <p v-if="customWarmupError" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">{{ customWarmupError }}</p>
+              <p v-if="phaseProgress.inicio === 100" class="text-xs font-bold text-green-600 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                ¡Excelente! Ordenaste correctamente el calentamiento.
+              </p>
+            </div>
+            <p v-else class="text-xs text-gray-500 italic">Este curso aún no tiene palabras de calentamiento configuradas.</p>
+          </div>
+
+          <div v-if="activitiesForPhase('inicio').length" class="space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+              <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <router-link v-for="activity in activitiesForPhase('inicio')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                  <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
                 </div>
-                <button @click="skipVideo" class="mt-6 text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/20">Omitir e ir al Calentamiento</button>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </router-link>
+            </div>
+          </div>
+        </div>
+
+        <!-- Welcome Video Section -->
+        <div v-if="isOfficialModule" class="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div class="md:col-span-3 space-y-4">
+            <div class="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video shadow-md">
+              <video
+                v-if="videoAvailable"
+                :src="currentVideoSrc"
+                controls
+                preload="metadata"
+                class="w-full h-full object-cover bg-black"
+                @play="videoPlaying = true"
+                @pause="videoPlaying = false"
+                @ended="onVideoWatched"
+              ></video>
+
+              <!-- Pending video placeholder -->
+              <div v-if="!videoAvailable" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-tr from-slate-900 via-slate-800 to-cyan-950 text-white p-6 text-center space-y-3">
+                <div class="w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-1 ring-2 ring-white/20">
+                  <span class="material-symbols-outlined text-5xl text-white/80">play_circle</span>
+                </div>
+                <p class="font-bold text-sm">
+                  {{ moduleNumber === 1
+                    ? '🎬 Video Introductorio — Getting to Know Other People'
+                    : 'Video de bienvenida en producción' }}
+                </p>
+                <p class="text-[11px] text-gray-300 max-w-md leading-relaxed">
+                  {{ moduleNumber === 1
+                    ? 'En este video descubrirás por qué saber presentarte, saludar y pedir información personal en inglés es esencial para tu práctica profesional como enfermero(a). Conocer a pacientes, colegas y familiares extranjeros es una habilidad clave en el entorno hospitalario. Mientras tanto, confirma la lectura de los objetivos para habilitar el calentamiento.'
+                    : 'Muy pronto encontrarás aquí el video de introducción de este módulo. Mientras tanto, puedes confirmar la lectura de los objetivos para habilitar el calentamiento.' }}
+                </p>
               </div>
 
-              <!-- Video Completed Screen -->
-              <div v-if="videoCompleted" class="absolute inset-0 flex flex-col items-center justify-center bg-green-900/80 text-white p-6 text-center space-y-2 z-10">
+              <!-- Completed video overlay -->
+              <div v-if="videoAvailable && videoCompleted && !videoPlaying" class="absolute inset-0 flex flex-col items-center justify-center bg-green-900/80 text-white p-6 text-center space-y-2">
                 <span class="material-symbols-outlined text-5xl text-white bg-green-500 rounded-full p-2">check_circle</span>
                 <p class="font-bold text-sm">¡Video Completado!</p>
                 <button @click="resetVideo" class="text-xs underline text-green-200 hover:text-white mt-1">Ver de nuevo</button>
-              </div>
-
-              <!-- Static BG representation -->
-              <div class="absolute inset-0 bg-gradient-to-tr from-cyan-900 to-indigo-950 flex items-center justify-center">
-                <span class="material-symbols-outlined text-8xl text-white/5">
-                  {{ moduleNumber === 4 ? 'verified_user' : moduleNumber === 3 ? 'groups' : moduleNumber === 2 ? 'hotel' : 'clinical_notes' }}
-                </span>
               </div>
             </div>
           </div>
@@ -201,10 +361,9 @@
 
             <!-- Module 1 Objectives -->
             <ul v-else class="text-xs text-gray-600 leading-relaxed space-y-1.5 mt-2 list-none">
-              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Saludar y despedirte correctamente en inglés</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Saludar y despedirte correctamente en inglés (formal e informal)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Presentarte e introducir a otras personas</span></li>
-              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Dar información personal básica (nombre, edad, nacionalidad)</span></li>
-              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Preguntar información básica a otra persona</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Dar y solicitar datos básicos (nombre, edad, nacionalidad)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Deletrear nombres y apellidos (spelling)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Utilizar números (teléfono, edad)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Construir oraciones básicas (Subject + Verb + Complement)</span></li>
@@ -220,106 +379,200 @@
                 ? '"En este módulo acompañarás a Mr. Thomas en su hospitalización. Al final, serás capaz de describir el estado físico de tus pacientes, detallar su entorno hospitalario y relatar antecedentes clínicos."' 
                 : '"At the end of this module, you will be able to introduce yourself, greet other people and ask for basic personal information in English."' }}
             </p>
+
+            <button
+              v-if="!introAcknowledged"
+              @click="confirmObjectives"
+              class="mt-3 w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-black rounded-xl shadow transition-all"
+            >
+              <span class="material-symbols-outlined text-sm">task_alt</span>
+              He leído los objetivos
+            </button>
+            <span v-else class="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold text-green-600">
+              <span class="material-symbols-outlined text-sm">check_circle</span>
+              Objetivos confirmados
+            </span>
           </div>
         </div>
 
         <!-- Warm-up Game Section -->
-        <div class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="isOfficialModule" ref="warmupSectionRef" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
             <h4 class="font-bold text-gray-800 text-sm">
               {{ moduleNumber === 4
-                ? 'Warm-Up: Estados de Alta Médica — Empareja los estados con el criterio de la lista de verificación'
+                ? 'Warm-Up: Estados de Alta Médica — Arrastra cada estado hacia su criterio de verificación'
                 : moduleNumber === 3
-                ? 'Warm-Up: Acciones Rutinarias & Roles — Empareja cada acción con su destinatario'
+                ? 'Warm-Up: Acciones Rutinarias & Roles — Arrastra cada acción hacia su destinatario'
                 : moduleNumber === 2 
-                ? 'Warm-Up: Hospital Shifts & Handover — Empareja los turnos con el saludo de relevo' 
-                : 'Warm-Up: Greetings — Empareja el momento del día con su saludo' }}
+                ? 'Warm-Up: Hospital Shifts & Handover — Arrastra cada turno hacia su saludo de relevo' 
+                : 'Warm-Up: Greetings — Arrastra cada ilustración del día hacia su saludo en inglés' }}
             </h4>
           </div>
           <p class="text-xs text-gray-600">
             {{ moduleNumber === 4
-              ? 'Instrucción: Empareja el estado clínico del paciente a la izquierda con el indicador de la lista de verificación de alta a la derecha.'
+              ? 'Instrucción: Toma la tarjeta del estado clínico y suéltala sobre el indicador de la lista de verificación que le corresponde.'
               : moduleNumber === 3
-              ? 'Instrucción: Empareja la acción rutinaria de enfermería de la izquierda con la persona o rol hospitalario correspondiente en la derecha.'
+              ? 'Instrucción: Toma la tarjeta de la acción rutinaria y suéltala sobre la persona o rol hospitalario que le corresponde.'
               : moduleNumber === 2 
-              ? 'Instrucción: Empareja el horario y turno hospitalario de la izquierda con la expresión y saludo de relevo correspondiente en inglés.' 
-              : 'Instrucción: Empareja el momento del día de la columna izquierda con el saludo correspondiente en inglés.' }}
+              ? 'Instrucción: Toma la tarjeta del turno hospitalario y suéltala sobre la expresión de entrega de turno que le corresponde.' 
+              : 'Instrucción: Toma la tarjeta ilustrada (mañana, tarde o noche) y suéltala sobre el saludo "Good morning", "Good afternoon" o "Good evening" que le corresponde.' }}
           </p>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            
-            <!-- Left column -->
-            <div class="space-y-2">
-              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                {{ moduleNumber === 4 ? 'Estado Clínico Final' : moduleNumber === 3 ? 'Acción Rutinaria de Enfermería' : moduleNumber === 2 ? 'Turno Hospitalario / Momento' : 'Momento del día' }}
-              </span>
-              <button 
-                v-for="item in activeLeftItems" 
-                :key="item"
-                @click="selectLeftItem(item)"
-                type="button"
-                :disabled="matchedPairs.includes(item)"
-                :class="`w-full p-3.5 border rounded-2xl text-xs font-bold text-left transition-all flex items-center justify-between ${
-                  matchedPairs.includes(item)
-                    ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed'
-                    : selectedLeft === item
-                      ? 'bg-[#006688] text-white border-[#006688] shadow-md scale-[1.02]'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688] hover:text-[#006688]'
-                }`"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base">
-                    {{ moduleNumber === 4 ? 'verified' : moduleNumber === 3 ? 'vital_signs' : (item.includes('Morning') || item === 'Sun' ? 'light_mode' : (item.includes('Afternoon') || item === 'Afternoon' ? 'wb_twilight' : 'dark_mode')) }}
-                  </span>
-                  <span>{{ item }}</span>
-                </div>
-                <span v-if="matchedPairs.includes(item)" class="material-symbols-outlined text-xs bg-green-500 text-white rounded-full p-0.5">check</span>
-              </button>
+          <div class="relative">
+            <!-- Lock Overlay (until video watched or objectives confirmed) -->
+            <div v-if="!warmupUnlocked" class="absolute inset-0 z-20 rounded-2xl bg-white/85 backdrop-blur-sm border border-gray-100 flex flex-col items-center justify-center text-center p-6 space-y-2">
+              <span class="material-symbols-outlined text-3xl text-gray-400">lock</span>
+              <p class="text-sm font-black text-gray-700">Calentamiento bloqueado</p>
+              <p class="text-xs text-gray-500 max-w-sm">
+                Reproduce el video de bienvenida o confirma la lectura de los objetivos para habilitar automáticamente esta actividad.
+              </p>
             </div>
 
-            <!-- Right column -->
-            <div class="space-y-2">
-              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                {{ moduleNumber === 4 ? 'Criterio de Checklist (Verificado)' : moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : 'Saludos en Inglés' }}
-              </span>
-              <button 
-                v-for="item in activeRightItems" 
-                :key="item"
-                @click="selectRightItem(item)"
-                type="button"
-                :disabled="matchedPairs.includes(item)"
-                :class="`w-full p-3.5 border rounded-2xl text-xs font-bold text-left transition-all flex items-center justify-between ${
-                  matchedPairs.includes(item)
-                    ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed'
-                    : selectedRight === item
-                      ? 'bg-[#006688] text-white border-[#006688] shadow-md scale-[1.02]'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688] hover:text-[#006688]'
-                }`"
-              >
-                <span>{{ item }}</span>
-                <span v-if="matchedPairs.includes(item)" class="material-symbols-outlined text-xs bg-green-500 text-white rounded-full p-0.5">check</span>
-              </button>
-            </div>
-
-            <div class="sm:col-span-2 flex items-center gap-3 pt-2 border-t border-gray-200">
-              <button 
-                @click="resetWarmupGame"
-                type="button"
-                class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-xl transition-all shadow-xs"
-              >
-                Limpiar Juego
-              </button>
+            <div :class="`grid grid-cols-1 lg:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100 ${!warmupUnlocked ? 'opacity-40 pointer-events-none select-none' : ''}`">
               
-              <span v-if="gameSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">check_circle</span>
-                ¡Excelente! Has emparejado todos los elementos correctamente. Momento 1 completado.
-              </span>
-              <span v-if="gameSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">cancel</span>
-                Emparejamiento incorrecto. Inténtalo de nuevo.
-              </span>
+              <!-- Draggable Cards Dock -->
+              <div class="space-y-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                  {{ moduleNumber === 4 ? 'Estados Clínicos Finales' : moduleNumber === 3 ? 'Acciones Rutinarias de Enfermería' : moduleNumber === 2 ? 'Turnos Hospitalarios / Momentos' : 'Tarjetas Ilustradas — Momento del Día' }}
+                </span>
+                <div class="flex flex-wrap gap-4 min-h-[120px] p-4 bg-white rounded-2xl border border-gray-100">
+                  <div 
+                    v-for="card in warmupCards" 
+                    :key="card.id"
+                    v-show="!card.matched"
+                    data-warmup-card
+                    @pointerdown="startWarmupDrag($event, card)"
+                    @click="selectWarmupCard(card)"
+                    :style="`transform: translate(${card.x}px, ${card.y}px);`"
+                    :class="`select-none cursor-grab active:cursor-grabbing bg-white border shadow-sm hover:shadow-md px-4 py-3 rounded-2xl flex items-center gap-3 touch-none transition-shadow ${card.isResetting ? 'card-reset' : ''} ${
+                      selectedWarmupCardId === card.id ? 'border-[#006688] ring-2 ring-[#006688]/30' : 'border-gray-200'
+                    }`"
+                  >
+                    <span v-if="moduleNumber === 1" class="w-20 h-20 rounded-2xl flex items-center justify-center shrink-0 border border-white/60 shadow-sm" :class="card.bg">
+                      <svg v-if="card.illustration === 'morning'" viewBox="0 0 80 80" class="w-16 h-16">
+                        <defs><radialGradient id="m1SunGlow"><stop offset="0%" stop-color="#fef08a"/><stop offset="100%" stop-color="#fbbf24"/></radialGradient></defs>
+                        <rect x="0" y="50" width="80" height="30" rx="6" fill="#86efac" />
+                        <rect x="0" y="44" width="80" height="10" rx="0" fill="#bef264" opacity="0.5" />
+                        <circle cx="40" cy="28" r="15" fill="url(#m1SunGlow)" />
+                        <g stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round">
+                          <line x1="40" y1="4" x2="40" y2="10" /><line x1="40" y1="46" x2="40" y2="40" />
+                          <line x1="58" y1="10" x2="54" y2="15" /><line x1="22" y1="10" x2="26" y2="15" />
+                          <line x1="66" y1="28" x2="60" y2="28" /><line x1="14" y1="28" x2="20" y2="28" />
+                          <line x1="58" y1="46" x2="54" y2="41" /><line x1="22" y1="46" x2="26" y2="41" />
+                        </g>
+                        <text x="40" y="72" text-anchor="middle" fill="#15803d" font-size="9" font-weight="bold">Mañana</text>
+                      </svg>
+                      <svg v-else-if="card.illustration === 'afternoon'" viewBox="0 0 80 80" class="w-16 h-16">
+                        <defs><linearGradient id="m1SunsetSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#fb923c"/></linearGradient></defs>
+                        <rect x="0" y="0" width="80" height="55" rx="6" fill="url(#m1SunsetSky)" opacity="0.3" />
+                        <rect x="0" y="52" width="80" height="28" rx="6" fill="#fcd34d" />
+                        <circle cx="40" cy="44" r="14" fill="#fb923c" />
+                        <g stroke="#f97316" stroke-width="2.5" stroke-linecap="round">
+                          <line x1="40" y1="22" x2="40" y2="27" />
+                          <line x1="56" y1="28" x2="52" y2="32" /><line x1="24" y1="28" x2="28" y2="32" />
+                          <line x1="62" y1="44" x2="57" y2="44" /><line x1="18" y1="44" x2="23" y2="44" />
+                        </g>
+                        <text x="40" y="72" text-anchor="middle" fill="#9a3412" font-size="9" font-weight="bold">Tarde</text>
+                      </svg>
+                      <svg v-else viewBox="0 0 80 80" class="w-16 h-16">
+                        <rect x="0" y="0" width="80" height="80" rx="10" fill="#1e1b4b" opacity="0.3" />
+                        <path d="M50 10a22 22 0 1 0 16 34A24 24 0 0 1 50 10z" fill="#c7d2fe" />
+                        <circle cx="18" cy="14" r="2" fill="#fef08a" /><circle cx="12" cy="28" r="1.5" fill="#fef08a" />
+                        <circle cx="30" cy="8" r="1.5" fill="#e0e7ff" /><circle cx="70" cy="18" r="2" fill="#fef08a" />
+                        <circle cx="65" cy="50" r="1.5" fill="#e0e7ff" /><circle cx="22" cy="48" r="1" fill="#fef08a" />
+                        <circle cx="55" cy="60" r="1.5" fill="#c7d2fe" /><circle cx="10" cy="58" r="1" fill="#e0e7ff" />
+                        <text x="40" y="74" text-anchor="middle" fill="#a5b4fc" font-size="9" font-weight="bold">Noche</text>
+                      </svg>
+                    </span>
+                    <span v-else class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="card.bg">
+                      <span :class="`material-symbols-outlined text-xl ${card.color}`">{{ card.icon }}</span>
+                    </span>
+                    <div class="text-left">
+                      <p class="text-xs font-black text-gray-800 leading-tight">{{ card.label }}</p>
+                      <span v-if="card.sublabel" class="text-[10px] text-gray-500 font-semibold block leading-tight">{{ card.sublabel }}</span>
+                      <span class="text-[10px] text-gray-400 font-semibold">{{ moduleNumber === 1 ? 'Arrastra al saludo ➜' : 'Arrastrar' }}</span>
+                    </div>
+                  </div>
+                  <p v-if="gameSuccess === true" class="text-xs font-bold text-green-600 flex items-center gap-1 my-auto">
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    ¡Todas las tarjetas están en su lugar!
+                  </p>
+                </div>
+              </div>
+
+              <!-- Drop Zones -->
+              <div class="space-y-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                  {{ moduleNumber === 4 ? 'Criterio de Checklist (Verificado)' : moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : '🇺🇸 Tarjetas de Saludo en Inglés' }}
+                </span>
+                <div class="grid grid-cols-1 gap-3">
+                  <div 
+                    v-for="pair in warmupPairs" 
+                    :key="pair.id"
+                    :data-warmup-slot="pair.id"
+                    @click="placeSelectedOnSlot(pair.id)"
+                    :class="`border-2 rounded-2xl p-5 min-h-[100px] flex flex-col items-center justify-center text-center transition-all ${
+                      isPairMatched(pair.id)
+                        ? 'border-green-400 bg-green-50/70 shadow-md shadow-green-100'
+                        : selectedWarmupCardId
+                          ? 'border-dashed border-[#006688]/40 bg-white cursor-pointer hover:bg-[#006688]/5 hover:shadow-md'
+                          : 'border-dashed border-gray-200 bg-white/70'
+                    }`"
+                  >
+                    <template v-if="isPairMatched(pair.id)">
+                      <span class="material-symbols-outlined text-xl bg-green-500 text-white rounded-full p-1 mb-1.5 shadow-sm">check</span>
+                      <p class="text-sm font-black text-green-700">{{ pair.right }}</p>
+                      <p class="text-[10px] font-bold text-green-600/80 mt-0.5">✅ ¡Asociación correcta!</p>
+                    </template>
+                    <template v-else>
+                      <span v-if="moduleNumber === 1" class="material-symbols-outlined text-lg text-[#006688]/40 mb-1">translate</span>
+                      <p class="text-sm font-black text-gray-700">{{ pair.right }}</p>
+                      <p class="text-[10px] text-gray-400 mt-1">{{ moduleNumber === 1 ? 'Arrastra aquí la ilustración del momento del día que corresponde' : 'Suelta aquí la tarjeta correcta' }}</p>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-2 flex flex-col sm:flex-row sm:items-center gap-3 pt-2 border-t border-gray-200">
+                <button 
+                  @click="resetWarmupGame"
+                  type="button"
+                  class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-xl transition-all shadow-xs"
+                >
+                  Limpiar Juego
+                </button>
+                
+                <transition name="fade">
+                  <span v-if="warmupError" class="text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">warning</span>
+                    {{ warmupError }}
+                  </span>
+                </transition>
+
+                <span v-if="gameSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">check_circle</span>
+                  ¡Felicitaciones! Completaste el calentamiento.
+                </span>
+              </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Actividades asignadas a esta fase (módulos oficiales) -->
+        <div v-if="isOfficialModule && activitiesForPhase('inicio').length" class="space-y-3 pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+            <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <router-link v-for="activity in activitiesForPhase('inicio')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
+              </div>
+              <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+            </router-link>
           </div>
         </div>
 
@@ -338,6 +591,32 @@
             <span class="material-symbols-outlined text-sm">arrow_forward</span>
           </button>
         </div>
+
+        <!-- Warm-up Celebration Modal -->
+        <div v-if="warmupCelebration" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl p-8 text-center space-y-5">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center mx-auto shadow-lg">
+              <span class="material-symbols-outlined text-4xl">emoji_events</span>
+            </div>
+            <div class="space-y-2">
+              <h3 class="text-xl font-black text-gray-800">🎉 ¡Felicitaciones!</h3>
+              <p class="text-sm font-bold text-[#006688]">Calentamiento Completado — Saludos e Información Personal</p>
+              <p class="text-xs text-gray-600 leading-relaxed">
+                {{ isCustomCourse
+                  ? 'Completaste el calentamiento inicial. Activaste tus conocimientos previos y desbloqueaste el Momento 2.'
+                  : 'Asociaste correctamente los tres momentos del día con sus saludos en inglés (Good morning, Good afternoon y Good evening). Activaste tus conocimientos previos y desbloqueaste el Momento 2.' }}
+              </p>
+              <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <span class="text-[10px] font-bold bg-green-100 text-green-700 px-2.5 py-1 rounded-full">✅ Preparación completada</span>
+                <span class="text-[10px] font-bold bg-blue-100 text-[#006688] px-2.5 py-1 rounded-full">🔓 Momento 2 desbloqueado</span>
+              </div>
+            </div>
+            <button @click="goToMomento2" class="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-green-600 hover:bg-green-700 text-white text-sm font-black rounded-xl shadow-md transition-all">
+              Continuar al Momento 2 — Absorción de Conocimiento
+              <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </button>
+          </div>
+        </div>
       </div>
 
 
@@ -351,7 +630,9 @@
             Momento 2 — Absorción de Conocimiento
           </h3>
           <p class="text-xs text-gray-500 mt-1">
-            {{ moduleNumber === 4
+            {{ isCustomCourse
+              ? 'Momento 2: Explora la explicación clave del curso y práctica la pronunciación para prepararte para la fase práctica.'
+              : moduleNumber === 4
               ? 'Momento 2: Aprende a estructurar órdenes y consejos médicos con verbos modales (Medical Advice) y a reportar resultados finales de la lista de verificación (Reporting Results).'
               : moduleNumber === 3
               ? 'Momento 2: Explora el Presente Simple (rutinas) vs. Presente Continuo (acciones ahora), fórmulas de sugerencias de mejora, flashcards de herramientas médicas y el diálogo de atención.'
@@ -361,10 +642,99 @@
           </p>
         </div>
 
+        <!-- Estudio para cursos personalizados -->
+        <template v-if="isCustomCourse">
+          <div class="space-y-6">
+            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-xl text-[#006688]">menu_book</span>
+                <h4 class="font-bold text-gray-800 text-sm">2.1 Explicación — Idea clave</h4>
+              </div>
+              <p class="text-sm font-bold text-gray-800 bg-white border border-gray-100 rounded-2xl p-4 leading-relaxed">
+                {{ customStructure?.f2?.grammar || 'El instructor aún no ha configurado la explicación de esta fase.' }}
+              </p>
+              <button
+                @click="completeCustomGrammar"
+                :disabled="phaseProgress.estudio === 100"
+                :class="`px-4 py-2 text-xs font-bold rounded-xl transition-all ${phaseProgress.estudio === 100 ? 'bg-green-100 text-green-700 cursor-default' : 'bg-[#006688] hover:bg-[#004e69] text-white'}`"
+              >
+                {{ phaseProgress.estudio === 100 ? 'Explicación vista' : 'Marcar explicación como vista' }}
+              </button>
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-xl text-[#006688]">record_voice_over</span>
+                <h4 class="font-bold text-gray-800 text-sm">2.2 Práctica de escucha — Pronuncia la idea clave</h4>
+              </div>
+              <template v-if="customSpeakingTarget">
+                <p class="text-sm font-semibold text-gray-800">"{{ customSpeakingTarget }}"</p>
+                <div class="flex flex-wrap gap-2">
+                  <button @click="playCustomSpeakingTarget" class="px-3 py-2 bg-white border border-gray-200 hover:border-[#006688] text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">volume_up</span> Escuchar
+                  </button>
+                  <button
+                    @click="startCustomSpeaking"
+                    :disabled="customRecognizing"
+                    class="px-3 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1 disabled:opacity-60"
+                  >
+                    <span class="material-symbols-outlined text-sm">mic</span>
+                    {{ customRecognizing ? 'Escuchando…' : 'Grabar mi voz' }}
+                  </button>
+                  <button @click="confirmCustomSpeaking" class="px-3 py-2 bg-white border border-gray-200 hover:border-[#006688] text-gray-700 text-xs font-bold rounded-xl transition-all">
+                    Ya practiqué (confirmar)
+                  </button>
+                </div>
+                <p v-if="customSpeakingPrompt" class="text-[11px] text-gray-500 italic">Escuchado: "{{ customSpeakingPrompt }}"</p>
+                <p v-if="customProfileError" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">{{ customProfileError }}</p>
+                <p v-if="customProfileSuccess" class="text-xs font-bold text-green-600 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">check_circle</span> ¡Práctica de voz completada!
+                </p>
+              </template>
+              <p v-else class="text-xs text-gray-500 italic">Sin frase de práctica configurada.</p>
+            </div>
+          </div>
+
+          <div v-if="activitiesForPhase('estudio').length" class="space-y-3 pt-4 border-t border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+              <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <router-link v-for="activity in activitiesForPhase('estudio')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                  <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
+                </div>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </router-link>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+            <button @click="goToPhase('inicio')" class="flex items-center gap-1 px-4 py-2.5 text-xs border border-gray-200 hover:bg-gray-50 font-bold rounded-xl transition-all">
+              <span class="material-symbols-outlined text-sm">arrow_back</span>
+              Volver a Inicio
+            </button>
+            <button
+              @click="validateStudyPhase"
+              :disabled="!isStudyCompleted"
+              :class="`flex items-center gap-1 px-5 py-3 text-xs font-black rounded-xl shadow transition-all ${
+                isStudyCompleted
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`"
+            >
+              Siguiente Fase: Práctica
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </template>
+
         <!-- ========================================== -->
         <!-- MÓDULO 1 — HU17: ABSORCIÓN DE CONOCIMIENTO -->
         <!-- ========================================== -->
-        <template v-if="moduleNumber === 1">
+        <template v-else-if="moduleNumber === 1">
           <!-- Stepper secuencial de secciones -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
@@ -468,8 +838,11 @@
               </div>
               <p class="text-[11px] text-teal-800 font-medium">El verbo <strong>To Be</strong> cambia según la persona. Memoriza estas formas básicas y escucha cada ejemplo:</p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div v-for="(tb, tIdx) in m1ToBeTable" :key="tIdx" class="bg-white p-3 rounded-xl border border-teal-100 shadow-xs flex items-center justify-between gap-2">
+                <div v-for="(tb, tIdx) in m1ToBeTable" :key="tIdx" :class="`bg-white p-3 rounded-xl border shadow-xs flex items-center justify-between gap-2 ${tb.pronoun === 'I' || tb.pronoun === 'You' ? 'border-teal-300 ring-2 ring-teal-500/20' : 'border-teal-100'}`">
                   <div>
+                    <div class="flex items-center gap-1.5 mb-0.5">
+                      <span v-if="tb.pronoun === 'I' || tb.pronoun === 'You'" class="text-[9px] bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.2 rounded uppercase tracking-wider">📌 Forma Principal</span>
+                    </div>
                     <p class="text-xs font-bold text-gray-800">
                       <span class="text-blue-700 font-black">{{ tb.pronoun }}</span>
                       <span class="text-orange-600 font-black mx-1">{{ tb.form }}</span>
@@ -586,8 +959,11 @@
             </div>
 
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <p v-if="!isM1VocabComplete" class="text-[11px] text-gray-500">
-                Escucha todas las tarjetas para habilitar la conversación ({{ m1HeardCount }} / {{ m1AllVocabItems.length }}).
+              <p v-if="!isM1VocabComplete" class="text-[11px] text-gray-500 flex items-center gap-2 flex-wrap">
+                <span>Escucha tarjetas de vocabulario para avanzar ({{ m1HeardCount }} / {{ m1AllVocabItems.length }} escuchados).</span>
+                <button type="button" @click="markAllVocabHeard" class="text-[#006688] font-bold hover:underline flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-xs">done_all</span> Marcar todo repasado
+                </button>
               </p>
               <p v-else class="text-[11px] text-green-600 font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">check_circle</span> ¡Vocabulario completo! Continúa con la conversación.
@@ -1047,6 +1423,22 @@
           </button>
         </div>
         </template>
+
+        <div v-if="isOfficialModule && activitiesForPhase('estudio').length" class="space-y-3 pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+            <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <router-link v-for="activity in activitiesForPhase('estudio')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
+              </div>
+              <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+            </router-link>
+          </div>
+        </div>
       </div>
 
 
@@ -1060,7 +1452,9 @@
             Momento 3 — Práctica y Aplicación ({{ currentCourseBadge }})
           </h3>
           <p class="text-xs text-gray-500 mt-1">
-            {{ moduleNumber === 4
+            {{ isCustomCourse
+              ? 'Momento 3: Practica el vocabulario, completa la respuesta clave y graba tu evidencia oral como preparación para la evaluación final.'
+              : moduleNumber === 4
               ? 'Completa el Discharge Summary escuchando las órdenes del médico, analiza el resultado de la lista de verificación y graba tus recomendaciones de alta.'
               : moduleNumber === 3
               ? 'Completa el Nursing Checklist digital, escucha las instrucciones del Dr. Smith y graba tu evidencia oral en dos misiones.'
@@ -1070,8 +1464,93 @@
           </p>
         </div>
 
+        <!-- Práctica para cursos personalizados -->
+        <div v-if="isCustomCourse" class="space-y-6">
+          <div v-if="customVocabulary.length" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-xl text-[#006688]">style</span>
+                <h4 class="font-bold text-gray-800 text-sm">3.1 Vocabulario — Escucha y repite</h4>
+              </div>
+              <span class="text-[11px] font-bold text-gray-500">Escuchados: {{ customVocabHeard.length }} / {{ customVocabulary.length }}</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                v-for="word in customVocabulary"
+                :key="word"
+                @click="playCustomVocab(word)"
+                class="flex items-center justify-between gap-2 px-3 py-2.5 bg-white border rounded-xl text-xs font-bold transition-all"
+                :class="customVocabHeard.includes(word) ? 'border-green-300 text-green-700' : 'border-gray-200 text-gray-700 hover:border-[#006688]'"
+              >
+                <span>{{ word }}</span>
+                <span class="material-symbols-outlined text-sm">{{ customVocabHeard.includes(word) ? 'check_circle' : 'volume_up' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div v-if="customFillAnswer" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">edit_note</span>
+              <h4 class="font-bold text-gray-800 text-sm">3.2 Completar la respuesta</h4>
+            </div>
+            <p class="text-xs text-gray-600">Escribe la respuesta correcta configurada para este curso.</p>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input v-model="customFillInput" @keyup.enter="checkCustomFill" type="text" class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Escribe aquí tu respuesta" />
+              <button @click="checkCustomFill" class="px-4 py-2 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl transition-all">Comprobar</button>
+            </div>
+            <p v-if="customFillError" class="text-xs font-bold text-red-600">{{ customFillError }}</p>
+            <p v-if="isCustomFillCorrect" class="text-xs font-bold text-green-600 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">check_circle</span> ¡Respuesta correcta!
+            </p>
+          </div>
+
+          <div v-if="customVoiceTarget" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">mic</span>
+              <h4 class="font-bold text-gray-800 text-sm">3.3 Práctica de voz</h4>
+            </div>
+            <p class="text-xs text-gray-600">Escucha y repite en voz alta la frase del curso:</p>
+            <p class="text-sm font-bold text-gray-800 bg-white border border-gray-100 rounded-2xl p-4">{{ customVoiceTarget }}</p>
+            <div class="flex flex-wrap gap-2">
+              <button @click="speakEnglish(customVoiceTarget)" class="px-3 py-2 bg-white border border-gray-200 hover:border-[#006688] text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">volume_up</span> Escuchar
+              </button>
+              <button
+                @click="markCustomVoice"
+                :class="`px-3 py-2 text-xs font-bold rounded-xl transition-all ${customVoiceDone ? 'bg-green-100 text-green-700' : 'bg-[#006688] hover:bg-[#004e69] text-white'}`"
+              >
+                {{ customVoiceDone ? 'Practicado' : 'Marcar como practicado' }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="!customVocabulary.length && !customFillAnswer && !customVoiceTarget" class="text-xs text-gray-500 italic bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-4">
+            El instructor aún no ha configurado actividades de práctica para este curso.
+          </div>
+
+          <p v-if="phaseProgress.practica === 100" class="text-xs font-bold text-green-600 flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">check_circle</span> ¡Práctica completada!
+          </p>
+
+          <div v-if="activitiesForPhase('practica').length" class="space-y-3 pt-4 border-t border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+              <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <router-link v-for="activity in activitiesForPhase('practica')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                  <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
+                </div>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </router-link>
+            </div>
+          </div>
+        </div>
+
         <!-- MODULE 4 PRACTICE 1: Discharge Summary Form with Audio -->
-        <div v-if="moduleNumber === 4" class="space-y-4">
+        <div v-if="isOfficialModule && moduleNumber === 4" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">description</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Formato Digital "Discharge Summary"</h4>
@@ -1159,7 +1638,7 @@
         </div>
 
         <!-- MODULE 4 PRACTICE 2: Checklist Analysis with Dropdowns -->
-        <div v-if="moduleNumber === 4" class="space-y-4 pt-4 border-t border-gray-100">
+        <div v-if="isOfficialModule && moduleNumber === 4" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">fact_check</span>
             <h4 class="font-bold text-gray-800 text-sm">2. Práctica Guiada 2 — Lectura y Análisis de Lista de Verificación (Checklist)</h4>
@@ -1245,7 +1724,7 @@
         </div>
 
         <!-- MODULE 3 PRACTICE 1 -->
-        <div v-else-if="moduleNumber === 3" class="space-y-4">
+        <div v-else-if="isOfficialModule && moduleNumber === 3" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">checklist</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Nursing Checklist Digital</h4>
@@ -1312,7 +1791,7 @@
         </div>
 
         <!-- MODULE 2 PRACTICE 1 -->
-        <div v-else-if="moduleNumber === 2" class="space-y-4">
+        <div v-else-if="isOfficialModule && moduleNumber === 2" class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">clinical_notes</span>
             <h4 class="font-bold text-gray-800 text-sm">1. Práctica Guiada 1 — Listening & Completar Notas de Enfermería</h4>
@@ -1335,7 +1814,7 @@
         </div>
 
         <!-- MODULE 1 PRACTICE 1 & 2 -->
-        <div v-else class="space-y-6">
+        <div v-else-if="isOfficialModule" class="space-y-6">
 
           <!-- 3.1 — Interactive ID Card (Subject + Verb + Complement) -->
           <div class="space-y-4">
@@ -1575,6 +2054,22 @@
           </div>
         </div>
 
+        <div v-if="isOfficialModule && activitiesForPhase('practica').length" class="space-y-3 pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+            <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <router-link v-for="activity in activitiesForPhase('practica')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
+              </div>
+              <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+            </router-link>
+          </div>
+        </div>
+
         <!-- Navigation Buttons -->
         <div class="flex justify-between items-center pt-4 border-t border-gray-100">
           <button 
@@ -1625,8 +2120,87 @@
           </p>
         </div>
 
+        <!-- Evaluación para cursos personalizados -->
+        <div v-if="isCustomCourse" class="space-y-6">
+          <div v-if="!customExamPassed" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">quiz</span>
+              <h4 class="font-bold text-gray-800 text-sm">4.1 Evaluación final del curso</h4>
+            </div>
+            <p class="text-sm font-bold text-gray-800">
+              {{ customExamQuestion || 'El instructor aún no ha configurado la pregunta de evaluación.' }}
+            </p>
+            <div v-if="customExamOptions.length" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                v-for="option in customExamOptions"
+                :key="option"
+                @click="customExamChoice = option"
+                :class="`px-4 py-3 rounded-xl text-xs font-bold border transition-all text-left ${
+                  customExamChoice === option
+                    ? 'bg-[#006688] text-white border-[#006688]'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688]'
+                }`"
+              >
+                {{ option }}
+              </button>
+            </div>
+            <div class="flex items-center gap-3">
+              <button
+                @click="submitCustomExam"
+                :disabled="!customExamChoice || !customExamOptions.length"
+                class="px-6 py-3 bg-[#006688] hover:bg-[#004e69] text-white font-black text-xs rounded-xl disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow"
+              >
+                Entregar Evaluación
+              </button>
+              <span v-if="customExamSubmitted && !customExamPassed" class="text-xs font-bold text-red-600 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">cancel</span>
+                Respuesta incorrecta. Inténtalo de nuevo.
+              </span>
+            </div>
+          </div>
+
+          <div v-else class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
+            <div class="flex justify-center">
+              <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-inner">
+                <span class="material-symbols-outlined text-3xl font-bold">celebration</span>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <h4 class="text-xl font-black text-green-800">🎉 ¡Has completado el {{ currentCourseTitle }}!</h4>
+              <p class="text-xs text-green-700">Evaluación final completada con éxito. ¡Felicitaciones por tu avance profesional!</p>
+            </div>
+            <div class="inline-flex gap-2">
+              <button
+                @click="resetCustomExamForReview"
+                class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-xl transition-all"
+              >
+                Re-presentar Evaluación (Prueba)
+              </button>
+              <router-link to="/dashboard/cursos" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
+                Volver a la Lista de Cursos
+              </router-link>
+            </div>
+          </div>
+
+          <div v-if="activitiesForPhase('evaluacion').length" class="space-y-3 pt-4 border-t border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+              <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <router-link v-for="activity in activitiesForPhase('evaluacion')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                  <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
+                </div>
+                <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+              </router-link>
+            </div>
+          </div>
+        </div>
+
         <!-- Badge Success Notification -->
-        <div v-if="examPassed && showBadgeAward" class="bg-yellow-50 border-2 border-yellow-300 rounded-3xl p-6 text-center space-y-4 shadow-md animate-bounce">
+        <div v-if="isOfficialModule && examPassed && showBadgeAward" class="bg-yellow-50 border-2 border-yellow-300 rounded-3xl p-6 text-center space-y-4 shadow-md animate-bounce">
           <div class="flex justify-center">
             <div class="w-20 h-20 rounded-full bg-yellow-400 flex items-center justify-center shadow-lg relative border-4 border-white">
               <span class="material-symbols-outlined text-white text-5xl">emoji_events</span>
@@ -1661,7 +2235,7 @@
         </div>
 
         <!-- Exam Questions Form -->
-        <div v-if="!examPassed" class="space-y-6">
+        <div v-if="isOfficialModule && !examPassed" class="space-y-6">
           <p class="text-xs text-gray-600">
             Deberás responder correctamente al menos <strong>5 de las 6 preguntas</strong> (75%) para aprobar el {{ currentCourseBadge }}.
           </p>
@@ -1686,13 +2260,24 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3">
             <button 
               @click="submitExam" 
               :disabled="Object.keys(examAnswers).length < 6"
               class="px-6 py-3 bg-[#006688] hover:bg-[#004e69] text-white font-black text-xs rounded-xl disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow"
             >
               Entregar Evaluación
+            </button>
+
+            <button
+              v-if="isPrivilegedUser"
+              @click="autoFillExamForAudit"
+              type="button"
+              class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 transition-all"
+              title="Rellenar todas las respuestas correctas para auditar la pantalla de aprobación"
+            >
+              <span class="material-symbols-outlined text-sm">auto_fix_high</span>
+              Autocompletar (Auditoría)
             </button>
 
             <span v-if="examScoreMessage" class="text-xs font-bold text-red-600 flex items-center gap-1">
@@ -1703,7 +2288,7 @@
         </div>
 
         <!-- Final Passed Screen -->
-        <div v-if="examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
+        <div v-if="isOfficialModule && examPassed" class="bg-green-50 border border-green-200 rounded-3xl p-8 text-center space-y-6">
           <div class="flex justify-center">
             <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center shadow-inner">
               <span class="material-symbols-outlined text-3xl font-bold">celebration</span>
@@ -1772,6 +2357,22 @@
           </router-link>
         </div>
 
+        <div v-if="isOfficialModule && activitiesForPhase('evaluacion').length" class="space-y-3 pt-4 border-t border-gray-100">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl text-[#006688]">extension</span>
+            <h4 class="font-bold text-gray-800 text-sm">Actividades asignadas a esta fase</h4>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <router-link v-for="activity in activitiesForPhase('evaluacion')" :key="activity.id" :to="`/dashboard/actividades/${activity.id}`" class="bg-white border border-gray-100 hover:border-[#006688] rounded-xl p-3 flex items-center justify-between gap-3 transition-all">
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 truncate">{{ activity.title }}</p>
+                <p class="text-[10px] text-gray-400 font-medium capitalize">{{ activity.template }} · {{ activity.points }} pts</p>
+              </div>
+              <span class="material-symbols-outlined text-[#006688]">play_circle</span>
+            </router-link>
+          </div>
+        </div>
+
         <!-- Bottom Actions -->
         <div class="flex justify-between items-center pt-4 border-t border-gray-100">
           <button 
@@ -1786,88 +2387,133 @@
 
     </div>
 
-    <!-- POST-TEST GLOBAL MODAL -->
-    <div v-if="showGlobalPostTestModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-2xl text-yellow-500">workspace_premium</span>
-            <div>
-              <h3 class="text-base font-black text-gray-800">POST-TEST GLOBAL DE EVALUACIÓN</h3>
-              <p class="text-xs text-gray-500">Evaluación integradora de toda la ruta formativa (RAP 1 a RAP 6)</p>
-            </div>
-          </div>
-          <button @click="showGlobalPostTestModal = false" class="text-gray-400 hover:text-gray-600">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
+    <!-- POST-TEST GLOBAL REUSABLE COMPONENT -->
+    <GlobalPostTestModal v-model="showGlobalPostTestModal" />
 
-        <div v-if="!globalPostTestSubmitted" class="space-y-4">
-          <p class="text-xs text-gray-600">
-            Responde las siguientes preguntas representativas de cada uno de los 4 módulos para obtener tu calificación final global.
-          </p>
-
-          <div v-for="(q, idx) in globalQuestions" :key="q.id" class="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
-            <span class="text-[10px] font-bold text-[#006688] uppercase tracking-wider">{{ q.moduleTag }}</span>
-            <p class="text-xs font-bold text-gray-800">{{ idx + 1 }}. {{ q.question }}</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-              <button 
-                v-for="opt in q.options" 
-                :key="opt"
-                @click="globalAnswers[q.id] = opt"
-                :class="`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all ${
-                  globalAnswers[q.id] === opt ? 'bg-[#006688] text-white border-[#006688]' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                }`"
-              >
-                {{ opt }}
-              </button>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <button @click="showGlobalPostTestModal = false" class="px-4 py-2 border border-gray-200 text-xs font-bold rounded-xl text-gray-600">Cancelar</button>
-            <button 
-              @click="submitGlobalPostTest" 
-              :disabled="Object.keys(globalAnswers).length < globalQuestions.length"
-              class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow disabled:bg-gray-200 disabled:text-gray-400"
-            >
-              Calificar Post-Test Global
-            </button>
-          </div>
-        </div>
-
-        <div v-else class="text-center py-6 space-y-4">
-          <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <span class="material-symbols-outlined text-3xl">emoji_events</span>
-          </div>
-          <div class="space-y-1">
-            <h4 class="text-lg font-black text-gray-800">¡Post-Test Global Completado!</h4>
-            <p class="text-sm font-bold text-green-600">Tu calificación final: {{ globalScore }}%</p>
-            <p class="text-xs text-gray-500 max-w-md mx-auto">
-              Has demostrado tu progreso en inglés técnico de enfermería desde el análisis inicial hasta el egreso hospitalario. ¡Felicitaciones por culminar toda la ruta académica!
-            </p>
-          </div>
-          <button @click="showGlobalPostTestModal = false" class="px-6 py-2.5 bg-[#006688] text-white font-bold text-xs rounded-xl shadow">Cerrar</button>
-        </div>
-      </div>
-    </div>
+    </template>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
+import GlobalPostTestModal from '../../components/cursos/GlobalPostTestModal.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
+const notificationStore = useNotificationStore()
+
+const isPrivilegedUser = computed(() => Boolean(auth.isAdmin || auth.isInstructor))
 
 // Course Route State
 const courseId = computed(() => route.params.courseId || '1')
 
+const OFFICIAL_MODULE_SLUGS = {
+  'getting-to-know-other-people': 1,
+  'work-life-interaction': 2,
+  'workplace-communication': 3,
+  'professional-practice': 4
+}
+
+const OFFICIAL_COURSES = {
+  1: {
+    title: 'Getting to Know Other People',
+    subtitle: 'Módulo 1 — Fase Análisis · RAP 1 (Inglés Técnico Aplicado a la Enfermería)',
+    badge: 'Fase Análisis · RAP 1'
+  },
+  2: {
+    title: 'Work Life Interaction',
+    subtitle: 'Módulo 2 — Fase Planeación · RAP 2 y 3 (Caso Clínico Mr. Thomas)',
+    badge: 'Fase Planeación · RAP 2 y 3'
+  },
+  3: {
+    title: 'Workplace Communication',
+    subtitle: 'Módulo 3 — Fase Ejecución · RAP 4 y 5 (Comunicación con Médicos, Colegas y Familiares)',
+    badge: 'Fase Ejecución · RAP 4 y 5'
+  },
+  4: {
+    title: 'Professional Practice',
+    subtitle: 'Módulo 4 — Fase Evaluación · RAP 6 (Instrucciones de Alta, Cuidado en Casa y Evaluación de Checklist)',
+    badge: 'Fase Evaluación · RAP 6'
+  }
+}
+
+// Course Details, Lock Status and RAPs
+const courseDetails = ref(null)
+const courseLoaded = ref(false)
+const isCourseLocked = ref(false)
+const prerequisiteCourseTitle = ref('')
+const prerequisiteCourseId = ref(null)
+
+const courseRaps = computed(() => {
+  if (courseDetails.value?.raps && courseDetails.value.raps.length > 0) {
+    return courseDetails.value.raps
+  }
+  if (moduleNumber.value === 1) return ['RAP-01']
+  if (moduleNumber.value === 2) return ['RAP-02', 'RAP-03']
+  if (moduleNumber.value === 3) return ['RAP-04', 'RAP-05']
+  if (moduleNumber.value === 4) return ['RAP-06']
+  return []
+})
+
+async function checkCourseLockAndDetails() {
+  resetCustomState()
+  try {
+    const token = auth.token || ''
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+    const res = await fetch(`${apiBaseUrl}/api/courses/${courseId.value}`, { headers })
+    if (res.ok) {
+      const payload = await res.json()
+      const course = payload?.data || payload
+      courseDetails.value = course
+      if (!auth.isAdmin && !auth.isInstructor && course.isLocked) {
+        isCourseLocked.value = true
+        prerequisiteCourseTitle.value = course.prerequisiteTitle || 'el módulo previo'
+        prerequisiteCourseId.value = course.prerequisiteId || (Number(courseId.value) - 1)
+        return
+      }
+    }
+  } catch (err) {
+    console.warn('Could not check course lock from backend:', err)
+  }
+
+  // Comprobación de seguridad local en caso de desconexión o progreso en cliente
+  if (!auth.isAdmin && !auth.isInstructor && moduleNumber.value > 1) {
+    const prevModuleId = moduleNumber.value - 1
+    const apprenticeId = auth.user?.id || 'guest'
+    const prevKey = `nursing_academy_progress_${apprenticeId}_course_${prevModuleId}`
+    try {
+      const raw = localStorage.getItem(prevKey)
+      let prevProg = 0
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed.phaseProgress) {
+          const sum = Object.values(parsed.phaseProgress).reduce((a, b) => a + b, 0)
+          prevProg = Math.round(sum / Object.keys(parsed.phaseProgress).length)
+        }
+      }
+      if (prevProg < 100 && (courseDetails.value?.isLocked ?? true)) {
+        isCourseLocked.value = true
+        prerequisiteCourseTitle.value = courseDetails.value?.prerequisiteTitle || `Módulo ${prevModuleId}`
+        prerequisiteCourseId.value = courseDetails.value?.prerequisiteId || prevModuleId
+        return
+      }
+    } catch {}
+  }
+
+  isCourseLocked.value = false
+  courseLoaded.value = true
+  initCustomWarmup()
+}
 const moduleNumber = computed(() => {
+  if (courseLoaded.value) {
+    const slug = courseDetails.value?.slug
+    return (slug && OFFICIAL_MODULE_SLUGS[slug]) || 0
+  }
   const id = String(courseId.value)
   if (id === '4' || id === '6') return 4
   if (id === '3' || id === '5') return 3
@@ -1875,25 +2521,23 @@ const moduleNumber = computed(() => {
   return 1
 })
 
+const isOfficialModule = computed(() => moduleNumber.value >= 1)
+const isCustomCourse = computed(() => courseLoaded.value && moduleNumber.value === 0)
+const customStructure = computed(() => courseDetails.value?.structure || null)
+
 const currentCourseTitle = computed(() => {
-  if (moduleNumber.value === 4) return 'Professional Practice'
-  if (moduleNumber.value === 3) return 'Workplace Communication'
-  if (moduleNumber.value === 2) return 'Work Life Interaction'
-  return 'Getting to Know Other People'
+  if (isCustomCourse.value) return courseDetails.value?.title || 'Curso'
+  return OFFICIAL_COURSES[moduleNumber.value]?.title || 'Getting to Know Other People'
 })
 
 const currentCourseSubtitle = computed(() => {
-  if (moduleNumber.value === 4) return 'Módulo 4 — Fase Evaluación · RAP 6 (Instrucciones de Alta, Cuidado en Casa y Evaluación de Checklist)'
-  if (moduleNumber.value === 3) return 'Módulo 3 — Fase Ejecución · RAP 4 y 5 (Comunicación con Médicos, Colegas y Familiares)'
-  if (moduleNumber.value === 2) return 'Módulo 2 — Fase Planeación · RAP 2 y 3 (Caso Clínico Mr. Thomas)'
-  return 'Módulo 1 — Fase Análisis · RAP 1 (Inglés Técnico Aplicado a la Enfermería)'
+  if (isCustomCourse.value) return courseDetails.value?.description || 'Curso personalizado'
+  return OFFICIAL_COURSES[moduleNumber.value]?.subtitle || OFFICIAL_COURSES[1].subtitle
 })
 
 const currentCourseBadge = computed(() => {
-  if (moduleNumber.value === 4) return 'Fase Evaluación · RAP 6'
-  if (moduleNumber.value === 3) return 'Fase Ejecución · RAP 4 y 5'
-  if (moduleNumber.value === 2) return 'Fase Planeación · RAP 2 y 3'
-  return 'Fase Análisis · RAP 1'
+  if (isCustomCourse.value) return courseDetails.value?.category || 'Curso Personalizado'
+  return OFFICIAL_COURSES[moduleNumber.value]?.badge || OFFICIAL_COURSES[1].badge
 })
 
 // Tab Navigation Definition
@@ -1935,122 +2579,499 @@ function speakEnglish(text, rate = 0.85) {
 }
 
 // -----------------------------------------------------------------
-// Phase 1 State (Warm-up Match Game)
+// Phase 1 State (HU16: video de bienvenida, objetivos y warm-up drag & drop)
 // -----------------------------------------------------------------
 const videoPlaying = ref(false)
 const videoCompleted = ref(false)
-const videoProgress = ref(0)
-let videoTimer = null
+const videoAvailable = ref(false)
+const introAcknowledged = ref(false)
+const objectivesConfirmed = ref(false)
+const warmupSectionRef = ref(null)
+const warmupError = ref(null)
+const warmupCelebration = ref(false)
+let warmupErrorTimer = null
 
-// M1 warm-up items
-const m1LeftItems = ['Sun', 'Afternoon', 'Moon']
-const m1RightItems = ['Good morning', 'Good afternoon', 'Good evening']
+const currentVideoSrc = computed(() => `/videos/m${moduleNumber.value}-welcome.mp4`)
 
-// M2 warm-up items
-const m2LeftItems = ['Morning Shift (07:00 AM)', 'Afternoon Shift (03:00 PM)', 'Night Shift (11:00 PM)']
-const m2RightItems = ['Good morning, Nurse', 'Good afternoon, Team', 'Good evening, Shift']
-
-// M3 warm-up items
-const m3LeftItems = ['Check vital signs & blood pressure', 'Explain current procedure politely', 'Propose checklist improvements']
-const m3RightItems = ['Patient in bed (Paciente)', 'Visitor / Family (Familia)', 'Nurse Manager / Doctor (Supervisor)']
-
-// M4 warm-up items (Discharge Final States vs Checklist Verification Criteria)
-const m4LeftItems = ['Vital signs stable', 'Pain resolved', 'Ready for discharge']
-const m4RightItems = ['Pulse & BP Normal (Check)', 'Pain Scale < 2/10 (Check)', 'Medical Orders Signed (Check)']
-
-const activeLeftItems = computed(() => {
-  if (moduleNumber.value === 4) return m4LeftItems
-  if (moduleNumber.value === 3) return m3LeftItems
-  if (moduleNumber.value === 2) return m2LeftItems
-  return m1LeftItems
-})
-
-const activeRightItems = computed(() => {
-  if (moduleNumber.value === 4) return m4RightItems
-  if (moduleNumber.value === 3) return m3RightItems
-  if (moduleNumber.value === 2) return m2RightItems
-  return m1RightItems
-})
-
-const selectedLeft = ref(null)
-const selectedRight = ref(null)
-const matchedPairs = ref([])
+const warmupUnlocked = computed(() => isPrivilegedUser.value || introAcknowledged.value || phaseProgress.value.inicio === 100)
+const isGameCompleted = computed(() => isPrivilegedUser.value || phaseProgress.value.inicio === 100)
 const gameSuccess = ref(null)
-const isGameCompleted = computed(() => phaseProgress.value.inicio === 100)
 
-function selectLeftItem(item) {
-  if (matchedPairs.value.includes(item)) return
-  selectedLeft.value = item
-  checkWarmupMatch()
-}
-
-function selectRightItem(item) {
-  if (matchedPairs.value.includes(item)) return
-  selectedRight.value = item
-  checkWarmupMatch()
-}
-
-function checkWarmupMatch() {
-  if (selectedLeft.value && selectedRight.value) {
-    let correctPairs = {}
-    if (moduleNumber.value === 4) {
-      correctPairs = {
-        'Vital signs stable': 'Pulse & BP Normal (Check)',
-        'Pain resolved': 'Pain Scale < 2/10 (Check)',
-        'Ready for discharge': 'Medical Orders Signed (Check)'
-      }
-    } else if (moduleNumber.value === 3) {
-      correctPairs = {
-        'Check vital signs & blood pressure': 'Patient in bed (Paciente)',
-        'Explain current procedure politely': 'Visitor / Family (Familia)',
-        'Propose checklist improvements': 'Nurse Manager / Doctor (Supervisor)'
-      }
-    } else if (moduleNumber.value === 2) {
-      correctPairs = {
-        'Morning Shift (07:00 AM)': 'Good morning, Nurse',
-        'Afternoon Shift (03:00 PM)': 'Good afternoon, Team',
-        'Night Shift (11:00 PM)': 'Good evening, Shift'
-      }
-    } else {
-      correctPairs = {
-        'Sun': 'Good morning',
-        'Afternoon': 'Good afternoon',
-        'Moon': 'Good evening'
-      }
-    }
-
-    if (correctPairs[selectedLeft.value] === selectedRight.value) {
-      matchedPairs.value.push(selectedLeft.value, selectedRight.value)
-    }
-    selectedLeft.value = null
-    selectedRight.value = null
-    
-    if (matchedPairs.value.length === 6) {
-      gameSuccess.value = true
-      phaseProgress.value.inicio = 100
-      saveProgress()
-    }
+async function checkVideoAsset() {
+  try {
+    const res = await fetch(currentVideoSrc.value, { method: 'HEAD' })
+    const contentType = res.headers.get('content-type') || ''
+    videoAvailable.value = res.ok && contentType.startsWith('video')
+  } catch {
+    videoAvailable.value = false
   }
 }
 
-function resetWarmupGame() {
-  selectedLeft.value = null
-  selectedRight.value = null
-  matchedPairs.value = []
-  gameSuccess.value = null
-  phaseProgress.value.inicio = 0
+function scrollToWarmup() {
+  nextTick(() => {
+    window.setTimeout(() => {
+      warmupSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+  })
+}
+
+function unlockWarmup() {
+  introAcknowledged.value = true
+  persistLocalState()
+  scrollToWarmup()
+}
+
+function onVideoWatched() {
+  videoPlaying.value = false
+  videoCompleted.value = true
+  unlockWarmup()
   saveProgress()
 }
 
-function checkPhase1Completion() {
-  if (videoCompleted.value && gameSuccess.value === true) {
-    phaseProgress.value.inicio = 100
+function resetVideo() {
+  videoCompleted.value = false
+  videoPlaying.value = false
+  persistLocalState()
+}
+
+function confirmObjectives() {
+  objectivesConfirmed.value = true
+  unlockWarmup()
+  saveProgress()
+}
+
+const warmupPairs = computed(() => {
+  if (moduleNumber.value === 4) {
+    return [
+      { id: 'vitals', label: 'Vital signs stable', right: 'Pulse & BP Normal (Check)', icon: 'monitor_heart', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      { id: 'pain', label: 'Pain resolved', right: 'Pain Scale < 2/10 (Check)', icon: 'healing', color: 'text-teal-600', bg: 'bg-teal-50' },
+      { id: 'discharge', label: 'Ready for discharge', right: 'Medical Orders Signed (Check)', icon: 'verified_user', color: 'text-[#006688]', bg: 'bg-[#006688]/10' },
+    ]
+  }
+  if (moduleNumber.value === 3) {
+    return [
+      { id: 'vitals', label: 'Check vital signs & blood pressure', right: 'Patient in bed (Paciente)', icon: 'vital_signs', color: 'text-rose-600', bg: 'bg-rose-50' },
+      { id: 'procedure', label: 'Explain current procedure politely', right: 'Visitor / Family (Familia)', icon: 'record_voice_over', color: 'text-amber-600', bg: 'bg-amber-50' },
+      { id: 'checklist', label: 'Propose checklist improvements', right: 'Nurse Manager / Doctor (Supervisor)', icon: 'checklist', color: 'text-[#006688]', bg: 'bg-[#006688]/10' },
+    ]
+  }
+  if (moduleNumber.value === 2) {
+    return [
+      { id: 'morning', label: 'Morning Shift (07:00 AM)', right: 'Good morning, Nurse', icon: 'light_mode', color: 'text-amber-600', bg: 'bg-amber-50' },
+      { id: 'afternoon', label: 'Afternoon Shift (03:00 PM)', right: 'Good afternoon, Team', icon: 'wb_twilight', color: 'text-orange-600', bg: 'bg-orange-50' },
+      { id: 'night', label: 'Night Shift (11:00 PM)', right: 'Good evening, Shift', icon: 'dark_mode', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    ]
+  }
+  return [
+    { id: 'morning', label: 'Morning', sublabel: '☀️ Sol de la mañana', right: 'Good morning', icon: 'wb_sunny', color: 'text-amber-600', bg: 'bg-gradient-to-b from-sky-200 to-amber-100', illustration: 'morning' },
+    { id: 'afternoon', label: 'Afternoon', sublabel: '🌇 Sol de la tarde', right: 'Good afternoon', icon: 'wb_twilight', color: 'text-orange-600', bg: 'bg-gradient-to-b from-orange-200 to-rose-100', illustration: 'afternoon' },
+    { id: 'night', label: 'Night', sublabel: '🌙 Luna en la noche', right: 'Good evening', icon: 'dark_mode', color: 'text-indigo-600', bg: 'bg-gradient-to-b from-indigo-900 to-slate-900', illustration: 'night' },
+  ]
+})
+
+const warmupCards = ref([])
+const selectedWarmupCardId = ref(null)
+const activeWarmupCard = ref(null)
+let warmupInitialPointerX = 0
+let warmupInitialPointerY = 0
+let warmupInitialCardX = 0
+let warmupInitialCardY = 0
+
+function buildWarmupCards() {
+  warmupCards.value = warmupPairs.value.map(pair => ({
+    ...pair,
+    matched: false,
+    x: 0,
+    y: 0,
+    isResetting: false,
+  }))
+  selectedWarmupCardId.value = null
+}
+
+function isPairMatched(pairId) {
+  return Boolean(warmupCards.value.find(card => card.id === pairId)?.matched)
+}
+
+function startWarmupDrag(event, card) {
+  if (!warmupUnlocked.value || card.matched) return
+  activeWarmupCard.value = card
+  warmupInitialPointerX = event.clientX
+  warmupInitialPointerY = event.clientY
+  warmupInitialCardX = card.x
+  warmupInitialCardY = card.y
+  window.addEventListener('pointermove', onWarmupDragMove)
+  window.addEventListener('pointerup', onWarmupDragEnd)
+}
+
+function onWarmupDragMove(event) {
+  if (!activeWarmupCard.value) return
+  activeWarmupCard.value.x = warmupInitialCardX + (event.clientX - warmupInitialPointerX)
+  activeWarmupCard.value.y = warmupInitialCardY + (event.clientY - warmupInitialPointerY)
+}
+
+function onWarmupDragEnd(event) {
+  if (!activeWarmupCard.value) return
+  window.removeEventListener('pointermove', onWarmupDragMove)
+  window.removeEventListener('pointerup', onWarmupDragEnd)
+
+  const card = activeWarmupCard.value
+  activeWarmupCard.value = null
+
+  const slots = document.querySelectorAll('[data-warmup-slot]')
+  let droppedSlotId = null
+  slots.forEach(el => {
+    const rect = el.getBoundingClientRect()
+    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+      droppedSlotId = el.getAttribute('data-warmup-slot')
+    }
+  })
+
+  if (!droppedSlotId) {
+    returnCardToOrigin(card, false)
+    return
+  }
+
+  evaluateWarmupDrop(card.id, droppedSlotId)
+}
+
+function selectWarmupCard(card) {
+  if (!warmupUnlocked.value || card.matched) return
+  if (activeWarmupCard.value) return
+  selectedWarmupCardId.value = card.id
+}
+
+function placeSelectedOnSlot(slotId) {
+  if (!selectedWarmupCardId.value) return
+  evaluateWarmupDrop(selectedWarmupCardId.value, slotId)
+}
+
+function evaluateWarmupDrop(cardId, slotId) {
+  const card = warmupCards.value.find(c => c.id === cardId)
+  if (!card || card.matched || !warmupUnlocked.value) return
+  selectedWarmupCardId.value = null
+
+  if (cardId === slotId) {
+    card.matched = true
+    card.x = 0
+    card.y = 0
+    warmupError.value = null
+    checkWarmupCompletion()
+  } else {
+    showWarmupWarning('Esa no es la pareja correcta. La tarjeta volvió a su lugar, inténtalo de nuevo.')
+    returnCardToOrigin(card, true)
   }
 }
 
-watch([videoCompleted, gameSuccess], () => {
-  checkPhase1Completion()
+function returnCardToOrigin(card, animate) {
+  if (animate) {
+    card.isResetting = true
+    window.setTimeout(() => { card.isResetting = false }, 350)
+  }
+  card.x = 0
+  card.y = 0
+}
+
+function showWarmupWarning(message) {
+  warmupError.value = message
+  gameSuccess.value = false
+  if (warmupErrorTimer) clearTimeout(warmupErrorTimer)
+  warmupErrorTimer = window.setTimeout(() => { warmupError.value = null }, 3000)
+}
+
+function checkWarmupCompletion() {
+  if (warmupCards.value.length > 0 && warmupCards.value.every(card => card.matched)) {
+    gameSuccess.value = true
+    phaseProgress.value.inicio = 100
+    warmupCelebration.value = true
+    saveProgress()
+  }
+}
+
+function goToMomento2() {
+  warmupCelebration.value = false
+  goToPhase('estudio')
+}
+
+function resetWarmupGame() {
+  selectedWarmupCardId.value = null
+  warmupError.value = null
+  warmupCelebration.value = false
+  warmupCards.value.forEach(card => {
+    card.matched = false
+    card.x = 0
+    card.y = 0
+    card.isResetting = false
+  })
+  gameSuccess.value = null
+  phaseProgress.value.inicio = 0
+  persistLocalState()
+}
+
+function restoreWarmupCompleted() {
+  warmupCards.value.forEach(card => { card.matched = true })
+  gameSuccess.value = true
+  introAcknowledged.value = true
+}
+
+buildWarmupCards()
+
+watch(moduleNumber, () => {
+  buildWarmupCards()
+  gameSuccess.value = phaseProgress.value.inicio === 100 ? true : null
+  checkVideoAsset()
 })
+
+// -----------------------------------------------------------------
+// Cursos personalizados creados desde "Editar Estructura del Curso"
+// -----------------------------------------------------------------
+const courseActivities = ref([])
+const customWarmupPool = ref([])
+const customWarmupPlaced = ref([])
+const customWarmupError = ref(null)
+const customVocabHeard = ref([])
+const customFillInput = ref('')
+const customFillError = ref(null)
+const customVoiceDone = ref(false)
+const customExamChoice = ref(null)
+const customExamSubmitted = ref(false)
+const customExamPassed = ref(false)
+const customSpeakingPrompt = ref('')
+const customProfilePrompt = ref('')
+const customProfileName = ref('')
+const customProfileError = ref(null)
+const customProfileSuccess = ref(false)
+const customRecognizing = ref(false)
+const customExtraHeard = ref([])
+let customRecognition = null
+
+const PHASE_ACTIVITY_LABELS = {
+  inicio: 'Preparación',
+  estudio: 'Absorción',
+  practica: 'Práctica',
+  evaluacion: 'Cierre'
+}
+
+function toList(value) {
+  if (Array.isArray(value)) return value.map(item => String(item).trim()).filter(Boolean)
+  if (typeof value === 'string') return value.split(',').map(item => item.trim()).filter(Boolean)
+  return []
+}
+
+const customWords = computed(() => toList(customStructure.value?.f1?.gameWords))
+const customVocabulary = computed(() => toList(customStructure.value?.f2?.vocabulary))
+const customSpeakingTarget = computed(() => customWords.value.length > 0 ? customWords.value.join(' ') : customVocabulary.value.join(', '))
+const customFillAnswer = computed(() => String(customStructure.value?.f3?.fillBlank || '').trim())
+const customVoiceTarget = computed(() => String(customStructure.value?.f3?.voiceTarget || '').trim())
+const customExamQuestion = computed(() => String(customStructure.value?.f4?.question || '').trim())
+const customExamCorrect = computed(() => String(customStructure.value?.f4?.correct || '').trim())
+const customExamIncorrect = computed(() => String(customStructure.value?.f4?.incorrect || '').trim())
+const isCustomFillCorrect = computed(() => {
+  if (!customFillAnswer.value) return false
+  return customFillInput.value.trim().toLowerCase() === customFillAnswer.value.toLowerCase()
+})
+const customExamOptions = computed(() => {
+  const options = [customExamCorrect.value, customExamIncorrect.value].filter(Boolean)
+  return options.sort(() => Math.random() - 0.5)
+})
+
+function shuffleList(list) {
+  const copy = [...list]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const temp = copy[i]
+    copy[i] = copy[j]
+    copy[j] = temp
+  }
+  return copy
+}
+
+function initCustomWarmup() {
+  customWarmupPlaced.value = []
+  customWarmupError.value = null
+  customWarmupPool.value = shuffleList(customWords.value)
+}
+
+function pickCustomWord(word) {
+  if (phaseProgress.value.inicio === 100) return
+  const expected = customWords.value[customWarmupPlaced.value.length]
+  if (word !== expected) {
+    customWarmupError.value = `Orden incorrecto: "${word}" no es la siguiente palabra.`
+    window.setTimeout(() => { customWarmupError.value = null }, 3000)
+    return
+  }
+  customWarmupError.value = null
+  customWarmupPlaced.value.push(word)
+  if (customWarmupPlaced.value.length === customWords.value.length) {
+    customWarmupPool.value = []
+    phaseProgress.value.inicio = 100
+    gameSuccess.value = true
+    warmupCelebration.value = true
+    saveProgress()
+  }
+}
+
+function playCustomVocab(word) {
+  speakEnglish(word)
+  if (!customVocabHeard.value.includes(word)) {
+    customVocabHeard.value.push(word)
+  }
+  checkCustomEstudioCompletion()
+}
+
+function playCustomSpeakingTarget() {
+  if (!customSpeakingTarget.value) return
+  speakEnglish(customSpeakingTarget.value)
+  if (!customExtraHeard.value.includes(customSpeakingTarget.value)) {
+    customExtraHeard.value.push(customSpeakingTarget.value)
+  }
+  checkCustomEstudioCompletion()
+}
+
+function checkCustomEstudioCompletion() {
+  if (phaseProgress.value.estudio === 100) return
+  const baseHeard = customVocabulary.value.length === 0 || customVocabulary.value.every(item => customVocabHeard.value.includes(item))
+  const extraHeard = !customSpeakingTarget.value || customExtraHeard.value.includes(customSpeakingTarget.value)
+  if (baseHeard && extraHeard) {
+    phaseProgress.value.estudio = 100
+    saveProgress()
+  }
+}
+
+function startCustomSpeaking() {
+  if (customRecognizing.value) return
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRecognition) {
+    customProfileError.value = 'Tu navegador no soporta reconocimiento de voz. Usa la confirmación manual.'
+    return
+  }
+  customProfileError.value = null
+  customRecognition = new SpeechRecognition()
+  customRecognition.lang = 'en-US'
+  customRecognition.interimResults = false
+  customRecognition.maxAlternatives = 1
+  customRecognition.onresult = event => {
+    const transcript = Array.from(event.results).map(result => result[0].transcript).join(' ')
+    evaluateCustomSpeaking(transcript)
+  }
+  customRecognition.onerror = () => {
+    customRecognizing.value = false
+    customProfileError.value = 'No pudimos escuchar tu voz. Inténtalo de nuevo o usa la confirmación manual.'
+  }
+  customRecognition.onend = () => { customRecognizing.value = false }
+  customRecognizing.value = true
+  customRecognition.start()
+}
+
+function evaluateCustomSpeaking(transcript) {
+  const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean)
+  const given = normalize(transcript)
+  const target = normalize(customProfilePrompt.value)
+  customSpeakingPrompt.value = String(transcript || '').trim()
+  const matches = target.length > 0 && target.every(word => given.includes(word))
+  if (matches) {
+    customProfileSuccess.value = true
+    customProfileError.value = null
+    checkCustomEstudioCompletion()
+  } else {
+    customProfileError.value = 'La frase no coincide con la meta. Inténtalo otra vez o usa la confirmación manual.'
+  }
+}
+
+function confirmCustomSpeaking() {
+  customProfileSuccess.value = true
+  customProfileError.value = null
+  checkCustomEstudioCompletion()
+}
+
+function resetCustomState() {
+  customWarmupPool.value = []
+  customWarmupPlaced.value = []
+  customWarmupError.value = null
+  customVocabHeard.value = []
+  customExtraHeard.value = []
+  customFillInput.value = ''
+  customFillError.value = null
+  customVoiceDone.value = false
+  customExamChoice.value = null
+  customExamSubmitted.value = false
+  customExamPassed.value = false
+  customSpeakingPrompt.value = ''
+  customProfilePrompt.value = ''
+  customProfileName.value = ''
+  customProfileError.value = null
+  customProfileSuccess.value = false
+  customRecognizing.value = false
+  gameSuccess.value = null
+}
+
+function completeCustomGrammar() {
+  if (phaseProgress.value.estudio !== 100) {
+    phaseProgress.value.estudio = 100
+    saveProgress()
+  }
+}
+
+function checkCustomFill() {
+  if (!customFillAnswer.value) return
+  if (isCustomFillCorrect.value) {
+    customFillError.value = null
+    checkCustomPracticeCompletion()
+  } else {
+    customFillError.value = 'Respuesta incorrecta. Inténtalo de nuevo.'
+  }
+}
+
+function markCustomVoice() {
+  customVoiceDone.value = true
+  checkCustomPracticeCompletion()
+}
+
+function checkCustomPracticeCompletion() {
+  const fillOk = !customFillAnswer.value || isCustomFillCorrect.value
+  const voiceOk = !customVoiceTarget.value || customVoiceDone.value
+  if (fillOk && voiceOk) {
+    phaseProgress.value.practica = 100
+    saveProgress()
+  }
+}
+
+function submitCustomExam() {
+  customExamSubmitted.value = true
+  if (customExamChoice.value && customExamChoice.value === customExamCorrect.value) {
+    customExamPassed.value = true
+    phaseProgress.value.evaluacion = 100
+    saveProgress()
+  }
+}
+
+function resetCustomExamForReview() {
+  customExamPassed.value = false
+  customExamSubmitted.value = false
+  customExamChoice.value = null
+  phaseProgress.value.evaluacion = 0
+  saveProgress()
+}
+
+function activitiesForPhase(phaseId) {
+  return courseActivities.value.filter(activity => {
+    const belongsToCourse = activity.courseId
+      ? Number(activity.courseId) === Number(courseId.value)
+      : activity.course === courseDetails.value?.title
+    return belongsToCourse && activity.phase === PHASE_ACTIVITY_LABELS[phaseId]
+  })
+}
+
+async function fetchCourseActivities() {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/activities`)
+    if (res.ok) {
+      const data = await res.json()
+      courseActivities.value = Array.isArray(data) ? data : (data?.data || [])
+    }
+  } catch (err) {
+    console.warn('Course activities unavailable:', err)
+  }
+}
 
 // -----------------------------------------------------------------
 // Phase 2 State: Grammar Pill, Vocabulary Flashcards, Storybook
@@ -2196,7 +3217,12 @@ const m1ActiveCategory = ref('alphabet')
 const m1ActiveVocabItems = computed(() => m1VocabCategories.value.find(c => c.id === m1ActiveCategory.value)?.items || [])
 const m1AllVocabItems = computed(() => m1VocabCategories.value.flatMap(c => c.items))
 const m1HeardCount = computed(() => m1AllVocabItems.value.filter(i => i.played).length)
-const isM1VocabComplete = computed(() => m1AllVocabItems.value.length > 0 && m1HeardCount.value === m1AllVocabItems.value.length)
+const isM1VocabComplete = computed(() => isPrivilegedUser.value || m1StudyDone.value.vocabulary || m1HeardCount.value >= 3 || (m1AllVocabItems.value.length > 0 && m1HeardCount.value === m1AllVocabItems.value.length))
+
+function markAllVocabHeard() {
+  m1AllVocabItems.value.forEach(i => { i.played = true })
+  persistLocalState()
+}
 
 // Aplicación laboral: dictado de correo y teléfono
 const m1DictationExamples = [
@@ -2406,7 +3432,7 @@ const activeDialogue = computed(() => {
   return m2Dialogue
 })
 
-const isStudyCompleted = computed(() => phaseProgress.value.estudio === 100)
+const isStudyCompleted = computed(() => isPrivilegedUser.value || phaseProgress.value.estudio === 100)
 
 function playVocabAudio(vocabItem) {
   playingVocabId.value = vocabItem.id
@@ -2447,6 +3473,7 @@ function playM1VocabAudio(item) {
 }
 
 function isM1SectionUnlocked(sectionId) {
+  if (isPrivilegedUser.value) return true
   if (sectionId === 'grammar') return true
   if (sectionId === 'vocabulary') return m1StudyDone.value.grammar
   return m1StudyDone.value.vocabulary
@@ -2719,7 +3746,7 @@ function playVoicePreview() {
   previewAudio.play().catch(() => { voicePreviewPlaying.value = false })
 }
 
-const isPracticeCompleted = computed(() => phaseProgress.value.practica === 100)
+const isPracticeCompleted = computed(() => isPrivilegedUser.value || phaseProgress.value.practica === 100)
 
 function checkPhase3Completion() {
   if (moduleNumber.value === 4) {
@@ -2874,44 +3901,254 @@ function resetExamForReview() {
   saveProgress()
 }
 
+function autoFillExamForAudit() {
+  activeExamQuestions.value.forEach(q => {
+    examAnswers.value[q.id] = q.correct
+  })
+  submitExam()
+}
+
 // -----------------------------------------------------------------
-// POST-TEST GLOBAL INTEGRATOR MODAL (All 4 Modules)
+// POST-TEST GLOBAL INTEGRATOR (All 4 Modules + Pre/Post Contrast)
 // -----------------------------------------------------------------
 const showGlobalPostTestModal = ref(false)
+const showCertificateModal = ref(false)
 const globalPostTestSubmitted = ref(false)
+const isSubmittingPostTest = ref(false)
 const globalAnswers = ref({})
 const globalScore = ref(0)
+const preTestBaseline = ref(35)
+const growthDelta = ref(0)
+const moduleBreakdown = ref({ m1: 0, m2: 0, m3: 0, m4: 0 })
+const certificateData = ref(null)
 
 const globalQuestions = [
-  { id: 'gq1', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'Which greeting is used in the morning?', options: ['Good morning', 'Good night', 'Goodbye'], correct: 'Good morning' },
-  { id: 'gq2', moduleTag: 'MÓDULO 1 (RAP 1)', question: 'What is the correct structure of a basic sentence?', options: ['Subject + Verb + Complement', 'Verb + Subject + Complement', 'Complement + Verb'], correct: 'Subject + Verb + Complement' },
-  { id: 'gq3', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'How do you describe a past accident in hospital history?', options: ['He fell yesterday and had a fracture.', 'He is falling tomorrow.', 'He fall down now.'], correct: 'He fell yesterday and had a fracture.' },
-  { id: 'gq4', moduleTag: 'MÓDULO 2 (RAP 2 y 3)', question: 'Which adjective describes a swollen limb?', options: ['Swollen', 'Fast', 'Tall'], correct: 'Swollen' },
-  { id: 'gq5', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you describe an action happening right now to a visitor?', options: ['We are checking his blood pressure right now.', 'We checked him yesterday.', 'We check him next year.'], correct: 'We are checking his blood pressure right now.' },
-  { id: 'gq6', moduleTag: 'MÓDULO 3 (RAP 4 y 5)', question: 'How do you politely suggest an improvement to your colleague?', options: ['I think we should update the digital checklist.', 'You must leave now.', 'Do not speak.'], correct: 'I think we should update the digital checklist.' },
-  { id: 'gq7', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'Which modal expresses a direct medical obligation?', options: ['You must take this painkiller every 8 hours.', 'You might take tea.', 'You would run.'], correct: 'You must take this painkiller every 8 hours.' },
-  { id: 'gq8', moduleTag: 'MÓDULO 4 (RAP 6)', question: 'What is the final confirmation when evaluating the checklist?', options: ['The vital signs are stable and the checklist is complete.', 'The patient is not ready.', 'The doctor is lost.'], correct: 'The vital signs are stable and the checklist is complete.' },
+  {
+    id: 'gq1',
+    moduleKey: 'm1',
+    moduleTag: 'MÓDULO 1 · RAP 1',
+    title: 'Presentación y Saludos Clínicos',
+    question: 'A British patient arrives at the hospital emergency room at 08:30 AM. Which formal greeting should the nurse use?',
+    options: ['Good morning, sir. Welcome to our hospital.', 'Good evening, sir. See you later.', 'Good night, mister.'],
+    correct: 'Good morning, sir. Welcome to our hospital.',
+    explanation: 'Para la atención matutina en triaje u hospitalización se emplea "Good morning".'
+  },
+  {
+    id: 'gq2',
+    moduleKey: 'm1',
+    moduleTag: 'MÓDULO 1 · RAP 1',
+    title: 'Estructura Básica Oracional (Grammar Pill)',
+    question: 'Listen to the clinical sentence and identify the correct syntactic structure (Subject + Verb + Complement):',
+    audioText: 'The nurse prepares the daily medication.',
+    hasAudio: true,
+    options: ['The nurse (S) + prepares (V) + the daily medication (C)', 'Prepares (V) + the nurse (S) + medication (C)', 'The medication (C) + prepares (V) + nurse (S)'],
+    correct: 'The nurse (S) + prepares (V) + the daily medication (C)',
+    explanation: 'El orden estándar en inglés técnico es Sujeto (The nurse) + Verbo (prepares) + Complemento (the daily medication).'
+  },
+  {
+    id: 'gq3',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Antecedentes y Pasado Simple (Mr. Thomas)',
+    question: 'How do you correctly report Mr. Thomas\'s admission event using Past Simple verbs?',
+    options: ['Yesterday, Mr. Thomas fell at the hotel and had an arm injury.', 'Yesterday, Mr. Thomas falls and is having injury.', 'Yesterday, Mr. Thomas will fall at the hotel.'],
+    correct: 'Yesterday, Mr. Thomas fell at the hotel and had an arm injury.',
+    explanation: 'Para hechos ocurridos en el pasado se usan las formas irregulares "fell" (caer) y "had" (tener).'
+  },
+  {
+    id: 'gq4',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Adjetivos Descriptivos y Signos Actuales',
+    question: 'Which sentence accurately describes the patient\'s current state in Room 204?',
+    options: ['He is pale, feels dizzy, and his right arm is swollen.', 'He is run quickly and happily.', 'He was surgery next week.'],
+    correct: 'He is pale, feels dizzy, and his right arm is swollen.',
+    explanation: '"Pale" (pálido), "dizzy" (mareado) y "swollen" (hinchado) son adjetivos descriptivos del estado actual.'
+  },
+  {
+    id: 'gq5',
+    moduleKey: 'm2',
+    moduleTag: 'MÓDULO 2 · RAP 2 y 3',
+    title: 'Comprensión de Entrega de Turno (Handover Report)',
+    question: 'Listen to the handover audio snippet and select the correct report summary:',
+    audioText: 'Handover report: Mr. Thomas in room 204 has vital signs stable and resting in bed.',
+    hasAudio: true,
+    options: ['Mr. Thomas in room 204 has stable vital signs and is resting.', 'Mr. Thomas was discharged this morning.', 'Mr. Thomas has acute emergency in room 101.'],
+    correct: 'Mr. Thomas in room 204 has stable vital signs and is resting.',
+    explanation: 'El reporte de entrega confirma signos estables y reposo en la habitación 204.'
+  },
+  {
+    id: 'gq6',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Acciones en Progreso Clínico (Present Continuous)',
+    question: 'Mr. Thomas\'s daughter asks what the nurse is doing right now. How should the nurse answer in Present Continuous?',
+    options: ['"We are checking his blood pressure and monitoring his heart rate right now."', '"We checked his pressure yesterday morning."', '"We check him next Monday."'],
+    correct: '"We are checking his blood pressure and monitoring his heart rate right now."',
+    explanation: 'El Presente Continuo (am/is/are + -ing) comunica lo que se está ejecutando en el momento presente.'
+  },
+  {
+    id: 'gq7',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Propuesta de Mejora al Supervisor (Polite Suggestions)',
+    question: 'How do you politely suggest an improvement to the Nurse Manager regarding the vital signs checklist?',
+    options: ['"I think we should digitize the nursing checklist to reduce charting time."', '"You must change the paper immediately."', '"Stop using checklists right now."'],
+    correct: '"I think we should digitize the nursing checklist to reduce charting time."',
+    explanation: 'La fórmula de cortesía colaborativa es "I think we should..." (Creo que deberíamos...).'
+  },
+  {
+    id: 'gq8',
+    moduleKey: 'm3',
+    moduleTag: 'MÓDULO 3 · RAP 4 y 5',
+    title: 'Instrumental y Herramientas Hospitalarias',
+    question: 'Which instrument is primarily used to listen to pulmonary and cardiovascular heart sounds?',
+    options: ['Stethoscope', 'Thermometer', 'Wheelchair'],
+    correct: 'Stethoscope',
+    explanation: 'El estetoscopio (Stethoscope) es el instrumento utilizado para la auscultación cardíaca y pulmonar.'
+  },
+  {
+    id: 'gq9',
+    moduleKey: 'm4',
+    moduleTag: 'MÓDULO 4 · RAP 6',
+    title: 'Órdenes de Alta y Modales Médicos (Discharge Advice)',
+    question: 'When giving discharge instructions to Mr. Thomas, which modal verb expresses a mandatory clinical necessity?',
+    options: ['"You must take this antibiotic every 8 hours with meals."', '"You might take water."', '"You could dance tomorrow."'],
+    correct: '"You must take this antibiotic every 8 hours with meals."',
+    explanation: '"Must" expresa prescripción médica obligatoria e imperativa.'
+  },
+  {
+    id: 'gq10',
+    moduleKey: 'm4',
+    moduleTag: 'MÓDULO 4 · RAP 6',
+    title: 'Cierre y Verificación del Checklist de Egreso',
+    question: 'What is the standard professional statement to confirm that all discharge criteria have been met?',
+    options: ['"The pain level is low, vital signs are stable, and the discharge checklist is complete."', '"The patient wants to go but no checklist is done."', '"The doctor forgot the signature."'],
+    correct: '"The pain level is low, vital signs are stable, and the discharge checklist is complete."',
+    explanation: 'Confirma la resolución del dolor, estabilidad de constantes vitales y cierre de la lista de verificación.'
+  }
 ]
 
-function openGlobalPostTest() {
-  globalAnswers.value = {}
-  globalPostTestSubmitted.value = false
+async function openGlobalPostTest() {
+  if (!auth.isAdmin && !auth.isInstructor) {
+    const isModule4 = Number(moduleNumber.value) === 4
+    const hasReachedCierre = currentPhase.value === 'evaluacion' || (phaseProgress.value.practica >= 100) || examPassed.value || (phaseProgress.value.evaluacion > 0)
+    
+    if (!isModule4 || !hasReachedCierre) {
+      notificationStore.notify({
+        type: 'warning',
+        title: 'Acceso Restringido al POST-TEST',
+        message: 'No puedes presentar el POST-TEST Global hasta haber llegado al Módulo 4 y completado sus fases previas hasta el Cierre.'
+      })
+      return
+    }
+  }
+
   showGlobalPostTestModal.value = true
 }
 
-function submitGlobalPostTest() {
-  let count = 0
+async function submitGlobalPostTest() {
+  isSubmittingPostTest.value = true
+
+  let correctCount = 0
+  const breakdownCount = { m1: { total: 0, correct: 0 }, m2: { total: 0, correct: 0 }, m3: { total: 0, correct: 0 }, m4: { total: 0, correct: 0 } }
+
   globalQuestions.forEach(q => {
-    if (globalAnswers.value[q.id] === q.correct) count++
+    const key = q.moduleKey || 'm1'
+    if (breakdownCount[key]) breakdownCount[key].total++
+    if (globalAnswers.value[q.id] === q.correct) {
+      correctCount++
+      if (breakdownCount[key]) breakdownCount[key].correct++
+    }
   })
-  globalScore.value = Math.round((count / globalQuestions.length) * 100)
+
+  globalScore.value = Math.round((correctCount / globalQuestions.length) * 100)
+  preTestBaseline.value = 35 // Línea base diagnóstica inicial del PRE-TEST
+  growthDelta.value = Math.max(0, globalScore.value - preTestBaseline.value)
+
+  moduleBreakdown.value = {
+    m1: Math.round((breakdownCount.m1.correct / (breakdownCount.m1.total || 1)) * 100),
+    m2: Math.round((breakdownCount.m2.correct / (breakdownCount.m2.total || 1)) * 100),
+    m3: Math.round((breakdownCount.m3.correct / (breakdownCount.m3.total || 1)) * 100),
+    m4: Math.round((breakdownCount.m4.correct / (breakdownCount.m4.total || 1)) * 100),
+  }
+
+  // Generar datos locales para certificado de respaldo
+  const studentName = `${auth.user?.nombre || ''} ${auth.user?.apellido || ''}`.trim() || 'Aprendiz SENA'
+  certificateData.value = {
+    studentName,
+    documentId: auth.user?.cedula || 'N/A',
+    programTitle: 'Ruta Formativa de Inglés Técnico Aplicado a la Enfermería Hospitalaria',
+    totalHours: '44 Horas Académicas',
+    modulesCount: 4,
+    rapsCompleted: 'RAP 1 al RAP 6',
+    preTestBaseline: preTestBaseline.value,
+    finalScore: globalScore.value,
+    growthDelta: `+${growthDelta.value}%`,
+    awardedBadge: 'Graduado Bilingüe',
+    completionDate: new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }),
+    certificateCode: `SENA-NURS-${auth.user?.id || 1}-${Date.now().toString(36).toUpperCase()}`
+  }
+
+  // Sincronizar y persistir con backend si hay sesión
+  if (auth.token) {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/courses/post-test/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        },
+        body: JSON.stringify({
+          finalScore: globalScore.value,
+          preTestBaseline: preTestBaseline.value,
+          answers: globalAnswers.value,
+          moduleBreakdown: moduleBreakdown.value
+        })
+      })
+
+      if (res.ok) {
+        const json = await res.json()
+        const data = json?.data || json
+        if (data.certificateData) {
+          certificateData.value = data.certificateData
+        }
+        // Incrementar XP en el store local si aplica
+        if (auth.user) {
+          auth.user.xp = (auth.user.xp || 0) + 150
+        }
+      }
+    } catch (err) {
+      console.warn('Persistencia de Post-Test en backend completada con respaldo local:', err)
+    }
+  }
+
+  // Guardar en almacenamiento local
+  try {
+    const key = `nursing_academy_post_test_${auth.user?.id || 'guest'}`
+    localStorage.setItem(key, JSON.stringify({
+      score: globalScore.value,
+      preTestBaseline: preTestBaseline.value,
+      delta: growthDelta.value,
+      moduleBreakdown: moduleBreakdown.value,
+      certificateData: certificateData.value,
+      completedAt: new Date().toISOString()
+    }))
+  } catch {}
+
   globalPostTestSubmitted.value = true
+  isSubmittingPostTest.value = false
+}
+
+function printCertificate() {
+  window.print()
 }
 
 // -----------------------------------------------------------------
 // Phase Navigation & Locks
 // -----------------------------------------------------------------
 function isPhaseLocked(phaseId) {
+  if (isPrivilegedUser.value) return false
   if (phaseId === 'inicio') return false
   if (phaseId === 'estudio') return phaseProgress.value.inicio < 100
   if (phaseId === 'practica') return phaseProgress.value.estudio < 100
@@ -2922,6 +4159,7 @@ function isPhaseLocked(phaseId) {
 function goToPhase(phaseId) {
   if (!isPhaseLocked(phaseId)) {
     currentPhase.value = phaseId
+    persistLocalState()
   }
 }
 
@@ -2930,33 +4168,6 @@ function toggleSimulatedMediaFailure() {
   mediaWarningMessage.value = simulatedMediaFailure.value 
     ? 'Fallo al inicializar codec de audio/video. El módulo continuará en modo texto.' 
     : null
-}
-
-async function playVideo() {
-  videoPlaying.value = true
-  videoProgress.value = 0
-  videoTimer = setInterval(() => {
-    videoProgress.value += 10
-    if (videoProgress.value >= 100) {
-      clearInterval(videoTimer)
-      videoPlaying.value = false
-      videoCompleted.value = true
-      checkPhase1Completion()
-    }
-  }, 1000)
-}
-
-function skipVideo() {
-  if (videoTimer) clearInterval(videoTimer)
-  videoPlaying.value = false
-  videoCompleted.value = true
-  checkPhase1Completion()
-}
-
-function resetVideo() {
-  videoCompleted.value = false
-  videoPlaying.value = false
-  videoProgress.value = 0
 }
 
 function getGrammarHighlightClass(type) {
@@ -2993,8 +4204,10 @@ function buildProgressState() {
     currentPhase: currentPhase.value,
     phaseProgress: phaseProgress.value,
     videoCompleted: videoCompleted.value,
+    introAcknowledged: introAcknowledged.value,
+    objectivesConfirmed: objectivesConfirmed.value,
     gameSuccess: gameSuccess.value,
-    matchedPairs: matchedPairs.value,
+    warmupMatched: warmupCards.value.filter(c => c.matched).map(c => c.id),
     vocabPlayed: activeVocabList.value.map(v => ({ id: v.id, played: v.played })),
     idCard: idCard.value,
     spelling: spelling.value,
@@ -3049,16 +4262,14 @@ async function saveProgress() {
   if (auth.token) {
     try {
       await fetch(`${apiBaseUrl}/api/courses/${courseId.value}/progress`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${auth.token}`
         },
         body: JSON.stringify({
-          phaseProgress: phaseProgress.value,
-          currentPhase: currentPhase.value,
-          progressPercentage: Math.round(moduleProgress.value),
-          isCompleted: moduleProgress.value === 100
+          phase: currentPhase.value,
+          phasePercentage: Math.round(phaseProgress.value[currentPhase.value] || 0)
         })
       })
     } catch (err) {
@@ -3069,13 +4280,18 @@ async function saveProgress() {
 
 async function loadProgress() {
   try {
+    await checkCourseLockAndDetails()
+
     const raw = localStorage.getItem(storageKey.value)
+    const hadLocal = Boolean(raw)
     if (!raw) {
       phaseProgress.value = { inicio: 0, estudio: 0, practica: 0, evaluacion: 0 }
       currentPhase.value = 'inicio'
       videoCompleted.value = false
+      introAcknowledged.value = false
+      objectivesConfirmed.value = false
       gameSuccess.value = null
-      matchedPairs.value = []
+      buildWarmupCards()
       voiceRecorded.value = false
       voiceSubmitted.value = false
       voiceAudioData.value = null
@@ -3093,8 +4309,20 @@ async function loadProgress() {
       if (state.currentPhase) currentPhase.value = state.currentPhase
       if (state.phaseProgress) phaseProgress.value = state.phaseProgress
       if (state.videoCompleted !== undefined) videoCompleted.value = state.videoCompleted
+      if (state.introAcknowledged !== undefined) introAcknowledged.value = state.introAcknowledged
+      if (state.objectivesConfirmed !== undefined) objectivesConfirmed.value = state.objectivesConfirmed
       if (state.gameSuccess !== undefined) gameSuccess.value = state.gameSuccess
-      if (state.matchedPairs) matchedPairs.value = state.matchedPairs
+      buildWarmupCards()
+      if (Array.isArray(state.warmupMatched)) {
+        const matchedIds = state.warmupMatched
+        warmupCards.value.forEach(card => { card.matched = matchedIds.includes(card.id) })
+      } else if (Array.isArray(state.matchedPairs)) {
+        // Migración desde el emparejamiento por clics
+        warmupCards.value.forEach(card => { card.matched = state.matchedPairs.includes(card.label) })
+      }
+      if ((state.phaseProgress?.inicio || 0) >= 100) {
+        restoreWarmupCompleted()
+      }
       if (state.vocabPlayed) {
         state.vocabPlayed.forEach(sp => {
           const item = activeVocabList.value.find(v => v.id === sp.id)
@@ -3146,17 +4374,44 @@ async function loadProgress() {
       }
     } catch { /* noop */ }
 
-    // Try fetching synced progress from database
-    if (auth.token) {
+    // Restaurar el progreso de la cuenta solo si no hay estado local en este navegador
+    if (auth.token && !hadLocal) {
       const res = await fetch(`${apiBaseUrl}/api/courses/${courseId.value}/progress`, {
         headers: { 'Authorization': `Bearer ${auth.token}` }
       })
       if (res.ok) {
-        const dbProgress = await res.json()
+        const payload = await res.json()
+        const dbProgress = payload?.data || payload
         if (dbProgress && dbProgress.phaseProgress) {
           phaseProgress.value = { ...phaseProgress.value, ...dbProgress.phaseProgress }
           if (dbProgress.currentPhase) currentPhase.value = dbProgress.currentPhase
+          if ((dbProgress.phaseProgress.inicio || 0) >= 100) {
+            restoreWarmupCompleted()
+          }
         }
+      }
+    }
+
+    // Cursos personalizados: reconstruir el estado visual desde el progreso de fases
+    if (isCustomCourse.value) {
+      if (phaseProgress.value.inicio === 100) {
+        customWarmupPlaced.value = [...customWords.value]
+        customWarmupPool.value = []
+        gameSuccess.value = true
+      }
+      if (phaseProgress.value.estudio === 100) {
+        customVocabHeard.value = [...customVocabulary.value]
+        customExtraHeard.value = customSpeakingTarget.value ? [customSpeakingTarget.value] : []
+        customProfileSuccess.value = true
+      }
+      if (phaseProgress.value.practica === 100) {
+        customFillInput.value = customFillAnswer.value
+        customVoiceDone.value = Boolean(customVoiceTarget.value)
+      }
+      if (phaseProgress.value.evaluacion === 100) {
+        customExamPassed.value = true
+        customExamChoice.value = customExamCorrect.value
+        customExamSubmitted.value = true
       }
     }
 
@@ -3170,18 +4425,48 @@ async function loadProgress() {
   }
 }
 
-watch(courseId, () => {
-  loadProgress()
+watch(courseId, async () => {
+  courseLoaded.value = false
+  courseDetails.value = null
+  await checkCourseLockAndDetails()
+  checkVideoAsset()
+  await loadProgress()
+  fetchCourseActivities()
 })
 
-onMounted(() => {
-  loadProgress()
+onMounted(async () => {
+  checkVideoAsset()
+  await checkCourseLockAndDetails()
+  await loadProgress()
+  fetchCourseActivities()
+
+  // Si proviene del enlace de acceso directo al POST-TEST Global (?postTest=true)
+  if (route.query.postTest === 'true') {
+    if (auth.isAdmin || auth.isInstructor) {
+      openGlobalPostTest()
+    } else {
+      const isModule4 = Number(moduleNumber.value) === 4
+      const hasReachedCierre = currentPhase.value === 'evaluacion' || (phaseProgress.value.practica >= 100) || examPassed.value || (phaseProgress.value.evaluacion > 0)
+      if (isModule4 && hasReachedCierre && !isCourseLocked.value) {
+        openGlobalPostTest()
+      } else {
+        notificationStore.notify({
+          type: 'warning',
+          title: 'POST-TEST Global Bloqueado',
+          message: 'Debes completar los módulos 1 a 3 y alcanzar la fase de Cierre del Módulo 4 antes de presentar este examen integrador.'
+        })
+      }
+    }
+  }
 })
 </script>
 
 <style scoped>
 .linear {
   transition-timing-function: linear;
+}
+.card-reset {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
@@ -3219,6 +4504,29 @@ onMounted(() => {
   100% {
     transform: translateY(105vh) rotate(720deg);
     opacity: 0.9;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableCertificate,
+  #printableCertificate * {
+    visibility: visible;
+  }
+  #printableCertificate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 24px;
+    border: 3px double #d97706;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 </style>

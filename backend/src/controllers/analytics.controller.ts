@@ -3,9 +3,9 @@ import { AnalyticsService } from '../services/analytics.service.js'
 import { ApiResponse } from '../utils/apiResponse.js'
 
 export class AnalyticsController {
-  static async getAnalytics(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async getAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const data = await AnalyticsService.getAnalytics()
+      const data = await AnalyticsService.getAnalytics(req.user)
       res.json(data)
     } catch (error) {
       next(error)

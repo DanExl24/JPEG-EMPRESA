@@ -28,6 +28,9 @@ router.patch('/admin/games/:id/toggle', GamificationController.toggleArcadeGame)
 // Contenido dinámico para los minijuegos del Arcade (preguntas, vocabulario, pares)
 router.get('/arcade/content', GamificationController.getArcadeContent)
 
+// Partidas y minijuegos superados por el aprendiz autenticado
+router.get('/my-games', GamificationController.getMyGameScores)
+
 // Registro de partidas de mini-juegos y suma de XP (JuegosView.vue)
 router.post('/games/score', GamificationController.recordGameScore)
 

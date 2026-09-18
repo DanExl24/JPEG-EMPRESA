@@ -17,10 +17,10 @@ import { requireRole } from '../middlewares/role.middleware.js'
 const router = Router()
 
 router.get('/', optionalAuthenticate, getActivities)
-router.get('/my-submissions', authenticate, getMySubmissions)
+router.get('/my-submissions', optionalAuthenticate, getMySubmissions)
 router.get('/:id', optionalAuthenticate, getActivityById)
 router.post('/', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), createActivity)
-router.post('/:id/submit', authenticate, submitActivity)
+router.post('/:id/submit', optionalAuthenticate, submitActivity)
 router.get('/:id/submissions/export-csv', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), exportSubmissionsCsv)
 router.get('/:id/submissions', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), getActivitySubmissions)
 router.patch('/:id/submissions/:apprenticeId/review', authenticate, requireRole('ADMIN', 'INSTRUCTOR'), reviewSubmission)

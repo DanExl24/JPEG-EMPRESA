@@ -16,6 +16,18 @@ export class GamificationController {
     }
   }
 
+  static async getMyGameScores(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = Number(req.user?.id)
+      if (!userId) throw new UnauthorizedError()
+
+      const scores = await GamificationService.getMyGameScores(userId)
+      ApiResponse.success(res, scores)
+    } catch (error) {
+      next(error)
+    }
+  }
+
   static async recordGameScore(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = Number(req.user?.id)

@@ -22,6 +22,10 @@
               <span v-if="isTeacherTestMode" class="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
                 Modo Prueba Docente
               </span>
+              <span v-else-if="isCurrentGameReview" class="bg-amber-100 text-amber-900 border border-amber-200 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">replay</span>
+                Modo Repaso
+              </span>
               <span v-else class="bg-blue-100 text-[#006688] text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
                 Partida Oficial
               </span>
@@ -31,9 +35,13 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <div class="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 text-xs font-black text-[#006688]">
+          <div v-if="!isCurrentGameReview" class="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 text-xs font-black text-[#006688]">
             <span class="material-symbols-outlined text-sm">emoji_events</span>
             Premio: +{{ currentGameInstance?.pts || 100 }} XP
+          </div>
+          <div v-else class="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 text-xs font-black text-amber-800">
+            <span class="material-symbols-outlined text-sm">replay</span>
+            Repaso (XP ya obtenido)
           </div>
           <button 
             @click="quitGame" 
@@ -44,12 +52,25 @@
         </div>
       </div>
 
+      <!-- Banner Informativo de Modo Repaso -->
+      <div v-if="isCurrentGameReview && !gameFinished" class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3.5 text-amber-950 shadow-xs animate-fade-in">
+        <div class="w-9 h-9 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 shadow-xs">
+          <span class="material-symbols-outlined text-xl">replay</span>
+        </div>
+        <div class="space-y-0.5 text-left">
+          <p class="text-xs font-black">Modo Repaso Activo</p>
+          <p class="text-[11px] text-amber-800 leading-snug">
+            Ya completaste este minijuego. Puedes practicar cuantas veces quieras para afianzar tus conocimientos y terminología clínica. Los puntos de XP se acreditan una sola vez en la primera victoria.
+          </p>
+        </div>
+      </div>
+
       <!-- ── MOTOR 1: WARM-UP DRAG MATCH (CALENTAMIENTO) ── -->
       <div v-if="activeEngine === 'warmup_drag_match'" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
         <div v-if="!gameFinished" class="space-y-6">
           <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <span class="text-[10px] font-black uppercase tracking-wider text-blue-700">Ronda {{ currentRoundIndex + 1 }} de {{ rounds.length }}</span>
+              <span class="text-[10px] font-black uppercase tracking-wider text-blue-700">Ronda {{ currentRoundIndex + 1 }} de {{ activeRounds.length }}</span>
               <p class="text-sm font-bold text-gray-800">{{ currentRound.theme }}</p>
             </div>
             <span class="text-xs font-semibold text-gray-500">Arrastra cada elemento a su casilla en inglés</span>
@@ -119,7 +140,7 @@
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
               }`"
             >
-              {{ currentRoundIndex === rounds.length - 1 ? 'Finalizar Calentamiento' : 'Siguiente Ronda' }}
+              {{ currentRoundIndex === activeRounds.length - 1 ? 'Finalizar Calentamiento' : 'Siguiente Ronda' }}
               <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>
@@ -134,8 +155,12 @@
             <h3 class="text-xl font-black text-gray-800">¡Calentamiento Superado!</h3>
             <p class="text-xs text-gray-600">Completaste las 4 rondas de terminología médica.</p>
             <div class="pt-2">
-              <span class="inline-block bg-green-100 text-green-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-green-100 text-green-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ currentGameInstance?.pts || 100 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Añadidos' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -237,8 +262,12 @@
               Acertaste <strong class="text-gray-900 font-black">{{ triviaCorrectCount }}</strong> de <strong class="text-gray-900 font-black">{{ triviaList.length }}</strong> preguntas.
             </p>
             <div class="pt-2">
-              <span class="inline-block bg-emerald-100 text-emerald-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-emerald-100 text-emerald-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ triviaScore }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -299,8 +328,12 @@
             <h3 class="text-xl font-black text-gray-800">¡Tablero Completado!</h3>
             <p class="text-xs text-gray-600">Emparejaste correctamente todos los términos clínicos.</p>
             <div class="pt-2">
-              <span class="inline-block bg-orange-100 text-orange-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-orange-100 text-orange-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ currentGameInstance?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -388,8 +421,12 @@
               Reconociste correctamente <strong class="text-gray-900 font-black">{{ listeningCorrectCount }}</strong> de <strong class="text-gray-900 font-black">{{ listeningList.length }}</strong> términos clínicos.
             </p>
             <div class="pt-2">
-              <span class="inline-block bg-purple-100 text-purple-800 font-black text-sm px-3 py-1 rounded-full">
+              <span v-if="!isCurrentGameReview" class="inline-block bg-purple-100 text-purple-800 font-black text-sm px-3 py-1 rounded-full">
                 +{{ currentGameInstance?.pts || 80 }} XP {{ isTeacherTestMode ? '(Simulado)' : 'Ganados' }}
+              </span>
+              <span v-else class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-xs px-3.5 py-1.5 rounded-full border border-amber-200">
+                <span class="material-symbols-outlined text-sm text-amber-700">replay</span>
+                Modo Repaso Superado (XP ya acreditado)
               </span>
             </div>
           </div>
@@ -402,6 +439,23 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Fallback en caso de que activeEngine no coincida con ningún motor conocido -->
+      <div v-else class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center space-y-4">
+        <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+          <span class="material-symbols-outlined text-3xl">sports_esports</span>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-base font-black text-gray-800">Motor de Minijuego no Disponible</h4>
+          <p class="text-xs text-gray-500">Este minijuego está en configuración o su plantilla aún no está disponible.</p>
+        </div>
+        <button 
+          @click="quitGame" 
+          class="px-5 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
+        >
+          Volver al Catálogo de Juegos
+        </button>
       </div>
     </div>
 
@@ -765,15 +819,41 @@
                     <p class="text-xs text-gray-400 font-semibold">{{ game.subtitle || 'Minijuego Clínico' }}</p>
                   </div>
                 </div>
-                <span class="bg-amber-100 text-amber-900 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm text-amber-600">emoji_events</span>
-                  +{{ game.pts }} XP
-                </span>
+                <div class="flex items-center gap-2">
+                  <span 
+                    v-if="isGameCompleted(game)"
+                    class="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs"
+                  >
+                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                    Completado
+                  </span>
+                  <span 
+                    v-else
+                    class="bg-sky-50 text-sky-700 border border-sky-100 text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-xs">schedule</span>
+                    Pendiente
+                  </span>
+                  <span class="bg-amber-100 text-amber-900 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm text-amber-600">emoji_events</span>
+                    +{{ game.pts }} XP
+                  </span>
+                </div>
               </div>
 
               <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
                 {{ game.description || game.desc }}
               </p>
+
+              <div v-if="isGameCompleted(game)" class="bg-emerald-50/80 border border-emerald-100 rounded-2xl p-3 flex items-center justify-between gap-3 text-[11px] text-emerald-900">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base text-emerald-600">verified</span>
+                  <span>¡Minijuego superado! Ya aseguraste tus puntos de experiencia.</span>
+                </div>
+                <span class="bg-emerald-200/70 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">
+                  Modo Repaso
+                </span>
+              </div>
             </div>
 
             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -785,10 +865,14 @@
               </div>
               <button 
                 @click="startApprenticeGame(game)"
-                class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                :class="`px-6 py-2.5 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isGameCompleted(game)
+                    ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-200'
+                    : 'bg-[#006688] hover:bg-[#004e69] text-white shadow-blue-200'
+                }`"
               >
-                <span>Jugar Ahora</span>
-                <span class="material-symbols-outlined text-sm">play_arrow</span>
+                <span>{{ isGameCompleted(game) ? 'Repasar Juego' : 'Jugar Ahora' }}</span>
+                <span class="material-symbols-outlined text-sm">{{ isGameCompleted(game) ? 'replay' : 'play_arrow' }}</span>
               </button>
             </div>
           </div>
@@ -855,7 +939,7 @@
         </div>
 
         <!-- Form Body con Scroll -->
-        <form @submit.prevent="saveGameForm" class="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
+        <form @submit.prevent="saveGameForm" novalidate class="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
           
           <!-- PESTAÑA 1: AJUSTES GENERALES -->
           <div v-show="modalTab === 'general'" class="space-y-4">
@@ -880,6 +964,30 @@
                 placeholder="Ej: Desafío de cálculo de dosis y antibióticos" 
                 class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 font-semibold text-gray-800 focus:bg-white focus:border-[#006688] focus:outline-none"
               />
+            </div>
+
+            <!-- Icono del Minijuego -->
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Icono Representativo del Minijuego</label>
+              <button 
+                type="button" 
+                @click="openItemIconPicker(gameForm, 'Icono de la Tarjeta del Juego', 'Elige el icono de Material Symbols que identifica a este minijuego')"
+                class="w-full bg-gray-50 hover:bg-sky-50/70 border border-gray-200 hover:border-[#006688] rounded-xl px-3.5 py-2 flex items-center justify-between text-left transition-all cursor-pointer group shadow-sm"
+              >
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-sky-100 text-[#006688] flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-xl">{{ gameForm.icon || 'sports_esports' }}</span>
+                  </div>
+                  <div>
+                    <p class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                      <span>{{ gameForm.icon || 'sports_esports' }}</span>
+                      <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Icono Activo</span>
+                    </p>
+                    <p class="text-[10px] text-gray-400">Clic para abrir el catálogo y cambiar este icono</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-base text-gray-400 group-hover:text-[#006688]">palette</span>
+              </button>
             </div>
 
             <!-- Mecánica / Plantilla de Juego -->
@@ -1315,12 +1423,16 @@
                 </div>
 
                 <div class="space-y-2">
-                  <label class="font-bold text-gray-600 block">Elementos Arrastrables y sus Destinos:</label>
+                  <div class="flex items-center justify-between">
+                    <label class="font-bold text-gray-700 block">Elementos Arrastrables y sus Destinos:</label>
+                    <span class="text-[10px] text-gray-400">Haz clic en el selector de cada fila para elegir un icono del catálogo</span>
+                  </div>
                   <div 
                     v-for="(it, itIdx) in round.items" 
                     :key="itIdx"
                     class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-200"
                   >
+                    <!-- Nombre / Etiqueta -->
                     <div class="sm:col-span-4">
                       <input 
                         v-model="it.label" 
@@ -1330,16 +1442,29 @@
                         class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-semibold text-gray-800 focus:border-[#006688] focus:outline-none"
                       />
                     </div>
-                    <div class="sm:col-span-2 flex items-center gap-1">
-                      <span class="material-symbols-outlined text-gray-500 text-sm">{{ it.icon || 'star' }}</span>
-                      <input 
-                        v-model="it.icon" 
-                        type="text" 
-                        placeholder="Icono" 
-                        class="w-full bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-1 text-gray-600 text-[11px] focus:border-[#006688] focus:outline-none"
-                      />
+                    <!-- Selector Visual de Icono -->
+                    <div class="sm:col-span-3">
+                      <button 
+                        type="button" 
+                        @click="openItemIconPicker(it, `Icono para '${it.label || 'Elemento'}'`, 'Selecciona un icono pedagógico visual del catálogo')"
+                        class="w-full bg-gray-50 hover:bg-sky-50/80 border border-gray-200 hover:border-[#006688] rounded-lg px-2 py-1 flex items-center justify-between gap-1 text-left transition-all cursor-pointer group shadow-sm"
+                        title="Hacer clic para abrir el catálogo y seleccionar icono"
+                      >
+                        <div class="flex items-center gap-1.5 min-w-0">
+                          <span class="material-symbols-outlined text-base text-[#006688] group-hover:scale-110 transition-transform flex-shrink-0">
+                            {{ it.icon || 'star' }}
+                          </span>
+                          <span class="text-[11px] font-bold text-gray-700 truncate">
+                            {{ it.icon || 'Elegir icono' }}
+                          </span>
+                        </div>
+                        <span class="material-symbols-outlined text-xs text-gray-400 group-hover:text-[#006688] flex-shrink-0">
+                          expand_more
+                        </span>
+                      </button>
                     </div>
-                    <div class="sm:col-span-5">
+                    <!-- Expresión en Inglés -->
+                    <div class="sm:col-span-4">
                       <input 
                         v-model="it.match" 
                         type="text" 
@@ -1348,6 +1473,7 @@
                         class="w-full bg-blue-50/50 border border-blue-200 rounded-lg px-2 py-1 font-bold text-blue-900 focus:border-[#006688] focus:outline-none"
                       />
                     </div>
+                    <!-- Botón Eliminar Fila -->
                     <div class="sm:col-span-1 text-right">
                       <button 
                         type="button" 
@@ -1410,8 +1536,9 @@
                 :disabled="savingGame"
                 class="px-6 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                <span class="material-symbols-outlined text-base">save</span>
-                {{ isEditingGame ? 'Guardar Cambios' : 'Crear Minijuego' }}
+                <span v-if="savingGame" class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                <span v-else class="material-symbols-outlined text-base">save</span>
+                {{ savingGame ? 'Guardando...' : (isEditingGame ? 'Guardar Cambios' : 'Crear Minijuego') }}
               </button>
             </div>
           </div>
@@ -1420,18 +1547,93 @@
       </div>
     </div>
 
+    <!-- Modal Selector Visual de Iconos Reutilizable -->
+    <IconPickerModal
+      v-model="activeIconModelValue"
+      :is-open="isIconPickerOpen"
+      :title="iconPickerTitle"
+      :subtitle="iconPickerSubtitle"
+      @select="onIconSelected"
+      @close="isIconPickerOpen = false"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
+import { getApiBaseUrl } from '../../lib/api'
+import { apiFetch } from '../../lib/apiClient'
+import IconPickerModal from '../../components/common/IconPickerModal.vue'
+
+const route = useRoute()
+const router = useRouter()
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || ''
+const apiBaseUrl = getApiBaseUrl()
+
+// Selector de Iconos para minijuegos y elementos pedagógicos
+const isIconPickerOpen = ref(false)
+const iconPickerTitle = ref('Selector de Iconos')
+const iconPickerSubtitle = ref('Selecciona un icono pedagógico visual del catálogo')
+const activeItemTarget = ref(null)
+
+const activeIconModelValue = computed({
+  get: () => activeItemTarget.value?.icon || '',
+  set: (val) => {
+    if (activeItemTarget.value) {
+      activeItemTarget.value.icon = val
+    }
+  }
+})
+
+function openItemIconPicker(target, title = 'Selector de Iconos', subtitle = 'Selecciona un icono pedagógico visual del catálogo') {
+  activeItemTarget.value = target
+  iconPickerTitle.value = title
+  iconPickerSubtitle.value = subtitle
+  isIconPickerOpen.value = true
+}
+
+function onIconSelected(selectedIcon) {
+  if (activeItemTarget.value) {
+    activeItemTarget.value.icon = selectedIcon
+  }
+  isIconPickerOpen.value = false
+}
+
+// Historial y estado de juegos del aprendiz
+const myCompletedScores = ref([])
+const isCurrentGameReview = ref(false)
+
+function isGameCompleted(game) {
+  if (!game) return false
+  const keys = [game.key, game.template, String(game.id)].filter(Boolean)
+  return myCompletedScores.value.some(s => keys.includes(s.gameKey))
+}
+
+function getGameScore(game) {
+  if (!game) return null
+  const keys = [game.key, game.template, String(game.id)].filter(Boolean)
+  return myCompletedScores.value.find(s => keys.includes(s.gameKey))
+}
+
+async function fetchMyGameHistory() {
+  if (!auth.isAuthenticated) return
+  try {
+    const res = await apiFetch('/api/gamification/my-games')
+    const list = res?.data || res
+    if (Array.isArray(list)) {
+      myCompletedScores.value = list
+    }
+  } catch (err) {
+    console.error('Error al cargar historial de minijuegos del aprendiz:', err)
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 // STATE & NAVIGATION
@@ -1818,59 +2020,219 @@ function openEditGameModal(game) {
 }
 
 async function saveGameForm() {
+  // 1. Validar Pestaña 1 (Ajustes Generales)
+  if (!gameForm.value.name?.trim()) {
+    modalTab.value = 'general'
+    notificationStore.notify({
+      type: 'error',
+      title: 'Nombre Requerido',
+      message: 'Por favor ingresa un nombre para el minijuego.'
+    })
+    return
+  }
+
+  if (!gameForm.value.description?.trim()) {
+    modalTab.value = 'general'
+    notificationStore.notify({
+      type: 'error',
+      title: 'Descripción Requerida',
+      message: 'Por favor ingresa la descripción pedagógica del minijuego.'
+    })
+    return
+  }
+
+  if (!gameForm.value.pts || Number(gameForm.value.pts) <= 0) {
+    modalTab.value = 'general'
+    notificationStore.notify({
+      type: 'error',
+      title: 'Puntos Inválidos',
+      message: 'Los puntos XP deben ser un número mayor a 0.'
+    })
+    return
+  }
+
+  // 2. Validar Pestaña 2 (Dinámica & Contenido según plantilla)
+  if (gameForm.value.template === 'trivia_medica') {
+    const questions = gameForm.value.config?.questions || []
+    if (questions.length === 0) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Preguntas Requeridas',
+        message: 'La trivia debe contener al menos una pregunta.'
+      })
+      return
+    }
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i]
+      if (!q.question?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Pregunta Incompleta',
+          message: `Ingresa el enunciado de la Pregunta #${i + 1}.`
+        })
+        return
+      }
+      if (!q.correctAnswer?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Respuesta Incompleta',
+          message: `Ingresa la respuesta correcta de la Pregunta #${i + 1}.`
+        })
+        return
+      }
+      if (!q.options) q.options = []
+      q.options[0] = q.correctAnswer
+    }
+  } else if (gameForm.value.template === 'warmup_drag_match') {
+    const rounds = gameForm.value.config?.rounds || []
+    if (rounds.length === 0) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Rondas Requeridas',
+        message: 'Debes configurar al menos una ronda para Warm-up Drag Match.'
+      })
+      return
+    }
+    for (let r = 0; r < rounds.length; r++) {
+      const round = rounds[r]
+      if (!round.theme?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Título de Ronda Incompleto',
+          message: `Ingresa el título temático de la Ronda #${r + 1}.`
+        })
+        return
+      }
+      const items = round.items || []
+      if (items.length === 0) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Elementos Requeridos',
+          message: `La Ronda #${r + 1} debe contener al menos un elemento arrastrable.`
+        })
+        return
+      }
+      for (let it = 0; it < items.length; it++) {
+        const item = items[it]
+        if (!item.label?.trim()) {
+          modalTab.value = 'interactive'
+          notificationStore.notify({
+            type: 'error',
+            title: 'Nombre de Elemento Incompleto',
+            message: `Ingresa el nombre del elemento #${it + 1} en la Ronda #${r + 1}.`
+          })
+          return
+        }
+        if (!item.match?.trim()) {
+          modalTab.value = 'interactive'
+          notificationStore.notify({
+            type: 'error',
+            title: 'Expresión Requerida',
+            message: `Ingresa la expresión en inglés para "${item.label}" en la Ronda #${r + 1}.`
+          })
+          return
+        }
+      }
+    }
+  } else if (gameForm.value.template === 'drug_match') {
+    const pairs = gameForm.value.config?.pairs || []
+    if (pairs.length < 2) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Parejas Requeridas',
+        message: 'Configura al menos 2 parejas de términos para el juego de emparejamiento.'
+      })
+      return
+    }
+    for (let p = 0; p < pairs.length; p++) {
+      const pair = pairs[p]
+      if (!pair.wordEn?.trim() || !pair.wordEs?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Pareja Incompleta',
+          message: `Completa el término en inglés y la traducción en español de la Pareja #${p + 1}.`
+        })
+        return
+      }
+    }
+  } else if (gameForm.value.template === 'listening_challenge') {
+    const items = gameForm.value.config?.items || []
+    if (items.length === 0) {
+      modalTab.value = 'interactive'
+      notificationStore.notify({
+        type: 'error',
+        title: 'Términos Requeridos',
+        message: 'Debes configurar al menos un término para el desafío auditivo.'
+      })
+      return
+    }
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (!item.wordEn?.trim() || !item.wordEs?.trim()) {
+        modalTab.value = 'interactive'
+        notificationStore.notify({
+          type: 'error',
+          title: 'Término Incompleto',
+          message: `Completa la palabra en inglés y su traducción para el término #${i + 1}.`
+        })
+        return
+      }
+      if (!item.options) item.options = []
+      item.options[0] = item.wordEn
+    }
+  }
+
   savingGame.value = true
-  const token = getToken()
   try {
-    const url = isEditingGame.value 
-      ? `${apiBaseUrl}/api/gamification/admin/games/${editingGameId.value}`
-      : `${apiBaseUrl}/api/gamification/admin/games`
+    const endpoint = isEditingGame.value 
+      ? `/api/gamification/admin/games/${editingGameId.value}`
+      : `/api/gamification/admin/games`
     
     const method = isEditingGame.value ? 'PUT' : 'POST'
 
-    // Asignar colores/iconos según la plantilla seleccionada si no tiene
+    // Iconos y estilos por defecto si el usuario no los personalizó
     if (gameForm.value.template === 'trivia_medica') {
-      gameForm.value.icon = 'quiz'
-      gameForm.value.color = 'text-emerald-500'
-      gameForm.value.bg = 'bg-emerald-50'
-      // Sincronizar respuesta correcta como opción 0
-      if (gameForm.value.config?.questions) {
-        gameForm.value.config.questions.forEach((q) => {
-          if (!q.options) q.options = []
-          q.options[0] = q.correctAnswer
-        })
-      }
+      gameForm.value.icon = gameForm.value.icon || 'quiz'
+      gameForm.value.color = gameForm.value.color || 'text-emerald-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-emerald-50'
     } else if (gameForm.value.template === 'drug_match') {
-      gameForm.value.icon = 'medication'
-      gameForm.value.color = 'text-orange-500'
-      gameForm.value.bg = 'bg-orange-50'
+      gameForm.value.icon = gameForm.value.icon || 'medication'
+      gameForm.value.color = gameForm.value.color || 'text-orange-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-orange-50'
     } else if (gameForm.value.template === 'listening_challenge') {
-      gameForm.value.icon = 'hearing'
-      gameForm.value.color = 'text-purple-500'
-      gameForm.value.bg = 'bg-purple-50'
-      if (gameForm.value.config?.items) {
-        gameForm.value.config.items.forEach((item) => {
-          if (!item.options) item.options = []
-          item.options[0] = item.wordEn
-        })
-      }
+      gameForm.value.icon = gameForm.value.icon || 'hearing'
+      gameForm.value.color = gameForm.value.color || 'text-purple-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-purple-50'
     } else if (gameForm.value.template === 'warmup_drag_match') {
-      gameForm.value.icon = 'pan_tool'
-      gameForm.value.color = 'text-blue-500'
-      gameForm.value.bg = 'bg-blue-50'
+      gameForm.value.icon = gameForm.value.icon || 'pan_tool'
+      gameForm.value.color = gameForm.value.color || 'text-blue-500'
+      gameForm.value.bg = gameForm.value.bg || 'bg-blue-50'
     }
 
-    const res = await fetch(url, {
+    const resData = await apiFetch(endpoint, {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
       body: JSON.stringify(gameForm.value)
     })
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.message || 'Error al guardar el minijuego.')
+    const savedGame = resData?.data || resData
+
+    if (savedGame) {
+      if (isEditingGame.value) {
+        const idx = arcadeGamesList.value.findIndex(g => g.id === savedGame.id)
+        if (idx !== -1) {
+          arcadeGamesList.value[idx] = { ...arcadeGamesList.value[idx], ...savedGame }
+        }
+      } else {
+        arcadeGamesList.value.unshift(savedGame)
+      }
     }
 
     notificationStore.notify({
@@ -1883,11 +2245,11 @@ async function saveGameForm() {
     await loadAdminData()
     await fetchArcadeContent()
   } catch (err) {
-    console.error(err)
+    console.error('[saveGameForm error]:', err)
     notificationStore.notify({
       type: 'error',
-      title: 'Error',
-      message: err.message || 'No se pudo guardar el juego.'
+      title: 'Error al Guardar',
+      message: err.message || 'No se pudo guardar el minijuego. Inténtalo de nuevo.'
     })
   } finally {
     savingGame.value = false
@@ -1896,14 +2258,10 @@ async function saveGameForm() {
 
 async function deleteGame(game) {
   if (!confirm(`¿Estás seguro de que deseas eliminar el minijuego "${game.name}"?`)) return
-  const token = getToken()
   try {
-    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games/${game.id}`, {
-      method: 'DELETE',
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    await apiFetch(`/api/gamification/admin/games/${game.id}`, {
+      method: 'DELETE'
     })
-
-    if (!res.ok) throw new Error('Error al eliminar el juego.')
 
     notificationStore.notify({
       type: 'success',
@@ -1911,6 +2269,7 @@ async function deleteGame(game) {
       message: 'El minijuego fue retirado del arcade.'
     })
 
+    arcadeGamesList.value = arcadeGamesList.value.filter(g => g.id !== game.id)
     await loadAdminData()
     await fetchArcadeContent()
   } catch (err) {
@@ -1924,23 +2283,18 @@ async function deleteGame(game) {
 }
 
 async function toggleGameStatus(game) {
-  const token = getToken()
   try {
-    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games/${game.id}/toggle`, {
-      method: 'PATCH',
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    const res = await apiFetch(`/api/gamification/admin/games/${game.id}/toggle`, {
+      method: 'PATCH'
     })
 
-    if (!res.ok) throw new Error('Error al cambiar estado.')
-
-    const data = await res.json()
-    const updated = data.data || data
-    game.active = updated.active
+    const updated = res?.data || res
+    game.active = updated?.active ?? !game.active
 
     notificationStore.notify({
       type: 'info',
-      title: updated.active ? 'Juego Activado' : 'Juego Pausado',
-      message: `El juego ahora está ${updated.active ? 'visible' : 'oculto'} para los aprendices.`
+      title: game.active ? 'Juego Activado' : 'Juego Pausado',
+      message: `El juego ahora está ${game.active ? 'visible' : 'oculto'} para los aprendices.`
     })
   } catch (err) {
     console.error(err)
@@ -1953,34 +2307,18 @@ async function toggleGameStatus(game) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// TOKEN HELPER
-// ─────────────────────────────────────────────────────────────
-function getToken() {
-  if (auth.token) return auth.token
-  if (auth.user?.token) return auth.user.token
-  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
-  return stored ? JSON.parse(stored)?.token : null
-}
-
-// ─────────────────────────────────────────────────────────────
 // DATA FETCHING
 // ─────────────────────────────────────────────────────────────
 async function loadAdminData() {
   if (!auth.isAdmin && !auth.isInstructor) return
   adminLoading.value = true
   try {
-    const token = getToken()
-    const res = await fetch(`${apiBaseUrl}/api/gamification/admin/games-overview`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    })
-    if (res.ok) {
-      const data = await res.json()
-      const payload = data.data || data
-      if (payload.stats) adminStats.value = payload.stats
-      if (payload.recentScores) recentScores.value = payload.recentScores
-      if (payload.games && Array.isArray(payload.games) && payload.games.length > 0) {
-        arcadeGamesList.value = payload.games
-      }
+    const res = await apiFetch('/api/gamification/admin/games-overview')
+    const payload = res?.data || res
+    if (payload?.stats) adminStats.value = payload.stats
+    if (payload?.recentScores) recentScores.value = payload.recentScores
+    if (payload?.games && Array.isArray(payload.games) && payload.games.length > 0) {
+      arcadeGamesList.value = payload.games
     }
   } catch (err) {
     console.error('Error al cargar datos de gamificación:', err)
@@ -1991,25 +2329,19 @@ async function loadAdminData() {
 
 async function fetchArcadeContent() {
   try {
-    const token = getToken()
-    const res = await fetch(`${apiBaseUrl}/api/gamification/arcade/content`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    })
-    if (res.ok) {
-      const data = await res.json()
-      const payload = data.data || data
-      if (payload.catalog && Array.isArray(payload.catalog) && payload.catalog.length > 0) {
-        arcadeGamesList.value = payload.catalog
-      }
-      if (payload.trivia && payload.trivia.length > 0) {
-        triviaList.value = payload.trivia
-      }
-      if (payload.pairs && payload.pairs.length > 0) {
-        setupMatchCardsFromData(payload.pairs)
-      }
-      if (payload.listening && payload.listening.length > 0) {
-        listeningList.value = payload.listening
-      }
+    const res = await apiFetch('/api/gamification/arcade/content')
+    const payload = res?.data || res
+    if (payload?.catalog && Array.isArray(payload.catalog) && payload.catalog.length > 0) {
+      arcadeGamesList.value = payload.catalog
+    }
+    if (payload?.trivia && payload.trivia.length > 0) {
+      triviaList.value = payload.trivia
+    }
+    if (payload?.pairs && payload.pairs.length > 0) {
+      setupMatchCardsFromData(payload.pairs)
+    }
+    if (payload?.listening && payload.listening.length > 0) {
+      listeningList.value = payload.listening
     }
   } catch (err) {
     console.error('Error al cargar contenido de arcade:', err)
@@ -2035,26 +2367,39 @@ function launchGame(gameOrKey) {
 
   if (typeof gameOrKey === 'string') {
     keyOrTemplate = gameOrKey
-    game = arcadeGamesList.value.find(g => g.key === gameOrKey || g.template === gameOrKey)
+    game = arcadeGamesList.value.find(g => g.key === gameOrKey || g.template === gameOrKey || String(g.id) === String(gameOrKey))
   } else if (gameOrKey && typeof gameOrKey === 'object') {
     game = gameOrKey
-    keyOrTemplate = game.template || game.key
+    keyOrTemplate = game.key || game.template
   }
+
+  const selectedKey = game?.key || keyOrTemplate || 'warmup_drag_match'
 
   currentGameInstance.value = game || {
     name: 'Minijuego Clínico',
     subtitle: 'Práctica de enfermería',
     pts: 100,
-    key: keyOrTemplate
+    key: selectedKey
   }
 
-  activeGame.value = game?.key || keyOrTemplate
-  activeEngine.value = game?.template || keyOrTemplate
+  activeGame.value = selectedKey
+  activeEngine.value = game?.template || keyOrTemplate || 'warmup_drag_match'
+  isCurrentGameReview.value = isGameCompleted(currentGameInstance.value || { key: selectedKey, template: activeEngine.value })
   gameFinished.value = false
 
-  const customConfig = game?.config
-    ? (typeof game.config === 'string' ? JSON.parse(game.config) : game.config)
-    : null
+  // Sincronizar ruta en la URL si difiere
+  if (route.params.gameId !== selectedKey) {
+    router.replace(`/dashboard/juegos/${selectedKey}`)
+  }
+
+  let customConfig = null
+  if (game?.config) {
+    try {
+      customConfig = typeof game.config === 'string' ? JSON.parse(game.config) : game.config
+    } catch {
+      customConfig = null
+    }
+  }
 
   if (activeEngine.value === 'warmup_drag_match') {
     resetDragGame(customConfig)
@@ -2072,7 +2417,11 @@ function quitGame() {
   activeEngine.value = null
   currentGameInstance.value = null
   isTeacherTestMode.value = false
+  isCurrentGameReview.value = false
   gameFinished.value = false
+  if (route.params.gameId) {
+    router.push('/dashboard/juegos')
+  }
   if (auth.isAdmin || auth.isInstructor) {
     loadAdminData()
   }
@@ -2087,36 +2436,53 @@ async function recordFinalScore(scoreAwarded, roundsCount = 4) {
   }
 
   const finalPts = currentGameInstance.value?.pts || scoreAwarded
+  const currentKey = activeGame.value || currentGameInstance.value?.key || currentGameInstance.value?.template
 
   try {
-    const token = getToken()
-    const res = await fetch(`${apiBaseUrl}/api/gamification/games/score`, {
+    const res = await apiFetch('/api/gamification/games/score', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
       body: JSON.stringify({
-        gameKey: activeGame.value,
+        gameKey: currentKey,
         score: finalPts,
         roundsCompleted: roundsCount
       })
     })
 
-    if (res.ok) {
-      const data = await res.json()
-      const payload = data.data || data
-      if (payload.currentTotalXp && auth.user) {
-        auth.user.xp = payload.currentTotalXp
-      }
+    const payload = res?.data || res
+
+    // Registrar en el historial local del aprendiz para marcar como completado
+    if (payload?.gameScoreId || payload?.success) {
+      myCompletedScores.value.push({
+        id: payload.gameScoreId,
+        gameKey: currentKey,
+        score: finalPts,
+        playedAt: new Date().toISOString()
+      })
+    }
+
+    // Actualizar usuario reactivo en store y persistir en storage
+    await auth.checkAuth()
+
+    if (payload?.isReview) {
+      notificationStore.notify({
+        type: 'info',
+        title: 'Repaso Completado',
+        message: '¡Excelente práctica de repaso! Reforzaste tus conocimientos clínicos.'
+      })
+    } else {
       notificationStore.notify({
         type: 'success',
-        title: `+${finalPts} XP Ganados`,
+        title: `+${payload?.scoreAwarded ?? finalPts} XP Ganados`,
         message: '¡Excelente desempeño en el arcade clínico!'
       })
     }
   } catch (err) {
     console.error('Error al registrar XP de partida:', err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al registrar puntaje',
+      message: 'No se pudo guardar el progreso de la partida.'
+    })
   }
 }
 
@@ -2164,6 +2530,7 @@ const DEFAULT_DRAG_ROUNDS = [
 ]
 
 const activeRounds = ref([...DEFAULT_DRAG_ROUNDS])
+const rounds = computed(() => activeRounds.value)
 const currentRoundCards = ref([])
 const currentRoundTargets = ref([])
 
@@ -2563,12 +2930,33 @@ function formatDate(dateStr) {
 // ─────────────────────────────────────────────────────────────
 // LIFECYCLE
 // ─────────────────────────────────────────────────────────────
+function checkRouteGame() {
+  const gameId = route.params.gameId
+  if (gameId && activeGame.value !== gameId) {
+    const found = arcadeGamesList.value.find(g => g.key === gameId || g.template === gameId || String(g.id) === String(gameId))
+    launchGame(found || gameId)
+  }
+}
+
+watch(() => route.params.gameId, (newGameId) => {
+  if (newGameId && activeGame.value !== newGameId) {
+    const found = arcadeGamesList.value.find(g => g.key === newGameId || g.template === newGameId || String(g.id) === String(newGameId))
+    launchGame(found || newGameId)
+  } else if (!newGameId && activeGame.value) {
+    activeGame.value = null
+    activeEngine.value = null
+    currentGameInstance.value = null
+  }
+})
+
 onMounted(async () => {
   setupMatchCardsFromData()
   if (auth.isAdmin || auth.isInstructor) {
     await loadAdminData()
   }
   await fetchArcadeContent()
+  await fetchMyGameHistory()
+  checkRouteGame()
 })
 </script>
 

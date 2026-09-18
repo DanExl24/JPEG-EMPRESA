@@ -76,10 +76,6 @@
           <p class="text-xs text-gray-400">{{ today }}</p>
         </div>
         <div class="flex items-center gap-3">
-          <button class="relative w-9 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition-colors">
-            <span class="material-symbols-outlined text-gray-500 text-xl">notifications</span>
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
-          </button>
           <button class="w-9 h-9 rounded-xl bg-[#006688] flex items-center justify-center text-white text-sm font-bold">
             {{ userInitials }}
           </button>
@@ -238,6 +234,8 @@ const pageTitleKeys = {
 
 const currentPageTitle = computed(() => {
   if (route.path.startsWith('/dashboard/actividades/')) return t('nav.activities')
+  if (route.path.startsWith('/dashboard/juegos/')) return t('nav.games')
+  if (route.path.startsWith('/dashboard/cursos/')) return t('nav.courses')
   const key = pageTitleKeys[route.path]
   return key ? t(key) : t('nav.dashboard')
 })

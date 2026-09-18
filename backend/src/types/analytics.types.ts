@@ -17,12 +17,34 @@ export interface CourseCompletionMetricDto {
   rate: number
 }
 
+export interface AtRiskLearnerDto {
+  id: number
+  name: string
+  email: string
+  failedCount: number
+  totalSubmissions: number
+  successRate: number
+  lastActivity: string
+  status: 'Riesgo Alto' | 'Seguimiento' | 'Al Día'
+}
+
+export interface ProgramDistributionDto {
+  program: string
+  cohortsCount: number
+  apprenticesCount: number
+}
+
 export interface AnalyticsSummaryDto {
+  role?: 'ADMIN' | 'INSTRUCTOR'
   kpis: KpiCardDto[]
-  monthlyEnrollments: MonthlyMetricDto[]
-  completionRates: CourseCompletionMetricDto[]
+  chartTitle?: string
+  monthlyEnrollments?: MonthlyMetricDto[]
+  completionRates?: CourseCompletionMetricDto[]
   monthData?: MonthlyMetricDto[]
+  tableTitle?: string
   tableData?: CourseCompletionMetricDto[]
+  atRiskLearners?: AtRiskLearnerDto[]
+  programDistribution?: ProgramDistributionDto[]
 }
 
 export interface DashboardSummaryDto {
@@ -44,5 +66,55 @@ export interface DashboardSummaryDto {
     badge: string
     badgeBg: string
     badgeText: string
+  }>
+  pendingReviews?: Array<{
+    id: number
+    activityId: number
+    activityTitle: string
+    studentName: string
+    studentEmail: string
+    passed: boolean
+    points: number
+    submittedAt: string
+  }>
+  levelInfo?: {
+    level: number
+    levelTitle: string
+    currentXp: number
+    nextLevelXp: number
+    progressPct: number
+    rank: number
+  }
+  activeCourse?: {
+    id: number
+    slug: string
+    title: string
+    category: string
+    currentPhase: string
+    overallPct: number
+    icon?: string
+    iconColor?: string
+  }
+  recommendedActivities?: Array<{
+    id: number
+    title: string
+    course: string
+    phase: string
+    template: string
+    points: number
+  }>
+  myRecentSubmissions?: Array<{
+    id: number
+    activityId: number
+    title: string
+    passed: boolean
+    points: number
+    submittedAt: string
+  }>
+  myBadges?: Array<{
+    key: string
+    name: string
+    iconEmoji: string
+    awardedAt: string
   }>
 }

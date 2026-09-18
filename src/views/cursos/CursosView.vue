@@ -27,55 +27,127 @@
 
     <!-- Courses Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div v-for="course in filteredCourses" :key="course.id" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
-        <div :class="`h-36 flex items-center justify-center ${course.bg}`">
-          <span class="material-symbols-outlined text-6xl opacity-60" :style="`color: ${course.iconColor}`">{{ course.icon }}</span>
+      <div 
+        v-for="course in filteredCourses" 
+        :key="course.id" 
+        :class="`rounded-2xl overflow-hidden shadow-sm border transition-all group flex flex-col justify-between relative ${
+          course.isLocked && !auth.isAdmin && !auth.isInstructor
+            ? 'bg-gray-50/90 border-dashed border-gray-300 opacity-80'
+            : 'bg-white border-gray-100 hover:shadow-md'
+        }`"
+      >
+        <!-- Locked Badge Indicator for Learner -->
+        <div 
+          v-if="course.isLocked && !auth.isAdmin && !auth.isInstructor" 
+          class="absolute top-3 right-3 z-10 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 backdrop-blur-xs"
+        >
+          <span class="material-symbols-outlined text-xs">lock</span>
+          BLOQUEADO
         </div>
-        <div class="p-5">
-          <div class="flex items-center gap-2 mb-2 flex-wrap">
-            <span :class="`text-xs font-bold px-2 py-1 rounded-full ${course.categoryBg} ${course.categoryText}`">{{ course.category }}</span>
-            <span class="text-xs text-gray-400">{{ course.duration }}</span>
-            <span v-if="course.programName" class="text-[10px] font-bold text-[#006688] bg-[#006688]/10 px-2 py-0.5 rounded-full truncate max-w-[180px]">
-              {{ course.programName }}
+
+        <div>
+          <div :class="`h-36 flex items-center justify-center relative ${course.bg}`">
+            <span 
+              class="material-symbols-outlined text-6xl opacity-60 transition-transform group-hover:scale-105" 
+              :style="`color: ${course.iconColor}`"
+            >
+              {{ course.icon }}
             </span>
           </div>
-          <h4 class="font-bold text-gray-800 mb-1">{{ course.title }}</h4>
-          <p class="text-xs text-gray-500 mb-3 line-clamp-2">{{ course.description }}</p>
-          
-          <div v-if="!auth.isAdmin && !auth.isInstructor" class="mb-3">
-            <div class="flex justify-between text-xs text-gray-500 mb-1">
-              <span>Progreso</span>
-              <span>{{ course.progress || 0 }}%</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-1.5">
-              <div class="h-1.5 rounded-full bg-[#006688] transition-all" :style="`width: ${course.progress || 0}%`"></div>
-            </div>
-          </div>
-          <div v-else class="mb-3 flex items-center justify-between text-xs text-gray-500">
-            <div class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm text-[#006688]">task</span>
-              <span>{{ course.activitiesCount || 0 }} actividades pedagógicas</span>
-            </div>
-          </div>
 
-          <div class="flex items-center justify-between border-t border-gray-50 pt-3 mt-2">
+          <div class="p-5 pb-3">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <span :class="`text-xs font-bold px-2 py-1 rounded-full ${course.categoryBg} ${course.categoryText}`">{{ course.category }}</span>
+              <span class="text-xs text-gray-400">{{ course.duration }}</span>
+              <span v-if="course.programName" class="text-[10px] font-bold text-[#006688] bg-[#006688]/10 px-2 py-0.5 rounded-full truncate max-w-[180px]">
+                {{ course.programName }}
+              </span>
+            </div>
+
+            <!-- RAP Badges on Card -->
+            <div v-if="course.raps && course.raps.length > 0" class="flex flex-wrap gap-1 mb-2.5">
+              <span 
+                v-for="rap in course.raps" 
+                :key="rap" 
+                class="text-[10px] font-extrabold bg-blue-50 text-[#006688] border border-blue-200/70 px-2 py-0.5 rounded-md flex items-center gap-1"
+                :title="`Resultado de Aprendizaje: ${rap}`"
+              >
+                <span class="material-symbols-outlined text-[11px]">verified</span>
+                {{ rap }}
+              </span>
+            </div>
+
+            <h4 class="font-bold text-gray-800 mb-1 leading-snug">{{ course.title }}</h4>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed">{{ course.description }}</p>
+            
+            <!-- Progress or Lock Notice for Learner -->
+            <div v-if="!auth.isAdmin && !auth.isInstructor" class="mb-3">
+              <div v-if="course.isLocked" class="p-2.5 bg-amber-50 border border-amber-200/70 rounded-xl flex items-start gap-2 text-xs text-amber-900">
+                <span class="material-symbols-outlined text-base text-amber-600 shrink-0 mt-0.5">lock_clock</span>
+                <div class="text-[11px] leading-tight">
+                  <span class="font-bold">Prerrequisito pendiente:</span>
+                  <p class="text-amber-800 mt-0.5">Completa al 100% el módulo <strong>"{{ course.prerequisiteTitle || 'anterior' }}"</strong> para desbloquear este nivel.</p>
+                </div>
+              </div>
+              <div v-else>
+                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Progreso</span>
+                  <span class="font-bold text-[#006688]">{{ course.progress || 0 }}%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                  <div class="h-1.5 rounded-full bg-[#006688] transition-all" :style="`width: ${course.progress || 0}%`"></div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="mb-3 flex items-center justify-between text-xs text-gray-500">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-[#006688]">task</span>
+                <span>{{ course.activitiesCount || 0 }} actividades pedagógicas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-5 pt-0">
+          <div class="flex items-center justify-between border-t border-gray-100 pt-3">
             <div class="flex items-center gap-1 text-xs text-gray-400">
               <span class="material-symbols-outlined text-sm">group</span>
               {{ course.students || 0 }} estudiantes
             </div>
             
-            <router-link
-              v-if="!auth.isAdmin && !auth.isInstructor"
-              :to="`/dashboard/cursos/${course.id}`"
-              class="text-xs font-semibold text-[#006688] hover:underline"
-            >
-              Continuar
-            </router-link>
+            <template v-if="!auth.isAdmin && !auth.isInstructor">
+              <button
+                v-if="course.isLocked"
+                disabled
+                class="px-3 py-1.5 bg-gray-200/70 text-gray-400 rounded-lg text-xs font-bold flex items-center gap-1 cursor-not-allowed"
+                title="Debes completar el módulo anterior al 100%"
+              >
+                <span class="material-symbols-outlined text-xs">lock</span>
+                Bloqueado
+              </button>
+              <router-link
+                v-else
+                :to="`/dashboard/cursos/${course.id}`"
+                class="px-3.5 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white rounded-lg text-xs font-bold transition-colors shadow-xs flex items-center gap-1"
+              >
+                <span>{{ (course.progress || 0) > 0 ? 'Continuar' : 'Iniciar' }}</span>
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+              </router-link>
+            </template>
             
             <div v-else class="flex items-center gap-2">
+              <router-link
+                :to="`/dashboard/cursos/${course.id}`"
+                class="px-2.5 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-[#006688] rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                title="Explorar el contenido pedagógico de este curso"
+              >
+                <span class="material-symbols-outlined text-sm">visibility</span>
+                Ver
+              </router-link>
               <button
                 @click="openEditCourseModal(course)"
-                class="text-xs font-semibold text-[#006688] hover:underline flex items-center gap-0.5"
+                class="text-xs font-semibold text-[#006688] hover:underline flex items-center gap-0.5 cursor-pointer"
                 title="Editar este curso"
               >
                 <span class="material-symbols-outlined text-sm">edit</span>
@@ -83,7 +155,7 @@
               </button>
               <button
                 @click="deleteCourse(course)"
-                class="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline flex items-center gap-0.5"
+                class="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline flex items-center gap-0.5 cursor-pointer"
                 title="Eliminar este curso"
               >
                 <span class="material-symbols-outlined text-sm">delete</span>
@@ -94,6 +166,109 @@
         </div>
       </div>
     </div>
+
+    <!-- ======================================================== -->
+    <!-- CIERRE GLOBAL · POST-TEST (EVALUACIÓN INTEGRADORA DE RUTA) -->
+    <!-- ======================================================== -->
+    <div class="mt-8">
+      <!-- Caso A: Desbloqueado para Admin/Instructor o Aprendiz que completó los módulos y llegó al cierre -->
+      <div 
+        v-if="canTakeGlobalPostTest" 
+        class="bg-gradient-to-r from-teal-900 via-[#004e69] to-emerald-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-emerald-500/30 group animate-fade-in"
+      >
+        <div class="absolute -right-10 -bottom-10 opacity-10 group-hover:opacity-15 transition-opacity">
+          <span class="material-symbols-outlined text-9xl">workspace_premium</span>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+          <div class="space-y-2 max-w-2xl">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-3 py-1 bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-yellow-300">workspace_premium</span>
+                {{ auth.isAdmin || auth.isInstructor ? 'Cierre Global · Acceso Auditoría' : '¡Cierre de Ruta Desbloqueado!' }}
+              </span>
+              <span class="text-xs text-cyan-200 font-semibold bg-white/10 px-2.5 py-0.5 rounded-full">
+                10 Reactivos Clínicos · RAP-01 al RAP-06
+              </span>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black tracking-tight text-white">
+              POST-TEST GLOBAL — Certificación Nursing Academy
+            </h3>
+
+            <p class="text-xs sm:text-sm text-gray-200 leading-relaxed">
+              {{ auth.isAdmin || auth.isInstructor 
+                ? 'Como administrador o instructor, puedes auditar, revisar y probar en cualquier momento la evaluación final integradora que mide el crecimiento pedagógico de los aprendices y emite el diploma oficial.' 
+                : '¡Excelente trabajo! Has completado el recorrido por los módulos formativos y alcanzado la fase de Cierre. Presenta tu evaluación final para medir tu aprendizaje frente al diagnóstico inicial y certificar tus competencias.' 
+              }}
+            </p>
+          </div>
+
+          <div class="shrink-0 flex flex-col sm:flex-row gap-3">
+            <button
+              @click="showGlobalPostTestModal = true"
+              class="px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-black text-sm rounded-2xl shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-base">school</span>
+              {{ auth.isAdmin || auth.isInstructor ? 'Auditar POST-TEST Global' : 'Presentar POST-TEST Global' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caso B: Bloqueado para Aprendiz que NO ha llegado al módulo 4 o no ha llegado a su cierre -->
+      <div 
+        v-else 
+        class="bg-gray-50/90 rounded-3xl p-6 sm:p-8 border-2 border-dashed border-gray-300 text-gray-600 shadow-xs relative overflow-hidden"
+      >
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-3 py-1 bg-gray-200 text-gray-600 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">lock</span>
+                POST-TEST GLOBAL BLOQUEADO
+              </span>
+              <span class="text-xs text-gray-400 font-semibold">
+                Certificación Final de Ruta
+              </span>
+            </div>
+
+            <h3 class="text-lg sm:text-xl font-bold text-gray-800">
+              Evaluación Integradora de Cierre (RAP-01 al RAP-06)
+            </h3>
+
+            <p class="text-xs sm:text-sm text-gray-500 leading-relaxed">
+              {{ postTestLockReason }}
+            </p>
+
+            <div class="p-3 bg-amber-50/80 border border-amber-200/70 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 mt-2">
+              <span class="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">info</span>
+              <div>
+                <span class="font-bold">Condiciones indispensables para desbloquear:</span>
+                <ul class="list-disc list-inside mt-1 space-y-0.5 text-[11px] text-amber-800">
+                  <li>Haber completado los Módulos 1, 2 y 3 al 100%.</li>
+                  <li>Haber ingresado al Módulo 4 (Professional Practice) y alcanzado su fase de Cierre / Evaluación.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="shrink-0">
+            <button
+              disabled
+              class="px-5 py-3 bg-gray-200 text-gray-400 font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-not-allowed shadow-none"
+              title="Cumple con los requisitos formativos para desbloquear"
+            >
+              <span class="material-symbols-outlined text-base">lock</span>
+              Requisitos Pendientes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reusable Global Post-Test Modal (Opens directly in Cursos page) -->
+    <GlobalPostTestModal v-model="showGlobalPostTestModal" />
 
     <!-- Interactive Course & Standardized Modules Editor Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
@@ -173,6 +348,46 @@
                   <option v-for="p in trainingPrograms" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
               </div>
+
+              <!-- RAPs Curriculum Linking -->
+              <div class="md:col-span-2 space-y-2 pt-2 border-t border-gray-100">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm text-[#006688]">verified</span>
+                    Resultados de Aprendizaje (RAPs) del Curso / Módulo
+                  </label>
+                  <span class="text-[10px] text-gray-400 font-medium">Selecciona los RAPs que desarrolla este módulo</span>
+                </div>
+
+                <div v-if="availableRaps.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2.5 bg-gray-50/80 rounded-xl border border-gray-200">
+                  <label
+                    v-for="rap in availableRaps"
+                    :key="rap.id || rap.code"
+                    :class="`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                      (form.raps || []).includes(rap.code)
+                        ? 'bg-blue-50/90 border-[#006688] text-[#006688] font-bold shadow-xs'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="rap.code"
+                      v-model="form.raps"
+                      class="mt-0.5 rounded text-[#006688] focus:ring-[#006688] cursor-pointer"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-black text-[11px] bg-[#006688] text-white px-1.5 py-0.5 rounded">{{ rap.code }}</span>
+                        <span v-if="rap.competency?.code" class="text-[9px] text-gray-400 font-semibold truncate">{{ rap.competency.code }}</span>
+                      </div>
+                      <p class="text-[11px] text-gray-600 mt-1 leading-snug font-normal line-clamp-2">{{ rap.description }}</p>
+                    </div>
+                  </label>
+                </div>
+                <div v-else class="text-xs text-gray-400 italic p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  No hay RAPs registrados en Gestión Curricular.
+                </div>
+              </div>
             </div>
           </div>
 
@@ -214,8 +429,8 @@
                   <input type="text" v-model="form.f1_welcome" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Bienvenido al módulo de enfermería básica." />
                 </div>
                 <div class="space-y-1">
-                  <label class="text-xs font-bold text-gray-500">Palabras desordenadas para el Calentamiento (separadas por comas)</label>
-                  <input type="text" v-model="form.f1_gameWords" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. checks, The nurse, the, patient's, blood pressure" />
+                  <label class="text-xs font-bold text-gray-500">Palabras del Calentamiento en orden correcto (separadas por comas)</label>
+                  <input type="text" v-model="form.f1_gameWords" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. The nurse, checks, the, patient's, blood pressure" />
                   <p class="text-[10px] text-gray-400 italic">El estudiante deberá ordenarlas para avanzar a la fase de estudio.</p>
                 </div>
               </div>
@@ -521,6 +736,7 @@ import { useAuthStore } from '../../stores/auth'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
+import GlobalPostTestModal from '../../components/cursos/GlobalPostTestModal.vue'
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
@@ -529,9 +745,11 @@ const filters = ['Todos', 'En Progreso', 'Completados', 'Nuevos']
 
 // Modal & Form States
 const showModal = ref(false)
+const showGlobalPostTestModal = ref(false)
 const editingCourse = ref(null)
 const activeModalPhase = ref('inicio')
 const trainingPrograms = ref([])
+const availableRaps = ref([])
 
 const newActivity = ref({
   title: '',
@@ -657,8 +875,21 @@ async function fetchCourses() {
       const list = Array.isArray(data) ? data : (data?.data || [])
       if (Array.isArray(list) && list.length > 0) {
         courses.value = list.map((c, i) => {
-          const fallback = courses.value[i] || courses.value[0] || {}
+          const fallback = courses.value.find(f => String(f.id) === String(c.id)) || courses.value.find(f => f.title === c.title) || {}
           const studentTotal = c.students !== undefined ? c.students : (c.studentsCount !== undefined ? c.studentsCount : 0)
+          const cat = c.category || fallback.category || 'Básico'
+          const catBg = cat === 'Profesional' ? 'bg-emerald-100' : cat === 'Avanzado' ? 'bg-amber-100' : cat === 'Intermedio' ? 'bg-indigo-100' : 'bg-teal-100'
+          const catText = cat === 'Profesional' ? 'text-emerald-700' : cat === 'Avanzado' ? 'text-amber-700' : cat === 'Intermedio' ? 'text-indigo-700' : 'text-teal-700'
+          
+          let parsedRaps = []
+          if (c.raps) {
+            try {
+              parsedRaps = Array.isArray(c.raps) ? c.raps : JSON.parse(c.raps)
+            } catch {
+              parsedRaps = []
+            }
+          }
+
           return {
             ...fallback,
             ...c,
@@ -667,24 +898,43 @@ async function fetchCourses() {
             title: c.title,
             description: c.description,
             duration: c.duration || fallback.duration || '10h',
-            category: c.category || fallback.category || 'Básico',
+            category: cat,
             students: studentTotal,
             studentsCount: studentTotal,
             activitiesCount: c.activitiesCount !== undefined ? c.activitiesCount : 0,
             icon: c.icon || fallback.icon || 'medical_services',
             iconColor: c.iconColor || fallback.iconColor || '#006688',
             bg: c.bg || fallback.bg || 'bg-teal-50',
-            categoryBg: c.categoryBg || fallback.categoryBg || 'bg-teal-100',
-            categoryText: c.categoryText || fallback.categoryText || 'text-teal-700',
+            categoryBg: catBg,
+            categoryText: catText,
             programId: c.programId || null,
             programName: c.programName || null,
-            progress: c.progress || 0
+            progress: c.progress || 0,
+            raps: parsedRaps,
+            isLocked: Boolean(c.isLocked),
+            prerequisiteTitle: c.prerequisiteTitle || null,
+            prerequisiteId: c.prerequisiteId || null
           }
         })
       }
     }
   } catch (err) {
     console.warn('Backend courses unavailable, using fallback courses:', err)
+  }
+}
+
+async function fetchCurriculumRaps() {
+  try {
+    const token = getAuthToken()
+    const res = await fetch(`${apiBaseUrl}/api/curriculum/raps`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (res.ok) {
+      const data = await res.json()
+      availableRaps.value = Array.isArray(data) ? data : (data?.data || [])
+    }
+  } catch (err) {
+    console.warn('Backend curriculum raps unavailable:', err)
   }
 }
 
@@ -707,6 +957,8 @@ onMounted(async () => {
   await fetchCourses()
   await fetchActivities()
   await fetchTrainingPrograms()
+  await fetchCurriculumRaps()
+
   const apprenticeId = auth.user?.id || 'guest'
   courses.value.forEach(course => {
     try {
@@ -716,13 +968,32 @@ onMounted(async () => {
         const data = JSON.parse(raw)
         if (data.phaseProgress) {
           const sum = Object.values(data.phaseProgress).reduce((a, b) => a + b, 0)
-          course.progress = Math.round(sum / Object.keys(data.phaseProgress).length)
+          course.progress = Math.max(course.progress || 0, Math.round(sum / Object.keys(data.phaseProgress).length))
         }
       }
     } catch (e) {
       console.error(e)
     }
   })
+
+  // Sincronizar bloqueo secuencial local si el aprendiz completó módulos en su sesión
+  if (!auth.isAdmin && !auth.isInstructor) {
+    let prevProg = 100
+    let prevTitle = null
+    let prevId = null
+    courses.value.forEach((course, idx) => {
+      if (idx > 0) {
+        course.isLocked = prevProg < 100
+        course.prerequisiteTitle = prevProg < 100 ? prevTitle : null
+        course.prerequisiteId = prevProg < 100 ? prevId : null
+      } else {
+        course.isLocked = false
+      }
+      prevProg = course.progress || 0
+      prevTitle = course.title
+      prevId = course.id
+    })
+  }
 })
 
 // Initial Courses Data State — Módulos Pedagógicos RAP 1, RAP 2/3, RAP 4/5 y RAP 6
@@ -812,6 +1083,7 @@ const form = ref({
   categoryBg: 'bg-blue-100',
   categoryText: 'text-blue-700',
   programId: null,
+  raps: [],
   f1_welcome: '',
   f1_gameWords: '',
   f2_grammar: '',
@@ -823,6 +1095,34 @@ const form = ref({
   f4_incorrect: '',
 })
 
+function structureListToCsv(value) {
+  if (Array.isArray(value)) return value.join(', ')
+  return value || ''
+}
+
+function buildStructurePayload() {
+  const splitList = value => String(value || '').split(',').map(item => item.trim()).filter(Boolean)
+  return {
+    f1: {
+      welcome: form.value.f1_welcome.trim(),
+      gameWords: splitList(form.value.f1_gameWords)
+    },
+    f2: {
+      grammar: form.value.f2_grammar.trim(),
+      vocabulary: splitList(form.value.f2_vocabulary)
+    },
+    f3: {
+      fillBlank: form.value.f3_fillBlank.trim(),
+      voiceTarget: form.value.f3_voiceTarget.trim()
+    },
+    f4: {
+      question: form.value.f4_q.trim(),
+      correct: form.value.f4_correct.trim(),
+      incorrect: form.value.f4_incorrect.trim()
+    }
+  }
+}
+
 const coursePhaseActivities = computed(() => {
   if (!editingCourse.value) return []
   const phaseMapping = {
@@ -832,7 +1132,12 @@ const coursePhaseActivities = computed(() => {
     evaluacion: 'Cierre'
   }
   const targetPhase = phaseMapping[activeModalPhase.value]
-  return activities.value.filter(a => a.course === editingCourse.value.title && a.phase === targetPhase)
+  return activities.value.filter(a => {
+    const belongsToCourse = a.courseId
+      ? Number(a.courseId) === Number(editingCourse.value.id)
+      : a.course === editingCourse.value.title
+    return belongsToCourse && a.phase === targetPhase
+  })
 })
 
 const showAddActivityForm = ref(false)
@@ -896,6 +1201,7 @@ async function saveNewActivity() {
   const payload = {
     title: newActivity.value.title,
     course: editingCourse.value.title,
+    courseId: editingCourse.value.id,
     phase: targetPhase,
     template: newActivity.value.template,
     points: parseInt(newActivity.value.points) || 10,
@@ -915,9 +1221,13 @@ async function saveNewActivity() {
   }
 
   try {
+    const token = getAuthToken()
     const response = await fetch(`${apiBaseUrl}/api/activities`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify(payload)
     })
     if (!response.ok) {
@@ -939,8 +1249,10 @@ async function saveNewActivity() {
 async function deleteInlineActivity(id) {
   if (!confirm('¿Estás seguro de que deseas eliminar esta actividad de la fase?')) return
   try {
+    const token = getAuthToken()
     const response = await fetch(`${apiBaseUrl}/api/activities/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
@@ -966,6 +1278,63 @@ const filteredCourses = computed(() => {
   return courses.value
 })
 
+// Validación estricta para el POST-TEST Global según los requisitos pedagógicos
+const canTakeGlobalPostTest = computed(() => {
+  if (auth.isAdmin || auth.isInstructor) return true
+
+  const c1 = courses.value.find(c => c.id === 1)
+  const c2 = courses.value.find(c => c.id === 2)
+  const c3 = courses.value.find(c => c.id === 3)
+  const c4 = courses.value.find(c => c.id === 4)
+
+  const m1Done = (c1?.progress || 0) >= 100
+  const m2Done = (c2?.progress || 0) >= 100
+  const m3Done = (c3?.progress || 0) >= 100
+
+  // 1) Si no ha completado los 3 módulos anteriores, no ha llegado válidamente al módulo 4
+  if (!m1Done || !m2Done || !m3Done) return false
+
+  // 2) Si llegó al módulo 4, verificar que haya alcanzado la fase de Cierre (evaluación)
+  // Progreso general en curso 4 >= 75% indica que superó práctica y llegó a evaluación
+  if ((c4?.progress || 0) >= 75) return true
+
+  // Consultar estado local guardado para el módulo 4
+  const apprenticeId = auth.user?.id || 'guest'
+  const m4Key = `nursing_academy_progress_${apprenticeId}_course_4`
+  try {
+    const raw = localStorage.getItem(m4Key)
+    if (raw) {
+      const state = JSON.parse(raw)
+      if (
+        state.currentPhase === 'evaluacion' || 
+        state.examPassed || 
+        (state.phaseProgress?.practica >= 100) ||
+        (state.phaseProgress?.evaluacion > 0)
+      ) {
+        return true
+      }
+    }
+  } catch {}
+
+  return false
+})
+
+const postTestLockReason = computed(() => {
+  const c1 = courses.value.find(c => c.id === 1)
+  const c2 = courses.value.find(c => c.id === 2)
+  const c3 = courses.value.find(c => c.id === 3)
+
+  const m1Done = (c1?.progress || 0) >= 100
+  const m2Done = (c2?.progress || 0) >= 100
+  const m3Done = (c3?.progress || 0) >= 100
+
+  if (!m1Done || !m2Done || !m3Done) {
+    return 'Debes completar secuencialmente los módulos previos (1, 2 y 3) al 100% para llegar al Módulo 4.'
+  }
+
+  return 'Has llegado al Módulo 4 pero aún no alcanzas la fase de Cierre (Evaluación). Avanza en las fases de estudio y práctica para habilitar este examen final.'
+})
+
 // Handlers
 function openNewCourseModal() {
   editingCourse.value = null
@@ -981,8 +1350,9 @@ function openNewCourseModal() {
     categoryBg: 'bg-blue-100',
     categoryText: 'text-blue-700',
     programId: null,
+    raps: [],
     f1_welcome: 'Welcome to this technical training module.',
-    f1_gameWords: 'checks, The nurse, the, patient\'s, blood pressure',
+    f1_gameWords: 'The nurse, checks, the, patient\'s, blood pressure',
     f2_grammar: 'The nurse checks the patient.',
     f2_vocabulary: 'Stethoscope, Suture, Heart rate',
     f3_fillBlank: 'prescription',
@@ -997,6 +1367,7 @@ function openNewCourseModal() {
 function openEditCourseModal(course) {
   editingCourse.value = course
   activeModalPhase.value = 'inicio'
+  const structure = course.structure || null
   
   // Fill form with current data (or defaults if missing)
   form.value = {
@@ -1010,15 +1381,16 @@ function openEditCourseModal(course) {
     categoryBg: course.categoryBg,
     categoryText: course.categoryText,
     programId: course.programId || null,
-    f1_welcome: course.f1_welcome || 'Welcome to this technical training module.',
-    f1_gameWords: course.f1_gameWords || 'checks, The nurse, the, patient\'s, blood pressure',
-    f2_grammar: course.f2_grammar || 'The nurse checks the patient.',
-    f2_vocabulary: course.f2_vocabulary || 'Stethoscope, Suture, Heart rate',
-    f3_fillBlank: course.f3_fillBlank || 'prescription',
-    f3_voiceTarget: course.f3_voiceTarget || 'The patient is stable.',
-    f4_q: course.f4_q || '¿Qué significa respiration rate?',
-    f4_correct: course.f4_correct || 'Frecuencia respiratoria',
-    f4_incorrect: course.f4_incorrect || 'Presión arterial',
+    raps: course.raps ? [...course.raps] : [],
+    f1_welcome: structure?.f1?.welcome ?? course.f1_welcome ?? 'Welcome to this technical training module.',
+    f1_gameWords: structure ? structureListToCsv(structure.f1?.gameWords) : (course.f1_gameWords || 'The nurse, checks, the, patient\'s, blood pressure'),
+    f2_grammar: structure?.f2?.grammar ?? course.f2_grammar ?? 'The nurse checks the patient.',
+    f2_vocabulary: structure ? structureListToCsv(structure.f2?.vocabulary) : (course.f2_vocabulary || 'Stethoscope, Suture, Heart rate'),
+    f3_fillBlank: structure?.f3?.fillBlank ?? course.f3_fillBlank ?? 'prescription',
+    f3_voiceTarget: structure?.f3?.voiceTarget ?? course.f3_voiceTarget ?? 'The patient is stable.',
+    f4_q: structure?.f4?.question ?? course.f4_q ?? '¿Qué significa respiration rate?',
+    f4_correct: structure?.f4?.correct ?? course.f4_correct ?? 'Frecuencia respiratoria',
+    f4_incorrect: structure?.f4?.incorrect ?? course.f4_incorrect ?? 'Presión arterial',
   }
   
   showModal.value = true
@@ -1051,6 +1423,8 @@ async function saveCourse() {
     iconColor: form.value.iconColor,
     bg: form.value.bg,
     programId: form.value.programId ? parseInt(form.value.programId) : null,
+    structure: buildStructurePayload(),
+    raps: form.value.raps || []
   }
 
   const token = getAuthToken()

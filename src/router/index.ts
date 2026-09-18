@@ -42,6 +42,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'ranking', component: RankingView },
       { path: 'logros', component: LogrosView },
       { path: 'juegos', component: JuegosView },
+      { path: 'juegos/:gameId', component: JuegosView },
       { path: 'analiticas', component: AnaliticasView },
       { path: 'usuarios', component: UsuariosView },
       { path: 'perfil', component: PerfilView },
