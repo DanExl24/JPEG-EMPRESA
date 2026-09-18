@@ -1,4 +1,5 @@
 import prisma from './db.js'
+import { Prisma } from '@prisma/client'
 import { hashPassword, verifyPassword } from './password.js'
 
 const DEFAULT_ADMIN = {
@@ -304,21 +305,53 @@ const DEFAULT_ACTIVITIES = [
 ]
 
 export async function ensureDefaultActivities(): Promise<void> {
+  const courses = await prisma.course.findMany({ select: { id: true, title: true } })
+  const courseMap = new Map(courses.map(c => [c.title, c.id]))
+
+  const outcomes = await prisma.learningOutcome.findMany({ select: { id: true, code: true } })
+  const outcomeMap = new Map(outcomes.map(o => [o.code, o.id]))
+
+  const getRapIdForActivity = (actCourse: string, actPhase: string): number | null => {
+    if (actCourse === 'Getting to Know Other People') return outcomeMap.get('RAP-01') || null
+    if (actCourse === 'Work Life Interaction') {
+      return actPhase === 'Práctica' || actPhase === 'Cierre' ? (outcomeMap.get('RAP-03') || null) : (outcomeMap.get('RAP-02') || null)
+    }
+    if (actCourse === 'Workplace Communication') {
+      return actPhase === 'Práctica' || actPhase === 'Cierre' ? (outcomeMap.get('RAP-05') || null) : (outcomeMap.get('RAP-04') || null)
+    }
+    if (actCourse === 'Professional Practice') return outcomeMap.get('RAP-06') || null
+    return null
+  }
+
   const count = await prisma.activity.count()
   if (count === 0) {
-    const courses = await prisma.course.findMany({ select: { id: true, title: true } })
-    const courseMap = new Map(courses.map(c => [c.title, c.id]))
-
     for (const act of DEFAULT_ACTIVITIES) {
       const courseId = courseMap.get(act.course) || null
+      const learningOutcomeId = getRapIdForActivity(act.course, act.phase)
       await prisma.activity.create({
         data: {
           ...act,
-          courseId
+          courseId,
+          learningOutcomeId
         }
       })
     }
-    console.log(`[Bootstrap] ${DEFAULT_ACTIVITIES.length} actividades iniciales sembradas con éxito.`)
+    console.log(`[Bootstrap] ${DEFAULT_ACTIVITIES.length} actividades iniciales sembradas con éxito asociadas a sus cursos y RAPs.`)
+  } else {
+    // Vincular actividades predeterminadas que no tengan courseId o learningOutcomeId
+    for (const act of DEFAULT_ACTIVITIES) {
+      const courseId = courseMap.get(act.course) || null
+      const learningOutcomeId = getRapIdForActivity(act.course, act.phase)
+      if (courseId || learningOutcomeId) {
+        await prisma.activity.updateMany({
+          where: { title: act.title, course: act.course },
+          data: {
+            courseId,
+            ...(learningOutcomeId ? { learningOutcomeId } : {})
+          }
+        })
+      }
+    }
   }
 
   // Sincronizar columna has_student_submissions con la realidad de activity_submissions
@@ -494,6 +527,8 @@ export async function ensureDefaultDialogues(): Promise<void> {
 }
 
 export async function ensureDefaultCourses(): Promise<void> {
+  const program = await prisma.trainingProgram.findFirst()
+
   const DEFAULT_COURSES = [
     {
       slug: 'getting-to-know-other-people',
@@ -504,7 +539,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       icon: 'medical_services',
       iconColor: '#006688',
       bg: 'bg-teal-50',
-      raps: JSON.stringify(['RAP-01'])
+      raps: JSON.stringify(['RAP-01']),
+      programId: program?.id || null
     },
     {
       slug: 'work-life-interaction',
@@ -515,7 +551,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       icon: 'assignment_ind',
       iconColor: '#4f46e5',
       bg: 'bg-indigo-50',
-      raps: JSON.stringify(['RAP-02', 'RAP-03'])
+      raps: JSON.stringify(['RAP-02', 'RAP-03']),
+      programId: program?.id || null
     },
     {
       slug: 'workplace-communication',
@@ -526,7 +563,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       icon: 'groups',
       iconColor: '#d97706',
       bg: 'bg-amber-50',
-      raps: JSON.stringify(['RAP-04', 'RAP-05'])
+      raps: JSON.stringify(['RAP-04', 'RAP-05']),
+      programId: program?.id || null
     },
     {
       slug: 'professional-practice',
@@ -537,7 +575,8 @@ export async function ensureDefaultCourses(): Promise<void> {
       icon: 'verified_user',
       iconColor: '#059669',
       bg: 'bg-emerald-50',
-      raps: JSON.stringify(['RAP-06'])
+      raps: JSON.stringify(['RAP-06']),
+      programId: program?.id || null
     }
   ]
 
@@ -549,14 +588,26 @@ export async function ensureDefaultCourses(): Promise<void> {
     console.log('[Bootstrap] Cursos clínicos oficiales iniciales sembrados con éxito.')
   } else {
     for (const target of DEFAULT_COURSES) {
-      const existing = await prisma.course.findUnique({ where: { slug: target.slug } })
-      if (existing && (!existing.raps || existing.raps === '[]')) {
+      const existing = await prisma.course.findFirst({
+        where: {
+          OR: [{ slug: target.slug }, { title: target.title }]
+        }
+      })
+      if (existing) {
         await prisma.course.update({
           where: { id: existing.id },
-          data: { raps: target.raps }
+          data: {
+            slug: target.slug,
+            raps: target.raps,
+            programId: program?.id || existing.programId,
+            structure: Prisma.DbNull // Mantiene intacta la plantilla predefinida oficial de cada módulo
+          }
         })
+      } else {
+        await prisma.course.create({ data: target })
       }
     }
+    console.log('[Bootstrap] Cursos clínicos oficiales sincronizados con sus RAPs y plantilla predefinida preservada.')
   }
 }
 

@@ -1,5 +1,5 @@
 import prisma from '../lib/db.js'
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { NotFoundError, BadRequestError } from '../utils/appError.js'
 import type { CreateCourseDto, UpdateCourseDto, SaveCourseProgressDto } from '../types/course.types.js'
 import { GamificationService } from './gamification.service.js'
@@ -56,26 +56,49 @@ export const OFFICIAL_COURSE_SLUGS = DEFAULT_COURSES.map(course => course.slug)
 export class CourseService {
   /**
    * Si la tabla de cursos está vacía (ej. tras docker compose down -v), siembra los 4 módulos oficiales.
-   * Si ya existen cursos, asegura que los módulos oficiales conserven sus RAPs.
+   * Si ya existen cursos, asegura que los módulos oficiales conserven sus RAPs y su plantilla predefinida oficial.
    */
   static async ensureCourses(): Promise<void> {
     try {
+      const program = await prisma.trainingProgram.findFirst()
       const count = await prisma.course.count()
       if (count === 0) {
         for (const def of DEFAULT_COURSES) {
-          await prisma.course.create({ data: def })
+          await prisma.course.create({
+            data: {
+              ...def,
+              programId: program?.id || null
+            }
+          })
         }
         console.log('[CourseService] Cursos clínicos oficiales iniciales sembrados exitosamente.')
       } else {
         for (const def of DEFAULT_COURSES) {
-          const found = await prisma.course.findUnique({ where: { slug: def.slug } })
-          if (found && (!found.raps || found.raps === '[]')) {
+          const found = await prisma.course.findFirst({
+            where: {
+              OR: [{ slug: def.slug }, { title: def.title }]
+            }
+          })
+          if (found) {
             await prisma.course.update({
               where: { id: found.id },
-              data: { raps: def.raps }
+              data: {
+                slug: def.slug,
+                raps: def.raps,
+                programId: program?.id || found.programId,
+                structure: Prisma.DbNull // Garantiza mantener la plantilla predefinida oficial intacta
+              }
+            })
+          } else {
+            await prisma.course.create({
+              data: {
+                ...def,
+                programId: program?.id || null
+              }
             })
           }
         }
+        console.log('[CourseService] Cursos clínicos oficiales sincronizados con sus RAPs y plantilla predefinida preservada.')
       }
     } catch (e) {
       console.warn('[CourseService] Could not sync courses:', e)

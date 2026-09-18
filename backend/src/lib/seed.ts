@@ -3,13 +3,17 @@ import {
   ensureDefaultAuthUser,
   ensureDefaultInstructorUser,
   ensureDefaultApprenticeUser,
-  ensureDefaultActivities,
   ensureDefaultCurriculum,
+  ensureDefaultCourses,
+  ensureDefaultActivities,
+  cleanupLegacySeedActivities,
   ensureDefaultVocabulary,
   ensureDefaultDialogues,
-  ensureDefaultCourses,
   ensureDefaultGlossary,
+  ensureDefaultArcadeGames,
+  ensureStaffPointsValidator,
 } from './bootstrapAuth.js'
+import { CourseService } from '../services/course.service.js'
 import { GamificationService } from '../services/gamification.service.js'
 import { seedVolume } from './seedVolume.js'
 
@@ -18,14 +22,18 @@ async function seedCatalog(): Promise<void> {
   await ensureDefaultAuthUser()
   await ensureDefaultInstructorUser()
   await ensureDefaultApprenticeUser()
-  await ensureDefaultActivities()
   await ensureDefaultCurriculum()
+  await ensureDefaultCourses()
+  await ensureDefaultActivities()
+  await cleanupLegacySeedActivities()
+  await CourseService.syncActivityCourseIds()
   await ensureDefaultVocabulary()
   await ensureDefaultDialogues()
-  await ensureDefaultCourses()
   await ensureDefaultGlossary()
+  await ensureDefaultArcadeGames()
   await GamificationService.ensureBadges()
-  console.log('✓ Catálogo base asegurado (usuarios, cursos, actividades, vocabulario, glosario, insignias).')
+  await ensureStaffPointsValidator()
+  console.log('✓ Catálogo base asegurado (usuarios, currículum con 6 RAPs, cursos clínicos oficiales, actividades, glosario, insignias y validador de puntos).')
 }
 
 async function main(): Promise<void> {

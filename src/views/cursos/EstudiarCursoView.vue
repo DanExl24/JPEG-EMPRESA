@@ -214,8 +214,8 @@
           </p>
         </div>
 
-        <!-- Inicio editable (ítems de la estructura del curso) -->
-        <div v-if="phaseHasItems('inicio')" class="space-y-6">
+        <!-- Inicio editable (ítems de la estructura del curso para cursos personalizados) -->
+        <div v-if="!isOfficialModule && phaseHasItems('inicio')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('inicio')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -754,8 +754,8 @@
           </p>
         </div>
 
-        <!-- Estudio editable (ítems de la estructura del curso) -->
-        <div v-if="phaseHasItems('estudio')" class="space-y-6">
+        <!-- Estudio editable (ítems de la estructura del curso para cursos personalizados) -->
+        <div v-if="!isOfficialModule && phaseHasItems('estudio')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('estudio')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -1701,8 +1701,8 @@
           </p>
         </div>
 
-        <!-- Práctica editable (ítems de la estructura del curso) -->
-        <div v-if="phaseHasItems('practica')" class="space-y-6">
+        <!-- Práctica editable (ítems de la estructura del curso para cursos personalizados) -->
+        <div v-if="!isOfficialModule && phaseHasItems('practica')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('practica')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -2468,8 +2468,8 @@
           </p>
         </div>
 
-        <!-- Evaluación editable (ítems de la estructura del curso) -->
-        <div v-if="phaseHasItems('evaluacion')" class="space-y-6">
+        <!-- Evaluación editable (ítems de la estructura del curso para cursos personalizados) -->
+        <div v-if="!isOfficialModule && phaseHasItems('evaluacion')" class="space-y-6">
           <div
             v-for="entry in phaseEntries('evaluacion')"
             :key="entry.kind === 'item' ? entry.item.id : 'act-' + entry.activity.id"
@@ -3546,15 +3546,15 @@ function convertStructureToItems(structure) {
 
 const structureItems = computed(() => convertStructureToItems(courseDetails.value?.structure))
 const structuredItemCount = computed(() => Object.values(structureItems.value).reduce((total, list) => total + list.length, 0))
-const usesStructuredContent = computed(() => courseLoaded.value && structuredItemCount.value > 0)
-const showsOfficialContent = computed(() => isOfficialModule.value && !usesStructuredContent.value)
+const usesStructuredContent = computed(() => courseLoaded.value && !isOfficialModule.value && structuredItemCount.value > 0)
+const showsOfficialContent = computed(() => isOfficialModule.value)
 
 function phaseHasItems(phaseId) {
-  return itemsForPhase(phaseId).length > 0
+  return !isOfficialModule.value && itemsForPhase(phaseId).length > 0
 }
 
 function showsOfficialPhase(phaseId) {
-  return isOfficialModule.value && !phaseHasItems(phaseId)
+  return isOfficialModule.value
 }
 
 function itemsForPhase(phaseId) {

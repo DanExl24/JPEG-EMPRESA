@@ -1078,6 +1078,12 @@ async function fetchCourses() {
               parsedRaps = []
             }
           }
+          if (!parsedRaps || parsedRaps.length === 0) {
+            if (c.slug === 'getting-to-know-other-people' || c.id === 1) parsedRaps = ['RAP-01']
+            else if (c.slug === 'work-life-interaction' || c.id === 2) parsedRaps = ['RAP-02', 'RAP-03']
+            else if (c.slug === 'workplace-communication' || c.id === 3) parsedRaps = ['RAP-04', 'RAP-05']
+            else if (c.slug === 'professional-practice' || c.id === 4) parsedRaps = ['RAP-06']
+          }
 
           return {
             ...fallback,
@@ -1214,7 +1220,8 @@ const courses = ref([
     progress: 0,
     icon: 'medical_services',
     bg: 'bg-teal-50',
-    iconColor: '#006688'
+    iconColor: '#006688',
+    raps: ['RAP-01']
   },
   {
     id: 2,
@@ -1229,7 +1236,8 @@ const courses = ref([
     progress: 0,
     icon: 'assignment_ind',
     bg: 'bg-indigo-50',
-    iconColor: '#4f46e5'
+    iconColor: '#4f46e5',
+    raps: ['RAP-02', 'RAP-03']
   },
   {
     id: 3,
@@ -1244,7 +1252,8 @@ const courses = ref([
     progress: 0,
     icon: 'groups',
     bg: 'bg-amber-50',
-    iconColor: '#d97706'
+    iconColor: '#d97706',
+    raps: ['RAP-04', 'RAP-05']
   },
   {
     id: 4,
@@ -1259,7 +1268,8 @@ const courses = ref([
     progress: 0,
     icon: 'verified_user',
     bg: 'bg-emerald-50',
-    iconColor: '#059669'
+    iconColor: '#059669',
+    raps: ['RAP-06']
   },
 ])
 
@@ -1969,7 +1979,12 @@ function openEditCourseModal(course) {
     categoryBg: course.categoryBg,
     categoryText: course.categoryText,
     programId: course.programId || null,
-    raps: course.raps ? [...course.raps] : [],
+    raps: (course.raps && course.raps.length > 0)
+      ? [...course.raps]
+      : (course.slug === 'getting-to-know-other-people' || course.id === 1 ? ['RAP-01']
+        : course.slug === 'work-life-interaction' || course.id === 2 ? ['RAP-02', 'RAP-03']
+        : course.slug === 'workplace-communication' || course.id === 3 ? ['RAP-04', 'RAP-05']
+        : course.slug === 'professional-practice' || course.id === 4 ? ['RAP-06'] : []),
     cohortIds: (course.cohorts || []).map(ficha => ficha.id),
     f1_welcome: structure?.f1?.welcome ?? course.f1_welcome ?? 'Welcome to this technical training module.',
     f1_gameWords: structure ? structureListToCsv(structure.f1?.gameWords) : (course.f1_gameWords || 'The nurse, checks, the, patient\'s, blood pressure'),
@@ -2007,6 +2022,7 @@ async function saveCourse() {
     return
   }
 
+  const isOfficialCourse = ['getting-to-know-other-people', 'work-life-interaction', 'workplace-communication', 'professional-practice'].includes(editingCourse.value?.slug)
   const coursePayload = {
     title: form.value.title.trim(),
     description: form.value.description.trim(),
@@ -2016,7 +2032,7 @@ async function saveCourse() {
     iconColor: form.value.iconColor,
     bg: form.value.bg,
     programId: form.value.programId ? parseInt(form.value.programId) : null,
-    structure: buildStructurePayload(),
+    structure: isOfficialCourse ? null : buildStructurePayload(),
     raps: form.value.raps || [],
     cohortIds: form.value.cohortIds || []
   }
