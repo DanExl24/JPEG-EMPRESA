@@ -205,13 +205,13 @@
           </div>
 
           <div class="shrink-0 flex flex-col sm:flex-row gap-3">
-            <router-link
-              to="/dashboard/cursos/4?postTest=true"
-              class="px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-black text-sm rounded-2xl shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+            <button
+              @click="showGlobalPostTestModal = true"
+              class="px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-black text-sm rounded-2xl shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span class="material-symbols-outlined text-base">school</span>
               {{ auth.isAdmin || auth.isInstructor ? 'Auditar POST-TEST Global' : 'Presentar POST-TEST Global' }}
-            </router-link>
+            </button>
           </div>
         </div>
       </div>
@@ -266,6 +266,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Reusable Global Post-Test Modal (Opens directly in Cursos page) -->
+    <GlobalPostTestModal v-model="showGlobalPostTestModal" />
 
     <!-- Interactive Course & Standardized Modules Editor Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
@@ -733,6 +736,7 @@ import { useAuthStore } from '../../stores/auth'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
+import GlobalPostTestModal from '../../components/cursos/GlobalPostTestModal.vue'
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
@@ -741,6 +745,7 @@ const filters = ['Todos', 'En Progreso', 'Completados', 'Nuevos']
 
 // Modal & Form States
 const showModal = ref(false)
+const showGlobalPostTestModal = ref(false)
 const editingCourse = ref(null)
 const activeModalPhase = ref('inicio')
 const trainingPrograms = ref([])
