@@ -736,4 +736,109 @@ export async function ensureDefaultArcadeGames(): Promise<void> {
   console.log('Juegos del Arcade clínico inicializados en base de datos con éxito.')
 }
 
+/**
+ * Validador de Integridad en Base de Datos:
+ * Asegura que ningún ADMIN ni INSTRUCTOR pueda acumular puntos (XP) ni puntuaciones,
+ * a nivel de Triggers y Check Constraints de PostgreSQL, garantizando blindaje
+ * incluso si el código de aplicación fallara.
+ */
+export async function ensureStaffPointsValidator(): Promise<void> {
+  try {
+    // 1. Resetear cualquier XP previo en usuarios staff a 0
+    await prisma.$executeRawUnsafe(`
+      UPDATE "users" 
+      SET "xp" = 0 
+      WHERE "rol" IN ('ADMIN', 'INSTRUCTOR') AND "xp" != 0;
+    `)
+
+    // 2. Trigger en PostgreSQL para la tabla 'users':
+    // Forzar irremisiblemente que NEW.xp sea 0 si el rol es ADMIN o INSTRUCTOR.
+    await prisma.$executeRawUnsafe(`
+      CREATE OR REPLACE FUNCTION trg_prevent_staff_xp_fn()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        IF NEW."rol" IN ('ADMIN', 'INSTRUCTOR') THEN
+          NEW."xp" := 0;
+        END IF;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `)
+
+    await prisma.$executeRawUnsafe(`
+      DROP TRIGGER IF EXISTS trg_prevent_staff_xp ON "users";
+      CREATE TRIGGER trg_prevent_staff_xp
+      BEFORE INSERT OR UPDATE OF "xp", "rol" ON "users"
+      FOR EACH ROW
+      EXECUTE FUNCTION trg_prevent_staff_xp_fn();
+    `)
+
+    // 3. CHECK CONSTRAINT en PostgreSQL como segundo candado físico de seguridad:
+    await prisma.$executeRawUnsafe(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'check_staff_zero_xp'
+        ) THEN
+          ALTER TABLE "users" ADD CONSTRAINT check_staff_zero_xp
+          CHECK ("rol" NOT IN ('ADMIN', 'INSTRUCTOR') OR "xp" = 0);
+        END IF;
+      END $$;
+    `)
+
+    // 4. Trigger en 'game_scores': Puntuaciones de arcade para staff siempre quedan en 0
+    await prisma.$executeRawUnsafe(`
+      CREATE OR REPLACE FUNCTION trg_prevent_staff_game_score_fn()
+      RETURNS TRIGGER AS $$
+      DECLARE
+        user_role TEXT;
+      BEGIN
+        SELECT "rol" INTO user_role FROM "users" WHERE "id" = NEW."user_id";
+        IF user_role IN ('ADMIN', 'INSTRUCTOR') THEN
+          NEW."score" := 0;
+        END IF;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `)
+
+    await prisma.$executeRawUnsafe(`
+      DROP TRIGGER IF EXISTS trg_prevent_staff_game_score ON "game_scores";
+      CREATE TRIGGER trg_prevent_staff_game_score
+      BEFORE INSERT OR UPDATE ON "game_scores"
+      FOR EACH ROW
+      EXECUTE FUNCTION trg_prevent_staff_game_score_fn();
+    `)
+
+    // 5. Trigger en 'user_badges': Evita asociar insignias de estudiantes a cuentas staff
+    await prisma.$executeRawUnsafe(`
+      CREATE OR REPLACE FUNCTION trg_prevent_staff_user_badge_fn()
+      RETURNS TRIGGER AS $$
+      DECLARE
+        user_role TEXT;
+      BEGIN
+        SELECT "rol" INTO user_role FROM "users" WHERE "id" = NEW."user_id";
+        IF user_role IN ('ADMIN', 'INSTRUCTOR') THEN
+          RETURN NULL; -- Omite la inserción a nivel motor relacional
+        END IF;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `)
+
+    await prisma.$executeRawUnsafe(`
+      DROP TRIGGER IF EXISTS trg_prevent_staff_user_badge ON "user_badges";
+      CREATE TRIGGER trg_prevent_staff_user_badge
+      BEFORE INSERT ON "user_badges"
+      FOR EACH ROW
+      EXECUTE FUNCTION trg_prevent_staff_user_badge_fn();
+    `)
+
+    console.log('🛡️ [DB Validator] Restricciones y Triggers de PostgreSQL instalados: Es imposible que ADMIN o INSTRUCTOR acumulen puntos/XP.')
+  } catch (err) {
+    console.warn('[DB Validator] No se pudieron aplicar triggers de PostgreSQL (posible entorno sin permisos DDL):', err)
+  }
+}
+
+
 

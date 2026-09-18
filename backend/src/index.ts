@@ -15,7 +15,8 @@ import {
   ensureDefaultDialogues,
   ensureDefaultCourses,
   ensureDefaultGlossary,
-  ensureDefaultArcadeGames
+  ensureDefaultArcadeGames,
+  ensureStaffPointsValidator
 } from './lib/bootstrapAuth.js'
 import { GamificationService } from './services/gamification.service.js'
 import { CourseService } from './services/course.service.js'
@@ -93,6 +94,7 @@ try {
   await ensureDefaultGlossary()
   await ensureDefaultArcadeGames()
   await GamificationService.ensureBadges()
+  await ensureStaffPointsValidator()
   // Datos de demo opcionales (aprendices, envíos, progreso...). Solo con SEED_DEMO=true.
   if (process.env.SEED_DEMO === 'true') {
     console.log('SEED_DEMO=true → sembrando datos de demostración...')

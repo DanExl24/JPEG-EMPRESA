@@ -201,6 +201,13 @@ export async function getLeaderboard(_req: Request, res: Response): Promise<void
 // POST /api/learner/award-xp (interno)
 export async function awardXp(userId: number, xpAmount: number): Promise<number | null> {
   if (!userId || !xpAmount || xpAmount <= 0) return null
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { rol: true }
+  })
+  if (!user || user.rol === 'ADMIN' || user.rol === 'INSTRUCTOR') {
+    return 0
+  }
   const updated = await prisma.user.update({
     where: { id: userId },
     data: { xp: { increment: xpAmount } },

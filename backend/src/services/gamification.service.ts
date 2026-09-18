@@ -75,6 +75,15 @@ export class GamificationService {
   static async awardXp(userId: number, xpAmount: number, reason?: string): Promise<number> {
     if (!userId || xpAmount <= 0) return 0
 
+    // Validación de seguridad: Imposible otorgar XP a administradores ni instructores
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { rol: true, xp: true }
+    })
+    if (!user || user.rol === 'ADMIN' || user.rol === 'INSTRUCTOR') {
+      return 0
+    }
+
     const updated = await prisma.user.update({
       where: { id: userId },
       data: { xp: { increment: xpAmount } },
@@ -100,6 +109,15 @@ export class GamificationService {
    * Evalúa y asigna insignias según el XP actual
    */
   static async checkAndAwardBadges(userId: number, currentXp: number) {
+    // Los administradores e instructores no pueden acumular insignias
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { rol: true }
+    })
+    if (!user || user.rol === 'ADMIN' || user.rol === 'INSTRUCTOR') {
+      return
+    }
+
     await this.ensureBadges()
     const allBadges = await prisma.badge.findMany({
       orderBy: { xpRequired: 'asc' }
@@ -404,19 +422,28 @@ export class GamificationService {
 
     const isFirstTime = !existing
 
+    const userRoleCheck = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { rol: true }
+    })
+    const isStaff = userRoleCheck?.rol === 'ADMIN' || userRoleCheck?.rol === 'INSTRUCTOR'
+    const effectiveScore = isStaff ? 0 : score
+
     const record = await prisma.gameScore.create({
       data: {
         userId,
         gameKey,
-        score,
+        score: effectiveScore,
         roundsCompleted: data.roundsCompleted || 4
       }
     })
 
     let newXp: number
-    if (isFirstTime) {
+    if (isStaff) {
+      newXp = 0
+    } else if (isFirstTime) {
       // Sumar XP real al usuario sólo la primera vez que supera el juego
-      newXp = await this.awardXp(userId, score, `Partida superada en "${gameKey}"`)
+      newXp = await this.awardXp(userId, effectiveScore, `Partida superada en "${gameKey}"`)
     } else {
       // Modo repaso: se registra la jugada pero no se acumulan puntos indefinidamente
       const currentUser = await prisma.user.findUnique({
@@ -429,8 +456,8 @@ export class GamificationService {
     return {
       success: true,
       gameScoreId: record.id,
-      scoreAwarded: isFirstTime ? score : 0,
-      currentTotalXp: newXp,
+      scoreAwarded: isStaff ? 0 : (isFirstTime ? effectiveScore : 0),
+      currentTotalXp: isStaff ? 0 : newXp,
       isFirstTime,
       isReview: !isFirstTime
     }
