@@ -50,7 +50,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="text-gray-400 font-medium">Progreso guardado automáticamente en:</span>
-        <span class="font-bold text-gray-700 bg-white border border-gray-100 px-2 py-1 rounded">LocalStorage</span>
+        <span class="font-bold text-gray-700 bg-white border border-gray-100 px-2 py-1 rounded">Cuenta de usuario + LocalStorage</span>
       </div>
     </div>
 
@@ -126,39 +126,34 @@
         <!-- Welcome Video Section -->
         <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
           <div class="md:col-span-3 space-y-4">
-            <div class="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video shadow-md group flex items-center justify-center">
-              
-              <!-- Video Placeholder Overlay -->
-              <div v-if="!videoPlaying && !videoCompleted" class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white p-6 text-center space-y-3 z-10">
-                <span class="material-symbols-outlined text-5xl text-[#006688] bg-white rounded-full p-3 shadow-lg group-hover:scale-105 transition-transform cursor-pointer" @click="playVideo">play_arrow</span>
-                <p class="font-bold text-sm">
-                  {{ moduleNumber === 4 ? 'Video Clínico: ¡Mr. Thomas se va a casa! (Discharge Preparation)' : moduleNumber === 3 ? 'Video Clínico: ¡Tu turno en el hospital ha comenzado!' : moduleNumber === 2 ? 'Caso Clínico: Hospitalización de Mr. Thomas (Habitación 204)' : 'Video de Bienvenida: Nursing Basics Introduction' }}
+            <div class="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video shadow-md">
+              <video
+                v-if="videoAvailable"
+                :src="currentVideoSrc"
+                controls
+                preload="metadata"
+                class="w-full h-full object-cover bg-black"
+                @play="videoPlaying = true"
+                @pause="videoPlaying = false"
+                @ended="onVideoWatched"
+              ></video>
+
+              <!-- Pending video placeholder -->
+              <div v-if="!videoAvailable" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-tr from-slate-900 via-slate-800 to-cyan-950 text-white p-6 text-center space-y-3">
+                <span class="material-symbols-outlined text-5xl text-white/70">movie</span>
+                <p class="font-bold text-sm">Video de bienvenida en producción</p>
+                <p class="text-[11px] text-gray-300 max-w-sm leading-relaxed">
+                  {{ moduleNumber === 1
+                    ? 'Aquí verás qué aprenderás en el módulo y por qué conocer a otras personas es clave en tu entorno laboral. Mientras tanto, puedes confirmar la lectura de los objetivos para habilitar el calentamiento.'
+                    : 'Muy pronto encontrarás aquí el video de introducción de este módulo. Mientras tanto, puedes confirmar la lectura de los objetivos para habilitar el calentamiento.' }}
                 </p>
-                <p class="text-[10px] text-gray-300">Duración estimada: 25s (Simulado)</p>
               </div>
 
-              <!-- Simulating Video Playing -->
-              <div v-if="videoPlaying" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center text-white p-6 z-10">
-                <span class="material-symbols-outlined text-4xl text-[#006688] animate-spin">sync</span>
-                <p class="text-sm mt-3 font-semibold">Reproduciendo Video de Introducción...</p>
-                <div class="w-48 bg-white/20 h-1 rounded-full mt-4 overflow-hidden">
-                  <div class="bg-[#006688] h-1 transition-all duration-[25000ms] linear" :style="`width: ${videoProgress}%`"></div>
-                </div>
-                <button @click="skipVideo" class="mt-6 text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/20">Omitir e ir al Calentamiento</button>
-              </div>
-
-              <!-- Video Completed Screen -->
-              <div v-if="videoCompleted" class="absolute inset-0 flex flex-col items-center justify-center bg-green-900/80 text-white p-6 text-center space-y-2 z-10">
+              <!-- Completed video overlay -->
+              <div v-if="videoAvailable && videoCompleted && !videoPlaying" class="absolute inset-0 flex flex-col items-center justify-center bg-green-900/80 text-white p-6 text-center space-y-2">
                 <span class="material-symbols-outlined text-5xl text-white bg-green-500 rounded-full p-2">check_circle</span>
                 <p class="font-bold text-sm">¡Video Completado!</p>
                 <button @click="resetVideo" class="text-xs underline text-green-200 hover:text-white mt-1">Ver de nuevo</button>
-              </div>
-
-              <!-- Static BG representation -->
-              <div class="absolute inset-0 bg-gradient-to-tr from-cyan-900 to-indigo-950 flex items-center justify-center">
-                <span class="material-symbols-outlined text-8xl text-white/5">
-                  {{ moduleNumber === 4 ? 'verified_user' : moduleNumber === 3 ? 'groups' : moduleNumber === 2 ? 'hotel' : 'clinical_notes' }}
-                </span>
               </div>
             </div>
           </div>
@@ -201,10 +196,9 @@
 
             <!-- Module 1 Objectives -->
             <ul v-else class="text-xs text-gray-600 leading-relaxed space-y-1.5 mt-2 list-none">
-              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Saludar y despedirte correctamente en inglés</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Saludar y despedirte correctamente en inglés (formal e informal)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Presentarte e introducir a otras personas</span></li>
-              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Dar información personal básica (nombre, edad, nacionalidad)</span></li>
-              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Preguntar información básica a otra persona</span></li>
+              <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Dar y solicitar datos básicos (nombre, edad, nacionalidad)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Deletrear nombres y apellidos (spelling)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Utilizar números (teléfono, edad)</span></li>
               <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-[#006688] shrink-0 mt-0.5">check_circle</span> <span>Construir oraciones básicas (Subject + Verb + Complement)</span></li>
@@ -220,105 +214,172 @@
                 ? '"En este módulo acompañarás a Mr. Thomas en su hospitalización. Al final, serás capaz de describir el estado físico de tus pacientes, detallar su entorno hospitalario y relatar antecedentes clínicos."' 
                 : '"At the end of this module, you will be able to introduce yourself, greet other people and ask for basic personal information in English."' }}
             </p>
+
+            <button
+              v-if="!introAcknowledged"
+              @click="confirmObjectives"
+              class="mt-3 w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#006688] hover:bg-[#004e69] text-white text-xs font-black rounded-xl shadow transition-all"
+            >
+              <span class="material-symbols-outlined text-sm">task_alt</span>
+              He leído los objetivos
+            </button>
+            <span v-else class="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold text-green-600">
+              <span class="material-symbols-outlined text-sm">check_circle</span>
+              Objetivos confirmados
+            </span>
           </div>
         </div>
 
         <!-- Warm-up Game Section -->
-        <div class="space-y-4 pt-4 border-t border-gray-100">
+        <div ref="warmupSectionRef" class="space-y-4 pt-4 border-t border-gray-100">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-xl text-[#006688]">sports_esports</span>
             <h4 class="font-bold text-gray-800 text-sm">
               {{ moduleNumber === 4
-                ? 'Warm-Up: Estados de Alta Médica — Empareja los estados con el criterio de la lista de verificación'
+                ? 'Warm-Up: Estados de Alta Médica — Arrastra cada estado hacia su criterio de verificación'
                 : moduleNumber === 3
-                ? 'Warm-Up: Acciones Rutinarias & Roles — Empareja cada acción con su destinatario'
+                ? 'Warm-Up: Acciones Rutinarias & Roles — Arrastra cada acción hacia su destinatario'
                 : moduleNumber === 2 
-                ? 'Warm-Up: Hospital Shifts & Handover — Empareja los turnos con el saludo de relevo' 
-                : 'Warm-Up: Greetings — Empareja el momento del día con su saludo' }}
+                ? 'Warm-Up: Hospital Shifts & Handover — Arrastra cada turno hacia su saludo de relevo' 
+                : 'Warm-Up: Greetings — Arrastra cada ilustración del día hacia su saludo en inglés' }}
             </h4>
           </div>
           <p class="text-xs text-gray-600">
             {{ moduleNumber === 4
-              ? 'Instrucción: Empareja el estado clínico del paciente a la izquierda con el indicador de la lista de verificación de alta a la derecha.'
+              ? 'Instrucción: Toma la tarjeta del estado clínico y suéltala sobre el indicador de la lista de verificación que le corresponde.'
               : moduleNumber === 3
-              ? 'Instrucción: Empareja la acción rutinaria de enfermería de la izquierda con la persona o rol hospitalario correspondiente en la derecha.'
+              ? 'Instrucción: Toma la tarjeta de la acción rutinaria y suéltala sobre la persona o rol hospitalario que le corresponde.'
               : moduleNumber === 2 
-              ? 'Instrucción: Empareja el horario y turno hospitalario de la izquierda con la expresión y saludo de relevo correspondiente en inglés.' 
-              : 'Instrucción: Empareja el momento del día de la columna izquierda con el saludo correspondiente en inglés.' }}
+              ? 'Instrucción: Toma la tarjeta del turno hospitalario y suéltala sobre la expresión de entrega de turno que le corresponde.' 
+              : 'Instrucción: Toma la tarjeta ilustrada (mañana, tarde o noche) y suéltala sobre el saludo "Good morning", "Good afternoon" o "Good evening" que le corresponde.' }}
           </p>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            
-            <!-- Left column -->
-            <div class="space-y-2">
-              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                {{ moduleNumber === 4 ? 'Estado Clínico Final' : moduleNumber === 3 ? 'Acción Rutinaria de Enfermería' : moduleNumber === 2 ? 'Turno Hospitalario / Momento' : 'Momento del día' }}
-              </span>
-              <button 
-                v-for="item in activeLeftItems" 
-                :key="item"
-                @click="selectLeftItem(item)"
-                type="button"
-                :disabled="matchedPairs.includes(item)"
-                :class="`w-full p-3.5 border rounded-2xl text-xs font-bold text-left transition-all flex items-center justify-between ${
-                  matchedPairs.includes(item)
-                    ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed'
-                    : selectedLeft === item
-                      ? 'bg-[#006688] text-white border-[#006688] shadow-md scale-[1.02]'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688] hover:text-[#006688]'
-                }`"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base">
-                    {{ moduleNumber === 4 ? 'verified' : moduleNumber === 3 ? 'vital_signs' : (item.includes('Morning') || item === 'Sun' ? 'light_mode' : (item.includes('Afternoon') || item === 'Afternoon' ? 'wb_twilight' : 'dark_mode')) }}
-                  </span>
-                  <span>{{ item }}</span>
-                </div>
-                <span v-if="matchedPairs.includes(item)" class="material-symbols-outlined text-xs bg-green-500 text-white rounded-full p-0.5">check</span>
-              </button>
+          <div class="relative">
+            <!-- Lock Overlay (until video watched or objectives confirmed) -->
+            <div v-if="!warmupUnlocked" class="absolute inset-0 z-20 rounded-2xl bg-white/85 backdrop-blur-sm border border-gray-100 flex flex-col items-center justify-center text-center p-6 space-y-2">
+              <span class="material-symbols-outlined text-3xl text-gray-400">lock</span>
+              <p class="text-sm font-black text-gray-700">Calentamiento bloqueado</p>
+              <p class="text-xs text-gray-500 max-w-sm">
+                Reproduce el video de bienvenida o confirma la lectura de los objetivos para habilitar automáticamente esta actividad.
+              </p>
             </div>
 
-            <!-- Right column -->
-            <div class="space-y-2">
-              <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                {{ moduleNumber === 4 ? 'Criterio de Checklist (Verificado)' : moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : 'Saludos en Inglés' }}
-              </span>
-              <button 
-                v-for="item in activeRightItems" 
-                :key="item"
-                @click="selectRightItem(item)"
-                type="button"
-                :disabled="matchedPairs.includes(item)"
-                :class="`w-full p-3.5 border rounded-2xl text-xs font-bold text-left transition-all flex items-center justify-between ${
-                  matchedPairs.includes(item)
-                    ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed'
-                    : selectedRight === item
-                      ? 'bg-[#006688] text-white border-[#006688] shadow-md scale-[1.02]'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#006688] hover:text-[#006688]'
-                }`"
-              >
-                <span>{{ item }}</span>
-                <span v-if="matchedPairs.includes(item)" class="material-symbols-outlined text-xs bg-green-500 text-white rounded-full p-0.5">check</span>
-              </button>
-            </div>
-
-            <div class="sm:col-span-2 flex items-center gap-3 pt-2 border-t border-gray-200">
-              <button 
-                @click="resetWarmupGame"
-                type="button"
-                class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-xl transition-all shadow-xs"
-              >
-                Limpiar Juego
-              </button>
+            <div :class="`grid grid-cols-1 lg:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100 ${!warmupUnlocked ? 'opacity-40 pointer-events-none select-none' : ''}`">
               
-              <span v-if="gameSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">check_circle</span>
-                ¡Excelente! Has emparejado todos los elementos correctamente. Momento 1 completado.
-              </span>
-              <span v-if="gameSuccess === false" class="text-red-600 text-xs font-bold flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">cancel</span>
-                Emparejamiento incorrecto. Inténtalo de nuevo.
-              </span>
+              <!-- Draggable Cards Dock -->
+              <div class="space-y-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                  {{ moduleNumber === 4 ? 'Estados Clínicos Finales' : moduleNumber === 3 ? 'Acciones Rutinarias de Enfermería' : moduleNumber === 2 ? 'Turnos Hospitalarios / Momentos' : 'Tarjetas Ilustradas — Momento del Día' }}
+                </span>
+                <div class="flex flex-wrap gap-4 min-h-[120px] p-4 bg-white rounded-2xl border border-gray-100">
+                  <div 
+                    v-for="card in warmupCards" 
+                    :key="card.id"
+                    v-show="!card.matched"
+                    data-warmup-card
+                    @pointerdown="startWarmupDrag($event, card)"
+                    @click="selectWarmupCard(card)"
+                    :style="`transform: translate(${card.x}px, ${card.y}px);`"
+                    :class="`select-none cursor-grab active:cursor-grabbing bg-white border shadow-sm hover:shadow-md px-4 py-3 rounded-2xl flex items-center gap-3 touch-none transition-shadow ${card.isResetting ? 'card-reset' : ''} ${
+                      selectedWarmupCardId === card.id ? 'border-[#006688] ring-2 ring-[#006688]/30' : 'border-gray-200'
+                    }`"
+                  >
+                    <span v-if="moduleNumber === 1" class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-white/60" :class="card.bg">
+                      <svg v-if="card.illustration === 'morning'" viewBox="0 0 64 64" class="w-11 h-11">
+                        <circle cx="32" cy="26" r="12" fill="#fbbf24" />
+                        <g stroke="#f59e0b" stroke-width="3" stroke-linecap="round">
+                          <line x1="32" y1="4" x2="32" y2="10" />
+                          <line x1="50" y1="8" x2="46" y2="12" />
+                          <line x1="14" y1="8" x2="18" y2="12" />
+                          <line x1="58" y1="26" x2="52" y2="26" />
+                          <line x1="6" y1="26" x2="12" y2="26" />
+                        </g>
+                        <rect x="4" y="44" width="56" height="16" rx="5" fill="#86efac" />
+                      </svg>
+                      <svg v-else-if="card.illustration === 'afternoon'" viewBox="0 0 64 64" class="w-11 h-11">
+                        <circle cx="32" cy="40" r="12" fill="#fb923c" />
+                        <g stroke="#f97316" stroke-width="3" stroke-linecap="round">
+                          <line x1="32" y1="20" x2="32" y2="24" />
+                          <line x1="48" y1="24" x2="45" y2="27" />
+                          <line x1="16" y1="24" x2="19" y2="27" />
+                        </g>
+                        <rect x="4" y="50" width="56" height="10" rx="5" fill="#fcd34d" />
+                      </svg>
+                      <svg v-else viewBox="0 0 64 64" class="w-11 h-11">
+                        <path d="M42 8a20 20 0 1 0 14 30A22 22 0 0 1 42 8z" fill="#c7d2fe" />
+                        <circle cx="16" cy="14" r="2" fill="#fef08a" />
+                        <circle cx="27" cy="22" r="1.5" fill="#fef08a" />
+                        <circle cx="10" cy="30" r="1.5" fill="#e0e7ff" />
+                      </svg>
+                    </span>
+                    <span v-else class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="card.bg">
+                      <span :class="`material-symbols-outlined text-xl ${card.color}`">{{ card.icon }}</span>
+                    </span>
+                    <div class="text-left">
+                      <p class="text-xs font-black text-gray-800 leading-tight">{{ card.label }}</p>
+                      <span class="text-[10px] text-gray-400 font-semibold">Arrastrar</span>
+                    </div>
+                  </div>
+                  <p v-if="gameSuccess === true" class="text-xs font-bold text-green-600 flex items-center gap-1 my-auto">
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    ¡Todas las tarjetas están en su lugar!
+                  </p>
+                </div>
+              </div>
+
+              <!-- Drop Zones -->
+              <div class="space-y-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                  {{ moduleNumber === 4 ? 'Criterio de Checklist (Verificado)' : moduleNumber === 3 ? 'Persona o Rol Hospitalario' : moduleNumber === 2 ? 'Expresiones de Entrega de Turno' : 'Saludos en Inglés' }}
+                </span>
+                <div class="grid grid-cols-1 gap-3">
+                  <div 
+                    v-for="pair in warmupPairs" 
+                    :key="pair.id"
+                    :data-warmup-slot="pair.id"
+                    @click="placeSelectedOnSlot(pair.id)"
+                    :class="`border-2 border-dashed rounded-2xl p-4 min-h-[92px] flex flex-col items-center justify-center text-center transition-all ${
+                      isPairMatched(pair.id)
+                        ? 'border-green-400 bg-green-50/70'
+                        : selectedWarmupCardId
+                          ? 'border-[#006688]/40 bg-white cursor-pointer hover:bg-[#006688]/5'
+                          : 'border-gray-200 bg-white/70'
+                    }`"
+                  >
+                    <template v-if="isPairMatched(pair.id)">
+                      <span class="material-symbols-outlined text-lg bg-green-500 text-white rounded-full p-0.5 mb-1">check</span>
+                      <p class="text-xs font-black text-green-700">{{ pair.right }}</p>
+                      <p class="text-[10px] font-bold text-green-600/80">¡Asociación correcta!</p>
+                    </template>
+                    <template v-else>
+                      <p class="text-xs font-black text-gray-700">{{ pair.right }}</p>
+                      <p class="text-[10px] text-gray-400 mt-1">Suelta aquí la tarjeta correcta</p>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-2 flex flex-col sm:flex-row sm:items-center gap-3 pt-2 border-t border-gray-200">
+                <button 
+                  @click="resetWarmupGame"
+                  type="button"
+                  class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-xl transition-all shadow-xs"
+                >
+                  Limpiar Juego
+                </button>
+                
+                <transition name="fade">
+                  <span v-if="warmupError" class="text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">warning</span>
+                    {{ warmupError }}
+                  </span>
+                </transition>
+
+                <span v-if="gameSuccess === true" class="text-green-600 text-xs font-bold flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">check_circle</span>
+                  ¡Felicitaciones! Completaste el calentamiento.
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -337,6 +398,25 @@
             Siguiente Fase: Estudio (Absorción)
             <span class="material-symbols-outlined text-sm">arrow_forward</span>
           </button>
+        </div>
+
+        <!-- Warm-up Celebration Modal -->
+        <div v-if="warmupCelebration" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl p-8 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-amber-400 text-white flex items-center justify-center mx-auto shadow-lg">
+              <span class="material-symbols-outlined text-3xl">emoji_events</span>
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-xl font-black text-gray-800">¡Felicitaciones!</h3>
+              <p class="text-xs text-gray-600 leading-relaxed">
+                Completaste el calentamiento sobre saludos e información personal. Activaste tus conocimientos previos y desbloqueaste el Momento 2.
+              </p>
+            </div>
+            <button @click="goToMomento2" class="w-full flex items-center justify-center gap-1 px-5 py-3 bg-green-600 hover:bg-green-700 text-white text-xs font-black rounded-xl shadow transition-all">
+              Ir al Momento 2 (Absorción)
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1996,7 +2076,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { getApiBaseUrl } from '../../lib/api'
@@ -2075,121 +2155,246 @@ function speakEnglish(text, rate = 0.85) {
 }
 
 // -----------------------------------------------------------------
-// Phase 1 State (Warm-up Match Game)
+// Phase 1 State (HU16: video de bienvenida, objetivos y warm-up drag & drop)
 // -----------------------------------------------------------------
 const videoPlaying = ref(false)
 const videoCompleted = ref(false)
-const videoProgress = ref(0)
-let videoTimer = null
+const videoAvailable = ref(false)
+const introAcknowledged = ref(false)
+const objectivesConfirmed = ref(false)
+const warmupSectionRef = ref(null)
+const warmupError = ref(null)
+const warmupCelebration = ref(false)
+let warmupErrorTimer = null
 
-// M1 warm-up items
-const m1LeftItems = ['Sun', 'Afternoon', 'Moon']
-const m1RightItems = ['Good morning', 'Good afternoon', 'Good evening']
+const currentVideoSrc = computed(() => `/videos/m${moduleNumber.value}-welcome.mp4`)
 
-// M2 warm-up items
-const m2LeftItems = ['Morning Shift (07:00 AM)', 'Afternoon Shift (03:00 PM)', 'Night Shift (11:00 PM)']
-const m2RightItems = ['Good morning, Nurse', 'Good afternoon, Team', 'Good evening, Shift']
-
-// M3 warm-up items
-const m3LeftItems = ['Check vital signs & blood pressure', 'Explain current procedure politely', 'Propose checklist improvements']
-const m3RightItems = ['Patient in bed (Paciente)', 'Visitor / Family (Familia)', 'Nurse Manager / Doctor (Supervisor)']
-
-// M4 warm-up items (Discharge Final States vs Checklist Verification Criteria)
-const m4LeftItems = ['Vital signs stable', 'Pain resolved', 'Ready for discharge']
-const m4RightItems = ['Pulse & BP Normal (Check)', 'Pain Scale < 2/10 (Check)', 'Medical Orders Signed (Check)']
-
-const activeLeftItems = computed(() => {
-  if (moduleNumber.value === 4) return m4LeftItems
-  if (moduleNumber.value === 3) return m3LeftItems
-  if (moduleNumber.value === 2) return m2LeftItems
-  return m1LeftItems
-})
-
-const activeRightItems = computed(() => {
-  if (moduleNumber.value === 4) return m4RightItems
-  if (moduleNumber.value === 3) return m3RightItems
-  if (moduleNumber.value === 2) return m2RightItems
-  return m1RightItems
-})
-
-const selectedLeft = ref(null)
-const selectedRight = ref(null)
-const matchedPairs = ref([])
-const gameSuccess = ref(null)
+const warmupUnlocked = computed(() => introAcknowledged.value || phaseProgress.value.inicio === 100)
 const isGameCompleted = computed(() => phaseProgress.value.inicio === 100)
+const gameSuccess = ref(null)
 
-function selectLeftItem(item) {
-  if (matchedPairs.value.includes(item)) return
-  selectedLeft.value = item
-  checkWarmupMatch()
-}
-
-function selectRightItem(item) {
-  if (matchedPairs.value.includes(item)) return
-  selectedRight.value = item
-  checkWarmupMatch()
-}
-
-function checkWarmupMatch() {
-  if (selectedLeft.value && selectedRight.value) {
-    let correctPairs = {}
-    if (moduleNumber.value === 4) {
-      correctPairs = {
-        'Vital signs stable': 'Pulse & BP Normal (Check)',
-        'Pain resolved': 'Pain Scale < 2/10 (Check)',
-        'Ready for discharge': 'Medical Orders Signed (Check)'
-      }
-    } else if (moduleNumber.value === 3) {
-      correctPairs = {
-        'Check vital signs & blood pressure': 'Patient in bed (Paciente)',
-        'Explain current procedure politely': 'Visitor / Family (Familia)',
-        'Propose checklist improvements': 'Nurse Manager / Doctor (Supervisor)'
-      }
-    } else if (moduleNumber.value === 2) {
-      correctPairs = {
-        'Morning Shift (07:00 AM)': 'Good morning, Nurse',
-        'Afternoon Shift (03:00 PM)': 'Good afternoon, Team',
-        'Night Shift (11:00 PM)': 'Good evening, Shift'
-      }
-    } else {
-      correctPairs = {
-        'Sun': 'Good morning',
-        'Afternoon': 'Good afternoon',
-        'Moon': 'Good evening'
-      }
-    }
-
-    if (correctPairs[selectedLeft.value] === selectedRight.value) {
-      matchedPairs.value.push(selectedLeft.value, selectedRight.value)
-    }
-    selectedLeft.value = null
-    selectedRight.value = null
-    
-    if (matchedPairs.value.length === 6) {
-      gameSuccess.value = true
-      phaseProgress.value.inicio = 100
-      saveProgress()
-    }
+async function checkVideoAsset() {
+  try {
+    const res = await fetch(currentVideoSrc.value, { method: 'HEAD' })
+    const contentType = res.headers.get('content-type') || ''
+    videoAvailable.value = res.ok && contentType.startsWith('video')
+  } catch {
+    videoAvailable.value = false
   }
 }
 
-function resetWarmupGame() {
-  selectedLeft.value = null
-  selectedRight.value = null
-  matchedPairs.value = []
-  gameSuccess.value = null
-  phaseProgress.value.inicio = 0
+function scrollToWarmup() {
+  nextTick(() => {
+    window.setTimeout(() => {
+      warmupSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+  })
+}
+
+function unlockWarmup() {
+  introAcknowledged.value = true
+  persistLocalState()
+  scrollToWarmup()
+}
+
+function onVideoWatched() {
+  videoPlaying.value = false
+  videoCompleted.value = true
+  unlockWarmup()
   saveProgress()
 }
 
-function checkPhase1Completion() {
-  if (videoCompleted.value && gameSuccess.value === true) {
-    phaseProgress.value.inicio = 100
+function resetVideo() {
+  videoCompleted.value = false
+  videoPlaying.value = false
+  persistLocalState()
+}
+
+function confirmObjectives() {
+  objectivesConfirmed.value = true
+  unlockWarmup()
+  saveProgress()
+}
+
+const warmupPairs = computed(() => {
+  if (moduleNumber.value === 4) {
+    return [
+      { id: 'vitals', label: 'Vital signs stable', right: 'Pulse & BP Normal (Check)', icon: 'monitor_heart', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      { id: 'pain', label: 'Pain resolved', right: 'Pain Scale < 2/10 (Check)', icon: 'healing', color: 'text-teal-600', bg: 'bg-teal-50' },
+      { id: 'discharge', label: 'Ready for discharge', right: 'Medical Orders Signed (Check)', icon: 'verified_user', color: 'text-[#006688]', bg: 'bg-[#006688]/10' },
+    ]
+  }
+  if (moduleNumber.value === 3) {
+    return [
+      { id: 'vitals', label: 'Check vital signs & blood pressure', right: 'Patient in bed (Paciente)', icon: 'vital_signs', color: 'text-rose-600', bg: 'bg-rose-50' },
+      { id: 'procedure', label: 'Explain current procedure politely', right: 'Visitor / Family (Familia)', icon: 'record_voice_over', color: 'text-amber-600', bg: 'bg-amber-50' },
+      { id: 'checklist', label: 'Propose checklist improvements', right: 'Nurse Manager / Doctor (Supervisor)', icon: 'checklist', color: 'text-[#006688]', bg: 'bg-[#006688]/10' },
+    ]
+  }
+  if (moduleNumber.value === 2) {
+    return [
+      { id: 'morning', label: 'Morning Shift (07:00 AM)', right: 'Good morning, Nurse', icon: 'light_mode', color: 'text-amber-600', bg: 'bg-amber-50' },
+      { id: 'afternoon', label: 'Afternoon Shift (03:00 PM)', right: 'Good afternoon, Team', icon: 'wb_twilight', color: 'text-orange-600', bg: 'bg-orange-50' },
+      { id: 'night', label: 'Night Shift (11:00 PM)', right: 'Good evening, Shift', icon: 'dark_mode', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    ]
+  }
+  return [
+    { id: 'morning', label: 'Morning', right: 'Good morning', icon: 'wb_sunny', color: 'text-amber-600', bg: 'bg-gradient-to-b from-sky-200 to-amber-100', illustration: 'morning' },
+    { id: 'afternoon', label: 'Afternoon', right: 'Good afternoon', icon: 'wb_twilight', color: 'text-orange-600', bg: 'bg-gradient-to-b from-orange-200 to-rose-100', illustration: 'afternoon' },
+    { id: 'night', label: 'Night', right: 'Good evening', icon: 'dark_mode', color: 'text-indigo-600', bg: 'bg-gradient-to-b from-indigo-900 to-slate-900', illustration: 'night' },
+  ]
+})
+
+const warmupCards = ref([])
+const selectedWarmupCardId = ref(null)
+const activeWarmupCard = ref(null)
+let warmupInitialPointerX = 0
+let warmupInitialPointerY = 0
+let warmupInitialCardX = 0
+let warmupInitialCardY = 0
+
+function buildWarmupCards() {
+  warmupCards.value = warmupPairs.value.map(pair => ({
+    ...pair,
+    matched: false,
+    x: 0,
+    y: 0,
+    isResetting: false,
+  }))
+  selectedWarmupCardId.value = null
+}
+
+function isPairMatched(pairId) {
+  return Boolean(warmupCards.value.find(card => card.id === pairId)?.matched)
+}
+
+function startWarmupDrag(event, card) {
+  if (!warmupUnlocked.value || card.matched) return
+  activeWarmupCard.value = card
+  warmupInitialPointerX = event.clientX
+  warmupInitialPointerY = event.clientY
+  warmupInitialCardX = card.x
+  warmupInitialCardY = card.y
+  window.addEventListener('pointermove', onWarmupDragMove)
+  window.addEventListener('pointerup', onWarmupDragEnd)
+}
+
+function onWarmupDragMove(event) {
+  if (!activeWarmupCard.value) return
+  activeWarmupCard.value.x = warmupInitialCardX + (event.clientX - warmupInitialPointerX)
+  activeWarmupCard.value.y = warmupInitialCardY + (event.clientY - warmupInitialPointerY)
+}
+
+function onWarmupDragEnd(event) {
+  if (!activeWarmupCard.value) return
+  window.removeEventListener('pointermove', onWarmupDragMove)
+  window.removeEventListener('pointerup', onWarmupDragEnd)
+
+  const card = activeWarmupCard.value
+  activeWarmupCard.value = null
+
+  const slots = document.querySelectorAll('[data-warmup-slot]')
+  let droppedSlotId = null
+  slots.forEach(el => {
+    const rect = el.getBoundingClientRect()
+    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+      droppedSlotId = el.getAttribute('data-warmup-slot')
+    }
+  })
+
+  if (!droppedSlotId) {
+    returnCardToOrigin(card, false)
+    return
+  }
+
+  evaluateWarmupDrop(card.id, droppedSlotId)
+}
+
+function selectWarmupCard(card) {
+  if (!warmupUnlocked.value || card.matched) return
+  if (activeWarmupCard.value) return
+  selectedWarmupCardId.value = card.id
+}
+
+function placeSelectedOnSlot(slotId) {
+  if (!selectedWarmupCardId.value) return
+  evaluateWarmupDrop(selectedWarmupCardId.value, slotId)
+}
+
+function evaluateWarmupDrop(cardId, slotId) {
+  const card = warmupCards.value.find(c => c.id === cardId)
+  if (!card || card.matched || !warmupUnlocked.value) return
+  selectedWarmupCardId.value = null
+
+  if (cardId === slotId) {
+    card.matched = true
+    card.x = 0
+    card.y = 0
+    warmupError.value = null
+    checkWarmupCompletion()
+  } else {
+    showWarmupWarning('Esa no es la pareja correcta. La tarjeta volvió a su lugar, inténtalo de nuevo.')
+    returnCardToOrigin(card, true)
   }
 }
 
-watch([videoCompleted, gameSuccess], () => {
-  checkPhase1Completion()
+function returnCardToOrigin(card, animate) {
+  if (animate) {
+    card.isResetting = true
+    window.setTimeout(() => { card.isResetting = false }, 350)
+  }
+  card.x = 0
+  card.y = 0
+}
+
+function showWarmupWarning(message) {
+  warmupError.value = message
+  gameSuccess.value = false
+  if (warmupErrorTimer) clearTimeout(warmupErrorTimer)
+  warmupErrorTimer = window.setTimeout(() => { warmupError.value = null }, 3000)
+}
+
+function checkWarmupCompletion() {
+  if (warmupCards.value.length > 0 && warmupCards.value.every(card => card.matched)) {
+    gameSuccess.value = true
+    phaseProgress.value.inicio = 100
+    warmupCelebration.value = true
+    saveProgress()
+  }
+}
+
+function goToMomento2() {
+  warmupCelebration.value = false
+  goToPhase('estudio')
+}
+
+function resetWarmupGame() {
+  selectedWarmupCardId.value = null
+  warmupError.value = null
+  warmupCelebration.value = false
+  warmupCards.value.forEach(card => {
+    card.matched = false
+    card.x = 0
+    card.y = 0
+    card.isResetting = false
+  })
+  gameSuccess.value = null
+  phaseProgress.value.inicio = 0
+  persistLocalState()
+}
+
+function restoreWarmupCompleted() {
+  warmupCards.value.forEach(card => { card.matched = true })
+  gameSuccess.value = true
+  introAcknowledged.value = true
+}
+
+buildWarmupCards()
+
+watch(moduleNumber, () => {
+  buildWarmupCards()
+  gameSuccess.value = phaseProgress.value.inicio === 100 ? true : null
+  checkVideoAsset()
 })
 
 // -----------------------------------------------------------------
@@ -3117,6 +3322,7 @@ function isPhaseLocked(phaseId) {
 function goToPhase(phaseId) {
   if (!isPhaseLocked(phaseId)) {
     currentPhase.value = phaseId
+    persistLocalState()
   }
 }
 
@@ -3125,33 +3331,6 @@ function toggleSimulatedMediaFailure() {
   mediaWarningMessage.value = simulatedMediaFailure.value 
     ? 'Fallo al inicializar codec de audio/video. El módulo continuará en modo texto.' 
     : null
-}
-
-async function playVideo() {
-  videoPlaying.value = true
-  videoProgress.value = 0
-  videoTimer = setInterval(() => {
-    videoProgress.value += 10
-    if (videoProgress.value >= 100) {
-      clearInterval(videoTimer)
-      videoPlaying.value = false
-      videoCompleted.value = true
-      checkPhase1Completion()
-    }
-  }, 1000)
-}
-
-function skipVideo() {
-  if (videoTimer) clearInterval(videoTimer)
-  videoPlaying.value = false
-  videoCompleted.value = true
-  checkPhase1Completion()
-}
-
-function resetVideo() {
-  videoCompleted.value = false
-  videoPlaying.value = false
-  videoProgress.value = 0
 }
 
 function getGrammarHighlightClass(type) {
@@ -3186,8 +3365,10 @@ function buildProgressState() {
     currentPhase: currentPhase.value,
     phaseProgress: phaseProgress.value,
     videoCompleted: videoCompleted.value,
+    introAcknowledged: introAcknowledged.value,
+    objectivesConfirmed: objectivesConfirmed.value,
     gameSuccess: gameSuccess.value,
-    matchedPairs: matchedPairs.value,
+    warmupMatched: warmupCards.value.filter(c => c.matched).map(c => c.id),
     vocabPlayed: activeVocabList.value.map(v => ({ id: v.id, played: v.played })),
     m1Study: {
       section: m1StudySection.value,
@@ -3224,16 +3405,14 @@ async function saveProgress() {
   if (auth.token) {
     try {
       await fetch(`${apiBaseUrl}/api/courses/${courseId.value}/progress`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${auth.token}`
         },
         body: JSON.stringify({
-          phaseProgress: phaseProgress.value,
-          currentPhase: currentPhase.value,
-          progressPercentage: Math.round(moduleProgress.value),
-          isCompleted: moduleProgress.value === 100
+          phase: currentPhase.value,
+          phasePercentage: Math.round(phaseProgress.value[currentPhase.value] || 0)
         })
       })
     } catch (err) {
@@ -3245,12 +3424,15 @@ async function saveProgress() {
 async function loadProgress() {
   try {
     const raw = localStorage.getItem(storageKey.value)
+    const hadLocal = Boolean(raw)
     if (!raw) {
       phaseProgress.value = { inicio: 0, estudio: 0, practica: 0, evaluacion: 0 }
       currentPhase.value = 'inicio'
       videoCompleted.value = false
+      introAcknowledged.value = false
+      objectivesConfirmed.value = false
       gameSuccess.value = null
-      matchedPairs.value = []
+      buildWarmupCards()
       voiceRecorded.value = false
       examPassed.value = false
       showBadgeAward.value = false
@@ -3263,8 +3445,20 @@ async function loadProgress() {
       if (state.currentPhase) currentPhase.value = state.currentPhase
       if (state.phaseProgress) phaseProgress.value = state.phaseProgress
       if (state.videoCompleted !== undefined) videoCompleted.value = state.videoCompleted
+      if (state.introAcknowledged !== undefined) introAcknowledged.value = state.introAcknowledged
+      if (state.objectivesConfirmed !== undefined) objectivesConfirmed.value = state.objectivesConfirmed
       if (state.gameSuccess !== undefined) gameSuccess.value = state.gameSuccess
-      if (state.matchedPairs) matchedPairs.value = state.matchedPairs
+      buildWarmupCards()
+      if (Array.isArray(state.warmupMatched)) {
+        const matchedIds = state.warmupMatched
+        warmupCards.value.forEach(card => { card.matched = matchedIds.includes(card.id) })
+      } else if (Array.isArray(state.matchedPairs)) {
+        // Migración desde el emparejamiento por clics
+        warmupCards.value.forEach(card => { card.matched = state.matchedPairs.includes(card.label) })
+      }
+      if ((state.phaseProgress?.inicio || 0) >= 100) {
+        restoreWarmupCompleted()
+      }
       if (state.vocabPlayed) {
         state.vocabPlayed.forEach(sp => {
           const item = activeVocabList.value.find(v => v.id === sp.id)
@@ -3305,16 +3499,20 @@ async function loadProgress() {
       }
     }
 
-    // Try fetching synced progress from database
-    if (auth.token) {
+    // Restaurar el progreso de la cuenta solo si no hay estado local en este navegador
+    if (auth.token && !hadLocal) {
       const res = await fetch(`${apiBaseUrl}/api/courses/${courseId.value}/progress`, {
         headers: { 'Authorization': `Bearer ${auth.token}` }
       })
       if (res.ok) {
-        const dbProgress = await res.json()
+        const payload = await res.json()
+        const dbProgress = payload?.data || payload
         if (dbProgress && dbProgress.phaseProgress) {
           phaseProgress.value = { ...phaseProgress.value, ...dbProgress.phaseProgress }
           if (dbProgress.currentPhase) currentPhase.value = dbProgress.currentPhase
+          if ((dbProgress.phaseProgress.inicio || 0) >= 100) {
+            restoreWarmupCompleted()
+          }
         }
       }
     }
@@ -3334,6 +3532,7 @@ watch(courseId, () => {
 })
 
 onMounted(() => {
+  checkVideoAsset()
   loadProgress()
 })
 </script>
@@ -3341,6 +3540,9 @@ onMounted(() => {
 <style scoped>
 .linear {
   transition-timing-function: linear;
+}
+.card-reset {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
