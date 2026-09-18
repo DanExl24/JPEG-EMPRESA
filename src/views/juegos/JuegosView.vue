@@ -966,6 +966,30 @@
               />
             </div>
 
+            <!-- Icono del Minijuego -->
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Icono Representativo del Minijuego</label>
+              <button 
+                type="button" 
+                @click="openItemIconPicker(gameForm, 'Icono de la Tarjeta del Juego', 'Elige el icono de Material Symbols que identifica a este minijuego')"
+                class="w-full bg-gray-50 hover:bg-sky-50/70 border border-gray-200 hover:border-[#006688] rounded-xl px-3.5 py-2 flex items-center justify-between text-left transition-all cursor-pointer group shadow-sm"
+              >
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-sky-100 text-[#006688] flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-xl">{{ gameForm.icon || 'sports_esports' }}</span>
+                  </div>
+                  <div>
+                    <p class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                      <span>{{ gameForm.icon || 'sports_esports' }}</span>
+                      <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Icono Activo</span>
+                    </p>
+                    <p class="text-[10px] text-gray-400">Clic para abrir el catálogo y cambiar este icono</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-base text-gray-400 group-hover:text-[#006688]">palette</span>
+              </button>
+            </div>
+
             <!-- Mecánica / Plantilla de Juego -->
             <div class="space-y-1">
               <div class="flex items-center justify-between">
@@ -1399,12 +1423,16 @@
                 </div>
 
                 <div class="space-y-2">
-                  <label class="font-bold text-gray-600 block">Elementos Arrastrables y sus Destinos:</label>
+                  <div class="flex items-center justify-between">
+                    <label class="font-bold text-gray-700 block">Elementos Arrastrables y sus Destinos:</label>
+                    <span class="text-[10px] text-gray-400">Haz clic en el selector de cada fila para elegir un icono del catálogo</span>
+                  </div>
                   <div 
                     v-for="(it, itIdx) in round.items" 
                     :key="itIdx"
                     class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-200"
                   >
+                    <!-- Nombre / Etiqueta -->
                     <div class="sm:col-span-4">
                       <input 
                         v-model="it.label" 
@@ -1414,16 +1442,29 @@
                         class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-semibold text-gray-800 focus:border-[#006688] focus:outline-none"
                       />
                     </div>
-                    <div class="sm:col-span-2 flex items-center gap-1">
-                      <span class="material-symbols-outlined text-gray-500 text-sm">{{ it.icon || 'star' }}</span>
-                      <input 
-                        v-model="it.icon" 
-                        type="text" 
-                        placeholder="Icono" 
-                        class="w-full bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-1 text-gray-600 text-[11px] focus:border-[#006688] focus:outline-none"
-                      />
+                    <!-- Selector Visual de Icono -->
+                    <div class="sm:col-span-3">
+                      <button 
+                        type="button" 
+                        @click="openItemIconPicker(it, `Icono para '${it.label || 'Elemento'}'`, 'Selecciona un icono pedagógico visual del catálogo')"
+                        class="w-full bg-gray-50 hover:bg-sky-50/80 border border-gray-200 hover:border-[#006688] rounded-lg px-2 py-1 flex items-center justify-between gap-1 text-left transition-all cursor-pointer group shadow-sm"
+                        title="Hacer clic para abrir el catálogo y seleccionar icono"
+                      >
+                        <div class="flex items-center gap-1.5 min-w-0">
+                          <span class="material-symbols-outlined text-base text-[#006688] group-hover:scale-110 transition-transform flex-shrink-0">
+                            {{ it.icon || 'star' }}
+                          </span>
+                          <span class="text-[11px] font-bold text-gray-700 truncate">
+                            {{ it.icon || 'Elegir icono' }}
+                          </span>
+                        </div>
+                        <span class="material-symbols-outlined text-xs text-gray-400 group-hover:text-[#006688] flex-shrink-0">
+                          expand_more
+                        </span>
+                      </button>
                     </div>
-                    <div class="sm:col-span-5">
+                    <!-- Expresión en Inglés -->
+                    <div class="sm:col-span-4">
                       <input 
                         v-model="it.match" 
                         type="text" 
@@ -1432,6 +1473,7 @@
                         class="w-full bg-blue-50/50 border border-blue-200 rounded-lg px-2 py-1 font-bold text-blue-900 focus:border-[#006688] focus:outline-none"
                       />
                     </div>
+                    <!-- Botón Eliminar Fila -->
                     <div class="sm:col-span-1 text-right">
                       <button 
                         type="button" 
@@ -1504,6 +1546,16 @@
       </div>
     </div>
 
+    <!-- Modal Selector Visual de Iconos Reutilizable -->
+    <IconPickerModal
+      v-model="activeIconModelValue"
+      :is-open="isIconPickerOpen"
+      :title="iconPickerTitle"
+      :subtitle="iconPickerSubtitle"
+      @select="onIconSelected"
+      @close="isIconPickerOpen = false"
+    />
+
   </div>
 </template>
 
@@ -1514,6 +1566,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
 import { apiFetch } from '../../lib/apiClient'
+import IconPickerModal from '../../components/common/IconPickerModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -1522,6 +1575,35 @@ const auth = useAuthStore()
 const notificationStore = useNotificationStore()
 
 const apiBaseUrl = getApiBaseUrl()
+
+// Selector de Iconos para minijuegos y elementos pedagógicos
+const isIconPickerOpen = ref(false)
+const iconPickerTitle = ref('Selector de Iconos')
+const iconPickerSubtitle = ref('Selecciona un icono pedagógico visual del catálogo')
+const activeItemTarget = ref(null)
+
+const activeIconModelValue = computed({
+  get: () => activeItemTarget.value?.icon || '',
+  set: (val) => {
+    if (activeItemTarget.value) {
+      activeItemTarget.value.icon = val
+    }
+  }
+})
+
+function openItemIconPicker(target, title = 'Selector de Iconos', subtitle = 'Selecciona un icono pedagógico visual del catálogo') {
+  activeItemTarget.value = target
+  iconPickerTitle.value = title
+  iconPickerSubtitle.value = subtitle
+  isIconPickerOpen.value = true
+}
+
+function onIconSelected(selectedIcon) {
+  if (activeItemTarget.value) {
+    activeItemTarget.value.icon = selectedIcon
+  }
+  isIconPickerOpen.value = false
+}
 
 // Historial y estado de juegos del aprendiz
 const myCompletedScores = ref([])
