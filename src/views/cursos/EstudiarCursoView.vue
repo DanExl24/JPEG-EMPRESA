@@ -2139,10 +2139,12 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useNotificationStore } from '../../stores/notification'
 import { getApiBaseUrl } from '../../lib/api'
 
 const route = useRoute()
 const auth = useAuthStore()
+const notificationStore = useNotificationStore()
 
 // Course Route State
 const courseId = computed(() => route.params.courseId || '1')
@@ -3308,6 +3310,23 @@ const globalQuestions = [
 ]
 
 async function openGlobalPostTest() {
+  // Validación estricta para aprendices:
+  // 1) Debe ser el Módulo 4
+  // 2) Debe haber alcanzado la fase de Cierre / Evaluación
+  if (!auth.isAdmin && !auth.isInstructor) {
+    const isModule4 = Number(moduleNumber.value) === 4
+    const hasReachedCierre = currentPhase.value === 'evaluacion' || (phaseProgress.value.practica >= 100) || examPassed.value || (phaseProgress.value.evaluacion > 0)
+    
+    if (!isModule4 || !hasReachedCierre) {
+      notificationStore.notify({
+        type: 'warning',
+        title: 'Acceso Restringido al POST-TEST',
+        message: 'No puedes presentar el POST-TEST Global hasta haber llegado al Módulo 4 y completado sus fases previas hasta el Cierre.'
+      })
+      return
+    }
+  }
+
   globalAnswers.value = {}
   isSubmittingPostTest.value = false
 
@@ -3665,7 +3684,26 @@ watch(courseId, () => {
 onMounted(async () => {
   checkVideoAsset()
   await checkCourseLockAndDetails()
-  loadProgress()
+  await loadProgress()
+
+  // Si proviene del enlace de acceso directo al POST-TEST Global (?postTest=true)
+  if (route.query.postTest === 'true') {
+    if (auth.isAdmin || auth.isInstructor) {
+      openGlobalPostTest()
+    } else {
+      const isModule4 = Number(moduleNumber.value) === 4
+      const hasReachedCierre = currentPhase.value === 'evaluacion' || (phaseProgress.value.practica >= 100) || examPassed.value || (phaseProgress.value.evaluacion > 0)
+      if (isModule4 && hasReachedCierre && !isCourseLocked.value) {
+        openGlobalPostTest()
+      } else {
+        notificationStore.notify({
+          type: 'warning',
+          title: 'POST-TEST Global Bloqueado',
+          message: 'Debes completar los módulos 1 a 3 y alcanzar la fase de Cierre del Módulo 4 antes de presentar este examen integrador.'
+        })
+      }
+    }
+  }
 })
 </script>
 

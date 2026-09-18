@@ -137,6 +137,14 @@
             </template>
             
             <div v-else class="flex items-center gap-2">
+              <router-link
+                :to="`/dashboard/cursos/${course.id}`"
+                class="px-2.5 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-[#006688] rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                title="Explorar el contenido pedagógico de este curso"
+              >
+                <span class="material-symbols-outlined text-sm">visibility</span>
+                Ver
+              </router-link>
               <button
                 @click="openEditCourseModal(course)"
                 class="text-xs font-semibold text-[#006688] hover:underline flex items-center gap-0.5 cursor-pointer"
@@ -154,6 +162,106 @@
                 Eliminar
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- CIERRE GLOBAL · POST-TEST (EVALUACIÓN INTEGRADORA DE RUTA) -->
+    <!-- ======================================================== -->
+    <div class="mt-8">
+      <!-- Caso A: Desbloqueado para Admin/Instructor o Aprendiz que completó los módulos y llegó al cierre -->
+      <div 
+        v-if="canTakeGlobalPostTest" 
+        class="bg-gradient-to-r from-teal-900 via-[#004e69] to-emerald-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-emerald-500/30 group animate-fade-in"
+      >
+        <div class="absolute -right-10 -bottom-10 opacity-10 group-hover:opacity-15 transition-opacity">
+          <span class="material-symbols-outlined text-9xl">workspace_premium</span>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+          <div class="space-y-2 max-w-2xl">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-3 py-1 bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-yellow-300">workspace_premium</span>
+                {{ auth.isAdmin || auth.isInstructor ? 'Cierre Global · Acceso Auditoría' : '¡Cierre de Ruta Desbloqueado!' }}
+              </span>
+              <span class="text-xs text-cyan-200 font-semibold bg-white/10 px-2.5 py-0.5 rounded-full">
+                10 Reactivos Clínicos · RAP-01 al RAP-06
+              </span>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black tracking-tight text-white">
+              POST-TEST GLOBAL — Certificación Nursing Academy
+            </h3>
+
+            <p class="text-xs sm:text-sm text-gray-200 leading-relaxed">
+              {{ auth.isAdmin || auth.isInstructor 
+                ? 'Como administrador o instructor, puedes auditar, revisar y probar en cualquier momento la evaluación final integradora que mide el crecimiento pedagógico de los aprendices y emite el diploma oficial.' 
+                : '¡Excelente trabajo! Has completado el recorrido por los módulos formativos y alcanzado la fase de Cierre. Presenta tu evaluación final para medir tu aprendizaje frente al diagnóstico inicial y certificar tus competencias.' 
+              }}
+            </p>
+          </div>
+
+          <div class="shrink-0 flex flex-col sm:flex-row gap-3">
+            <router-link
+              to="/dashboard/cursos/4?postTest=true"
+              class="px-6 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-black text-sm rounded-2xl shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-base">school</span>
+              {{ auth.isAdmin || auth.isInstructor ? 'Auditar POST-TEST Global' : 'Presentar POST-TEST Global' }}
+            </router-link>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caso B: Bloqueado para Aprendiz que NO ha llegado al módulo 4 o no ha llegado a su cierre -->
+      <div 
+        v-else 
+        class="bg-gray-50/90 rounded-3xl p-6 sm:p-8 border-2 border-dashed border-gray-300 text-gray-600 shadow-xs relative overflow-hidden"
+      >
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-3 py-1 bg-gray-200 text-gray-600 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">lock</span>
+                POST-TEST GLOBAL BLOQUEADO
+              </span>
+              <span class="text-xs text-gray-400 font-semibold">
+                Certificación Final de Ruta
+              </span>
+            </div>
+
+            <h3 class="text-lg sm:text-xl font-bold text-gray-800">
+              Evaluación Integradora de Cierre (RAP-01 al RAP-06)
+            </h3>
+
+            <p class="text-xs sm:text-sm text-gray-500 leading-relaxed">
+              {{ postTestLockReason }}
+            </p>
+
+            <div class="p-3 bg-amber-50/80 border border-amber-200/70 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 mt-2">
+              <span class="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">info</span>
+              <div>
+                <span class="font-bold">Condiciones indispensables para desbloquear:</span>
+                <ul class="list-disc list-inside mt-1 space-y-0.5 text-[11px] text-amber-800">
+                  <li>Haber completado los Módulos 1, 2 y 3 al 100%.</li>
+                  <li>Haber ingresado al Módulo 4 (Professional Practice) y alcanzado su fase de Cierre / Evaluación.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="shrink-0">
+            <button
+              disabled
+              class="px-5 py-3 bg-gray-200 text-gray-400 font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-not-allowed shadow-none"
+              title="Cumple con los requisitos formativos para desbloquear"
+            >
+              <span class="material-symbols-outlined text-base">lock</span>
+              Requisitos Pendientes
+            </button>
           </div>
         </div>
       </div>
@@ -1123,6 +1231,63 @@ const filteredCourses = computed(() => {
   if (activeFilter.value === 'Completados') return courses.value.filter(c => c.progress === 100)
   if (activeFilter.value === 'Nuevos') return courses.value.filter(c => c.progress === 0 || !c.progress)
   return courses.value
+})
+
+// Validación estricta para el POST-TEST Global según los requisitos pedagógicos
+const canTakeGlobalPostTest = computed(() => {
+  if (auth.isAdmin || auth.isInstructor) return true
+
+  const c1 = courses.value.find(c => c.id === 1)
+  const c2 = courses.value.find(c => c.id === 2)
+  const c3 = courses.value.find(c => c.id === 3)
+  const c4 = courses.value.find(c => c.id === 4)
+
+  const m1Done = (c1?.progress || 0) >= 100
+  const m2Done = (c2?.progress || 0) >= 100
+  const m3Done = (c3?.progress || 0) >= 100
+
+  // 1) Si no ha completado los 3 módulos anteriores, no ha llegado válidamente al módulo 4
+  if (!m1Done || !m2Done || !m3Done) return false
+
+  // 2) Si llegó al módulo 4, verificar que haya alcanzado la fase de Cierre (evaluación)
+  // Progreso general en curso 4 >= 75% indica que superó práctica y llegó a evaluación
+  if ((c4?.progress || 0) >= 75) return true
+
+  // Consultar estado local guardado para el módulo 4
+  const apprenticeId = auth.user?.id || 'guest'
+  const m4Key = `nursing_academy_progress_${apprenticeId}_course_4`
+  try {
+    const raw = localStorage.getItem(m4Key)
+    if (raw) {
+      const state = JSON.parse(raw)
+      if (
+        state.currentPhase === 'evaluacion' || 
+        state.examPassed || 
+        (state.phaseProgress?.practica >= 100) ||
+        (state.phaseProgress?.evaluacion > 0)
+      ) {
+        return true
+      }
+    }
+  } catch {}
+
+  return false
+})
+
+const postTestLockReason = computed(() => {
+  const c1 = courses.value.find(c => c.id === 1)
+  const c2 = courses.value.find(c => c.id === 2)
+  const c3 = courses.value.find(c => c.id === 3)
+
+  const m1Done = (c1?.progress || 0) >= 100
+  const m2Done = (c2?.progress || 0) >= 100
+  const m3Done = (c3?.progress || 0) >= 100
+
+  if (!m1Done || !m2Done || !m3Done) {
+    return 'Debes completar secuencialmente los módulos previos (1, 2 y 3) al 100% para llegar al Módulo 4.'
+  }
+
+  return 'Has llegado al Módulo 4 pero aún no alcanzas la fase de Cierre (Evaluación). Avanza en las fases de estudio y práctica para habilitar este examen final.'
 })
 
 // Handlers
