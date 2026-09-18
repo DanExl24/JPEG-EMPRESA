@@ -396,30 +396,141 @@
           />
         </div>
 
-        <!-- ── PRONUNCIACIÓN ── -->
-        <div v-else-if="activity.template === 'pronunciation'" class="space-y-4">
-          <h3 class="font-black text-gray-800 text-base flex items-center gap-2">
-            <span class="w-2 h-5 bg-red-500 rounded-full"></span>
-            Práctica de Pronunciación
-          </h3>
-          <p class="text-xs text-gray-500">Lee esta oración en voz alta y graba tu pronunciación:</p>
-          <div class="p-4 bg-[#006688]/5 border border-[#006688]/20 rounded-xl text-center">
-            <p class="text-base font-bold text-[#006688]">"{{ activity.pronouncePhrase || 'Frase a pronunciar' }}"</p>
-          </div>
-          <div class="flex flex-col items-center gap-3">
+        <!-- ── PRONUNCIACIÓN (RECONOCIMIENTO DE VOZ REAL) ── -->
+        <div v-else-if="activity.template === 'pronunciation'" class="space-y-5">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h3 class="font-black text-gray-800 text-base flex items-center gap-2">
+              <span class="w-2 h-5 bg-red-500 rounded-full"></span>
+              Práctica de Pronunciación en Inglés
+            </h3>
             <button
-              @click="simulateMicRecording"
+              @click="playModelPronunciation"
               type="button"
-              :disabled="submitted"
-              :class="`w-16 h-16 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${
-                isRecording ? 'bg-red-600 animate-pulse' : 'bg-[#006688] hover:bg-[#004e69] hover:scale-105'
-              }`"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl transition-all border border-red-200 shadow-2xs"
+              title="Escuchar pronunciación modelo en inglés"
             >
-              <span class="material-symbols-outlined text-2xl">{{ isRecording ? 'stop' : 'mic' }}</span>
+              <span class="material-symbols-outlined text-base">volume_up</span>
+              Escuchar frase modelo
             </button>
-            <span class="text-xs text-gray-500 font-semibold">
-              {{ isRecording ? 'Grabando... (haz clic para detener)' : voiceRecorded ? '✓ Grabación lista' : 'Haz clic para grabar tu voz' }}
+          </div>
+
+          <p class="text-xs text-gray-500">
+            Escucha la frase de referencia y luego presiona el micrófono para leerla en voz alta en inglés:
+          </p>
+
+          <!-- Phrase target card -->
+          <div class="p-5 bg-gradient-to-br from-red-50/40 via-white to-gray-50 border border-red-100 rounded-2xl text-center space-y-1.5 shadow-2xs">
+            <span class="text-[10px] font-black tracking-wider uppercase text-red-600 bg-red-100/70 px-2.5 py-0.5 rounded-full">
+              Frase Objetivo
             </span>
+            <p class="text-xl sm:text-2xl font-black text-gray-800 tracking-wide mt-1">
+              "{{ activity.pronouncePhrase || 'Nice to meet you too' }}"
+            </p>
+          </div>
+
+          <!-- Browser Support Warning if SpeechRecognition not available -->
+          <div v-if="!speechSupported" class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 space-y-1">
+            <p class="font-bold flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-base text-amber-600">warning</span>
+              Reconocimiento de voz no soportado por este navegador
+            </p>
+            <p>Te sugerimos usar Google Chrome, Microsoft Edge o Safari para interactuar con actividades de pronunciación por micrófono.</p>
+          </div>
+
+          <!-- Microphone Controls & Status -->
+          <div v-else class="flex flex-col items-center gap-4 py-2">
+            <div class="relative flex items-center justify-center">
+              <!-- Pulsing outer ring when recording -->
+              <div 
+                v-if="isRecording"
+                class="absolute w-24 h-24 rounded-full bg-red-500/20 animate-ping pointer-events-none"
+              ></div>
+              <div 
+                v-if="isRecording"
+                class="absolute w-20 h-20 rounded-full bg-red-500/30 animate-pulse pointer-events-none"
+              ></div>
+
+              <button
+                @click="toggleSpeechRecognition"
+                type="button"
+                :disabled="submitted"
+                :class="`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${
+                  isRecording 
+                    ? 'bg-red-600 hover:bg-red-700 hover:scale-105 shadow-red-600/30' 
+                    : pronunciationPassed
+                      ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
+                      : 'bg-[#006688] hover:bg-[#004e69] hover:scale-105 shadow-[#006688]/30'
+                } disabled:opacity-50 disabled:cursor-not-allowed`"
+              >
+                <span class="material-symbols-outlined text-2xl">
+                  {{ isRecording ? 'mic' : pronunciationPassed ? 'check' : 'mic' }}
+                </span>
+              </button>
+            </div>
+
+            <p class="text-xs font-bold text-gray-600 text-center">
+              {{ isRecording ? '🎙️ Escuchando en inglés... ¡Habla ahora!' : pronunciationPassed ? '✓ Pronunciación validada con éxito' : 'Presiona el micrófono y pronuncia la frase en voz alta' }}
+            </p>
+
+            <!-- Error message if any -->
+            <div v-if="speechError" class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-semibold text-center max-w-md">
+              {{ speechError }}
+            </div>
+
+            <!-- Recognition Result & Live Evaluation Panel -->
+            <div v-if="recognizedText" class="w-full max-w-lg bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-gray-500 uppercase tracking-wider">Lo que escuchamos:</span>
+                <span 
+                  class="font-black px-2.5 py-0.5 rounded-full text-[11px]"
+                  :class="pronunciationPassed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                >
+                  {{ speechSimilarity }}% de similitud
+                </span>
+              </div>
+
+              <p class="text-sm font-bold text-gray-800 bg-white p-3 rounded-xl border border-gray-150 italic text-center">
+                "{{ recognizedText }}"
+              </p>
+
+              <!-- Progress Bar -->
+              <div class="h-2.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  class="h-full transition-all duration-500 rounded-full"
+                  :class="pronunciationPassed ? 'bg-emerald-500' : 'bg-amber-500'"
+                  :style="`width: ${Math.max(5, speechSimilarity)}%`"
+                ></div>
+              </div>
+
+              <!-- Word Breakdown Highlight -->
+              <div class="pt-1">
+                <span class="text-[10px] font-bold text-gray-400 block mb-1.5 uppercase">Desglose de palabras detectadas:</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span 
+                    v-for="(w, idx) in wordBreakdown" 
+                    :key="idx"
+                    :class="`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all ${
+                      w.matched 
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                        : 'bg-gray-100 text-gray-500 border border-gray-200 line-through'
+                    }`"
+                  >
+                    {{ w.word }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Feedback message -->
+              <div 
+                class="p-2.5 rounded-xl text-xs font-bold text-center"
+                :class="pronunciationPassed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'"
+              >
+                {{ pronunciationPassed 
+                  ? '¡Excelente pronunciación! Cumples con el estándar clínico requerido.' 
+                  : 'Pronunciación no del todo clara. Vuelve a presionar el micrófono para intentar de nuevo.' 
+                }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -490,7 +601,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 import { useNotificationStore } from '../../stores/notification'
@@ -542,6 +653,11 @@ async function fetchActivity() {
           submitted.value = true
           reviewStatus.value = existing.reviewStatus || 'graded'
           feedbackResult.value = reviewStatus.value === 'pending' ? null : existing.passed
+          if (data.template === 'pronunciation' && existing.passed) {
+            pronunciationPassed.value = true
+            speechSimilarity.value = 100
+            recognizedText.value = data.pronouncePhrase || ''
+          }
           try {
             const parsedAnswers = JSON.parse(existing.answers || '[]')
             reviewedAnswers.value = parsedAnswers
@@ -926,23 +1042,204 @@ function playListeningAudio() {
 }
 
 // ════════════════════════════════════════════════
-//  PRONUNCIATION
+//  PRONUNCIATION (REAL WEB SPEECH API)
 // ════════════════════════════════════════════════
-const isRecording  = ref(false)
-const voiceRecorded = ref(false)
+const isRecording = ref(false)
+const recognizedText = ref('')
+const speechSimilarity = ref(0)
+const pronunciationPassed = ref(false)
+const speechError = ref(null)
+const speechSupported = ref(typeof window !== 'undefined' && Boolean(window.SpeechRecognition || window.webkitSpeechRecognition))
 
-function simulateMicRecording() {
-  if (isRecording.value) {
-    isRecording.value  = false
-    voiceRecorded.value = true
+let recognitionInstance = null
+
+function normalizeText(text) {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.,!?;:'"¿¡()\-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function levenshteinDistance(s1, s2) {
+  const m = s1.length
+  const n = s2.length
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (s1[i - 1] === s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1]
+      } else {
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + 1
+        )
+      }
+    }
+  }
+  return dp[m][n]
+}
+
+function evaluateSpeech(spoken) {
+  const target = activity.value?.pronouncePhrase || ''
+  const normTarget = normalizeText(target)
+  const normSpoken = normalizeText(spoken)
+
+  if (!normTarget || !normSpoken) {
+    speechSimilarity.value = 0
+    pronunciationPassed.value = false
+    return
+  }
+
+  if (normTarget === normSpoken) {
+    speechSimilarity.value = 100
+    pronunciationPassed.value = true
+    return
+  }
+
+  const maxLen = Math.max(normTarget.length, normSpoken.length)
+  const dist = levenshteinDistance(normTarget, normSpoken)
+  const levRatio = maxLen > 0 ? (maxLen - dist) / maxLen : 0
+
+  const targetWords = normTarget.split(' ').filter(Boolean)
+  const spokenWords = normSpoken.split(' ').filter(Boolean)
+  let matches = 0
+  targetWords.forEach(tw => {
+    if (spokenWords.some(sw => sw === tw || (sw.length >= 4 && (tw.includes(sw) || sw.includes(tw))))) {
+      matches++
+    }
+  })
+  const wordRatio = targetWords.length > 0 ? matches / targetWords.length : 0
+
+  const score = Math.round((levRatio * 0.5 + wordRatio * 0.5) * 100)
+  speechSimilarity.value = Math.max(0, Math.min(100, score))
+  // Aprobado con 70% o más de coincidencia fonética/textual
+  pronunciationPassed.value = score >= 70
+}
+
+const wordBreakdown = computed(() => {
+  const target = activity.value?.pronouncePhrase || ''
+  const spoken = recognizedText.value || ''
+  const normSpoken = normalizeText(spoken).split(' ').filter(Boolean)
+  const targetWords = target.split(/\s+/).filter(Boolean)
+
+  return targetWords.map(word => {
+    const cleanWord = normalizeText(word)
+    const matched = normSpoken.some(sw => sw === cleanWord || (cleanWord.length >= 4 && (sw.includes(cleanWord) || cleanWord.includes(sw))))
+    return { word, matched }
+  })
+})
+
+function playModelPronunciation() {
+  const phrase = activity.value?.pronouncePhrase || ''
+  if (!phrase) return
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
+    const utt = new SpeechSynthesisUtterance(phrase)
+    utt.lang = 'en-US'
+    utt.rate = 0.85
+    window.speechSynthesis.speak(utt)
   } else {
-    isRecording.value  = true
-    voiceRecorded.value = false
-    setTimeout(() => {
-      if (isRecording.value) { isRecording.value = false; voiceRecorded.value = true }
-    }, 4000)
+    notificationStore.notify({ type: 'info', title: 'Frase Modelo', message: phrase })
   }
 }
+
+function toggleSpeechRecognition() {
+  if (isRecording.value) {
+    stopSpeechRecognition()
+  } else {
+    startSpeechRecognition()
+  }
+}
+
+function startSpeechRecognition() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRec) {
+    speechSupported.value = false
+    speechError.value = 'Tu navegador no soporta reconocimiento de voz nativo. Te recomendamos usar Google Chrome o Edge.'
+    return
+  }
+
+  speechError.value = null
+  recognizedText.value = ''
+  speechSimilarity.value = 0
+  pronunciationPassed.value = false
+
+  try {
+    if (recognitionInstance) {
+      try { recognitionInstance.abort() } catch {}
+    }
+
+    const rec = new SpeechRec()
+    rec.lang = 'en-US'
+    rec.continuous = false
+    rec.interimResults = true
+    rec.maxAlternatives = 1
+
+    rec.onstart = () => {
+      isRecording.value = true
+    }
+
+    rec.onresult = (event) => {
+      let interim = ''
+      let finalTranscript = ''
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript
+        } else {
+          interim += event.results[i][0].transcript
+        }
+      }
+      const text = (finalTranscript || interim).trim()
+      if (text) {
+        recognizedText.value = text
+        evaluateSpeech(text)
+      }
+    }
+
+    rec.onerror = (event) => {
+      isRecording.value = false
+      if (event.error === 'not-allowed') {
+        speechError.value = 'Permiso de micrófono denegado. Permite el acceso al micrófono en la barra de direcciones del navegador.'
+      } else if (event.error === 'no-speech') {
+        speechError.value = 'No se detectó voz. Por favor habla de nuevo más cerca del micrófono.'
+      } else if (event.error !== 'aborted') {
+        speechError.value = `Aviso de audio (${event.error}). Puedes presionar el botón e intentar de nuevo.`
+      }
+    }
+
+    rec.onend = () => {
+      isRecording.value = false
+      if (recognizedText.value) {
+        evaluateSpeech(recognizedText.value)
+      }
+    }
+
+    recognitionInstance = rec
+    rec.start()
+  } catch (err) {
+    isRecording.value = false
+    speechError.value = 'No se pudo iniciar el micrófono. Verifica los permisos de tu navegador.'
+    console.error('Speech recognition error:', err)
+  }
+}
+
+function stopSpeechRecognition() {
+  if (recognitionInstance) {
+    try {
+      recognitionInstance.stop()
+    } catch {}
+  }
+  isRecording.value = false
+}
+
 // ════════════════════════════════════════════════
 //  FILL IN THE BLANK
 // ════════════════════════════════════════════════
@@ -963,7 +1260,7 @@ const canSubmit = computed(() => {
   if (tpl === 'quiz' || tpl === 'preguntas') return quizQuestionsList.value.length > 0 && quizQuestionsList.value.every((q, idx) => isQuizQuestionAnswered(q, idx))
   if (tpl === 'match') return matchedPairs.value.length === matchTermsList.value.length
   if (tpl === 'listening') return listeningInput.value.trim().length > 0
-  if (tpl === 'pronunciation') return voiceRecorded.value
+  if (tpl === 'pronunciation') return pronunciationPassed.value
   if (tpl === 'fillblank') return fillblankInput.value.trim().length > 0
   return false
 })
@@ -1000,7 +1297,7 @@ async function submitActivity() {
     const entered  = listeningInput.value.toLowerCase().replace(/[.,!?;:]/g, '')
     ok = entered.includes(phrase) || phrase.includes(entered)
   } else if (tpl === 'pronunciation') {
-    ok = voiceRecorded.value
+    ok = pronunciationPassed.value
   } else if (tpl === 'fillblank') {
     const correct = (activity.value.fillblankAnswer || '').trim().toLowerCase()
     const entered = fillblankInput.value.trim().toLowerCase()
@@ -1086,9 +1383,20 @@ function resetActivity() {
   matchFeedback.value  = null
   listeningInput.value = ''
   isRecording.value    = false
-  voiceRecorded.value  = false
+  recognizedText.value = ''
+  speechSimilarity.value = 0
+  pronunciationPassed.value = false
+  speechError.value    = null
   fillblankInput.value = ''
+  stopSpeechRecognition()
 }
+
+onBeforeUnmount(() => {
+  stopSpeechRecognition()
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
+  }
+})
 </script>
 
 <style scoped>
