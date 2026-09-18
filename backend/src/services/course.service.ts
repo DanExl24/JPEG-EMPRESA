@@ -1,4 +1,5 @@
 import prisma from '../lib/db.js'
+import type { Prisma } from '@prisma/client'
 import { NotFoundError, BadRequestError } from '../utils/appError.js'
 import type { CreateCourseDto, UpdateCourseDto, SaveCourseProgressDto } from '../types/course.types.js'
 import { GamificationService } from './gamification.service.js'
@@ -49,6 +50,8 @@ export const DEFAULT_COURSES = [
     raps: JSON.stringify(['RAP-06'])
   }
 ]
+
+export const OFFICIAL_COURSE_SLUGS = DEFAULT_COURSES.map(course => course.slug)
 
 export class CourseService {
   /**
@@ -115,6 +118,38 @@ export class CourseService {
   }
 
   /**
+   * Enlaza las actividades antiguas (que solo guardaban el título del curso) con su curso real
+   */
+  static async syncActivityCourseIds(): Promise<void> {
+    try {
+      const courses = await prisma.course.findMany({ select: { id: true, title: true } })
+      if (courses.length === 0) return
+
+      const pending = await prisma.activity.findMany({
+        where: { courseId: null },
+        select: { id: true, course: true }
+      })
+
+      let linked = 0
+      for (const activity of pending) {
+        const match = courses.find(course => course.title === activity.course)
+        if (!match) continue
+        await prisma.activity.update({
+          where: { id: activity.id },
+          data: { courseId: match.id }
+        })
+        linked++
+      }
+
+      if (linked > 0) {
+        console.log(`[CourseService] ${linked} actividad(es) enlazada(s) a su curso.`)
+      }
+    } catch (e) {
+      console.warn('[CourseService] Could not link activities to courses:', e)
+    }
+  }
+
+  /**
    * Obtiene la lista de todos los cursos con el progreso del usuario conectado y estado de bloqueo secuencial
    */
   static async listCourses(userId?: number, userRole?: string) {
@@ -133,11 +168,15 @@ export class CourseService {
     })
 
     const activities = await prisma.activity.findMany({
-      select: { course: true }
+      select: { course: true, courseId: true }
     })
     const activityCountMap = new Map<string, number>()
+    const activityCountByCourseId = new Map<number, number>()
     activities.forEach((a: any) => {
       activityCountMap.set(a.course, (activityCountMap.get(a.course) || 0) + 1)
+      if (a.courseId) {
+        activityCountByCourseId.set(a.courseId, (activityCountByCourseId.get(a.courseId) || 0) + 1)
+      }
     })
 
     let progressMap = new Map<number, number>()
@@ -151,29 +190,33 @@ export class CourseService {
     }
 
     const isPrivileged = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+
+    // Bloqueo secuencial solo entre los 4 módulos oficiales (RAP): los cursos
+    // personalizados creados por admin/instructor nunca se bloquean.
+    const officialCourses = courses.filter((c: any) => OFFICIAL_COURSE_SLUGS.includes(c.slug))
+    const lockInfoMap = new Map<number, { isLocked: boolean; prerequisiteTitle: string | null; prerequisiteId: number | null }>()
     let previousCourse: any = null
     let previousProgress = 100
-
-    return courses.map((c: any, index: number) => {
-      const studentCount = c._count?.progresses || 0
-      const activitiesCount = activityCountMap.get(c.title) || 0
-      const currentProgress = userId ? (progressMap.get(c.id) || 0) : 0
-
+    for (const officialCourse of officialCourses) {
+      const currentProgress = userId ? (progressMap.get(officialCourse.id) || 0) : 0
       let isLocked = false
       let prerequisiteTitle: string | null = null
       let prerequisiteId: number | null = null
-
-      // Bloqueo secuencial: Para aprendices, el módulo N requiere que el módulo N-1 esté al 100%
-      if (!isPrivileged && index > 0) {
-        if (previousProgress < 100) {
-          isLocked = true
-          prerequisiteTitle = previousCourse ? previousCourse.title : null
-          prerequisiteId = previousCourse ? previousCourse.id : null
-        }
+      if (!isPrivileged && previousCourse && previousProgress < 100) {
+        isLocked = true
+        prerequisiteTitle = previousCourse.title
+        prerequisiteId = previousCourse.id
       }
-
-      previousCourse = c
+      lockInfoMap.set(officialCourse.id, { isLocked, prerequisiteTitle, prerequisiteId })
+      previousCourse = officialCourse
       previousProgress = currentProgress
+    }
+
+    return courses.map((c: any) => {
+      const studentCount = c._count?.progresses || 0
+      const activitiesCount = activityCountByCourseId.get(c.id) || activityCountMap.get(c.title) || 0
+      const currentProgress = userId ? (progressMap.get(c.id) || 0) : 0
+      const lockInfo = lockInfoMap.get(c.id) || { isLocked: false, prerequisiteTitle: null, prerequisiteId: null }
 
       let rapsList: string[] = []
       if (c.raps) {
@@ -194,6 +237,7 @@ export class CourseService {
         icon: c.icon,
         iconColor: c.iconColor,
         bg: c.bg,
+        structure: c.structure || null,
         programId: c.programId || null,
         programName: c.program?.name || null,
         studentsCount: studentCount,
@@ -201,9 +245,9 @@ export class CourseService {
         activitiesCount,
         progress: currentProgress,
         raps: rapsList,
-        isLocked,
-        prerequisiteTitle,
-        prerequisiteId
+        isLocked: lockInfo.isLocked,
+        prerequisiteTitle: lockInfo.prerequisiteTitle,
+        prerequisiteId: lockInfo.prerequisiteId
       }
     })
   }
@@ -226,30 +270,37 @@ export class CourseService {
 
     const course = allCourses[courseIndex]
     const isPrivileged = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+    const isOfficialCourse = OFFICIAL_COURSE_SLUGS.includes(course.slug)
 
     let isLocked = false
     let prerequisiteTitle: string | null = null
     let prerequisiteId: number | null = null
 
-    if (!isPrivileged && courseIndex > 0) {
-      const prevCourse = allCourses[courseIndex - 1]
-      let prevProgress = 0
-      if (userId) {
-        const p = await prisma.courseProgress.findUnique({
-          where: {
-            userId_courseId: {
-              userId,
-              courseId: prevCourse.id
-            }
-          }
-        })
-        prevProgress = p ? p.overallPct : 0
-      }
+    // Bloqueo secuencial solo entre módulos oficiales (RAP); los cursos personalizados no se bloquean
+    if (!isPrivileged && isOfficialCourse) {
+      const officialCourses = allCourses.filter(c => OFFICIAL_COURSE_SLUGS.includes(c.slug))
+      const officialIndex = officialCourses.findIndex(c => c.id === id)
 
-      if (prevProgress < 100) {
-        isLocked = true
-        prerequisiteTitle = prevCourse.title
-        prerequisiteId = prevCourse.id
+      if (officialIndex > 0) {
+        const prevCourse = officialCourses[officialIndex - 1]
+        let prevProgress = 0
+        if (userId) {
+          const p = await prisma.courseProgress.findUnique({
+            where: {
+              userId_courseId: {
+                userId,
+                courseId: prevCourse.id
+              }
+            }
+          })
+          prevProgress = p ? p.overallPct : 0
+        }
+
+        if (prevProgress < 100) {
+          isLocked = true
+          prerequisiteTitle = prevCourse.title
+          prerequisiteId = prevCourse.id
+        }
       }
     }
 
@@ -300,6 +351,7 @@ export class CourseService {
         iconColor: data.iconColor || '#006688',
         bg: data.bg || 'bg-blue-50',
         programId: data.programId || null,
+        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
         raps: rapsValue
       }
     })
@@ -327,6 +379,7 @@ export class CourseService {
         ...(data.iconColor ? { iconColor: data.iconColor } : {}),
         ...(data.bg ? { bg: data.bg } : {}),
         ...(data.programId !== undefined ? { programId: data.programId } : {}),
+        ...(data.structure !== undefined ? { structure: data.structure as unknown as Prisma.InputJsonValue } : {}),
         ...(rapsValue !== undefined ? { raps: rapsValue } : {})
       }
     })

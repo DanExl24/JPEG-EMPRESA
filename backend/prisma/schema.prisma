@@ -134,6 +134,8 @@ model Activity {
   id                    Int      @id @default(autoincrement())
   title                 String
   course                String
+  courseId              Int?     @map("course_id")
+  courseRel             Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   phase                 String
   template              String
   points                Int      @default(10)
@@ -213,8 +215,10 @@ model Course {
   icon         String           @default("school")
   iconColor    String           @default("#006688") @map("icon_color")
   bg           String           @default("bg-blue-50")
+  structure    Json?
   programId    Int?             @map("program_id")
   program      TrainingProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  activities   Activity[]
   raps         String?          @default("[]")
   progresses   CourseProgress[]
   createdAt    DateTime         @default(now()) @map("created_at")

@@ -11,6 +11,7 @@ export type ActivityTemplate =
 export interface CreateActivityDto {
   title: string
   course: string
+  courseId?: number | string | null
   phase: string
   template: ActivityTemplate | string
   points?: number
