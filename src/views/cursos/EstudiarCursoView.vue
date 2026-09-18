@@ -37,8 +37,15 @@
         </div>
       </div>
 
-      <!-- Main Progress Tracking -->
-      <div class="w-full sm:w-64 space-y-2">
+      <!-- Main Progress Tracking / Modo Auditoría Docente -->
+      <div v-if="isPrivilegedUser" class="flex flex-col sm:items-end gap-1.5">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#006688]/10 border border-[#006688]/30 rounded-xl text-[#006688] shadow-2xs">
+          <span class="material-symbols-outlined text-base">admin_panel_settings</span>
+          <span class="text-xs font-black uppercase tracking-wider">Modo Auditoría Docente</span>
+        </div>
+        <span class="text-[11px] text-gray-500 font-medium">Navegación libre: 4 fases 100% accesibles</span>
+      </div>
+      <div v-else class="w-full sm:w-64 space-y-2">
         <div class="flex justify-between text-xs font-bold text-gray-600">
           <span>Progreso del Módulo</span>
           <span class="text-[#006688]">{{ Math.round(moduleProgress) }}%</span>
@@ -94,6 +101,30 @@
 
     <!-- Active Course Content (Rendered only if course is unlocked) -->
     <template v-else>
+    <!-- Banner de modo auditor docente / admin -->
+    <div v-if="isPrivilegedUser" class="bg-linear-to-r from-teal-50 via-sky-50 to-blue-50 border border-[#006688]/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-[#006688] text-white flex items-center justify-center shrink-0 shadow-sm">
+          <span class="material-symbols-outlined text-xl">visibility</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h4 class="font-black text-gray-800 text-sm">Vista de Inspección Pedagógica ({{ auth.isAdmin ? 'Administrador' : 'Instructor' }})</h4>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#006688] text-white uppercase tracking-wider">Sin Restricciones</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-0.5">
+            Estás visualizando el curso con privilegios docentes. Tienes acceso directo e irrestricto a todas las fases (Inicio, Estudio, Práctica y Cierre), materiales y cuestionarios.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-[#006688] bg-white px-3 py-1.5 rounded-xl border border-sky-200/80 shadow-2xs">
+          <span class="material-symbols-outlined text-sm text-green-600">lock_open</span>
+          4 Fases Desbloqueadas
+        </span>
+      </div>
+    </div>
+
     <!-- Media Check Settings Banner (Simulation) -->
     <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
       <div class="flex items-center gap-2">
@@ -2063,13 +2094,24 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3">
             <button 
               @click="submitExam" 
               :disabled="Object.keys(examAnswers).length < 6"
               class="px-6 py-3 bg-[#006688] hover:bg-[#004e69] text-white font-black text-xs rounded-xl disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow"
             >
               Entregar Evaluación
+            </button>
+
+            <button
+              v-if="isPrivilegedUser"
+              @click="autoFillExamForAudit"
+              type="button"
+              class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 transition-all"
+              title="Rellenar todas las respuestas correctas para auditar la pantalla de aprobación"
+            >
+              <span class="material-symbols-outlined text-sm">auto_fix_high</span>
+              Autocompletar (Auditoría)
             </button>
 
             <span v-if="examScoreMessage" class="text-xs font-bold text-red-600 flex items-center gap-1">
@@ -2182,6 +2224,8 @@ import GlobalPostTestModal from '../../components/cursos/GlobalPostTestModal.vue
 const route = useRoute()
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
+
+const isPrivilegedUser = computed(() => Boolean(auth.isAdmin || auth.isInstructor))
 
 // Course Route State
 const courseId = computed(() => route.params.courseId || '1')
@@ -2367,8 +2411,8 @@ let warmupErrorTimer = null
 
 const currentVideoSrc = computed(() => `/videos/m${moduleNumber.value}-welcome.mp4`)
 
-const warmupUnlocked = computed(() => introAcknowledged.value || phaseProgress.value.inicio === 100)
-const isGameCompleted = computed(() => phaseProgress.value.inicio === 100)
+const warmupUnlocked = computed(() => isPrivilegedUser.value || introAcknowledged.value || phaseProgress.value.inicio === 100)
+const isGameCompleted = computed(() => isPrivilegedUser.value || phaseProgress.value.inicio === 100)
 const gameSuccess = ref(null)
 
 async function checkVideoAsset() {
@@ -2991,7 +3035,7 @@ const m1ActiveCategory = ref('alphabet')
 const m1ActiveVocabItems = computed(() => m1VocabCategories.value.find(c => c.id === m1ActiveCategory.value)?.items || [])
 const m1AllVocabItems = computed(() => m1VocabCategories.value.flatMap(c => c.items))
 const m1HeardCount = computed(() => m1AllVocabItems.value.filter(i => i.played).length)
-const isM1VocabComplete = computed(() => m1AllVocabItems.value.length > 0 && m1HeardCount.value === m1AllVocabItems.value.length)
+const isM1VocabComplete = computed(() => isPrivilegedUser.value || (m1AllVocabItems.value.length > 0 && m1HeardCount.value === m1AllVocabItems.value.length))
 
 // Aplicación laboral: dictado de correo y teléfono
 const m1DictationExamples = [
@@ -3201,7 +3245,7 @@ const activeDialogue = computed(() => {
   return m2Dialogue
 })
 
-const isStudyCompleted = computed(() => phaseProgress.value.estudio === 100)
+const isStudyCompleted = computed(() => isPrivilegedUser.value || phaseProgress.value.estudio === 100)
 
 function playVocabAudio(vocabItem) {
   playingVocabId.value = vocabItem.id
@@ -3242,6 +3286,7 @@ function playM1VocabAudio(item) {
 }
 
 function isM1SectionUnlocked(sectionId) {
+  if (isPrivilegedUser.value) return true
   if (sectionId === 'grammar') return true
   if (sectionId === 'vocabulary') return m1StudyDone.value.grammar
   return m1StudyDone.value.vocabulary
@@ -3405,7 +3450,7 @@ function playVoicePreview() {
   setTimeout(() => { voicePreviewPlaying.value = false }, 2000)
 }
 
-const isPracticeCompleted = computed(() => phaseProgress.value.practica === 100)
+const isPracticeCompleted = computed(() => isPrivilegedUser.value || phaseProgress.value.practica === 100)
 
 function checkPhase3Completion() {
   if (moduleNumber.value === 4) {
@@ -3505,6 +3550,13 @@ function resetExamForReview() {
   examScoreMessage.value = ''
   phaseProgress.value.evaluacion = 0
   saveProgress()
+}
+
+function autoFillExamForAudit() {
+  activeExamQuestions.value.forEach(q => {
+    examAnswers.value[q.id] = q.correct
+  })
+  submitExam()
 }
 
 // -----------------------------------------------------------------
@@ -3747,6 +3799,7 @@ function printCertificate() {
 // Phase Navigation & Locks
 // -----------------------------------------------------------------
 function isPhaseLocked(phaseId) {
+  if (isPrivilegedUser.value) return false
   if (phaseId === 'inicio') return false
   if (phaseId === 'estudio') return phaseProgress.value.inicio < 100
   if (phaseId === 'practica') return phaseProgress.value.estudio < 100
