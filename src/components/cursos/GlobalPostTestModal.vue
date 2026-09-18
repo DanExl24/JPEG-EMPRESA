@@ -252,10 +252,10 @@
     <!-- CERTIFICATE / DIPLOMA MODAL (Imprimible y Descargable, adaptable a pantalla) -->
     <div 
       v-if="showCertificateModal" 
-      class="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 z-50 animate-fade-in overflow-y-auto print:p-0 print:bg-white print:static"
+      class="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 z-[70] animate-fade-in overflow-y-auto print:p-0 print:bg-white print:static"
       @click.self="showCertificateModal = false"
     >
-      <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl relative border border-amber-200 overflow-hidden print:shadow-none print:border-none print:max-w-none print:max-h-none print:p-0">
+      <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[88vh] my-auto flex flex-col shadow-2xl relative border border-amber-200 overflow-hidden print:shadow-none print:border-none print:max-w-none print:max-h-none print:p-0">
         
         <!-- Header: Siempre visible en la parte superior (Hidden during print) -->
         <div class="flex justify-between items-center px-6 py-3.5 border-b border-gray-100 shrink-0 bg-white print:hidden">
@@ -265,10 +265,11 @@
           </div>
           <button 
             @click="showCertificateModal = false" 
-            class="text-gray-400 hover:text-gray-700 p-1.5 hover:bg-gray-100 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+            class="px-3 py-1.5 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-xl transition-all cursor-pointer flex items-center gap-1 text-xs font-bold border border-gray-200 shadow-2xs"
             title="Cerrar certificado"
           >
-            <span class="material-symbols-outlined text-xl">close</span>
+            <span class="material-symbols-outlined text-base">close</span>
+            <span>Cerrar</span>
           </button>
         </div>
 
@@ -368,12 +369,11 @@
             <!-- Botón Exportar PDF -->
             <button 
               @click="exportToPdf" 
-              :disabled="isExportingPdf"
-              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer"
-              title="Descargar archivo PDF directamente a tu equipo"
+              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5 transition-transform hover:scale-105 cursor-pointer"
+              title="Guardar o descargar como documento PDF"
             >
-              <span class="material-symbols-outlined text-base">{{ isExportingPdf ? 'hourglass_top' : 'picture_as_pdf' }}</span>
-              {{ isExportingPdf ? 'Generando PDF...' : 'Exportar PDF' }}
+              <span class="material-symbols-outlined text-base">picture_as_pdf</span>
+              Exportar PDF
             </button>
 
             <!-- Botón Imprimir -->
@@ -395,7 +395,6 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import html2pdf from 'html2pdf.js'
 import { useAuthStore } from '../../stores/auth'
 import { getApiBaseUrl } from '../../lib/api'
 
@@ -414,7 +413,6 @@ const apiBaseUrl = getApiBaseUrl()
 // State
 const globalPostTestSubmitted = ref(false)
 const isSubmittingPostTest = ref(false)
-const isExportingPdf = ref(false)
 const globalAnswers = ref({})
 const globalScore = ref(0)
 const preTestBaseline = ref(35)
@@ -542,36 +540,18 @@ function closeModal() {
 }
 
 function printCertificate() {
+  const rawName = certificateData.value?.studentName || auth.user?.nombre || 'Aprendiz'
+  const cleanName = rawName.trim().replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')
+  const originalTitle = document.title
+  document.title = `Certificado_Nursing_Academy_${cleanName}`
   window.print()
+  setTimeout(() => {
+    document.title = originalTitle
+  }, 1000)
 }
 
-async function exportToPdf() {
-  const element = document.getElementById('printableCertificate')
-  if (!element) return
-
-  isExportingPdf.value = true
-  try {
-    const rawName = certificateData.value?.studentName || auth.user?.nombre || 'Aprendiz'
-    const cleanName = rawName.trim().replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: `Certificado_Nursing_Academy_${cleanName}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        logging: false,
-        backgroundColor: '#ffffff'
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    }
-    await html2pdf().set(opt).from(element).save()
-  } catch (err) {
-    console.error('Error al exportar PDF:', err)
-    window.print()
-  } finally {
-    isExportingPdf.value = false
-  }
+function exportToPdf() {
+  printCertificate()
 }
 
 async function loadExistingResult() {
@@ -699,3 +679,12 @@ watch(() => props.modelValue, (isOpen) => {
   }
 })
 </script>
+
+<style scoped>
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+}
+</style>
