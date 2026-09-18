@@ -17,12 +17,34 @@ export interface CourseCompletionMetricDto {
   rate: number
 }
 
+export interface AtRiskLearnerDto {
+  id: number
+  name: string
+  email: string
+  failedCount: number
+  totalSubmissions: number
+  successRate: number
+  lastActivity: string
+  status: 'Riesgo Alto' | 'Seguimiento' | 'Al Día'
+}
+
+export interface ProgramDistributionDto {
+  program: string
+  cohortsCount: number
+  apprenticesCount: number
+}
+
 export interface AnalyticsSummaryDto {
+  role?: 'ADMIN' | 'INSTRUCTOR'
   kpis: KpiCardDto[]
-  monthlyEnrollments: MonthlyMetricDto[]
-  completionRates: CourseCompletionMetricDto[]
+  chartTitle?: string
+  monthlyEnrollments?: MonthlyMetricDto[]
+  completionRates?: CourseCompletionMetricDto[]
   monthData?: MonthlyMetricDto[]
+  tableTitle?: string
   tableData?: CourseCompletionMetricDto[]
+  atRiskLearners?: AtRiskLearnerDto[]
+  programDistribution?: ProgramDistributionDto[]
 }
 
 export interface DashboardSummaryDto {
