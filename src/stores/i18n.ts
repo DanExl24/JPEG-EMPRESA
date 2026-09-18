@@ -67,6 +67,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, any>> = {
     nav: {
       dashboard: 'Dashboard',
       courses: 'Cursos',
+      myCohorts: 'Mis Fichas',
       activities: 'Actividades',
       curriculum: 'Gestión Curricular',
       vocabulary: 'Vocabulario',
@@ -175,6 +176,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, any>> = {
     nav: {
       dashboard: 'Dashboard',
       courses: 'Courses',
+      myCohorts: 'My Cohorts',
       activities: 'Activities',
       curriculum: 'Curriculum Management',
       vocabulary: 'Vocabulary',
@@ -283,6 +285,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, any>> = {
     nav: {
       dashboard: 'Painel Principal',
       courses: 'Cursos',
+      myCohorts: 'Minhas Turmas',
       activities: 'Atividades',
       curriculum: 'Gestão Curricular',
       vocabulary: 'Vocabulário',
@@ -375,6 +378,10 @@ const PHRASE_DICTIONARY: Record<'en' | 'pt', Record<string, string>> = {
     // Layout & Navigation
     'Dashboard': 'Dashboard',
     'Cursos': 'Courses',
+    'Mis Fichas': 'My Cohorts',
+    'Mis Fichas de Formación': 'My Training Cohorts',
+    'Fichas de Formación': 'Training Cohorts',
+    'XP Global de la Ficha': 'Cohort Global XP',
     'Actividades': 'Activities',
     'Gestión Curricular': 'Curriculum Management',
     'Vocabulario': 'Vocabulary',

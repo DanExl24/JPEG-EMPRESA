@@ -21,6 +21,7 @@ import VocabularioView from '../views/vocabulario/VocabularioView.vue'
 import GlosarioView from '../views/glosario/GlosarioView.vue'
 import CurriculumView from '../views/curriculum/CurriculumView.vue'
 import DialogosView from '../views/dialogos/DialogosView.vue'
+import MisFichasView from '../views/instructor/MisFichasView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes: RouteRecordRaw[] = [
@@ -51,6 +52,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'glosario', component: GlosarioView },
       { path: 'curriculum', component: CurriculumView, meta: { requiresAdmin: true } },
       { path: 'dialogos', component: DialogosView },
+      { path: 'fichas', component: MisFichasView, meta: { requiresInstructorOrAdmin: true } },
     ],
   },
 ]
@@ -80,6 +82,10 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta['requiresAdmin'] && !auth.isAdmin) {
+    return '/dashboard/inicio'
+  }
+
+  if (to.meta['requiresInstructorOrAdmin'] && !auth.isAdmin && !auth.isInstructor) {
     return '/dashboard/inicio'
   }
 

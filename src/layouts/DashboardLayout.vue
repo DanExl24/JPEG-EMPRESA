@@ -144,6 +144,7 @@ const menuGroups = computed(() => {
         label: t('nav.groups.institutional'),
         items: [
           { name: t('nav.users'), path: '/dashboard/usuarios', icon: 'group' },
+          { name: t('nav.myCohorts'), path: '/dashboard/fichas', icon: 'groups' },
           { name: t('nav.analytics'), path: '/dashboard/analiticas', icon: 'analytics' },
           { name: t('nav.badges'), path: '/dashboard/logros', icon: 'emoji_events' },
         ]
@@ -169,6 +170,7 @@ const menuGroups = computed(() => {
       {
         label: t('nav.groups.teaching'),
         items: [
+          { name: t('nav.myCohorts'), path: '/dashboard/fichas', icon: 'groups' },
           { name: t('nav.courses'), path: '/dashboard/cursos', icon: 'school' },
           { name: t('nav.activities'), path: '/dashboard/actividades', icon: 'task' },
           { name: t('nav.vocabulary'), path: '/dashboard/vocabulario', icon: 'translate' },
@@ -243,6 +245,7 @@ const pageTitleKeys = {
   '/dashboard/juegos': 'nav.games',
   '/dashboard/analiticas': 'nav.analytics',
   '/dashboard/usuarios': 'nav.users',
+  '/dashboard/fichas': 'nav.myCohorts',
   '/dashboard/perfil': 'nav.profile',
   '/dashboard/settings': 'nav.settings',
 }
