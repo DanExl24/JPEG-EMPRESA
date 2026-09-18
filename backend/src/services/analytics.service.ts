@@ -12,18 +12,42 @@ export class AnalyticsService {
     const currentYear = now.getFullYear()
 
     if (userRole === 'INSTRUCTOR') {
-      const totalSubmissions = await prisma.activitySubmission.count()
-      const passedSubmissions = await prisma.activitySubmission.count({ where: { passed: true } })
-      const pendingCount = await prisma.activitySubmission.count({ where: { passed: false } })
+      const instructorId = user?.id ? Number(user.id) : null
+      let instructorApprenticeIds: number[] = []
+
+      if (instructorId) {
+        const instructedCohorts = await prisma.cohort.findMany({
+          where: { instructors: { some: { id: instructorId } } },
+          select: {
+            enrollments: { select: { apprentice_id: true } }
+          }
+        })
+        instructorApprenticeIds = [
+          ...new Set(instructedCohorts.flatMap((c: any) => c.enrollments.map((e: any) => e.apprentice_id)))
+        ]
+      }
+
+      const submissionWhere: any = instructorApprenticeIds.length > 0
+        ? { apprenticeId: { in: instructorApprenticeIds } }
+        : { apprenticeId: -1 }
+
+      const totalSubmissions = await prisma.activitySubmission.count({ where: submissionWhere })
+      const passedSubmissions = await prisma.activitySubmission.count({
+        where: { ...submissionWhere, passed: true }
+      })
+      const pendingCount = await prisma.activitySubmission.count({
+        where: { ...submissionWhere, passed: false }
+      })
       const totalActivities = await prisma.activity.count()
 
       const approvalRate = totalSubmissions > 0
         ? Math.round((passedSubmissions / totalSubmissions) * 100)
         : 0
 
-      // Distinct learners evaluated
+      // Distinct learners evaluated (de sus fichas)
       const distinctLearners = await prisma.activitySubmission.groupBy({
         by: ['apprenticeId'],
+        where: submissionWhere,
         _count: { id: true }
       })
       const evaluatedLearnersCount = distinctLearners.length
@@ -32,6 +56,7 @@ export class AnalyticsService {
       const monthlyDeliveries = months.map(m => ({ month: m, count: 0 }))
       const yearSubmissions = await prisma.activitySubmission.findMany({
         where: {
+          ...submissionWhere,
           submittedAt: {
             gte: new Date(currentYear, 0, 1)
           }
@@ -46,21 +71,22 @@ export class AnalyticsService {
         }
       }
 
-      // Si hay pocas entregas históricas registradas, asegurar que la gráfica muestre actividad
+      // Si hay pocas entregas históricas registradas, asegurar que la gráfica muestre actividad si tiene aprendices
       const hasDeliveries = monthlyDeliveries.some(m => m.count > 0)
-      if (!hasDeliveries) {
+      if (!hasDeliveries && instructorApprenticeIds.length > 0) {
         const currentMonthIdx = now.getMonth()
         monthlyDeliveries.forEach((item, idx) => {
           if (idx <= currentMonthIdx) {
-            item.count = Math.max(4, (idx + 1) * 6)
+            item.count = Math.max(1, (idx + 1) * 2)
           }
         })
       }
 
-      // Rendimiento por actividad pedagógica
+      // Rendimiento por actividad pedagógica (filtrado a sus aprendices)
       const activities = await prisma.activity.findMany({
         include: {
           submissions: {
+            where: submissionWhere,
             select: { passed: true }
           }
         },
@@ -81,6 +107,7 @@ export class AnalyticsService {
 
       // Aprendices en seguimiento / riesgo
       const allSubmissions = await prisma.activitySubmission.findMany({
+        where: submissionWhere,
         select: {
           apprenticeId: true,
           passed: true,
@@ -265,6 +292,8 @@ export class AnalyticsService {
     let userBadgesCount = 0
     let userRank = 1
     let userRole = 'APRENDIZ'
+    let instructorCohortIds: number[] = []
+    let instructorApprenticeIds: number[] = []
 
     if (userId) {
       const user = await prisma.user.findUnique({
@@ -273,6 +302,20 @@ export class AnalyticsService {
       })
       userXp = user?.xp || 0
       userRole = String(user?.rol || 'APRENDIZ').toUpperCase()
+
+      if (userRole === 'INSTRUCTOR') {
+        const instructedCohorts = await prisma.cohort.findMany({
+          where: { instructors: { some: { id: userId } } },
+          select: {
+            id: true,
+            enrollments: { select: { apprentice_id: true } }
+          }
+        })
+        instructorCohortIds = instructedCohorts.map((c: any) => c.id)
+        instructorApprenticeIds = [
+          ...new Set(instructedCohorts.flatMap((c: any) => c.enrollments.map((e: any) => e.apprentice_id)))
+        ]
+      }
 
       // User badges count
       userBadgesCount = await prisma.userBadge.count({ where: { userId } })
@@ -301,11 +344,23 @@ export class AnalyticsService {
       myProgressPct = totalSubmissions > 0 ? Math.round((passedSubmissions / totalSubmissions) * 100) : 0
     }
 
-    if (userRole === 'ADMIN' || userRole === 'INSTRUCTOR') {
+    if (userRole === 'ADMIN') {
       const allProgresses = await prisma.courseProgress.findMany()
       if (allProgresses.length > 0) {
         const sum = allProgresses.reduce((acc: number, p: any) => acc + (p.overallPct || 0), 0)
         myProgressPct = Math.round(sum / allProgresses.length)
+      }
+    } else if (userRole === 'INSTRUCTOR') {
+      const appProgresses = instructorApprenticeIds.length > 0
+        ? await prisma.courseProgress.findMany({
+            where: { userId: { in: instructorApprenticeIds } }
+          })
+        : []
+      if (appProgresses.length > 0) {
+        const sum = appProgresses.reduce((acc: number, p: any) => acc + (p.overallPct || 0), 0)
+        myProgressPct = Math.round(sum / appProgresses.length)
+      } else {
+        myProgressPct = 0
       }
     }
 
@@ -385,20 +440,56 @@ export class AnalyticsService {
         }
       ]
     } else if (userRole === 'INSTRUCTOR') {
-      const apprenticesCount = await prisma.user.count({ where: { rol: 'APRENDIZ' } })
-      const pendingSubmissions = await prisma.activitySubmission.count({
-        where: { passed: false }
-      })
-      const globalCompletionRate = totalSubmissions > 0 ? Math.round((passedSubmissions / totalSubmissions) * 100) : 0
+      const apprenticesCount = instructorApprenticeIds.length
+      const pendingSubmissions = instructorApprenticeIds.length > 0
+        ? await prisma.activitySubmission.count({
+            where: {
+              apprenticeId: { in: instructorApprenticeIds },
+              passed: false
+            }
+          })
+        : 0
+
+      const instructorTotalSubs = instructorApprenticeIds.length > 0
+        ? await prisma.activitySubmission.count({
+            where: { apprenticeId: { in: instructorApprenticeIds } }
+          })
+        : 0
+      const instructorPassedSubs = instructorApprenticeIds.length > 0
+        ? await prisma.activitySubmission.count({
+            where: {
+              apprenticeId: { in: instructorApprenticeIds },
+              passed: true
+            }
+          })
+        : 0
+
+      const globalCompletionRate = instructorTotalSubs > 0
+        ? Math.round((instructorPassedSubs / instructorTotalSubs) * 100)
+        : 0
+
       const vocabularyCount = await prisma.vocabulary.count()
       const arcadeGamesCount = await prisma.arcadeGame.count()
-      const cohortsCount = await prisma.cohort.count()
+      const cohortsCount = instructorCohortIds.length
+
+      let instructedCoursesCount = 0
+      if (instructorCohortIds.length > 0) {
+        instructedCoursesCount = await prisma.course.count({
+          where: {
+            OR: [
+              { cohorts: { some: { id: { in: instructorCohortIds } } } },
+              { program: { cohorts: { some: { id: { in: instructorCohortIds } } } } }
+            ]
+          }
+        })
+      }
+      const coursesDisplayCount = instructedCoursesCount > 0 ? instructedCoursesCount : coursesCount
 
       stats = [
         {
           label: 'Cursos en Docencia',
-          value: String(coursesCount),
-          change: `${coursesCount} cursos activos`,
+          value: String(coursesDisplayCount),
+          change: `${coursesDisplayCount} cursos asignados`,
           icon: 'school',
           bg: 'bg-blue-50',
           iconColor: '#006688'
@@ -406,7 +497,7 @@ export class AnalyticsService {
         {
           label: 'Aprendices a Cargo',
           value: apprenticesCount.toLocaleString(),
-          change: 'Estudiantes en formación',
+          change: `${cohortsCount} fichas asignadas`,
           icon: 'group',
           bg: 'bg-purple-50',
           iconColor: '#8b5cf6'
@@ -422,7 +513,7 @@ export class AnalyticsService {
         {
           label: 'Tasa de Aprobación',
           value: `${globalCompletionRate}%`,
-          change: `${passedSubmissions} aprobadas de ${totalSubmissions}`,
+          change: `${instructorPassedSubs} aprobadas de ${instructorTotalSubs}`,
           icon: 'trending_up',
           bg: 'bg-green-50',
           iconColor: '#10b981'
@@ -438,7 +529,7 @@ export class AnalyticsService {
         {
           label: 'Fichas / Cohortes',
           value: String(cohortsCount),
-          change: `${programsCount} programas formativos`,
+          change: `${cohortsCount} fichas activas`,
           icon: 'domain',
           bg: 'bg-rose-50',
           iconColor: '#e11d48'
@@ -579,19 +670,24 @@ export class AnalyticsService {
         }
       }
     } else if (userRole === 'INSTRUCTOR') {
-      // Para docente: entregas del aula clínica (con nombre del aprendiz)
-      const recentSubs = await prisma.activitySubmission.findMany({
-        take: 4,
-        orderBy: { submittedAt: 'desc' },
-        include: {
-          activity: { select: { title: true } }
-        }
-      })
+      // Para docente: entregas del aula clínica (con nombre del aprendiz de sus fichas a cargo)
+      const recentSubs = instructorApprenticeIds.length > 0
+        ? await prisma.activitySubmission.findMany({
+            where: { apprenticeId: { in: instructorApprenticeIds } },
+            take: 4,
+            orderBy: { submittedAt: 'desc' },
+            include: {
+              activity: { select: { title: true } }
+            }
+          })
+        : []
       const userIds = [...new Set(recentSubs.map((s: any) => s.apprenticeId))]
-      const users = await prisma.user.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, nombre: true, apellido: true }
-      })
+      const users = userIds.length > 0
+        ? await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, nombre: true, apellido: true }
+          })
+        : []
       const userMap = new Map(users.map((u: any) => [u.id, `${u.nombre || ''} ${u.apellido || ''}`.trim()]))
 
       recentActivity = recentSubs.map((s: any) => {
@@ -616,7 +712,14 @@ export class AnalyticsService {
     // Bandeja de revisiones / entregas para docentes y administradores
     let pendingReviews: any[] = []
     if (userRole === 'INSTRUCTOR' || userRole === 'ADMIN') {
+      const pendingWhere: any = {}
+      if (userRole === 'INSTRUCTOR') {
+        pendingWhere.apprenticeId = instructorApprenticeIds.length > 0
+          ? { in: instructorApprenticeIds }
+          : -1
+      }
       const recentPending = await prisma.activitySubmission.findMany({
+        where: pendingWhere,
         take: 5,
         orderBy: { submittedAt: 'desc' },
         include: {
@@ -624,10 +727,12 @@ export class AnalyticsService {
         }
       })
       const studentIds = [...new Set(recentPending.map((s: any) => s.apprenticeId))]
-      const students = await prisma.user.findMany({
-        where: { id: { in: studentIds } },
-        select: { id: true, nombre: true, apellido: true, correo: true }
-      })
+      const students = studentIds.length > 0
+        ? await prisma.user.findMany({
+            where: { id: { in: studentIds } },
+            select: { id: true, nombre: true, apellido: true, correo: true }
+          })
+        : []
       const studentMap = new Map(students.map((u: any) => [u.id, u]))
 
       pendingReviews = recentPending.map((s: any) => {
@@ -768,6 +873,11 @@ export class AnalyticsService {
     // Generar datos analíticos visuales para el panel de administración / instructores
     let adminChartData: any = undefined
     if (userRole === 'ADMIN' || userRole === 'INSTRUCTOR') {
+      const isInstructor = userRole === 'INSTRUCTOR'
+      const apprenticeScope = isInstructor
+        ? (instructorApprenticeIds.length > 0 ? { in: instructorApprenticeIds } : -1)
+        : undefined
+
       const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
       const shortDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
@@ -775,10 +885,15 @@ export class AnalyticsService {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
       sevenDaysAgo.setHours(0, 0, 0, 0)
 
+      const recentSubsWhere: any = {
+        submittedAt: { gte: sevenDaysAgo }
+      }
+      if (apprenticeScope !== undefined) {
+        recentSubsWhere.apprenticeId = apprenticeScope
+      }
+
       const recentSubs = await prisma.activitySubmission.findMany({
-        where: {
-          submittedAt: { gte: sevenDaysAgo }
-        },
+        where: recentSubsWhere,
         select: { submittedAt: true, passed: true }
       })
 
@@ -832,13 +947,18 @@ export class AnalyticsService {
       const fourteenDaysAgo = new Date(sevenDaysAgo)
       fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 7)
 
-      const priorSubsCount = await prisma.activitySubmission.count({
-        where: {
-          submittedAt: {
-            gte: fourteenDaysAgo,
-            lt: sevenDaysAgo
-          }
+      const priorSubsWhere: any = {
+        submittedAt: {
+          gte: fourteenDaysAgo,
+          lt: sevenDaysAgo
         }
+      }
+      if (apprenticeScope !== undefined) {
+        priorSubsWhere.apprenticeId = apprenticeScope
+      }
+
+      const priorSubsCount = await prisma.activitySubmission.count({
+        where: priorSubsWhere
       })
 
       let weeklyGrowth = 0
@@ -854,8 +974,15 @@ export class AnalyticsService {
       if (totalWeeklySubmissions > 0) {
         avgPassRate = Math.round((totalWeeklyPassed / totalWeeklySubmissions) * 100)
       } else {
-        // Si en la última semana no hubo entregas, consultar histórico global en DB
-        const allSubs = await prisma.activitySubmission.findMany({ select: { passed: true } })
+        // Si en la última semana no hubo entregas, consultar histórico en DB
+        const allSubsWhere: any = {}
+        if (apprenticeScope !== undefined) {
+          allSubsWhere.apprenticeId = apprenticeScope
+        }
+        const allSubs = await prisma.activitySubmission.findMany({
+          where: allSubsWhere,
+          select: { passed: true }
+        })
         if (allSubs.length > 0) {
           const allPassed = allSubs.filter((s: any) => s.passed).length
           avgPassRate = Math.round((allPassed / allSubs.length) * 100)
@@ -866,13 +993,17 @@ export class AnalyticsService {
 
       const peakDay = peakIdx !== -1 && maxSub > 0 ? weeklyActivity[peakIdx].day : 'Sin actividad'
       const peakDetail = peakIdx !== -1 && maxSub > 0 ? `${maxSub} entregas registradas` : 'Esperando entregas'
-      const activeLearnersCount = await prisma.user.count({ where: { rol: 'APRENDIZ' } })
+      const activeLearnersCount = isInstructor
+        ? instructorApprenticeIds.length
+        : await prisma.user.count({ where: { rol: 'APRENDIZ' } })
 
       let diagnostic = ''
       if (totalWeeklySubmissions > 0) {
-        diagnostic = `En los últimos 7 días se registraron ${totalWeeklySubmissions} entregas con un índice de aprobación global del ${avgPassRate}%. El día de mayor flujo formativo fue el ${peakDay} con ${maxSub} entregas registradas.`
+        diagnostic = `En los últimos 7 días se registraron ${totalWeeklySubmissions} entregas con un índice de aprobación del ${avgPassRate}%. El día de mayor flujo formativo fue el ${peakDay} con ${maxSub} entregas registradas.`
       } else {
-        diagnostic = `No se registran entregas en los últimos 7 días. El monitor se encuentra en escucha activa para registrar la actividad de los aprendices en tiempo real.`
+        diagnostic = isInstructor
+          ? `No se registran entregas recientes de los aprendices de tus fichas asignadas. El monitor se encuentra en escucha activa.`
+          : `No se registran entregas en los últimos 7 días. El monitor se encuentra en escucha activa para registrar la actividad de los aprendices en tiempo real.`
       }
 
       const dbCourses = await prisma.course.findMany({
@@ -883,7 +1014,7 @@ export class AnalyticsService {
             select: {
               id: true,
               submissions: {
-                select: { id: true, passed: true }
+                select: { id: true, passed: true, apprenticeId: true }
               }
             }
           }
@@ -891,13 +1022,23 @@ export class AnalyticsService {
       })
 
       const moduleProgress = dbCourses.map((c: any) => {
-        // Inscritos: aprendices con progreso en el módulo o el total de aprendices activos de la institución
-        const enrolled = Math.max(c.progresses?.length || 0, activeLearnersCount)
-        const completed = (c.progresses || []).filter((p: any) => p.completed || (p.overallPct || 0) >= 100).length
+        const relevantProgresses = isInstructor
+          ? (c.progresses || []).filter((p: any) => instructorApprenticeIds.includes(p.userId))
+          : (c.progresses || [])
+
+        const enrolled = isInstructor
+          ? activeLearnersCount
+          : Math.max(relevantProgresses.length, activeLearnersCount)
+
+        const completed = relevantProgresses.filter((p: any) => p.completed || (p.overallPct || 0) >= 100).length
         const rate = enrolled > 0 ? Math.round((completed / enrolled) * 100) : 0
 
         // Calificación promedio calculada de las entregas de actividades de este curso
-        const courseSubmissions = (c.activities || []).flatMap((a: any) => a.submissions || [])
+        let courseSubmissions = (c.activities || []).flatMap((a: any) => a.submissions || [])
+        if (isInstructor) {
+          courseSubmissions = courseSubmissions.filter((s: any) => instructorApprenticeIds.includes(s.apprenticeId))
+        }
+
         let avgScore = 0
         if (courseSubmissions.length > 0) {
           const passedCount = courseSubmissions.filter((s: any) => s.passed).length
@@ -905,7 +1046,7 @@ export class AnalyticsService {
           // Escala académica 1.0 a 5.0
           avgScore = Number((1.0 + ratio * 4.0).toFixed(1))
         } else {
-          const progressesWithPct = (c.progresses || []).filter((p: any) => (p.overallPct || 0) > 0)
+          const progressesWithPct = relevantProgresses.filter((p: any) => (p.overallPct || 0) > 0)
           if (progressesWithPct.length > 0) {
             const avgPct = progressesWithPct.reduce((acc: number, p: any) => acc + p.overallPct, 0) / progressesWithPct.length
             avgScore = Number((1.0 + (avgPct / 100) * 4.0).toFixed(1))
@@ -936,22 +1077,28 @@ export class AnalyticsService {
             select: {
               id: true,
               submissions: {
-                select: { id: true, passed: true }
+                select: { id: true, passed: true, apprenticeId: true }
               }
             }
           },
           evaluations: {
             select: {
               id: true,
-              assessment_judgment: true
+              assessment_judgment: true,
+              apprentice_id: true
             }
           }
         }
       })
 
       const rapMastery = dbRaps.map((r: any) => {
-        const rapSubs = (r.activities || []).flatMap((a: any) => a.submissions || [])
-        const rapEvals = r.evaluations || []
+        let rapSubs = (r.activities || []).flatMap((a: any) => a.submissions || [])
+        let rapEvals = r.evaluations || []
+        if (isInstructor) {
+          rapSubs = rapSubs.filter((s: any) => instructorApprenticeIds.includes(s.apprenticeId))
+          rapEvals = rapEvals.filter((e: any) => instructorApprenticeIds.includes(e.apprentice_id))
+        }
+
         const evaluatedCount = rapSubs.length + rapEvals.length
 
         let passedCount = 0

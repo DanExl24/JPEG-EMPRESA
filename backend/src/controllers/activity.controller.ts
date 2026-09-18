@@ -5,14 +5,28 @@ import { GamificationService } from '../services/gamification.service.js'
 import { CourseService } from '../services/course.service.js'
 import type { CreateActivityDto, SubmitActivityDto, ReviewSubmissionDto } from '../types/dtos.js'
 
+async function getInstructorApprenticeIds(user: any): Promise<number[] | null> {
+  if (user?.role === 'INSTRUCTOR' && user?.id) {
+    const cohorts = await prisma.cohort.findMany({
+      where: { instructors: { some: { id: Number(user.id) } } },
+      select: { enrollments: { select: { apprentice_id: true } } }
+    })
+    return [...new Set(cohorts.flatMap((c: any) => c.enrollments.map((e: any) => e.apprentice_id)))]
+  }
+  return null
+}
+
 // GET /api/activities
-export async function getActivities(_req: Request, res: Response): Promise<void> {
+export async function getActivities(req: Request, res: Response): Promise<void> {
   try {
+    const apprenticeIds = await getInstructorApprenticeIds((req as any).user)
+
     const activities = await prisma.activity.findMany({
       orderBy: { id: 'asc' },
       include: {
         learningOutcome: true,
         submissions: {
+          where: apprenticeIds !== null ? { apprenticeId: { in: apprenticeIds } } : undefined,
           select: { id: true, reviewStatus: true }
         }
       }
@@ -215,8 +229,13 @@ export async function getActivitySubmissions(req: Request<{ id: string }>, res: 
       return
     }
 
+    const apprenticeScopeIds = await getInstructorApprenticeIds((req as any).user)
+
     const submissions = await prisma.activitySubmission.findMany({
-      where: { activityId: id },
+      where: {
+        activityId: id,
+        ...(apprenticeScopeIds !== null ? { apprenticeId: { in: apprenticeScopeIds } } : {})
+      },
       orderBy: { submittedAt: 'desc' }
     })
 
@@ -504,8 +523,13 @@ export async function exportSubmissionsCsv(req: Request<{ id: string }>, res: Re
       return
     }
 
+    const apprenticeScopeIds = await getInstructorApprenticeIds((req as any).user)
+
     const submissions = await prisma.activitySubmission.findMany({
-      where: { activityId: id },
+      where: {
+        activityId: id,
+        ...(apprenticeScopeIds !== null ? { apprenticeId: { in: apprenticeScopeIds } } : {})
+      },
       orderBy: { submittedAt: 'asc' }
     })
 
