@@ -621,7 +621,7 @@
                   </div>
                   <button 
                     v-if="!showAddActivityForm && editingCourse"
-                    @click="showAddActivityForm = true"
+                    @click="openAssignActivityModal"
                     type="button"
                     class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[10px] rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                   >
@@ -661,204 +661,368 @@
                   </div>
                 </div>
                 <div v-else class="text-center py-4 text-[11px] text-gray-400 italic bg-white/50 rounded-xl border border-dashed border-gray-200">
-                  No hay actividades adicionales creadas para esta fase en este curso.
+                  No hay actividades configuradas para esta fase. Haz clic en "Asignar Actividad" para añadir la primera.
                 </div>
 
-                <!-- Add Activity Inline Form -->
-                <div v-if="showAddActivityForm" class="bg-white border border-gray-200 rounded-2xl p-4 space-y-4 animate-slide-up">
-                  <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                    <span class="text-xs font-bold text-gray-700">{{ newActivity.id ? 'Editar Actividad de esta Fase' : 'Nueva Actividad para esta Fase' }}</span>
-                    <button @click="resetNewActivityForm" type="button" class="text-gray-400 hover:text-gray-600">
-                      <span class="material-symbols-outlined text-xs">close</span>
+                <!-- Add/Assign Activity Modal / Panel -->
+                <div v-if="showAddActivityForm" class="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm animate-slide-up">
+                  <!-- Header: Mode Selector (Tabs) if creating/assigning, or Title if editing an existing activity -->
+                  <div v-if="!newActivity.id" class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-150 gap-2">
+                    <div class="flex items-center gap-1.5 p-1 bg-gray-100 rounded-xl">
+                      <button 
+                        type="button"
+                        @click="assignActivityTab = 'link'"
+                        :class="assignActivityTab === 'link' ? 'bg-[#006688] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-sm">link</span>
+                        Vincular Actividad Existente ({{ availableCatalogActivities.length }})
+                      </button>
+                      <button 
+                        type="button"
+                        @click="assignActivityTab = 'create'"
+                        :class="assignActivityTab === 'create' ? 'bg-[#006688] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-sm">add_circle</span>
+                        Crear Nueva Actividad
+                      </button>
+                    </div>
+                    <button @click="resetNewActivityForm" type="button" class="text-gray-400 hover:text-gray-600 p-1 self-end sm:self-center" title="Cerrar">
+                      <span class="material-symbols-outlined text-base">close</span>
                     </button>
                   </div>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Título de la Actividad</label>
-                      <input type="text" v-model="newActivity.title" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Vocabulario de Signos Vitales" />
+                  <!-- Header if editing an existing activity -->
+                  <div v-else class="flex justify-between items-center pb-2 border-b border-gray-150">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-base text-[#006688]">edit_note</span>
+                      <span class="text-xs font-bold text-gray-700">Editar Actividad de esta Fase</span>
                     </div>
-                    <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Plantilla de Juego</label>
-                      <select v-model="newActivity.template" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]">
-                        <option v-for="opt in allowedTemplatesForCurrentPhase" :key="opt.value" :value="opt.value">
-                          {{ opt.label }}
+                    <button @click="resetNewActivityForm" type="button" class="text-gray-400 hover:text-gray-600 p-1" title="Cerrar">
+                      <span class="material-symbols-outlined text-base">close</span>
+                    </button>
+                  </div>
+
+                  <!-- ========================================================= -->
+                  <!-- TAB 1: VINCULAR ACTIVIDAD EXISTENTE DEL CATÁLOGO         -->
+                  <!-- ========================================================= -->
+                  <div v-if="assignActivityTab === 'link' && !newActivity.id" class="space-y-3.5">
+                    <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
+                      <div class="relative flex-1 w-full">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+                        <input 
+                          type="text" 
+                          v-model="catalogSearchQuery" 
+                          placeholder="Buscar por título, plantilla o curso..."
+                          class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#006688] focus:bg-white transition-all"
+                        />
+                      </div>
+                      <select 
+                        v-model="catalogTemplateFilter" 
+                        class="w-full sm:w-auto px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 focus:outline-none focus:border-[#006688]"
+                      >
+                        <option value="all">Todas las plantillas</option>
+                        <option value="sopa">Sopa de Letras</option>
+                        <option value="crucigrama">Crucigramas</option>
+                        <option value="quiz">Quizzes</option>
+                        <option value="preguntas">Opción Múltiple</option>
+                        <option value="match">Conectar Significado</option>
+                        <option value="fillblank">Completar Oración</option>
+                        <option value="listening">Escucha</option>
+                        <option value="pronunciation">Pronunciación</option>
+                      </select>
+                    </div>
+
+                    <p class="text-[11px] text-gray-500 leading-normal">
+                      Selecciona cualquier actividad creada previamente en la sección de <strong>Actividades</strong> para vincularla a esta fase (<span class="font-bold text-[#006688]">{{ targetModalPhaseName }}</span>), o pulsa <em>"Usar como Plantilla"</em> para crear una copia adaptada a este módulo.
+                    </p>
+
+                    <!-- Catalog List -->
+                    <div class="max-h-80 overflow-y-auto pr-1 space-y-2">
+                      <div 
+                        v-for="act in filteredCatalogActivities" 
+                        :key="act.id"
+                        class="p-3 bg-gray-50/50 hover:bg-white rounded-xl border border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all hover:border-[#006688]/30 hover:shadow-xs"
+                      >
+                        <div class="flex items-center gap-3 min-w-0">
+                          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-2xs" :style="`background-color: ${act.color || '#006688'}15; color: ${act.color || '#006688'}`">
+                            <span class="material-symbols-outlined text-lg">{{ act.icon || 'extension' }}</span>
+                          </div>
+                          <div class="min-w-0">
+                            <p class="text-xs font-bold text-gray-800 truncate">{{ act.title }}</p>
+                            <div class="flex items-center gap-2 mt-0.5 flex-wrap text-[10px]">
+                              <span class="font-bold uppercase px-2 py-0.2 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                {{ act.template }}
+                              </span>
+                              <span class="text-gray-500 font-semibold">{{ act.points }} pts</span>
+                              <span v-if="act.isAssignedHere" class="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.2 rounded-full border border-emerald-200">
+                                ✓ Ya asignada a esta fase
+                              </span>
+                              <span v-else-if="act.course" class="text-gray-400 font-medium truncate max-w-[200px]">
+                                En: {{ act.course }} ({{ act.phase }})
+                              </span>
+                              <span v-else class="text-amber-600 font-medium bg-amber-50 px-1.5 py-0.2 rounded">
+                                Sin curso asignado
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          <button
+                            v-if="!act.isAssignedHere"
+                            @click="linkExistingActivityToPhase(act)"
+                            :disabled="isLinkingActivity"
+                            type="button"
+                            class="px-3 py-1.5 bg-[#006688] hover:bg-[#004e69] text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            title="Asignar esta actividad directamente a este módulo y fase"
+                          >
+                            <span class="material-symbols-outlined text-xs">link</span>
+                            Vincular a esta Fase
+                          </button>
+                          <button
+                            @click="cloneActivityAsTemplate(act)"
+                            type="button"
+                            class="px-2.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 font-bold text-xs rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                            title="Usar su contenido como base para crear una actividad nueva para este módulo"
+                          >
+                            <span class="material-symbols-outlined text-xs">content_copy</span>
+                            Usar como Plantilla
+                          </button>
+                        </div>
+                      </div>
+
+                      <div v-if="filteredCatalogActivities.length === 0" class="py-10 text-center text-xs text-gray-400 space-y-1">
+                        <span class="material-symbols-outlined text-2xl text-gray-300 block">search_off</span>
+                        <p>No se encontraron actividades que coincidan con los filtros.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ========================================================= -->
+                  <!-- TAB 2: CREAR NUEVA ACTIVIDAD (O ADAPTAR PLANTILLA)        -->
+                  <!-- ========================================================= -->
+                  <div v-else class="space-y-4">
+                    <!-- Template Selector Banner (Only when creating new, not editing) -->
+                    <div v-if="!newActivity.id" class="bg-blue-50/60 border border-blue-100 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#006688] text-lg shrink-0">auto_awesome</span>
+                        <div>
+                          <p class="text-xs font-bold text-[#006688]">Usar plantilla de una actividad creada (opcional)</p>
+                          <p class="text-[10px] text-gray-500">Precarga palabras, crucigramas o preguntas para adaptarlas a este módulo.</p>
+                        </div>
+                      </div>
+                      <select 
+                        :value="selectedTemplateActivityId || ''"
+                        @change="cloneActivityAsTemplate($event.target.value)"
+                        class="px-2.5 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:border-[#006688] max-w-xs truncate"
+                      >
+                        <option value="">-- Plantilla en blanco (desde cero) --</option>
+                        <option v-for="act in availableCatalogActivities" :key="act.id" :value="act.id">
+                          [{{ act.template }}] {{ act.title }}
                         </option>
                       </select>
                     </div>
-                    <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Puntos Otorgados</label>
-                      <input type="number" v-model="newActivity.points" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Descripción / instrucción (opcional)</label>
-                      <input type="text" v-model="newActivity.description" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Practica el vocabulario visto en clase" />
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Icono (Material Symbols)</label>
-                      <input type="text" v-model="newActivity.icon" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="ej. extension" />
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Color</label>
-                      <select v-model="newActivity.color" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]">
-                        <option value="">Por defecto</option>
-                        <option value="#006688">Azul institucional</option>
-                        <option value="#059669">Verde</option>
-                        <option value="#d97706">Ámbar</option>
-                        <option value="#4f46e5">Índigo</option>
-                        <option value="#dc2626">Rojo</option>
-                      </select>
-                    </div>
-                    <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="newActivity.visible" class="rounded" /> Visible para el aprendiz</label>
-                    <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="newActivity.required" class="rounded" /> Obligatoria para avanzar</label>
-                    <p v-if="newActivity.hasStudentSubmissions" class="sm:col-span-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
-                      Esta actividad ya tiene entregas: solo se puede cambiar la presentación, el orden y la visibilidad.
-                    </p>
-                    
-                    <!-- Dynamic Fields in course inline creator -->
-                    <div v-if="newActivity.template === 'sopa'" class="sm:col-span-2 space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Palabras (separadas por comas)</label>
-                      <input type="text" v-model="newActivity.sopaWords" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                    </div>
 
-                    <div v-if="newActivity.template === 'crucigrama'" class="sm:col-span-2 space-y-3">
-                      <div class="flex justify-between items-center">
-                        <label class="text-[10px] font-bold text-gray-500">Palabras y Pistas del Crucigrama</label>
-                        <button 
-                          @click="newActivity.crosswordWords.push({ word: '', clue: '', orientation: 'horizontal' })"
-                          type="button"
-                          class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[9px] rounded-lg transition-all flex items-center gap-1"
-                        >
-                          <span class="material-symbols-outlined text-[10px] font-bold">add</span>
-                          Agregar Palabra
-                        </button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Título de la Actividad</label>
+                        <input type="text" v-model="newActivity.title" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Vocabulario de Signos Vitales" />
                       </div>
-
-                      <!-- Layout Mode Selector -->
-                      <div class="bg-white p-3 rounded-2xl border border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <span class="text-xs font-bold text-gray-660">Modo de Orientación:</span>
-                        <div class="flex gap-4">
-                          <label class="flex items-center gap-1.5 text-xs font-bold text-gray-660 cursor-pointer">
-                            <input type="radio" value="automatic" v-model="newActivity.layoutMode" class="text-[#006688] focus:ring-[#006688]" />
-                            Automático (Recomendado)
-                          </label>
-                          <label class="flex items-center gap-1.5 text-xs font-bold text-gray-660 cursor-pointer">
-                            <input type="radio" value="manual" v-model="newActivity.layoutMode" class="text-[#006688] focus:ring-[#006688]" />
-                            Manual (Eliges la dirección)
-                          </label>
-                        </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Plantilla de Juego</label>
+                        <select v-model="newActivity.template" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]">
+                          <option v-for="opt in ALL_GAME_TEMPLATES" :key="opt.value" :value="opt.value">
+                            {{ opt.label }}
+                          </option>
+                        </select>
                       </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Puntos Otorgados</label>
+                        <input type="number" v-model="newActivity.points" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Descripción / instrucción (opcional)</label>
+                        <input type="text" v-model="newActivity.description" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Practica el vocabulario visto en clase" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Icono (Material Symbols)</label>
+                        <input type="text" v-model="newActivity.icon" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="ej. extension" />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Color</label>
+                        <select v-model="newActivity.color" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]">
+                          <option value="">Por defecto</option>
+                          <option value="#006688">Azul institucional</option>
+                          <option value="#059669">Verde</option>
+                          <option value="#d97706">Ámbar</option>
+                          <option value="#4f46e5">Índigo</option>
+                          <option value="#dc2626">Rojo</option>
+                        </select>
+                      </div>
+                      <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="newActivity.visible" class="rounded" /> Visible para el aprendiz</label>
+                      <label class="flex items-center gap-2 text-[11px] font-bold text-gray-600"><input type="checkbox" v-model="newActivity.required" class="rounded" /> Obligatoria para avanzar</label>
+                      <p v-if="newActivity.hasStudentSubmissions" class="sm:col-span-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                        Esta actividad ya tiene entregas: solo se puede cambiar la presentación, el orden y la visibilidad.
+                      </p>
                       
-                      <div v-for="(item, idx) in newActivity.crosswordWords" :key="idx" class="bg-gray-50/50 p-3.5 rounded-2xl border border-gray-150 space-y-3 relative">
-                        <button 
-                          v-if="newActivity.crosswordWords.length > 1"
-                          @click="newActivity.crosswordWords.splice(idx, 1)"
-                          type="button"
-                          class="absolute top-2.5 right-2.5 text-red-400 hover:text-red-600 transition-colors"
-                        >
-                          <span class="material-symbols-outlined text-sm">close</span>
-                        </button>
+                      <!-- Dynamic Fields in course inline creator -->
+                      <div v-if="newActivity.template === 'sopa'" class="sm:col-span-2 space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Palabras (separadas por comas)</label>
+                        <input type="text" v-model="newActivity.sopaWords" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                      </div>
+
+                      <div v-if="newActivity.template === 'crucigrama'" class="sm:col-span-2 space-y-3">
+                        <div class="flex justify-between items-center">
+                          <label class="text-[10px] font-bold text-gray-500">Palabras y Pistas del Crucigrama</label>
+                          <button 
+                            @click="newActivity.crosswordWords.push({ word: '', clue: '', orientation: 'horizontal' })"
+                            type="button"
+                            class="px-2.5 py-1 bg-[#006688]/10 hover:bg-[#006688]/20 text-[#006688] font-bold text-[9px] rounded-lg transition-all flex items-center gap-1"
+                          >
+                            <span class="material-symbols-outlined text-[10px] font-bold">add</span>
+                            Agregar Palabra
+                          </button>
+                        </div>
+
+                        <!-- Layout Mode Selector -->
+                        <div class="bg-white p-3 rounded-2xl border border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <span class="text-xs font-bold text-gray-660">Modo de Orientación:</span>
+                          <div class="flex gap-4">
+                            <label class="flex items-center gap-1.5 text-xs font-bold text-gray-660 cursor-pointer">
+                              <input type="radio" value="automatic" v-model="newActivity.layoutMode" class="text-[#006688] focus:ring-[#006688]" />
+                              Automático (Recomendado)
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs font-bold text-gray-660 cursor-pointer">
+                              <input type="radio" value="manual" v-model="newActivity.layoutMode" class="text-[#006688] focus:ring-[#006688]" />
+                              Manual (Eliges la dirección)
+                            </label>
+                          </div>
+                        </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div class="space-y-1">
-                            <label class="text-[9px] font-bold text-gray-400">Palabra</label>
-                            <input type="text" v-model="item.word" @input="sanitizeWordInput(item)" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold uppercase focus:outline-none focus:border-[#006688]" placeholder="Ej. STETHOSCOPE" />
-                            <p class="text-[9px] text-gray-400 font-medium mt-0.5">Solo letras. Máx. 20 caracteres.</p>
+                        <div v-for="(item, idx) in newActivity.crosswordWords" :key="idx" class="bg-gray-50/50 p-3.5 rounded-2xl border border-gray-150 space-y-3 relative">
+                          <button 
+                            v-if="newActivity.crosswordWords.length > 1"
+                            @click="newActivity.crosswordWords.splice(idx, 1)"
+                            type="button"
+                            class="absolute top-2.5 right-2.5 text-red-400 hover:text-red-600 transition-colors"
+                          >
+                            <span class="material-symbols-outlined text-sm">close</span>
+                          </button>
+                          
+                          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="space-y-1">
+                              <label class="text-[9px] font-bold text-gray-400">Palabra</label>
+                              <input type="text" v-model="item.word" @input="sanitizeWordInput(item)" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold uppercase focus:outline-none focus:border-[#006688]" placeholder="Ej. STETHOSCOPE" />
+                              <p class="text-[9px] text-gray-400 font-medium mt-0.5">Solo letras. Máx. 20 caracteres.</p>
+                            </div>
+                            
+                            <div class="space-y-1 sm:col-span-2">
+                              <label class="text-[9px] font-bold text-gray-400">Pista / Descripción</label>
+                              <input type="text" v-model="item.clue" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Instrumento para escuchar los latidos" />
+                            </div>
                           </div>
                           
-                          <div class="space-y-1 sm:col-span-2">
-                            <label class="text-[9px] font-bold text-gray-400">Pista / Descripción</label>
-                            <input type="text" v-model="item.clue" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="Ej. Instrumento para escuchar los latidos" />
+                          <div v-if="newActivity.layoutMode === 'manual'" class="flex items-center gap-4 pt-1">
+                            <span class="text-[9px] font-bold text-gray-400">Orientación:</span>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-650 cursor-pointer">
+                              <input type="radio" :name="'orientation-' + idx" value="horizontal" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
+                              Horizontal
+                            </label>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-650 cursor-pointer">
+                              <input type="radio" :name="'orientation-' + idx" value="vertical" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
+                              Vertical
+                            </label>
+                          </div>
+                          <div v-else class="flex items-center gap-2 pt-1">
+                            <span class="text-[9px] font-bold text-gray-400">Dirección:</span>
+                            <span :class="`text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded ${getCalculatedInlineOrientationBadge(idx).bg}`">
+                              {{ getCalculatedInlineOrientationBadge(idx).label }}
+                            </span>
                           </div>
                         </div>
-                        
-                        <div v-if="newActivity.layoutMode === 'manual'" class="flex items-center gap-4 pt-1">
-                          <span class="text-[9px] font-bold text-gray-400">Orientación:</span>
-                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-650 cursor-pointer">
-                            <input type="radio" :name="'orientation-' + idx" value="horizontal" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
-                            Horizontal
-                          </label>
-                          <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-650 cursor-pointer">
-                            <input type="radio" :name="'orientation-' + idx" value="vertical" v-model="item.orientation" class="text-[#006688] focus:ring-[#006688]" />
-                            Vertical
-                          </label>
-                        </div>
-                        <div v-else class="flex items-center gap-2 pt-1">
-                          <span class="text-[9px] font-bold text-gray-400">Dirección:</span>
-                          <span :class="`text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded ${getCalculatedInlineOrientationBadge(idx).bg}`">
-                            {{ getCalculatedInlineOrientationBadge(idx).label }}
-                          </span>
+
+                        <!-- Warning Banner -->
+                        <div v-if="inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())" class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-xs space-y-1 mt-2">
+                          <div class="flex items-center gap-1.5 font-bold">
+                            <span class="material-symbols-outlined text-sm">warning</span>
+                            <span>El crucigrama no se puede conectar</span>
+                          </div>
+                          <p v-if="inlineCrosswordLayout.reason === 'isolated'">
+                            La palabra <strong class="uppercase">"{{ inlineCrosswordLayout.errorWord }}"</strong> no comparte ninguna vocal o consonante con las demás palabras. Modifícala o añade palabras intermedias para poder conectarlas.
+                          </p>
+                          <p v-else>
+                            Las palabras no pueden formar un crucigrama cruzado válido con las combinaciones actuales. Modifica alguna palabra o añade letras en común.
+                          </p>
                         </div>
                       </div>
 
-                      <!-- Warning Banner -->
-                      <div v-if="inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())" class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-xs space-y-1 mt-2">
-                        <div class="flex items-center gap-1.5 font-bold">
-                          <span class="material-symbols-outlined text-sm">warning</span>
-                          <span>El crucigrama no se puede conectar</span>
-                        </div>
-                        <p v-if="inlineCrosswordLayout.reason === 'isolated'">
-                          La palabra <strong class="uppercase">"{{ inlineCrosswordLayout.errorWord }}"</strong> no comparte ninguna vocal o consonante con las demás palabras. Modifícala o añade palabras intermedias para poder conectarlas.
-                        </p>
-                        <p v-else>
-                          Las palabras no pueden formar un crucigrama cruzado válido con las combinaciones actuales. Modifica alguna palabra o añade letras en común.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div v-if="newActivity.template === 'quiz' || newActivity.template === 'preguntas'" class="sm:col-span-2 space-y-3">
-                      <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-gray-500">Pregunta</label>
-                        <input type="text" v-model="newActivity.quizQuestion" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="¿Cuál es la pregunta?" />
-                      </div>
-                      <div class="grid grid-cols-2 gap-2">
+                      <div v-if="newActivity.template === 'quiz' || newActivity.template === 'preguntas'" class="sm:col-span-2 space-y-3">
                         <div class="space-y-1">
-                          <label class="text-[10px] font-bold text-gray-500">Opción Correcta</label>
-                          <input type="text" v-model="newActivity.quizCorrect" class="w-full px-2 py-1.5 border border-green-200 bg-green-50/20 rounded-lg text-xs font-semibold focus:outline-none" />
+                          <label class="text-[10px] font-bold text-gray-500">Pregunta</label>
+                          <input type="text" v-model="newActivity.quizQuestion" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="¿Cuál es la pregunta?" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                          <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-500">Opción Correcta</label>
+                            <input type="text" v-model="newActivity.quizCorrect" class="w-full px-2 py-1.5 border border-green-200 bg-green-50/20 rounded-lg text-xs font-semibold focus:outline-none" />
+                          </div>
+                          <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-500">Opción Incorrecta</label>
+                            <input type="text" v-model="newActivity.quizIncorrect" class="w-full px-2 py-1.5 border border-red-200 bg-red-50/20 rounded-lg text-xs font-semibold focus:outline-none" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div v-if="newActivity.template === 'match'" class="sm:col-span-2 grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                          <label class="text-[10px] font-bold text-gray-500">Término en Inglés</label>
+                          <input type="text" v-model="newActivity.matchTerm" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none" />
                         </div>
                         <div class="space-y-1">
-                          <label class="text-[10px] font-bold text-gray-500">Opción Incorrecta</label>
-                          <input type="text" v-model="newActivity.quizIncorrect" class="w-full px-2 py-1.5 border border-red-200 bg-red-50/20 rounded-lg text-xs font-semibold focus:outline-none" />
+                          <label class="text-[10px] font-bold text-gray-500">Significado en Español</label>
+                          <input type="text" v-model="newActivity.matchMeaning" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none" />
+                        </div>
+                      </div>
+
+                      <div v-if="newActivity.template === 'listening'" class="sm:col-span-2 space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Frase para Reproducir en Inglés</label>
+                        <input type="text" v-model="newActivity.listeningPhrase" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                      </div>
+
+                      <div v-if="newActivity.template === 'pronunciation'" class="sm:col-span-2 space-y-1">
+                        <label class="text-[10px] font-bold text-gray-500">Frase para Pronunciar en Inglés</label>
+                        <input type="text" v-model="newActivity.pronouncePhrase" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
+                      </div>
+
+                      <div v-if="newActivity.template === 'fillblank'" class="sm:col-span-2 space-y-2">
+                        <div class="space-y-1">
+                          <label class="text-[10px] font-bold text-gray-500">Oración con espacio (usa [blank] o __)</label>
+                          <input type="text" v-model="newActivity.fillblankSentence" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" placeholder="The nurse prepares the [blank]." />
+                        </div>
+                        <div class="space-y-1">
+                          <label class="text-[10px] font-bold text-gray-500">Palabra o respuesta correcta</label>
+                          <input type="text" v-model="newActivity.fillblankAnswer" class="w-full px-2 py-1.5 border border-green-200 bg-green-50/20 rounded-lg text-xs font-semibold focus:outline-none" placeholder="medication" />
                         </div>
                       </div>
                     </div>
 
-                    <div v-if="newActivity.template === 'match'" class="sm:col-span-2 grid grid-cols-2 gap-2">
-                      <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-gray-500">Término en Inglés</label>
-                        <input type="text" v-model="newActivity.matchTerm" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none" />
-                      </div>
-                      <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-gray-500">Significado en Español</label>
-                        <input type="text" v-model="newActivity.matchMeaning" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none" />
-                      </div>
+                    <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                      <button @click="resetNewActivityForm" type="button" class="px-3 py-1.5 border border-gray-200 text-gray-600 font-bold text-[10px] rounded-lg transition-all">Cancelar</button>
+                      <button 
+                        @click="saveNewActivity" 
+                        type="button" 
+                        :disabled="newActivity.template === 'crucigrama' && inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())"
+                        :class="`px-3.5 py-1.5 text-white font-bold text-[10px] rounded-lg shadow transition-all ${
+                          newActivity.template === 'crucigrama' && inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none border-gray-300'
+                            : 'bg-[#006688] hover:bg-[#004e69]'
+                        }`"
+                      >
+                        {{ newActivity.id ? 'Guardar Cambios' : 'Guardar y Asignar al Módulo' }}
+                      </button>
                     </div>
-
-                    <div v-if="newActivity.template === 'listening'" class="sm:col-span-2 space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Frase para Reproducir en Inglés</label>
-                      <input type="text" v-model="newActivity.listeningPhrase" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                    </div>
-
-                    <div v-if="newActivity.template === 'pronunciation'" class="sm:col-span-2 space-y-1">
-                      <label class="text-[10px] font-bold text-gray-500">Frase para Pronunciar en Inglés</label>
-                      <input type="text" v-model="newActivity.pronouncePhrase" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#006688]" />
-                    </div>
-                  </div>
-
-                  <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
-                    <button @click="resetNewActivityForm" type="button" class="px-3 py-1.5 border border-gray-200 text-gray-600 font-bold text-[10px] rounded-lg transition-all">Cancelar</button>
-                    <button 
-                      @click="saveNewActivity" 
-                      type="button" 
-                      :disabled="newActivity.template === 'crucigrama' && inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())"
-                      :class="`px-3.5 py-1.5 text-white font-bold text-[10px] rounded-lg shadow transition-all ${
-                        newActivity.template === 'crucigrama' && inlineCrosswordLayout && !inlineCrosswordLayout.success && newActivity.crosswordWords.some(w => w.word.trim())
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none border-gray-300'
-                          : 'bg-[#006688] hover:bg-[#004e69]'
-                      }`"
-                    >
-                      Guardar Actividad
-                    </button>
                   </div>
                 </div>
               </div>
@@ -952,9 +1116,176 @@ const newActivity = ref({
   matchMeaning: '',
   listeningPhrase: '',
   pronouncePhrase: '',
+  fillblankSentence: '',
+  fillblankAnswer: '',
   crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
   layoutMode: 'automatic'
 })
+
+// Activity Assigner State & Catalog Linking
+const assignActivityTab = ref('link') // 'link' | 'create'
+const catalogSearchQuery = ref('')
+const catalogTemplateFilter = ref('all')
+const selectedTemplateActivityId = ref(null)
+const isLinkingActivity = ref(false)
+
+const ALL_GAME_TEMPLATES = [
+  { value: 'sopa', label: 'Sopa de letras' },
+  { value: 'crucigrama', label: 'Crucigramas' },
+  { value: 'match', label: 'Conectar significado' },
+  { value: 'quiz', label: 'Quizzes' },
+  { value: 'preguntas', label: 'Opción múltiple' },
+  { value: 'fillblank', label: 'Completar oración' },
+  { value: 'listening', label: 'Escucha (Audio)' },
+  { value: 'pronunciation', label: 'Pronunciación (Voz)' }
+]
+
+const targetModalPhaseName = computed(() => {
+  const phaseMapping = {
+    inicio: 'Preparación',
+    estudio: 'Absorción',
+    practica: 'Práctica',
+    evaluacion: 'Cierre'
+  }
+  return phaseMapping[activeModalPhase.value] || 'Preparación'
+})
+
+const availableCatalogActivities = computed(() => {
+  const currentCourseId = editingCourse.value?.id
+  const currentPhase = targetModalPhaseName.value
+  return (activities.value || []).map(act => {
+    const actCourseId = act.courseId ? Number(act.courseId) : null
+    const isAssignedHere = Boolean(currentCourseId && actCourseId === Number(currentCourseId) && act.phase === currentPhase)
+    return {
+      ...act,
+      isAssignedHere
+    }
+  })
+})
+
+const filteredCatalogActivities = computed(() => {
+  let list = availableCatalogActivities.value
+  if (catalogTemplateFilter.value && catalogTemplateFilter.value !== 'all') {
+    list = list.filter(a => a.template === catalogTemplateFilter.value)
+  }
+  if (catalogSearchQuery.value.trim()) {
+    const q = catalogSearchQuery.value.trim().toLowerCase()
+    list = list.filter(a => 
+      (a.title && a.title.toLowerCase().includes(q)) ||
+      (a.course && a.course.toLowerCase().includes(q)) ||
+      (a.phase && a.phase.toLowerCase().includes(q)) ||
+      (a.template && a.template.toLowerCase().includes(q))
+    )
+  }
+  return list
+})
+
+function openAssignActivityModal() {
+  resetNewActivityForm()
+  assignActivityTab.value = 'link'
+  catalogSearchQuery.value = ''
+  catalogTemplateFilter.value = 'all'
+  selectedTemplateActivityId.value = null
+  showAddActivityForm.value = true
+}
+
+async function linkExistingActivityToPhase(act) {
+  if (!editingCourse.value || !act) return
+  isLinkingActivity.value = true
+  try {
+    const token = getAuthToken()
+    const targetPhase = targetModalPhaseName.value
+    const payload = {
+      courseId: editingCourse.value.id,
+      course: editingCourse.value.title,
+      phase: targetPhase
+    }
+    const res = await fetch(`${apiBaseUrl}/api/activities/${act.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(payload)
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.message || 'No se pudo vincular la actividad a esta fase.')
+    }
+    await fetchActivities()
+    notificationStore.notify({
+      type: 'success',
+      title: 'Actividad Vinculada',
+      message: `"${act.title}" ha sido asignada a la fase ${targetPhase}.`
+    })
+  } catch (err) {
+    console.error(err)
+    notificationStore.notify({
+      type: 'error',
+      title: 'Error al Vincular',
+      message: err.message || 'No se pudo vincular la actividad.'
+    })
+  } finally {
+    isLinkingActivity.value = false
+  }
+}
+
+function cloneActivityAsTemplate(actOrId) {
+  const act = typeof actOrId === 'object' && actOrId !== null
+    ? actOrId 
+    : activities.value.find(a => a.id === Number(actOrId))
+  
+  if (!act) return
+
+  const empty = createEmptyActivity()
+  let crosswordWords = empty.crosswordWords
+  let layoutMode = 'automatic'
+  if (act.crossword1Clue) {
+    try {
+      const parsed = JSON.parse(act.crossword1Clue)
+      layoutMode = parsed.layoutMode || 'automatic'
+      if (Array.isArray(parsed.words) && parsed.words.length) {
+        crosswordWords = parsed.words.map(w => ({ word: w.word, clue: w.clue, orientation: w.orientation || 'horizontal' }))
+      }
+    } catch {}
+  }
+
+  newActivity.value = {
+    ...empty,
+    id: null,
+    title: `${act.title} (Copia)`,
+    template: act.template || 'quiz',
+    points: act.points || 10,
+    description: act.description || '',
+    icon: act.icon || '',
+    color: act.color || '',
+    visible: act.visible !== false,
+    required: act.required !== false,
+    hasStudentSubmissions: false,
+    sopaWords: act.sopaWords || '',
+    quizQuestion: act.quizQuestion || '',
+    quizCorrect: act.quizCorrect || '',
+    quizIncorrect: act.quizIncorrect || '',
+    matchTerm: act.matchTerm || '',
+    matchMeaning: act.matchMeaning || '',
+    listeningPhrase: act.listeningPhrase || '',
+    pronouncePhrase: act.pronouncePhrase || '',
+    fillblankSentence: act.fillblankSentence || '',
+    fillblankAnswer: act.fillblankAnswer || '',
+    crosswordWords,
+    layoutMode
+  }
+
+  selectedTemplateActivityId.value = act.id
+  assignActivityTab.value = 'create'
+  showAddActivityForm.value = true
+
+  notificationStore.notify({
+    type: 'info',
+    title: 'Plantilla Cargada',
+    message: `Se cargó la plantilla de "${act.title}". Puedes modificarla y guardarla para este módulo.`
+  })
+}
 
 const allowedTemplatesForCurrentPhase = computed(() => {
   if (activeModalPhase.value === 'inicio') {
@@ -973,11 +1304,13 @@ const allowedTemplatesForCurrentPhase = computed(() => {
       { value: 'listening', label: 'Escucha (Audio)' },
       { value: 'pronunciation', label: 'Pronunciación (Voz)' },
       { value: 'match', label: 'Conectar significado' },
+      { value: 'fillblank', label: 'Completar oración' },
       { value: 'preguntas', label: 'Opción múltiple' }
     ]
   } else if (activeModalPhase.value === 'evaluacion') {
     return [
       { value: 'quiz', label: 'Quizzes' },
+      { value: 'fillblank', label: 'Completar oración' },
       { value: 'preguntas', label: 'Opción múltiple' }
     ]
   }
@@ -1628,7 +1961,7 @@ function createEmptyActivity() {
   return {
     id: null,
     title: '',
-    template: 'quiz',
+    template: allowedTemplatesForCurrentPhase.value[0]?.value || 'quiz',
     points: 10,
     description: '',
     icon: '',
@@ -1644,6 +1977,8 @@ function createEmptyActivity() {
     matchMeaning: '',
     listeningPhrase: '',
     pronouncePhrase: '',
+    fillblankSentence: '',
+    fillblankAnswer: '',
     crosswordWords: [{ word: '', clue: '', orientation: 'horizontal' }],
     layoutMode: 'automatic'
   }
@@ -1652,6 +1987,8 @@ function createEmptyActivity() {
 function resetNewActivityForm() {
   newActivity.value = createEmptyActivity()
   showAddActivityForm.value = false
+  selectedTemplateActivityId.value = null
+  assignActivityTab.value = 'link'
 }
 
 function openEditActivityForm(act) {
@@ -1687,22 +2024,19 @@ function openEditActivityForm(act) {
     matchMeaning: act.matchMeaning || '',
     listeningPhrase: act.listeningPhrase || '',
     pronouncePhrase: act.pronouncePhrase || '',
+    fillblankSentence: act.fillblankSentence || '',
+    fillblankAnswer: act.fillblankAnswer || '',
     crosswordWords,
     layoutMode
   }
+  assignActivityTab.value = 'create'
   showAddActivityForm.value = true
 }
 
 async function saveNewActivity() {
   if (!newActivity.value.title.trim() || !editingCourse.value) return
   
-  const phaseMapping = {
-    inicio: 'Preparación',
-    estudio: 'Absorción',
-    practica: 'Práctica',
-    evaluacion: 'Cierre'
-  }
-  const targetPhase = phaseMapping[activeModalPhase.value]
+  const targetPhase = targetModalPhaseName.value
 
   let crossword1Clue = ''
   let crossword1Word = ''
@@ -1754,7 +2088,9 @@ async function saveNewActivity() {
     matchTerm: newActivity.value.matchTerm,
     matchMeaning: newActivity.value.matchMeaning,
     listeningPhrase: newActivity.value.listeningPhrase,
-    pronouncePhrase: newActivity.value.pronouncePhrase
+    pronouncePhrase: newActivity.value.pronouncePhrase,
+    fillblankSentence: newActivity.value.fillblankSentence || '',
+    fillblankAnswer: newActivity.value.fillblankAnswer || ''
   }
 
   try {
