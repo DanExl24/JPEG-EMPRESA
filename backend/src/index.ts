@@ -69,6 +69,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // 5. Rutas API Modulares (SRP & DRY)
 app.use('/api', apiRouter)
+app.use('/', apiRouter)
 app.use('/', testRoutes)
 
 // 6. Manejador Global de Errores (DRY)
