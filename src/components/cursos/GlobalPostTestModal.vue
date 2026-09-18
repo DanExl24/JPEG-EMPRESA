@@ -540,27 +540,39 @@
         </div>
 
         <form @submit.prevent="saveQuestionForm" class="space-y-4 text-xs">
-          <!-- Módulo y RAP selector -->
+          <!-- Módulo y RAP selector dinámicos -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-gray-700 mb-1">Módulo Formativo:</label>
-              <select v-model="editForm.moduleKey" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:border-[#006688]">
-                <option value="m1">Módulo 1 · Analysis Phase</option>
-                <option value="m2">Módulo 2 · Planning Phase</option>
-                <option value="m3">Módulo 3 · Execution Phase</option>
-                <option value="m4">Módulo 4 · Evaluation Phase</option>
+              <select 
+                v-model="editForm.moduleKey" 
+                @change="onModuleChange"
+                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:border-[#006688]"
+              >
+                <option v-for="mod in availableModules" :key="mod.key" :value="mod.key">
+                  {{ mod.displayName }}
+                </option>
               </select>
             </div>
 
             <div>
               <label class="block font-bold text-gray-700 mb-1">Resultado de Aprendizaje (RAP):</label>
-              <select v-model="editForm.rap" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:border-[#006688]">
-                <option value="RAP 1">RAP 1 (Saludos & Admisión Hospitalaria)</option>
-                <option value="RAP 2">RAP 2 (Antecedentes & Caso Clínico Mr. Thomas)</option>
-                <option value="RAP 3">RAP 3 (Entrega de Turno & Comprensión Oral)</option>
-                <option value="RAP 4">RAP 4 (Rutinas, Instrumental & Present Continuous)</option>
-                <option value="RAP 5">RAP 5 (Propuestas de Mejora & Trabajo en Equipo)</option>
-                <option value="RAP 6">RAP 6 (Instrucciones de Alta & Checklists)</option>
+              <select 
+                v-model="editForm.rap" 
+                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:border-[#006688]"
+              >
+                <!-- RAPs asociados específicamente al módulo seleccionado -->
+                <optgroup v-if="currentModuleRaps.length > 0" label="RAPs de este Módulo">
+                  <option v-for="r in currentModuleRaps" :key="'mod-' + r.value" :value="r.value">
+                    {{ r.label }}
+                  </option>
+                </optgroup>
+                <!-- Todos los RAPs curriculares registrados -->
+                <optgroup label="Todos los RAPs del Currículo">
+                  <option v-for="r in allCurriculumRapsFormatted" :key="'all-' + r.value" :value="r.value">
+                    {{ r.label }}
+                  </option>
+                </optgroup>
               </select>
             </div>
           </div>
@@ -822,7 +834,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { getApiBaseUrl } from '../../lib/api'
 
@@ -837,6 +849,165 @@ const emit = defineEmits(['update:modelValue'])
 
 const auth = useAuthStore()
 const apiBaseUrl = getApiBaseUrl()
+
+// Token resolver
+function getAuthToken() {
+  if (auth.token) return auth.token
+  if (auth.user?.token) return auth.user.token
+  const stored = localStorage.getItem('nursed.auth.user') || sessionStorage.getItem('nursed.auth.user')
+  return stored ? JSON.parse(stored)?.token : null
+}
+
+// Catálogo base de RAPs oficiales
+const DEFAULT_OFFICIAL_RAPS = [
+  { id: 1, code: 'RAP 1', name: 'Saludos & Admisión Hospitalaria (Módulo 1 · Fase Análisis)' },
+  { id: 2, code: 'RAP 2', name: 'Antecedentes & Caso Clínico Mr. Thomas (Módulo 2 · Fase Planeación)' },
+  { id: 3, code: 'RAP 3', name: 'Entrega de Turno & Comprensión Oral (Módulo 2 · Fase Planeación)' },
+  { id: 4, code: 'RAP 4', name: 'Rutinas, Instrumental & Present Continuous (Módulo 3 · Fase Ejecución)' },
+  { id: 5, code: 'RAP 5', name: 'Propuestas de Mejora & Trabajo en Equipo (Módulo 3 · Fase Ejecución)' },
+  { id: 6, code: 'RAP 6', name: 'Instrucciones de Alta & Checklists (Módulo 4 · Fase Evaluación)' }
+]
+
+// Normalizador de formato RAP ("RAP-01" -> "RAP 1")
+function normalizeRap(code) {
+  if (!code) return 'RAP 1'
+  const str = String(code).trim()
+  const m = str.match(/RAP[- ]?0?([0-9]+)/i)
+  if (m) return `RAP ${m[1]}`
+  return str
+}
+
+// Cursos y RAPs dinámicos desde backend
+const loadedCourses = ref([])
+const availableRaps = ref([...DEFAULT_OFFICIAL_RAPS])
+
+async function fetchCoursesData() {
+  try {
+    const token = getAuthToken()
+    const res = await fetch(`${apiBaseUrl}/api/courses`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const list = Array.isArray(data) ? data : (data?.data || [])
+      if (Array.isArray(list) && list.length > 0) {
+        loadedCourses.value = list
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load courses for post-test modal:', err)
+  }
+}
+
+async function fetchCurriculumRaps() {
+  try {
+    const token = getAuthToken()
+    let res = await fetch(`${apiBaseUrl}/api/admin/curriculum/raps`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (!res.ok) {
+      res = await fetch(`${apiBaseUrl}/api/curriculum/raps`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+    }
+    if (res.ok) {
+      const data = await res.json()
+      const list = Array.isArray(data) ? data : (data?.data || [])
+      if (Array.isArray(list) && list.length > 0) {
+        availableRaps.value = list.map(r => ({
+          ...r,
+          code: normalizeRap(r.code || r.name)
+        }))
+      }
+    }
+  } catch (err) {
+    console.warn('Backend curriculum raps unavailable:', err)
+  }
+}
+
+// Módulos/Cursos disponibles dinámicamente
+const availableModules = computed(() => {
+  if (loadedCourses.value && loadedCourses.value.length > 0) {
+    return loadedCourses.value.map((c, idx) => {
+      let key = `m${idx + 1}`
+      if (c.slug === 'getting-to-know-other-people') key = 'm1'
+      else if (c.slug === 'work-life-interaction') key = 'm2'
+      else if (c.slug === 'workplace-communication') key = 'm3'
+      else if (c.slug === 'professional-practice') key = 'm4'
+      else if (c.id) key = `c_${c.id}`
+
+      let parsedRaps = []
+      if (c.raps) {
+        try {
+          parsedRaps = Array.isArray(c.raps) ? c.raps : JSON.parse(c.raps)
+        } catch {
+          parsedRaps = []
+        }
+      }
+
+      // RAPs por defecto si es uno de los módulos canónicos y no tiene en BD
+      if (parsedRaps.length === 0) {
+        if (key === 'm1') parsedRaps = ['RAP 1']
+        else if (key === 'm2') parsedRaps = ['RAP 2', 'RAP 3']
+        else if (key === 'm3') parsedRaps = ['RAP 4', 'RAP 5']
+        else if (key === 'm4') parsedRaps = ['RAP 6']
+      }
+
+      return {
+        key,
+        id: c.id,
+        slug: c.slug,
+        title: c.title,
+        displayName: `Módulo ${idx + 1} · ${c.title}`,
+        tagPrefix: `MÓDULO ${idx + 1}`,
+        raps: parsedRaps.map(r => normalizeRap(r))
+      }
+    })
+  }
+
+  // Fallback con los 4 módulos oficiales
+  return [
+    { key: 'm1', displayName: 'Módulo 1 · Analysis Phase (Getting to Know Other People)', tagPrefix: 'MÓDULO 1', raps: ['RAP 1'] },
+    { key: 'm2', displayName: 'Módulo 2 · Planning Phase (Work Life Interaction)', tagPrefix: 'MÓDULO 2', raps: ['RAP 2', 'RAP 3'] },
+    { key: 'm3', displayName: 'Módulo 3 · Execution Phase (Workplace Communication)', tagPrefix: 'MÓDULO 3', raps: ['RAP 4', 'RAP 5'] },
+    { key: 'm4', displayName: 'Módulo 4 · Evaluation Phase (Professional Practice)', tagPrefix: 'MÓDULO 4', raps: ['RAP 6'] }
+  ]
+})
+
+// RAPs asociados al módulo actualmente seleccionado en el formulario
+const currentModuleRaps = computed(() => {
+  const mod = availableModules.value.find(m => m.key === editForm.value.moduleKey)
+  if (!mod || !mod.raps || mod.raps.length === 0) return []
+  return mod.raps.map(rawRap => {
+    const norm = normalizeRap(rawRap)
+    const found = availableRaps.value.find(r => normalizeRap(r.code) === norm || r.name?.includes(norm))
+    return {
+      value: norm,
+      label: found ? `${norm} (${found.name})` : norm
+    }
+  })
+})
+
+// Todos los RAPs curriculares formateados
+const allCurriculumRapsFormatted = computed(() => {
+  return availableRaps.value.map(r => {
+    const norm = normalizeRap(r.code || r.name)
+    return {
+      value: norm,
+      label: r.name ? `${norm} (${r.name})` : norm
+    }
+  })
+})
+
+function onModuleChange() {
+  const currentMod = availableModules.value.find(m => m.key === editForm.value.moduleKey)
+  if (currentMod && currentMod.raps && currentMod.raps.length > 0) {
+    const normalizedModuleRaps = currentMod.raps.map(r => normalizeRap(r))
+    if (!normalizedModuleRaps.includes(normalizeRap(editForm.value.rap))) {
+      editForm.value.rap = normalizedModuleRaps[0]
+    }
+  }
+}
 
 // Staff Recognition (Admin / Instructor)
 const isStaff = computed(() => Boolean(auth.isAdmin || auth.isInstructor))
@@ -855,7 +1026,16 @@ const certificateData = ref(null)
 
 // Filtering for Staff
 const selectedRapFilter = ref('Todos')
-const rapFilterOptions = ['Todos', 'RAP 1', 'RAP 2', 'RAP 3', 'RAP 4', 'RAP 5', 'RAP 6']
+const rapFilterOptions = computed(() => {
+  const set = new Set(['Todos'])
+  questionsList.value.forEach(q => {
+    if (q.rap) set.add(normalizeRap(q.rap))
+  })
+  availableRaps.value.forEach(r => {
+    set.add(normalizeRap(r.code || r.name))
+  })
+  return Array.from(set)
+})
 
 // Standard Clinical Questions (Base Default Bank)
 const DEFAULT_GLOBAL_QUESTIONS = [
@@ -1003,7 +1183,7 @@ function resetToDefaultQuestions() {
 // Staff Question Filter
 const filteredQuestionsForStaff = computed(() => {
   if (selectedRapFilter.value === 'Todos') return questionsList.value
-  return questionsList.value.filter(q => q.rap === selectedRapFilter.value)
+  return questionsList.value.filter(q => normalizeRap(q.rap) === selectedRapFilter.value)
 })
 
 // Question Editor State
@@ -1025,11 +1205,13 @@ const editForm = ref({
 
 function openAddQuestionModal() {
   isCreatingQuestion.value = true
+  const firstMod = availableModules.value[0] || { key: 'm1', tagPrefix: 'MÓDULO 1' }
+  const firstRap = (firstMod.raps && firstMod.raps[0]) ? normalizeRap(firstMod.raps[0]) : 'RAP 1'
   editForm.value = {
     id: Date.now(),
-    moduleKey: 'm1',
-    rap: 'RAP 1',
-    moduleTag: 'MÓDULO 1 · RAP 1',
+    moduleKey: firstMod.key,
+    rap: firstRap,
+    moduleTag: `${firstMod.tagPrefix || 'MÓDULO 1'} · ${firstRap}`,
     title: '',
     question: '',
     options: ['', '', ''],
@@ -1044,11 +1226,14 @@ function openAddQuestionModal() {
 function openEditQuestionModal(q) {
   isCreatingQuestion.value = false
   const correctIdx = q.options.indexOf(q.correct)
+  const normRap = normalizeRap(q.rap || 'RAP 1')
+  const matchedMod = availableModules.value.find(m => m.key === q.moduleKey)
+  const tagPrefix = matchedMod?.tagPrefix || `MÓDULO ${q.moduleKey || '1'}`
   editForm.value = {
     id: q.id,
     moduleKey: q.moduleKey || 'm1',
-    rap: q.rap || 'RAP 1',
-    moduleTag: q.moduleTag || 'MÓDULO 1 · RAP 1',
+    rap: normRap,
+    moduleTag: q.moduleTag || `${tagPrefix} · ${normRap}`,
     title: q.title || '',
     question: q.question || '',
     options: [...q.options],
@@ -1061,14 +1246,16 @@ function openEditQuestionModal(q) {
 }
 
 function saveQuestionForm() {
-  const modNum = editForm.value.moduleKey.replace('m', '')
-  const moduleTag = `MÓDULO ${modNum} · ${editForm.value.rap}`
+  const selectedMod = availableModules.value.find(m => m.key === editForm.value.moduleKey)
+  const tagPrefix = selectedMod?.tagPrefix || `MÓDULO ${editForm.value.moduleKey}`
+  const normRap = normalizeRap(editForm.value.rap)
+  const moduleTag = `${tagPrefix} · ${normRap}`
   const chosenCorrect = editForm.value.options[editForm.value.correctIndex] || editForm.value.options[0]
 
   const questionPayload = {
     id: editForm.value.id,
     moduleKey: editForm.value.moduleKey,
-    rap: editForm.value.rap,
+    rap: normRap,
     moduleTag,
     title: editForm.value.title.trim(),
     question: editForm.value.question.trim(),
@@ -1152,12 +1339,22 @@ function calculateAndSetResults(isSimulationMode = false) {
     m4: { total: 0, correct: 0 } 
   }
 
+  // Registrar todas las claves de módulos disponibles
+  availableModules.value.forEach(m => {
+    if (!breakdownCount[m.key]) {
+      breakdownCount[m.key] = { total: 0, correct: 0 }
+    }
+  })
+
   questionsList.value.forEach(q => {
     const key = q.moduleKey || 'm1'
-    if (breakdownCount[key]) breakdownCount[key].total++
+    if (!breakdownCount[key]) {
+      breakdownCount[key] = { total: 0, correct: 0 }
+    }
+    breakdownCount[key].total++
     if (globalAnswers.value[q.id] === q.correct) {
       correctCount++
-      if (breakdownCount[key]) breakdownCount[key].correct++
+      breakdownCount[key].correct++
     }
   })
 
@@ -1165,12 +1362,13 @@ function calculateAndSetResults(isSimulationMode = false) {
   preTestBaseline.value = 35 // Diagnóstico de entrada
   growthDelta.value = Math.max(0, globalScore.value - preTestBaseline.value)
 
-  moduleBreakdown.value = {
-    m1: breakdownCount.m1.total ? Math.round((breakdownCount.m1.correct / breakdownCount.m1.total) * 100) : 100,
-    m2: breakdownCount.m2.total ? Math.round((breakdownCount.m2.correct / breakdownCount.m2.total) * 100) : 100,
-    m3: breakdownCount.m3.total ? Math.round((breakdownCount.m3.correct / breakdownCount.m3.total) * 100) : 100,
-    m4: breakdownCount.m4.total ? Math.round((breakdownCount.m4.correct / breakdownCount.m4.total) * 100) : 100,
-  }
+  const computedBreakdown = {}
+  Object.keys(breakdownCount).forEach(k => {
+    computedBreakdown[k] = breakdownCount[k].total 
+      ? Math.round((breakdownCount[k].correct / breakdownCount[k].total) * 100) 
+      : 100
+  })
+  moduleBreakdown.value = computedBreakdown
 
   const rawStaffName = `${auth.user?.nombre || ''} ${auth.user?.apellido || ''}`.trim() || 'Instructor / Admin'
   const studentName = isSimulationMode 
@@ -1371,8 +1569,15 @@ async function loadExistingResult() {
   globalPostTestSubmitted.value = false
 }
 
+onMounted(() => {
+  fetchCoursesData()
+  fetchCurriculumRaps()
+})
+
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
+    fetchCoursesData()
+    fetchCurriculumRaps()
     questionsList.value = loadSavedQuestions()
     globalAnswers.value = {}
     isSubmittingPostTest.value = false
