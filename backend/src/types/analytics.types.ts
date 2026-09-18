@@ -117,4 +117,47 @@ export interface DashboardSummaryDto {
     iconEmoji: string
     awardedAt: string
   }>
+  adminChartData?: AdminChartDataDto
+}
+
+export interface AdminChartItemWeeklyDto {
+  day: string
+  shortDay: string
+  date: string
+  submissions: number
+  passed: number
+  rate: number
+  isPeak?: boolean
+}
+
+export interface AdminChartItemModuleDto {
+  id: number
+  title: string
+  category: string
+  enrolled: number
+  completed: number
+  rate: number
+  avgScore: number
+  status: 'Óptimo' | 'Satisfactorio' | 'En Seguimiento'
+}
+
+export interface AdminChartItemRapDto {
+  code: string
+  title: string
+  masteryPct: number
+  evaluatedCount: number
+  status: 'Sobresaliente' | 'Competente' | 'En Refuerzo'
+}
+
+export interface AdminChartDataDto {
+  summary: {
+    weeklySubmissions: number
+    weeklyGrowth: number
+    avgPassRate: number
+    peakDay: string
+    activeLearnersCount: number
+  }
+  weeklyActivity: AdminChartItemWeeklyDto[]
+  moduleProgress: AdminChartItemModuleDto[]
+  rapMastery: AdminChartItemRapDto[]
 }

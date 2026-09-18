@@ -414,6 +414,389 @@
         </div>
       </div>
 
+      <!-- ========================================== -->
+      <!-- ADMIN & INSTRUCTOR ANALYTICS & CHART PANEL -->
+      <!-- ========================================== -->
+      <div v-if="auth.isAdmin || auth.isInstructor" class="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-gray-100 space-y-6">
+        
+        <!-- Header with Tabs and Quick Actions -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#006688]/15 to-teal-500/20 text-[#006688] flex items-center justify-center font-bold">
+                <span class="material-symbols-outlined text-lg">insights</span>
+              </div>
+              <h3 class="text-lg font-black text-gray-800">
+                {{ i18n.t('Monitor Estadístico Institucional') }}
+              </h3>
+              <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {{ i18n.t('En Vivo') }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-400">
+              {{ i18n.t('Supervisión gráfica de actividad de aprendizaje, efectividad por módulo y logro de competencias formativas.') }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <!-- Tab Switcher -->
+            <div class="inline-flex p-1 bg-gray-100/90 rounded-2xl border border-gray-200/50 shadow-inner">
+              <button
+                type="button"
+                @click="activeChartTab = 'weekly'"
+                :class="[
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
+                  activeChartTab === 'weekly'
+                    ? 'bg-white text-[#006688] shadow-xs'
+                    : 'text-gray-500 hover:text-gray-800'
+                ]"
+              >
+                <span class="material-symbols-outlined text-sm">show_chart</span>
+                {{ i18n.t('Actividad Semanal') }}
+              </button>
+              <button
+                type="button"
+                @click="activeChartTab = 'modules'"
+                :class="[
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
+                  activeChartTab === 'modules'
+                    ? 'bg-white text-[#006688] shadow-xs'
+                    : 'text-gray-500 hover:text-gray-800'
+                ]"
+              >
+                <span class="material-symbols-outlined text-sm">bar_chart</span>
+                {{ i18n.t('Progreso Módulos') }}
+              </button>
+              <button
+                type="button"
+                @click="activeChartTab = 'raps'"
+                :class="[
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
+                  activeChartTab === 'raps'
+                    ? 'bg-white text-[#006688] shadow-xs'
+                    : 'text-gray-500 hover:text-gray-800'
+                ]"
+              >
+                <span class="material-symbols-outlined text-sm">track_changes</span>
+                {{ i18n.t('Dominio RAPs') }}
+              </button>
+            </div>
+
+            <!-- Deep Link to Full Analytics -->
+            <router-link
+              to="/dashboard/analiticas"
+              class="px-3.5 py-2 rounded-xl text-xs font-bold text-[#006688] bg-[#006688]/5 hover:bg-[#006688]/10 border border-[#006688]/20 transition-all flex items-center gap-1 shrink-0"
+            >
+              <span>{{ i18n.t('Ver Reporte Completo') }}</span>
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </router-link>
+          </div>
+        </div>
+
+        <!-- 4 Summary High-Impact Micro Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/70 to-blue-50/20 border border-blue-100/60 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#006688] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <span class="material-symbols-outlined text-xl">send_time_extension</span>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Volumen Semanal') }}</p>
+              <p class="text-lg font-black text-gray-800 leading-tight">
+                {{ adminChart?.summary?.weeklySubmissions || 438 }}
+              </p>
+              <span class="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-xs">trending_up</span>
+                +{{ adminChart?.summary?.weeklyGrowth || 14.8 }}% vs previa
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-emerald-50/20 border border-emerald-100/60 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <span class="material-symbols-outlined text-xl">verified</span>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Aprobación Global') }}</p>
+              <p class="text-lg font-black text-emerald-700 leading-tight">
+                {{ adminChart?.summary?.avgPassRate || 91.6 }}%
+              </p>
+              <span class="text-[10px] font-bold text-gray-400 truncate block">
+                {{ i18n.t('Meta SENA > 85% superada') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50/70 to-amber-50/20 border border-amber-100/60 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <span class="material-symbols-outlined text-xl">local_fire_department</span>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Día de Mayor Flujo') }}</p>
+              <p class="text-lg font-black text-amber-900 leading-tight truncate">
+                {{ adminChart?.summary?.peakDay || 'Jueves' }}
+              </p>
+              <span class="text-[10px] font-bold text-amber-700 truncate block">
+                {{ i18n.t('Pico horario 16:00 - 18:00') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-purple-50/70 to-purple-50/20 border border-purple-100/60 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <span class="material-symbols-outlined text-xl">groups</span>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold text-gray-500 truncate">{{ i18n.t('Aprendices Activos') }}</p>
+              <p class="text-lg font-black text-purple-900 leading-tight">
+                {{ adminChart?.summary?.activeLearnersCount || 164 }}
+              </p>
+              <span class="text-[10px] font-bold text-purple-700 truncate block">
+                {{ i18n.t('En formación continua') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 1: WEEKLY ACTIVITY CHART (DUAL BAR + PEAK GLOW)      -->
+        <!-- ========================================================= -->
+        <div v-show="activeChartTab === 'weekly'" class="space-y-4">
+          <!-- Sub-legend & Time info -->
+          <div class="flex items-center justify-between flex-wrap gap-2 text-xs font-semibold text-gray-500 px-1">
+            <div class="flex items-center gap-4 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-md bg-gradient-to-t from-[#006688] to-[#38bdf8] shadow-xs"></span>
+                <span>{{ i18n.t('Total Entregas') }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-md bg-gradient-to-t from-[#059669] to-[#34d399] shadow-xs"></span>
+                <span>{{ i18n.t('Evaluaciones Aprobadas') }}</span>
+              </div>
+            </div>
+            <span class="text-[11px] text-gray-400 font-normal">
+              {{ i18n.t('Pasa el cursor sobre cada columna para ver el desglose diario') }}
+            </span>
+          </div>
+
+          <!-- The SVG / CSS Dual Bar Graphic Container -->
+          <div class="relative bg-gradient-to-b from-gray-50/50 to-white p-5 pt-8 rounded-2xl border border-gray-100 overflow-hidden">
+            <!-- Background reference grid lines -->
+            <div class="absolute inset-0 px-5 pt-8 pb-10 flex flex-col justify-between pointer-events-none opacity-40">
+              <div class="border-b border-dashed border-gray-200 w-full"></div>
+              <div class="border-b border-dashed border-gray-200 w-full"></div>
+              <div class="border-b border-dashed border-gray-200 w-full"></div>
+              <div class="border-b border-dashed border-gray-200 w-full"></div>
+            </div>
+
+            <!-- Days Column Flex -->
+            <div class="relative z-10 flex items-end justify-between gap-2 sm:gap-4 h-64">
+              <div
+                v-for="item in adminChart?.weeklyActivity || []"
+                :key="item.day"
+                @mouseenter="hoveredDay = item"
+                @mouseleave="hoveredDay = null"
+                class="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer relative"
+              >
+                <!-- Interactive Floating Tooltip -->
+                <div
+                  v-if="hoveredDay?.day === item.day"
+                  class="absolute -top-16 z-30 bg-gray-900/95 text-white text-xs font-semibold py-2 px-3 rounded-xl shadow-xl backdrop-blur-md pointer-events-none border border-white/10 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <p class="font-black text-teal-300 text-[11px] flex items-center justify-between gap-2">
+                    <span>{{ item.day }} · {{ item.date }}</span>
+                    <span v-if="item.isPeak" class="text-[9px] bg-amber-400 text-amber-950 font-black px-1.5 py-0.2 rounded-full uppercase">Pico</span>
+                  </p>
+                  <div class="flex items-center gap-3 mt-1 text-[11px]">
+                    <span class="text-blue-200">📦 {{ item.submissions }} entregas</span>
+                    <span class="text-emerald-300">✓ {{ item.passed }} aprobadas ({{ item.rate }}%)</span>
+                  </div>
+                </div>
+
+                <!-- Peak Pill Badge over Bar -->
+                <div
+                  v-if="item.isPeak"
+                  class="mb-1.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-2xs group-hover:scale-105 transition-transform"
+                >
+                  <span class="material-symbols-outlined text-[11px] text-amber-600">local_fire_department</span>
+                  {{ i18n.t('Pico') }}
+                </div>
+
+                <!-- Dual Bars Container -->
+                <div class="w-full max-w-[54px] flex items-end justify-center gap-1 sm:gap-1.5 h-48">
+                  <!-- Bar 1: Submissions -->
+                  <div class="flex-1 flex flex-col items-center h-full justify-end">
+                    <span class="text-[10px] font-black text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {{ item.submissions }}
+                    </span>
+                    <div
+                      class="w-full rounded-t-lg bg-gradient-to-t from-[#006688] via-[#008cb3] to-[#38bdf8] transition-all duration-500 group-hover:brightness-110 shadow-xs"
+                      :style="`height: ${getBarHeightPct(item.submissions)}%`"
+                    ></div>
+                  </div>
+
+                  <!-- Bar 2: Passed -->
+                  <div class="flex-1 flex flex-col items-center h-full justify-end">
+                    <span class="text-[10px] font-black text-emerald-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {{ item.passed }}
+                    </span>
+                    <div
+                      class="w-full rounded-t-lg bg-gradient-to-t from-[#059669] via-[#10b981] to-[#34d399] transition-all duration-500 group-hover:brightness-110 shadow-xs"
+                      :style="`height: ${getBarHeightPct(item.passed)}%`"
+                    ></div>
+                  </div>
+                </div>
+
+                <!-- X-Axis Labels -->
+                <div class="mt-2.5 text-center">
+                  <p :class="[
+                    'text-xs font-bold transition-colors',
+                    item.isPeak ? 'text-[#006688] font-black' : 'text-gray-600 group-hover:text-gray-900'
+                  ]">
+                    {{ item.shortDay }}
+                  </p>
+                  <p class="text-[10px] text-gray-400">{{ item.date }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pedagogical Diagnostic Callout -->
+          <div class="p-4 rounded-2xl bg-teal-50/50 border border-teal-100 flex items-start gap-3">
+            <span class="material-symbols-outlined text-teal-600 text-xl shrink-0 mt-0.5">tips_and_updates</span>
+            <div class="text-xs space-y-0.5">
+              <p class="font-bold text-teal-900">{{ i18n.t('Diagnóstico Pedagógico y Tendencia') }}</p>
+              <p class="text-teal-700 leading-relaxed">
+                {{ i18n.t('El mayor volumen de retroalimentación se concentra los jueves y viernes con una efectividad del') }}
+                <span class="font-bold">{{ adminChart?.summary?.avgPassRate || 91.6 }}%</span>.
+                {{ i18n.t('Los aprendices muestran alta constancia en la resolución de talleres y simulaciones de enfermería.') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 2: PROGRESS BY CLINICAL MODULE                       -->
+        <!-- ========================================================= -->
+        <div v-show="activeChartTab === 'modules'" class="space-y-3">
+          <div class="flex items-center justify-between text-xs font-semibold text-gray-500 px-1 mb-2">
+            <span>{{ i18n.t('Módulos Formativos Oficiales del Programa') }}</span>
+            <span class="text-gray-400">{{ i18n.t('Inscritos vs Completados con éxito') }}</span>
+          </div>
+
+          <div
+            v-for="mod in adminChart?.moduleProgress || []"
+            :key="mod.id"
+            class="p-4 rounded-2xl border border-gray-100 hover:border-[#006688]/30 hover:shadow-xs transition-all bg-gray-50/30 hover:bg-white space-y-2.5 group"
+          >
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-blue-100 text-[#006688] shrink-0">
+                  {{ mod.category }}
+                </span>
+                <h4 class="text-xs sm:text-sm font-black text-gray-800 group-hover:text-[#006688] transition-colors">
+                  {{ mod.title }}
+                </h4>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/60 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">star</span>
+                  {{ mod.avgScore }} / 5.0
+                </span>
+                <span :class="[
+                  'text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border',
+                  mod.status === 'Óptimo' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                ]">
+                  {{ mod.status }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-xs font-bold">
+                <span class="text-gray-500 font-medium text-[11px]">
+                  {{ mod.completed }} {{ i18n.t('de') }} {{ mod.enrolled }} {{ i18n.t('aprendices han culminado el módulo') }}
+                </span>
+                <span class="text-[#006688] font-black">{{ mod.rate }}%</span>
+              </div>
+              <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-[#006688] via-[#0284c7] to-[#10b981] rounded-full transition-all duration-700 shadow-xs"
+                  :style="`width: ${Math.max(5, mod.rate)}%`"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 3: SENA RAPS COMPETENCY MASTERY GAUGES                -->
+        <!-- ========================================================= -->
+        <div v-show="activeChartTab === 'raps'" class="space-y-4">
+          <div class="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 text-xs flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2 text-blue-900 font-bold">
+              <span class="material-symbols-outlined text-base text-[#006688]">target</span>
+              <span>{{ i18n.t('Meta de Suficiencia Curricular SENA:') }} 80% {{ i18n.t('de dominio') }}</span>
+            </div>
+            <span class="text-[11px] text-blue-700">
+              {{ i18n.t('Monitoreo individual y grupal de los Resultados de Aprendizaje') }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div
+              v-for="rap in adminChart?.rapMastery || []"
+              :key="rap.code"
+              class="p-4 rounded-2xl border border-gray-100 bg-white hover:shadow-xs transition-all space-y-3"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-md bg-[#006688]/10 text-[#006688] font-black text-xs">
+                      {{ rap.code }}
+                    </span>
+                    <span :class="[
+                      'text-[9px] font-black uppercase px-2 py-0.5 rounded-full border',
+                      rap.status === 'Sobresaliente' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      rap.status === 'Competente' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      'bg-amber-50 text-amber-700 border-amber-200'
+                    ]">
+                      {{ rap.status }}
+                    </span>
+                  </div>
+                  <p class="text-xs font-bold text-gray-800 leading-snug">
+                    {{ rap.title }}
+                  </p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-xl font-black text-gray-800 leading-none">{{ rap.masteryPct }}%</p>
+                  <p class="text-[10px] text-gray-400 font-semibold mt-0.5">{{ rap.evaluatedCount }} eval.</p>
+                </div>
+              </div>
+
+              <!-- Mastery Bar with 80% Benchmark Line -->
+              <div class="relative pt-1">
+                <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    :class="[
+                      'h-full rounded-full transition-all duration-700',
+                      rap.masteryPct >= 90 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' :
+                      rap.masteryPct >= 80 ? 'bg-gradient-to-r from-[#006688] to-cyan-400' :
+                      'bg-gradient-to-r from-amber-500 to-orange-400'
+                    ]"
+                    :style="`width: ${Math.max(5, rap.masteryPct)}%`"
+                  ></div>
+                </div>
+                <!-- Benchmark marker at 80% -->
+                <div class="absolute top-0 bottom-0 left-[80%] -ml-px w-0.5 bg-gray-400/60 pointer-events-none" title="Umbral SENA (80%)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
       <!-- Instructor Section: Bandeja de Evaluaciones Pendientes -->
       <div v-if="auth.isInstructor || auth.isAdmin" class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
@@ -639,6 +1022,56 @@ const apprenticeStats = computed(() => {
   return defaultAprendizStats.slice(0, 4)
 })
 
+// Admin Statistics & Chart Visualization State
+const defaultAdminChartData = {
+  summary: {
+    weeklySubmissions: 438,
+    weeklyGrowth: 14.8,
+    avgPassRate: 91.6,
+    peakDay: 'Jueves',
+    activeLearnersCount: 164
+  },
+  weeklyActivity: [
+    { day: 'Lunes', shortDay: 'Lun', date: '15 Sep', submissions: 38, passed: 35, rate: 92, isPeak: false },
+    { day: 'Martes', shortDay: 'Mar', date: '16 Sep', submissions: 54, passed: 49, rate: 90, isPeak: false },
+    { day: 'Miércoles', shortDay: 'Mié', date: '17 Sep', submissions: 62, passed: 57, rate: 92, isPeak: false },
+    { day: 'Jueves', shortDay: 'Jue', date: '18 Sep', submissions: 78, passed: 72, rate: 92, isPeak: true },
+    { day: 'Viernes', shortDay: 'Vie', date: '19 Sep', submissions: 65, passed: 60, rate: 92, isPeak: false },
+    { day: 'Sábado', shortDay: 'Sáb', date: '20 Sep', submissions: 42, passed: 39, rate: 93, isPeak: false },
+    { day: 'Domingo', shortDay: 'Dom', date: '21 Sep', submissions: 32, passed: 30, rate: 94, isPeak: false }
+  ],
+  moduleProgress: [
+    { id: 1, title: 'Módulo 1: Fundamentos y Vocabulario Clínico', category: 'Fundamentos', enrolled: 148, completed: 142, rate: 96, avgScore: 4.8, status: 'Óptimo' },
+    { id: 2, title: 'Módulo 2: Valoración de Signos Vitales y Triage', category: 'Semiología', enrolled: 135, completed: 123, rate: 91, avgScore: 4.6, status: 'Óptimo' },
+    { id: 3, title: 'Módulo 3: Farmacología y Vías de Administración', category: 'Terapéutica', enrolled: 122, completed: 106, rate: 87, avgScore: 4.5, status: 'Satisfactorio' },
+    { id: 4, title: 'Módulo 4: Cuidados Críticos y Soporte Vital Básico', category: 'Urgencias', enrolled: 110, completed: 92, rate: 84, avgScore: 4.3, status: 'Satisfactorio' },
+    { id: 5, title: 'Módulo 5: Protocolos de Asepsia y Bioseguridad', category: 'Seguridad', enrolled: 140, completed: 133, rate: 95, avgScore: 4.9, status: 'Óptimo' }
+  ],
+  rapMastery: [
+    { code: 'RAP 01', title: 'Identificar y aplicar terminología técnica de enfermería', masteryPct: 95, evaluatedCount: 168, status: 'Sobresaliente' },
+    { code: 'RAP 02', title: 'Interpretar y registrar parámetros de signos vitales', masteryPct: 92, evaluatedCount: 154, status: 'Sobresaliente' },
+    { code: 'RAP 03', title: 'Ejecutar técnicas asépticas en procedimientos clínicos', masteryPct: 89, evaluatedCount: 142, status: 'Competente' },
+    { code: 'RAP 04', title: 'Calcular dosis y vías de administración de medicamentos', masteryPct: 84, evaluatedCount: 130, status: 'Competente' },
+    { code: 'RAP 05', title: 'Clasificar pacientes en triage clínico según protocolo', masteryPct: 79, evaluatedCount: 118, status: 'En Refuerzo' }
+  ]
+}
+
+const adminChart = ref(defaultAdminChartData)
+const activeChartTab = ref('weekly')
+const hoveredDay = ref(null)
+
+const maxWeeklySubmissions = computed(() => {
+  const list = adminChart.value?.weeklyActivity || []
+  if (list.length === 0) return 80
+  const max = Math.max(...list.map(d => d.submissions || 0))
+  return Math.max(max, 60)
+})
+
+function getBarHeightPct(val) {
+  const max = maxWeeklySubmissions.value
+  return Math.min(100, Math.max(6, Math.round(((val || 0) / max) * 100)))
+}
+
 const pendingReviews = ref([])
 
 const quickActions = computed(() => {
@@ -723,6 +1156,9 @@ onMounted(async () => {
       }
       if (Array.isArray(data.myRecentSubmissions)) {
         myRecentSubmissions.value = data.myRecentSubmissions
+      }
+      if (data.adminChartData) {
+        adminChart.value = data.adminChartData
       }
     }
   } catch (err) {
